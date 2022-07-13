@@ -5,7 +5,10 @@
 #include <AMReX_Vector.H>
 #include <AMReX_IntVect.H>
 #include <AMReX_GpuContainers.H>
+
 #include <mfix_pc.H>
+#include <mfix_ic.H>
+#include <mfix_dem.H>
 
 class ParticlesGenerator {
 
@@ -21,7 +24,10 @@ class ParticlesGenerator {
                         const int id,
                         const int cpu,
                         const int icv,
-                        const int phase);
+                        const int phase,
+                        MFIXInitialConditions& initial_conditions,
+                        MFIXDEM& dem,
+                        MFIXPIC& pic);
 
     // Particle generator
     void generate (int& particles_count,
@@ -50,6 +56,10 @@ class ParticlesGenerator {
     const int m_cpu;
     const int m_icv;
     const int m_phase;
+
+    MFIXInitialConditions& m_initial_conditions;
+    MFIXDEM& m_dem;
+    MFIXPIC& m_pic;
 };
 
 #endif

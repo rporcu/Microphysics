@@ -1,5 +1,5 @@
 #include <mfix_rw.H>
-#include <mfix_dem_parms.H>
+#include <mfix_dem.H>
 
 #include <AMReX_WriteEBSurface.H>
 
@@ -21,7 +21,7 @@ MfixRW::WriteMyEBSurface () const
 
   const EBFArrayBoxFactory * ebf;
 
-  if (particle_ebfactory[lev] != nullptr && DEM::solve) {
+  if (particle_ebfactory[lev] != nullptr && m_dem.solve()) {
       ebf = particle_ebfactory[lev].get();
       ba  = pc->ParticleBoxArray(lev);
       dm  = pc->ParticleDistributionMap(lev);

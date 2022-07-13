@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 
 using namespace amrex;
 
@@ -51,10 +51,10 @@ mfix::set_enthalpy_bcs (Real time,
   Array4<const int> const& bct_klo = bc_list.bc_klo[lev]->array();
   Array4<const int> const& bct_khi = bc_list.bc_khi[lev]->array();
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
   // Flag to understand if fluid is a mixture
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int fluid_is_a_mixture = fluid.isMixture();
 
   Array4<Real> const& h_g = h_g_fab.array();
 
@@ -103,7 +103,7 @@ mfix::set_enthalpy_bcs (Real time,
 
   Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   auto const& flags_arr = flags.const_array();
 

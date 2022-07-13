@@ -5,12 +5,12 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_ic_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_regions_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_reactions.H>
+#include <mfix_ic.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_regions.H>
+#include <mfix_species.H>
 #include <mfix_des_rrates_K.H>
 
 #include <string>
@@ -40,88 +40,88 @@ std::string trim(const std::string& s) {
 } // end namespace chemistry_aux
 
 
-Reactions::Reactions()
-  : solve(0)
-  , nreactions(0)
-  , reactions(0)
-  , reaction_equations(0)
-  , is_initialized(0)
-  , parameters(nullptr)
+MFIXReactions::MFIXReactions()
+  : m_solve(0)
+  , m_nreactions(0)
+  , m_reactions(0)
+  , m_reaction_equations(0)
+  , m_is_initialized(0)
+  , m_parameters(nullptr)
   , m_chemical_reactions(0)
 {}
 
 
-Reactions::~Reactions()
+MFIXReactions::~MFIXReactions()
 {
-  if (solve)
-    for (int n(0); n < nreactions; n++)
+  if (m_solve)
+    for (int n(0); n < m_nreactions; n++)
       delete m_chemical_reactions[n];
 }
 
 
 // Initialization: read input parameters and set up reactions
-void Reactions::Initialize (const Species& species)
+void MFIXReactions::Initialize (const MFIXSpecies& species)
 {
-  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.is_initialized,
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(species.isInitialized(),
       "Species not initialized. Can't initialize reactions before species initialization");
 
   // Set the initialization flag
-  is_initialized = 1;
+  m_is_initialized = 1;
 
   amrex::ParmParse pp("chemistry");
 
   if (pp.contains("solve")) {
 
     // Get the list of reactions names to define chem equations
-    pp.getarr("solve", reactions);
+    pp.getarr("solve", m_reactions);
 
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(reactions.size() > 0,
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_reactions.size() > 0,
         "No input provided for chemistry.solve");
 
     // Disable the species solver if the species are defined as "None" (case
     // insensitive) or 0
-    if (amrex::toLower(reactions[0]).compare("none") == 0 || (reactions[0]).compare("0") == 0) {
-      solve = 0;
-      reactions.clear();
-      nreactions = 0;
-      reaction_equations.clear();
+    if (amrex::toLower(m_reactions[0]).compare("none") == 0 || (m_reactions[0]).compare("0") == 0) {
+      m_solve = 0;
+      m_reactions.clear();
+      m_nreactions = 0;
+      m_reaction_equations.clear();
     } else {
-      solve = 1;
-      nreactions = reactions.size();
-      reaction_equations.clear();
-      reaction_equations.resize(nreactions);
+      m_solve = 1;
+      m_nreactions = m_reactions.size();
+      m_reaction_equations.clear();
+      m_reaction_equations.resize(m_nreactions);
     }
 
-    if (solve) {
-      for (int n(0); n < nreactions; n++) {
+    if (m_solve) {
+      for (int n(0); n < m_nreactions; n++) {
         // Get the reation equation relative to given reaction name
         Vector<std::string> equation(0);
-        pp.getarr((reactions[n]+".reaction").c_str(), equation);
-        for (auto elem: equation) reaction_equations[n] += elem;
+        pp.getarr((m_reactions[n]+".reaction").c_str(), equation);
+        for (auto elem: equation) m_reaction_equations[n] += elem;
       }
     }
   }
 
-  if (solve) {
+  if (m_solve) {
 
-    m_chemical_reactions.resize(nreactions, nullptr);
+    m_chemical_reactions.resize(m_nreactions, nullptr);
     
-    for (int n(0); n < nreactions; n++) {
+    for (int n(0); n < m_nreactions; n++) {
 
-      const std::string& equation = reaction_equations[n];
+      const std::string& equation = m_reaction_equations[n];
 
-      m_chemical_reactions[n] = new ChemicalReaction(equation, species);
+      m_chemical_reactions[n] = new MFIXChemicalReaction(equation, species);
     }
   }
 
-  parameters = new ReactionsParms(nreactions);
+  m_parameters = new MFIXReactionsParms(m_nreactions);
 }
 
 
 // REACTION_T Class Constructor
-ChemicalReaction::ChemicalReaction (const std::string& reaction,
-                                    const Species& species)
-  : m_type(REACTIONTYPE::Invalid)
+MFIXChemicalReaction::MFIXChemicalReaction (const std::string& reaction,
+                                    const MFIXSpecies& species)
+  : m_type(ReactionType::Invalid)
   , m_formula(reaction)
   , m_phases(0)
   , m_reactants(0)
@@ -138,7 +138,7 @@ ChemicalReaction::ChemicalReaction (const std::string& reaction,
 
 
 std::string 
-ChemicalReaction::parse_reactants(const std::string& formula)
+MFIXChemicalReaction::parse_reactants(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("-->");
@@ -166,7 +166,7 @@ ChemicalReaction::parse_reactants(const std::string& formula)
 
 
 std::string 
-ChemicalReaction::parse_products(const std::string& formula)
+MFIXChemicalReaction::parse_products(const std::string& formula)
 {
   {
     std::size_t pos = formula.find("<--");
@@ -194,12 +194,12 @@ ChemicalReaction::parse_products(const std::string& formula)
 
 
 void
-ChemicalReaction::parse_stoichiometric_data(const std::string& s,
+MFIXChemicalReaction::parse_stoichiometric_data(const std::string& s,
                                             amrex::Vector<std::string>& compounds,
                                             amrex::Vector<int>& compounds_id,
                                             amrex::Vector<amrex::Real>& coefficients,
                                             amrex::Vector<int>& phases,
-                                            const Species& species)
+                                            const MFIXSpecies& species)
 {
   std::string formula(chemistry_aux::trim(s));
   std::replace(formula.begin(), formula.end(), '+', ' ');
@@ -241,11 +241,11 @@ ChemicalReaction::parse_stoichiometric_data(const std::string& s,
     if (pos != std::string::npos) {
       std::string loc_phase = single_compound.substr(pos, pos+3);
       if (loc_phase.compare("(g)") == 0)
-        phases[n] = CHEMICALPHASE::Fluid;
+        phases[n] = ChemicalPhase::Fluid;
       else if (loc_phase.compare("(l)") == 0)
-        phases[n] = CHEMICALPHASE::Fluid;
+        phases[n] = ChemicalPhase::Fluid;
       else if (loc_phase.compare("(s)") == 0)
-        phases[n] = CHEMICALPHASE::Solid;
+        phases[n] = ChemicalPhase::Solid;
       else
         amrex::Abort("Error: not recognized phase in stoichiometric equation");
 
@@ -257,22 +257,22 @@ ChemicalReaction::parse_stoichiometric_data(const std::string& s,
     
     compounds[n] = chemistry_aux::trim(single_compound);
 
-    auto it = std::find(species.names.begin(), species.names.end(),
-        compounds[n]);
+    const auto& names = species.names();
+    auto it = std::find(names.begin(), names.end(), compounds[n]);
 
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != species.names.end(),
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(it != names.end(),
         "Error: species " + compounds[n] + " is present in a reaction but " +
         "it is not present in the list of declared species");
 
-    const auto it_pos = std::distance(species.names.begin(), it);
+    const auto it_pos = std::distance(names.begin(), it);
 
-    compounds_id[n] = species.IDs[it_pos];
+    compounds_id[n] = species.IDs(it_pos);
   }
 }
 
 
 void
-ChemicalReaction::parse_reaction(const Species& species)
+MFIXChemicalReaction::parse_reaction(const MFIXSpecies& species)
 {
   // remove spaces from reaction reaction_formula string
   std::string formula(m_formula);
@@ -318,9 +318,9 @@ ChemicalReaction::parse_reaction(const Species& species)
 
   // Set the type of reaction, whether homogeneous or heterogeneous
   if (m_phases.size() == 1)
-    m_type = REACTIONTYPE::Homogeneous;
+    m_type = ReactionType::Homogeneous;
   else if (m_phases.size() >= 2)
-    m_type = REACTIONTYPE::Heterogeneous;
+    m_type = ReactionType::Heterogeneous;
   else
     amrex::Abort("Error: unrecognized reaction type");
 

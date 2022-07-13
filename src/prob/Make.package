@@ -1,0 +1,20 @@
+CEXE_headers += mfix_regions.H
+CEXE_headers += mfix_ic.H
+CEXE_headers += mfix_bc.H
+CEXE_headers += mfix_eb.H
+CEXE_headers += mfix_fluid.H
+CEXE_headers += mfix_species.H
+CEXE_headers += mfix_reactions.H
+CEXE_headers += mfix_solids.H
+CEXE_headers += mfix_dem.H
+CEXE_headers += mfix_pic.H
+
+CEXE_sources += mfix_regions.cpp
+CEXE_sources += mfix_ic.cpp
+CEXE_sources += mfix_bc.cpp
+CEXE_sources += mfix_fluid.cpp
+CEXE_sources += mfix_species.cpp
+CEXE_sources += mfix_reactions.cpp
+CEXE_sources += mfix_solids.cpp
+CEXE_sources += mfix_dem.cpp
+CEXE_sources += mfix_pic.cpp

@@ -8,9 +8,9 @@
 #include <AMReX_Geometry.H>
 
 #include <mfix_rw.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 using namespace amrex;
 
@@ -62,12 +62,12 @@ MfixRW::ResetIOChkData ()
     chkScalarVars[2][lev] = m_leveldata[lev]->ro_g;
     chkScalarVars[3][lev] = level_sets[lev].get();
     
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       chkTVars[0][lev] = m_leveldata[lev]->T_g;
       //chkTVars[1][lev] = m_leveldata[lev]->h_g;
     }
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       chkSpeciesVars[0][lev] = m_leveldata[lev]->X_gk;
     }
   }
@@ -153,7 +153,7 @@ MfixRW::WriteCheckPointFile (std::string& check_file_in,
     WriteCheckHeader(checkpointname, nstep, dt, time);
 
     WriteJobInfo(checkpointname);
-    if (fluid.solve)
+    if (fluid.solve())
     {
        ResetIOChkData();
 
@@ -171,13 +171,13 @@ MfixRW::WriteCheckPointFile (std::string& check_file_in,
 
           // Write scalar variables
           for (int i = 0; i < chkScalarVars.size(); i++ ) {
-            if ( DEM::solve || PIC::solve || (chkscaVarsName[i] != "level_sets"))
+            if ( m_dem.solve() || m_pic.solve() || (chkscaVarsName[i] != "level_sets"))
                  VisMF::Write( *(chkScalarVars[i][lev]),
                    amrex::MultiFabFileFullPrefix(lev, checkpointname,
                          level_prefix, chkscaVarsName[i]));
           }
 
-          if (fluid.solve_enthalpy) {
+          if (fluid.solve_enthalpy()) {
              // Write temperature variables
              for (int i = 0; i < chkTVars.size(); i++) {
                 VisMF::Write( *(chkTVars[i][lev]),
@@ -186,7 +186,7 @@ MfixRW::WriteCheckPointFile (std::string& check_file_in,
              }
           }
 
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
              // Write species variables
              for (int i = 0; i < chkSpeciesVars.size(); i++) {
                 VisMF::Write( *(chkSpeciesVars[i][lev]),
@@ -197,13 +197,13 @@ MfixRW::WriteCheckPointFile (std::string& check_file_in,
        }
     }
 
-    if ( DEM::solve || PIC::solve )
+    if ( m_dem.solve() || m_pic.solve() )
     {
        pc->Checkpoint(checkpointname, "particles");
     }
 
 
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
     {
         // The level set might have a higher refinement than the mfix level.
         //      => Current mechanism for saving checkpoint files requires the

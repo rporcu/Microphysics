@@ -8,9 +8,9 @@
 #include <cmath>
 
 #include <mfix_pc.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_reactions.H>
 
 
 class HeterogeneousRatesUser
@@ -30,14 +30,14 @@ class HeterogeneousRatesUser
     SYCL_EXTERNAL
 #endif
     void operator() (amrex::Real* R_q,
-                     const ReactionsParms& reactions_parms,
-                     const SolidsParms& solids_parms,
+                     const MFIXReactionsParms& reactions_parms,
+                     const MFIXSolidsParms& solids_parms,
                      const amrex::Real* X_sn,
                      const amrex::Real ro_s,
                      const amrex::Real ep_s,
                      const amrex::Real T_s,
                      const amrex::RealVect& vel_s,
-                     const FluidParms& fluid_parms,
+                     const MFIXFluidParms& fluid_parms,
                      const amrex::Real* X_gk,
                      const amrex::Real ro_g,
                      const amrex::Real ep_g,
@@ -65,8 +65,8 @@ class HomogeneousRatesUser
     SYCL_EXTERNAL
 #endif
     void operator() (amrex::Real*, // R_q,
-                     const ReactionsParms&, // reactions_parms,
-                     const SolidsParms&, // solids_parms,
+                     const MFIXReactionsParms&, // reactions_parms,
+                     const MFIXSolidsParms&, // solids_parms,
                      const amrex::Real*, // X_sn,
                      const amrex::Real, // ro_s,
                      const amrex::Real /*ep_s*/) const;
@@ -83,8 +83,8 @@ class HomogeneousRatesUser
     SYCL_EXTERNAL
 #endif
     void operator() (amrex::Real*, // R_q,
-                     const ReactionsParms&, // reactions_parms,
-                     const FluidParms&, // fluid_parms,
+                     const MFIXReactionsParms&, // reactions_parms,
+                     const MFIXFluidParms&, // fluid_parms,
                      const amrex::Real*, // X_gk,
                      const amrex::Real, // ro_g,
                      const amrex::Real /*ep_g*/) const;

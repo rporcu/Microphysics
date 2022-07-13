@@ -6,10 +6,11 @@
 #include <AMReX_BoxArray.H>
 
 #include <mfix_pc.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_regions_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_reactions.H>
+#include <mfix_regions.H>
 #include <mfix_monitors.H>
 
 
@@ -22,7 +23,7 @@ public:
            amrex::Vector<amrex::BoxArray>& grids_in,
            amrex::Vector<amrex::Geometry>& geom_in,
            MFIXParticleContainer* pc_in,
-           FluidPhase& fluid_in,
+           MFIXFluidPhase& fluid_in,
            amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
            amrex::Vector<amrex::DistributionMapping>& dmap_in,
@@ -33,8 +34,10 @@ public:
            int levelset_pad_in,
            int levelset_eb_refinement_in,
            int levelset_eb_pad_in,
-           SolidsPhase& solids_in,
-           Reactions& reactions_in,
+           MFIXSolidsPhase& solids_in,
+           MFIXDEM& dem,
+           MFIXPIC& pic,
+           MFIXReactions& reactions_in,
            amrex::Vector<amrex::MultiFab*>& particle_cost_in,
            amrex::Vector<amrex::MultiFab*>& particle_proc_in,
            amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
@@ -48,7 +51,7 @@ public:
            std::string load_balance_type_in,
            BCList& bc_list_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
-           Regions& regions_in);
+           MFIXRegions& regions_in);
 
    // Class for specifying a subregion for ParticleContainer::WritePlotFile
    // and add a filter to plot only a selected group of particles
@@ -195,7 +198,7 @@ public:
    amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkSpeciesVars;
    amrex::Vector<std::string> chkSpeciesVarsName;
 
-   void Initialize (const Regions& regions);
+   void Initialize (const MFIXRegions& regions);
 
     bool solids_plot_regions () const
     { return m_solids_plot_regions.size() > 0; };
@@ -212,7 +215,7 @@ private:
 
    MFIXParticleContainer* pc;
 
-   FluidPhase& fluid;
+   MFIXFluidPhase& fluid;
 
    // Options to control the computing of particle eulerian velocities
    amrex::Vector<amrex::Real> avg_p_g;
@@ -246,8 +249,13 @@ private:
    int levelset_eb_refinement;
    int levelset_eb_pad;
 
-   SolidsPhase& solids;
-   Reactions& reactions;
+   MFIXSolidsPhase& solids;
+
+   MFIXDEM& m_dem;
+
+   MFIXPIC& m_pic;
+
+   MFIXReactions& reactions;
 
    amrex::Vector<amrex::MultiFab*>& particle_cost;
    amrex::Vector<amrex::MultiFab*>& particle_proc;
@@ -271,12 +279,12 @@ private:
 
    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory;
 
-   Regions& regions;
+   MFIXRegions& regions;
 
-   amrex::GpuArray<amrex::Real,2*Species::NMAX> mass_accum = {0.};
-   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_inflow = {0.};
-   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_outflow = {0.};
-   amrex::GpuArray<amrex::Real,  Species::NMAX> mass_prod = {0.};
+   amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> mass_accum = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_inflow = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_outflow = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_prod = {0.};
 
 
    void readParameters ();

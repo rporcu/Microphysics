@@ -3,8 +3,8 @@
 #include <AMReX_BC_TYPES.H>
 #include <AMReX_Box.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 
 std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
@@ -34,7 +34,7 @@ RealVect mfix::gp0     {0.};
 // Destructor
 mfix::~mfix ()
 {
-  if (DEM::solve)
+  if (m_dem.solve())
     delete pc;
 
   for (int lev(0); lev < nlev; ++lev)
@@ -63,7 +63,8 @@ mfix::~mfix ()
 
 // Constructor
 mfix::mfix ()
-  : bc_list(maxLevel() + 1)
+  : m_boundary_conditions(m_embedded_boundaries)
+  , bc_list(maxLevel() + 1)
   , m_bc_u_g(50, 0)
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
@@ -158,11 +159,11 @@ mfix::mfix ()
     mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
                                 ebfactory, dmap, ooo_debug, level_sets, boxArray(),
                                 levelset_refinement, levelset_pad,
-                                levelset_eb_refinement, levelset_eb_pad,
-                                solids, reactions, particle_cost, particle_proc,
-                                fluid_proc, covered_val, refRatio(),
-                                eb_levels, nghost_eb_basic(),
-                                nghost_eb_volume(), nghost_eb_full(), m_eb_support_level,
+                                levelset_eb_refinement, levelset_eb_pad, solids,
+                                m_dem, m_pic, reactions, particle_cost,
+                                particle_proc, fluid_proc, covered_val, refRatio(),
+                                eb_levels, nghost_eb_basic(), nghost_eb_volume(),
+                                nghost_eb_full(), m_eb_support_level,
                                 load_balance_type, bc_list, particle_ebfactory,
                                 regions);
 }

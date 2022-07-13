@@ -1,10 +1,8 @@
 #include <mfix.H>
 
-#include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_bc.H>
+#include <mfix_fluid.H>
 
-
-using namespace BC;
 
 void
 mfix::mfix_set_bc_type (int lev, int nghost_bc)
@@ -17,7 +15,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
 
     const GpuArray<Real, 3> plo = geom[lev].ProbLoArray();
 
-    const int l_species = fluid.nspecies;
+    const int l_species = fluid.nspecies();
     const int l_ntrac = ntrac;
     const int l_force = amrex::max(AMREX_SPACEDIM, l_ntrac, l_species);
 
@@ -58,19 +56,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_ilo_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_xlo.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_xlo().size(); ++lc) {
 
-          const int bcv  = bc_xlo[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_xlo(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           xlo_type = type;
 
           if (lc > 0){
-            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
-            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc.region->lo(1)-plo[1])/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc.region->lo(2)-plo[2])/dz + 0.5));
 
-            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
-            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc.region->hi(1)-plo[1])/dy + 0.5)-1);
+            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc.region->hi(2)-plo[2])/dz + 0.5)-1);
           }
 
           const Box lo_box(ibx_lo, ibx_hi);
@@ -103,19 +103,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_ihi_type(i,j,k,0) = init_x;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_xhi.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_xhi().size(); ++lc) {
 
-          const int bcv  = bc_xhi[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_xhi(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           xhi_type = type;
 
           if (lc > 0){
-            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
-            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            ibx_lo[1] = static_cast<int>(amrex::Math::floor((bc.region->lo(1)-plo[1])/dy + 0.5));
+            ibx_lo[2] = static_cast<int>(amrex::Math::floor((bc.region->lo(2)-plo[2])/dz + 0.5));
 
-            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
-            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            ibx_hi[1] = static_cast<int>(amrex::Math::floor((bc.region->hi(1)-plo[1])/dy + 0.5)-1);
+            ibx_hi[2] = static_cast<int>(amrex::Math::floor((bc.region->hi(2)-plo[2])/dz + 0.5)-1);
           }
 
           const Box hi_box(ibx_lo, ibx_hi);
@@ -163,19 +165,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_jlo_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_ylo.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_ylo().size(); ++lc) {
 
-          const int bcv  = bc_ylo[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_ylo(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           ylo_type = type;
 
           if (lc > 0){
-            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc.region->lo(0)-plo[0])/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc.region->lo(2)-plo[2])/dz + 0.5));
 
-            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc.region->hi(0)-plo[0])/dx + 0.5)-1);
+            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc.region->hi(2)-plo[2])/dz + 0.5)-1);
           }
 
           const Box lo_box(jbx_lo, jbx_hi);
@@ -209,19 +213,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_jhi_type(i,j,k,0) = init_y;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_yhi.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_yhi().size(); ++lc) {
 
-          const int bcv  = bc_yhi[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_yhi(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           yhi_type = type;
 
           if (lc > 0){
-            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(2)-plo[2])/dz + 0.5));
+            jbx_lo[0] = static_cast<int>(amrex::Math::floor((bc.region->lo(0)-plo[0])/dx + 0.5));
+            jbx_lo[2] = static_cast<int>(amrex::Math::floor((bc.region->lo(2)-plo[2])/dz + 0.5));
 
-            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(2)-plo[2])/dz + 0.5))-1;
+            jbx_hi[0] = static_cast<int>(amrex::Math::floor((bc.region->hi(0)-plo[0])/dx + 0.5)-1);
+            jbx_hi[2] = static_cast<int>(amrex::Math::floor((bc.region->hi(2)-plo[2])/dz + 0.5)-1);
           }
 
           const Box hi_box(jbx_lo, jbx_hi);
@@ -267,19 +273,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_klo_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_zlo.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_zlo().size(); ++lc) {
 
-          const int bcv  = bc_zlo[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_zlo(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           zlo_type = type;
 
           if (lc > 0){
-            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc.region->lo(0)-plo[0])/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc.region->lo(1)-plo[1])/dy + 0.5));
 
-            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc.region->hi(0)-plo[0])/dx + 0.5)-1);
+            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc.region->hi(1)-plo[1])/dy + 0.5)-1);
           }
 
           const Box lo_box(kbx_lo, kbx_hi);
@@ -313,19 +321,21 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
            {bc_khi_type(i,j,k,0) = init_z;});
 
         // Define specific BC conditions from inputs
-        for (int lc(0); lc < bc_zhi.size(); ++lc) {
+        for (int lc(0); lc < m_boundary_conditions.bc_zhi().size(); ++lc) {
 
-          const int bcv  = bc_zhi[lc];
-          const int type = bc[bcv].type;
+          const int bcv  = m_boundary_conditions.bc_zhi(lc);
+          const int type = m_boundary_conditions.bc(bcv).type;
+
+          const BC_t& bc = m_boundary_conditions.bc(bcv);
 
           zhi_type = type;
 
           if (lc > 0){
-            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(0)-plo[0])/dx + 0.5));
-            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->lo(1)-plo[1])/dy + 0.5));
+            kbx_lo[0] = static_cast<int>(amrex::Math::floor((bc.region->lo(0)-plo[0])/dx + 0.5));
+            kbx_lo[1] = static_cast<int>(amrex::Math::floor((bc.region->lo(1)-plo[1])/dy + 0.5));
 
-            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(0)-plo[0])/dx + 0.5))-1;
-            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc[bcv].region->hi(1)-plo[1])/dy + 0.5))-1;
+            kbx_hi[0] = static_cast<int>(amrex::Math::floor((bc.region->hi(0)-plo[0])/dx + 0.5)-1);
+            kbx_hi[1] = static_cast<int>(amrex::Math::floor((bc.region->hi(1)-plo[1])/dy + 0.5)-1);
           }
 
           const Box hi_box(kbx_lo, kbx_hi);
@@ -363,7 +373,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     }
 
 
-    if (fluid.solve_density) {
+    if (fluid.solve_density()) {
       m_bcrec_density_d.resize(1);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
@@ -373,7 +383,7 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
         (m_bcrec_density_d.data(), m_bcrec_density.data(), sizeof(BCRec));
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       m_bcrec_enthalpy_d.resize(1);
 #ifdef AMREX_USE_GPU
       Gpu::htod_memcpy
@@ -415,38 +425,38 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     }
 
 
-    if (fluid.solve) {
+    if (fluid.solve()) {
       Real ltime(0.);
 
       set_velocity_bc_values(ltime);
       set_density_bc_values(ltime);
 
-      if (fluid.solve_tracer) {
+      if (fluid.solve_tracer()) {
         set_tracer_bc_values(ltime);
       }
 
-      if (fluid.solve_species) {
+      if (fluid.solve_species()) {
         set_species_bc_values(ltime);
       }
 
       // Species
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         set_temperature_bc_values(ltime);
       }
 
     }
 
 
-    m_h_bc_ep_g.resize(bc.size());
-    m_h_bc_p_g.resize(bc.size());
+    m_h_bc_ep_g.resize(m_boundary_conditions.bc().size());
+    m_h_bc_p_g.resize(m_boundary_conditions.bc().size());
 
 
-    for(unsigned bcv(0); bcv < bc.size(); ++bcv)
+    for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv)
     {
 
-      if ( fluid.solve ) {
-        m_h_bc_ep_g[bcv] = bc[bcv].fluid.volfrac;
-        m_h_bc_p_g[bcv]  = bc[bcv].fluid.pressure;
+      if ( fluid.solve() ) {
+        m_h_bc_ep_g[bcv] = m_boundary_conditions.bc(bcv).fluid.volfrac;
+        m_h_bc_p_g[bcv]  = m_boundary_conditions.bc(bcv).fluid.pressure;
 
       } else {
         m_h_bc_ep_g[bcv] = 1e50;
@@ -628,15 +638,17 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 void
 mfix::set_velocity_bc_values (Real time_in) const
 {
-  m_h_bc_u_g.resize(bc.size());
-  m_h_bc_v_g.resize(bc.size());
-  m_h_bc_w_g.resize(bc.size());
+  m_h_bc_u_g.resize(m_boundary_conditions.bc().size());
+  m_h_bc_v_g.resize(m_boundary_conditions.bc().size());
+  m_h_bc_w_g.resize(m_boundary_conditions.bc().size());
 
-  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
+  for (unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
-    if ( bc[bcv].type == BCList::minf ) {
+    const BC_t& bc = m_boundary_conditions.bc(bcv);
 
-      const auto& bc_vels = BC::bc[bcv].fluid.get_velocity(time_in);
+    if (bc.type == BCList::minf) {
+
+      RealVect bc_vels = bc.fluid.get_velocity(time_in);
       m_h_bc_u_g[bcv] = bc_vels[0];
       m_h_bc_v_g[bcv] = bc_vels[1];
       m_h_bc_w_g[bcv] = bc_vels[2];
@@ -661,30 +673,38 @@ mfix::set_velocity_bc_values (Real time_in) const
 void
 mfix::set_temperature_bc_values (Real time_in) const
 {
-  m_h_bc_t_g.resize(bc.size());
-  m_h_bc_h_g.resize(bc.size());
+  m_h_bc_t_g.resize(m_boundary_conditions.bc().size());
+  m_h_bc_h_g.resize(m_boundary_conditions.bc().size());
 
-  // Flag to understand if fluid is a mixture
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const auto& fluid_parms = fluid.parameters();
 
-  auto& fluid_parms = *fluid.parameters;
+  for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
-  for(unsigned bcv(0); bcv < bc.size(); ++bcv) {
-    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
-         (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
-      const Real Tg = bc[bcv].fluid.get_temperature(time_in);
+    const BC_t& bc = m_boundary_conditions.bc(bcv);
+
+    if (bc.type == BCList::minf || bc.type == BCList::pinf ||
+        (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
+
+      const Real Tg = bc.fluid.get_temperature(time_in);
       m_h_bc_t_g[bcv] = Tg;
-      if (!fluid_is_a_mixture) {
+
+      if (!fluid.isMixture()) {
+
         m_h_bc_h_g[bcv] = fluid_parms.calc_h_g<RunOn::Host>(m_h_bc_t_g[bcv]);
+
       } else {
+
         m_h_bc_h_g[bcv] = 0.0;
-        for (int n(0); n < fluid.nspecies; n++) {
-          const Real X_gk = bc[bcv].fluid.species[n].mass_fraction;
+
+        for (int n(0); n < fluid.nspecies(); n++) {
+
+          const Real X_gk = bc.fluid.species[n].mass_fraction;
           m_h_bc_h_g[bcv] += X_gk*fluid_parms.calc_h_gk<RunOn::Host>(Tg,n);
         }
       }
 
     } else {
+
       m_h_bc_t_g[bcv] = 1e50;
       m_h_bc_h_g[bcv] = 1e50;
     }
@@ -699,12 +719,16 @@ mfix::set_temperature_bc_values (Real time_in) const
 void
 mfix::set_density_bc_values (Real time_in) const
 {
-  m_h_bc_ro_g.resize(bc.size());
+  m_h_bc_ro_g.resize(m_boundary_conditions.bc().size());
 
-  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if (bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
-        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
-      const Real ro_g = bc[bcv].fluid.get_density(time_in);
+  for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+
+    const BC_t& bc = m_boundary_conditions.bc(bcv);
+
+    if (bc.type == BCList::minf || bc.type == BCList::pinf ||
+        (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
+
+      const Real ro_g = bc.fluid.get_density(time_in);
       m_h_bc_ro_g[bcv] = ro_g;
 
     } else {
@@ -719,15 +743,19 @@ mfix::set_density_bc_values (Real time_in) const
 void
 mfix::set_tracer_bc_values (Real /*time_in*/) const
 {
-  m_h_bc_tracer.resize(bc.size());
+  m_h_bc_tracer.resize(m_boundary_conditions.bc().size());
 
   // HACK -- BC tracer is constant given current implementation.
   // This was copied over from the mfix_set_tracer_bcs routine.
-  const Real trac0 = fluid.trac_0;
+  const Real trac0 = fluid.tracer();
 
-  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
-        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb) ) {
+  for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+
+    const BC_t& bc = m_boundary_conditions.bc(bcv);
+
+    if (bc.type == BCList::minf || bc.type == BCList::pinf ||
+        (bc.type == BCList::eb && bc.fluid.flow_thru_eb) ) {
+
       m_h_bc_tracer[bcv] = trac0;
     } else {
       m_h_bc_tracer[bcv] = 1e50;
@@ -742,32 +770,41 @@ mfix::set_tracer_bc_values (Real /*time_in*/) const
 void
 mfix::set_species_bc_values (Real time_in) const
 {
-  m_h_bc_X_gk.resize(fluid.nspecies, Gpu::HostVector<Real>(bc.size()));
-  m_bc_X_gk.resize(fluid.nspecies, Gpu::DeviceVector<Real>(bc.size()));
+  m_h_bc_X_gk.resize(fluid.nspecies(), Gpu::HostVector<Real>(m_boundary_conditions.bc().size()));
+  m_bc_X_gk.resize(fluid.nspecies(), Gpu::DeviceVector<Real>(m_boundary_conditions.bc().size()));
 
   // Important! Resize the bc vector for the fluid species mass fractions
   // We have to do it here because the size has to match the number of fluid
   // species
-  m_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
-  m_h_bc_X_gk_ptr.resize(fluid.nspecies, nullptr);
+  m_bc_X_gk_ptr.resize(fluid.nspecies(), nullptr);
+  m_h_bc_X_gk_ptr.resize(fluid.nspecies(), nullptr);
 
-  for(unsigned bcv(0); bcv < BC::bc.size(); ++bcv) {
-    if ( bc[bcv].type == BCList::minf || bc[bcv].type == BCList::pinf ||
-        (bc[bcv].type == BCList::eb  && bc[bcv].fluid.flow_thru_eb)) {
-      for (int n(0); n < fluid.nspecies; n++) {
-        m_h_bc_X_gk[n][bcv] = bc[bcv].fluid.get_species(n, time_in);
+  for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+
+    const BC_t& bc = m_boundary_conditions.bc(bcv);
+
+    if (bc.type == BCList::minf || bc.type == BCList::pinf ||
+        (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
+
+      for (int n(0); n < fluid.nspecies(); n++) {
+        m_h_bc_X_gk[n][bcv] = bc.fluid.get_species(n, time_in);
       }
+
     } else {
-      for (int n(0); n < fluid.nspecies; n++) {
+
+      for (int n(0); n < fluid.nspecies(); n++) {
         m_h_bc_X_gk[n][bcv] = 1e50;
       }
     }
   }
 
-  for (int n = 0; n < fluid.nspecies; ++n) {
+  for (int n = 0; n < fluid.nspecies(); ++n) {
+
     Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
     m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
+
   }
+
   Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk_ptr.begin(), m_h_bc_X_gk_ptr.end(), m_bc_X_gk_ptr.begin());
 
   Gpu::synchronize();

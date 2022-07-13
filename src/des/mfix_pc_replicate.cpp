@@ -1,7 +1,7 @@
 #include <mfix_des_K.H>
-#include <mfix_solids_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_solids.H>
+#include <mfix_reactions.H>
+#include <mfix_pic.H>
 
 using namespace amrex;
 
@@ -18,8 +18,8 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
     const int myProc = ParallelDescriptor::MyProc();
 
-    const int nspecies_s = solids.nspecies;
-    const int nreactions = reactions.nreactions;
+    const int nspecies_s = solids.nspecies();
+    const int nreactions = reactions.nreactions();
     const int idx_count = m_runtimeRealData.count;
 
     for (int idim = 0; idim < 3; ++idim)

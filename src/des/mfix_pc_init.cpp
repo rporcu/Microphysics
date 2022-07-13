@@ -1,8 +1,8 @@
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_species_parms.H>
-#include <mfix_ic_parms.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_reactions.H>
+#include <mfix_species.H>
+#include <mfix_ic.H>
 #include <mfix_calc_cell.H>
 
 #include <mfix_particle_generator.H>
@@ -118,9 +118,9 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
     // max_particle_phase because we're reading the particle_input.dat only on
     // the IO proc
 
-    if (DEM::solve && max_particle_phase > DEM::NPHASE)
+    if (m_dem.solve() && max_particle_phase > m_dem.NPHASE())
       amrex::Abort("One or more particle in the particle_input.dat has a phase number that is not present in the inputs file");
-    else if (PIC::solve && max_particle_phase > PIC::NPHASE)
+    else if (m_pic.solve() && max_particle_phase > m_pic.NPHASE())
       amrex::Abort("One or more particle in the particle_input.dat has a phase number that is not present in the inputs file");
 
     auto& aos = particles.GetArrayOfStructs();
@@ -176,15 +176,16 @@ void MFIXParticleContainer::InitParticlesAuto ()
     // grid and add the particles to it
     auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-    for (int icv(0); icv < IC::ic.size(); icv++) {
-      if (Math::abs(IC::ic[icv].fluid.volfrac-1) > tolerance) {
+    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
 
-        for (int lcs(0); lcs < IC::ic[icv].solids.size(); lcs++) {
-          if (IC::ic[icv].solids[lcs].volfrac > tolerance) {
+      if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
 
-            const int phase = IC::ic[icv].solids[lcs].phase;
+        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
+          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
 
-            const RealBox* ic_region = IC::ic[icv].region;
+            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+
+            const RealBox* ic_region = m_initial_conditions.ic(icv).region;
             const Box ic_box = calc_ic_box(Geom(lev), ic_region);
 
             if (tilebx.intersects(ic_box)) {
@@ -197,7 +198,8 @@ void MFIXParticleContainer::InitParticlesAuto ()
               const int id = ParticleType::NextID();
               const int cpu = ParallelDescriptor::MyProc();
 
-              ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id, cpu, icv, phase);
+              ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id,
+                  cpu, icv, phase, m_initial_conditions, m_dem, m_pic);
 
               // This is particles per grid so we reset to 0
               int pcount = 0;
@@ -240,12 +242,12 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
   const GpuArray<Real, 3> plo = Geom(lev).ProbLoArray();
 
-  const int solve_species = solids.solve_species;
+  const int solve_species = solids.solve_species();
 
-  const int nspecies_s = solids.nspecies;
-  const int solid_is_a_mixture = solids.is_a_mixture;
+  const int nspecies_s = solids.nspecies();
+  const int solid_is_a_mixture = solids.isMixture();
 
-  auto& solids_parms = *solids.parameters;
+  const auto& solids_parms = solids.parameters();
 
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -264,9 +266,9 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
     auto ptile_data = ptile.getParticleTileData();
 
     // Set the initial conditions.
-    for(int icv(0); icv < IC::ic.size(); ++icv) {
+    for(int icv(0); icv < m_initial_conditions.ic().size(); ++icv) {
 
-      IC::IC_t& loc_ic = IC::ic[icv];
+      const IC_t& loc_ic = m_initial_conditions.ic(icv);
 
       // This is a round about way to address what is likely overly complex
       // logic in the particle generator. We take the region specified by

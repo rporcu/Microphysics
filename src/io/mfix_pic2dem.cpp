@@ -25,7 +25,7 @@ void mfix::PIC_to_DEM(const int lev)
   pc->Redistribute(0, 0, 0, 0);
   pc->fillNeighbors();
 
-  pc->buildNeighborList(MFIXCheckFullPair(DEM::neighborhood), false);
+  pc->buildNeighborList(MFIXCheckFullPair(m_dem.neighborhood()), false);
 
   for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
     

@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 
 //
 // Purpose: This routine is called before the time loop starts and is

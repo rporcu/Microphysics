@@ -1,9 +1,8 @@
 #include <mfix.H>
 
 #include <mfix_calc_cell.H>
-#include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_list.H>
+#include <mfix_bc.H>
+#include <mfix_fluid.H>
 
 using namespace amrex;
 
@@ -88,20 +87,20 @@ mfix::set_eb_temperature_bcs (const Box& sbx,
   const IntVect domhi(domain.hiVect());
 
   // Set the initial conditions.
-  for(int bcv(0); bcv < BC::bc.size(); ++bcv)
+  for(int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv)
   {
-    if (BC::bc[bcv].type == BCList::eb) {
+    if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
       int i_w(0), j_s(0), k_b(0);
       int i_e(0), j_n(0), k_t(0);
 
       calc_cell_ic(dx, dy, dz,
-                   BC::bc[bcv].region->lo(),
-                   BC::bc[bcv].region->hi(),
+                   m_boundary_conditions.bc(bcv).region->lo(),
+                   m_boundary_conditions.bc(bcv).region->hi(),
                    plo.data(),
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
       // Use the volume fraction already calculated from particle data
-      const Real eb_temperature = BC::bc[bcv].eb.temperature;
+      const Real eb_temperature = m_boundary_conditions.bc(bcv).eb.temperature;
 
       const int istart = amrex::max(slo[0], i_w);
       const int jstart = amrex::max(slo[1], j_s);

@@ -8,9 +8,9 @@
 #include <AMReX_Geometry.H>
 
 #include <mfix.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 
 namespace restart_aux
@@ -168,13 +168,13 @@ mfix::Restart (std::string& restart_file,
           // Particle data is loaded into the MFIXParticleContainer's base
           // class using amrex::NeighborParticleContainer::Restart
 
-          if (DEM::solve && lev == 0) {
+          if (m_dem.solve() && lev == 0) {
 
             pc->Restart(restart_file, "particles");
 
-          } else if (PIC::solve && lev == 0) {
+          } else if (m_pic.solve() && lev == 0) {
 
-            const int PIC_restart_refinement = PIC::restart_refinement;
+            const int PIC_restart_refinement = m_pic.restart_refinement();
 
             if (PIC_restart_refinement > 1) {
 
@@ -189,7 +189,7 @@ mfix::Restart (std::string& restart_file,
 
           amrex::Print() << "  Finished reading particle data" << std::endl;
 
-          if (fluid.solve) AllocateArrays(lev);
+          if (fluid.solve()) AllocateArrays(lev);
       }
     }
 
@@ -198,7 +198,7 @@ mfix::Restart (std::string& restart_file,
     /***************************************************************************
      * Load fluid data                                                         *
      ***************************************************************************/
-    if (fluid.solve)
+    if (fluid.solve())
     {
       // Load the field data
       for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
@@ -307,26 +307,26 @@ mfix::Restart (std::string& restart_file,
           }
         }
 
-        if (fluid.solve_enthalpy)
+        if (fluid.solve_enthalpy())
         {
-          auto& fluid_parms = *fluid.parameters;
+          const auto& fluid_parms = fluid.parameters();
 
           for (int i = 0; i < mfixRW->chkTVars.size(); i++ )
           {
             if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "T_g")
             {
-              amrex::Print() << "  Setting T_g to T_g0 = " << fluid.T_g0 << std::endl;
-              m_leveldata[lev]->T_g->setVal(fluid.T_g0);
+              amrex::Print() << "  Setting T_g to T_g0 = " << fluid.cold_flow_temperature() << std::endl;
+              m_leveldata[lev]->T_g->setVal(fluid.cold_flow_temperature());
               continue;
 
             } else if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "h_g") {
 
-              const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.T_g0);
+              const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.cold_flow_temperature());
 
               amrex::Print() << "  Setting h_g to h_g(T_g0) = " << h_g0 << std::endl;
 
-              const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Host>(fluid.T_g0);
-              m_leveldata[lev]->h_g->setVal(fluid.T_g0*cp_g0);
+              const Real cp_g0 = fluid_parms.calc_cp_g<RunOn::Host>(fluid.cold_flow_temperature());
+              m_leveldata[lev]->h_g->setVal(fluid.cold_flow_temperature()*cp_g0);
               continue;
             }
 
@@ -354,7 +354,7 @@ mfix::Restart (std::string& restart_file,
           }
         }
 
-        if (fluid.solve_species)
+        if (fluid.solve_species())
         {
           for (int i = 0; i < mfixRW->chkSpeciesVars.size(); i++ )
           {
@@ -372,7 +372,7 @@ mfix::Restart (std::string& restart_file,
               // Copy from the mf we used to read in to the mf we will use going forward
               const int ng_to_copy = 0;
 
-              (*(mfixRW->chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies,
+              (*(mfixRW->chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies(),
                                                                ng_to_copy, ng_to_copy);
 
             } else {
@@ -388,7 +388,7 @@ mfix::Restart (std::string& restart_file,
 
     // Make sure that the particle BoxArray is the same as the mesh data -- we can
     //      create a dual grid decomposition in the regrid operation
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -420,7 +420,7 @@ mfix::Restart (std::string& restart_file,
     * (compared to the rest of the checkpoint data) => the level-set data is   *
     * stored in separate ls_raw MultiFab.                                      *
     ****************************************************************************/
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
     {
         if (levelset_restart) {
            // Load level-set Multifab
@@ -472,7 +472,7 @@ mfix::Restart (std::string& restart_file,
         }
     }
 
-    if (fluid.solve)
+    if (fluid.solve())
     {
         for (int lev = 0; lev <= finestLevel(); lev++)
         {
@@ -481,7 +481,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->ro_g->FillBoundary(geom[lev].periodicity());
           m_leveldata[lev]->ro_go->FillBoundary(geom[lev].periodicity());
 
-          if (fluid.solve_enthalpy) {
+          if (fluid.solve_enthalpy()) {
             m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
           }
@@ -493,7 +493,7 @@ mfix::Restart (std::string& restart_file,
           m_leveldata[lev]->gp->FillBoundary(geom[lev].periodicity());
 
           // Fill the bc's just in case
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
             m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
           }
         }
@@ -502,7 +502,7 @@ mfix::Restart (std::string& restart_file,
     if (load_balance_type == "KnapSack" || load_balance_type == "SFC" ||
         load_balance_type == "Greedy")
     {
-      if (DEM::solve || PIC::solve) {
+      if (m_dem.solve() || m_pic.solve()) {
         for (int lev(0); lev < particle_cost.size(); ++lev) {
           if (particle_cost[lev] != nullptr)  delete particle_cost[lev];
           if (particle_proc[lev] != nullptr)  delete particle_proc[lev];
@@ -526,7 +526,7 @@ mfix::Restart (std::string& restart_file,
         }
       }
 
-      if (fluid.solve) {
+      if (fluid.solve()) {
         for (int lev(0); lev < fluid_cost.size(); ++lev) {
           if (fluid_cost[lev] != nullptr)  delete fluid_cost[lev];
           if (fluid_proc[lev] != nullptr)  delete fluid_proc[lev];

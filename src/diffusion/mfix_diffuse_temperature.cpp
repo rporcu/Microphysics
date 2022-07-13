@@ -1,8 +1,8 @@
 #include <mfix_diffusion_op.H>
 
 #include <mfix.H>
-#include <mfix_eb_parms.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_eb.H>
+#include <mfix_fluid.H>
 #include <mfix_solvers.H>
 
 #include <AMReX_EB_utils.H>
@@ -43,9 +43,9 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   if(verbose > 0)
     amrex::Print() << "Diffusing temperature ..." << std::endl;
 
-  auto& fluid_parms = *fluid.parameters;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
-  const int nspecies_g = fluid.nspecies;
+  const auto& fluid_parms = fluid.parameters();
+  const int fluid_is_a_mixture = fluid.isMixture();
+  const int nspecies_g = fluid.nspecies();
 
   amrex::Vector<amrex::MultiFab*> T_g_old(finest_level+1, nullptr);
 
@@ -202,7 +202,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       EB_interp_CellCentroid_to_FaceCentroid (ep_k_g, GetArrOfPtrs(b[lev]), 0,
                                               0, 1, geom[lev], bcs_dummy);
 
-      if (EB::fix_temperature) {
+      if (m_embedded_boundaries.fix_temperature()) {
         // The following is a WIP in AMReX
         //temperature_matrix->setPhiOnCentroid();
 
@@ -267,8 +267,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           auto const& flags_arr = flags.const_array();
 
           amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ro_g_array,fluid_parms,
-              X_gk_array,h_g_array,dt,fluid_is_a_mixture,
-              nspecies_g,rhs_array,flags_arr]
+              X_gk_array,h_g_array,dt,fluid_is_a_mixture,nspecies_g,rhs_array,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());

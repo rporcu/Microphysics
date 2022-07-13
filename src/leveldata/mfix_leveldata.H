@@ -6,8 +6,10 @@
 #include <AMReX_FabFactory.H>
 #include <AMReX_MultiFab.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_eb.H>
+#include <mfix_fluid.H>
+#include <mfix_reactions.H>
+
 
 struct Transfer {
   enum {
@@ -21,8 +23,9 @@ struct Transfer {
   };
 };
 
-struct ChemTransfer
-{
+
+struct ChemTransfer {
+
   ChemTransfer (const int nspecies_g, const int nreactions)
     : ro_gk_txfr(0)
     , vel_g_txfr(ro_gk_txfr + nspecies_g*(nreactions>0))
@@ -36,14 +39,13 @@ struct ChemTransfer
   const int count;
 };
 
-class LevelData
-{
+
+class LevelData {
+
   public:
     // Default Constructor
     LevelData ()
       : level_allocated(0)
-      , fluid(nullptr)
-      , reactions(nullptr)
     {}
 
     // Constructor
@@ -51,13 +53,10 @@ class LevelData
                amrex::DistributionMapping const& dm,
                const int nghost,
                amrex::FabFactory<amrex::FArrayBox> const& fact,
-               FluidPhase* fluid_in,
-               Reactions* reactions_in);
-
-    LevelData (bool only_ep_g, amrex::BoxArray const& ba,
-               amrex::DistributionMapping const& dm,
-               const int nghost,
-               amrex::FabFactory<amrex::FArrayBox> const& fact);
+               MFIXEmbeddedBoundaries* embedded_boundaries,
+               MFIXFluidPhase* fluid_in,
+               MFIXReactions* reactions_in,
+               bool only_ep_g = false);
 
     // Reset initial values
     void resetValues (const amrex::Real covered_val);
@@ -127,8 +126,9 @@ class LevelData
 
     const int level_allocated;
 
-    FluidPhase* fluid;
-    Reactions* reactions;
+    MFIXEmbeddedBoundaries* m_embedded_boundaries;
+    MFIXFluidPhase* fluid;
+    MFIXReactions* reactions;
 
     bool ep_g_only = false;
 };

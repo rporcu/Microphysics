@@ -1,8 +1,8 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_parms.H>
-#include <mfix_ic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_bc.H>
+#include <mfix_ic.H>
 
 #include <AMReX_GpuDevice.H>
 
@@ -32,7 +32,8 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
-                     const Real ro_g0);
+                     const Real ro_g0,
+                     const MFIXBoundaryConditions& boundary_conditions);
 
 void set_p0_bcs (const Box& sbx,
                  const Box& domain,
@@ -121,13 +122,13 @@ mfix::set_p0 (const Box& bx,
   const int ntop = amrex::max(0, sbx_hi[1]-dom_hi[1]);
   const int nup  = amrex::max(0, sbx_hi[2]-dom_hi[2]);
 
-  int delp_dir_loc(BC::delp_dir);
+  int delp_dir_loc(m_boundary_conditions.delp_dir());
 
   Real pj(0);
 
-  Real delp_x = BC::delp[0];
-  Real delp_y = BC::delp[1];
-  Real delp_z = BC::delp[2];
+  Real delp_x = m_boundary_conditions.delp(0);
+  Real delp_y = m_boundary_conditions.delp(1);
+  Real delp_z = m_boundary_conditions.delp(2);
 
   // ---------------------------------------------------------------->>>
   //     If the bc's are pressure inflow/outflow then be sure to capture that in p0andgp0
@@ -148,7 +149,7 @@ mfix::set_p0 (const Box& bx,
     const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_x = p_lo - p_hi;
-    BC::delp[0] = delp_x;
+    m_boundary_conditions.set_delp(0, delp_x);
 
     pj = p_hi;
   }
@@ -167,7 +168,7 @@ mfix::set_p0 (const Box& bx,
     const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_y = p_lo - p_hi;
-    BC::delp[1] = delp_y;
+    m_boundary_conditions.set_delp(1, delp_y);
 
     pj = p_hi;
   }
@@ -186,7 +187,7 @@ mfix::set_p0 (const Box& bx,
     const Real p_hi  = m_h_bc_p_g[bcv_hi];
 
     delp_z = p_lo - p_hi;
-    BC::delp[2] = delp_z;
+    m_boundary_conditions.set_delp(2, delp_z);
 
     pj = p_hi;
   }
@@ -196,20 +197,20 @@ mfix::set_p0 (const Box& bx,
   pj = 0;
 
   //  Make sure that ic_p_g is set if using delp pressure conditions
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < m_initial_conditions.ic().size(); ++icv)
   {
-    if((delp_dir_loc >= 0) && (delp_dir_loc == BC::delp_dir))
+    if((delp_dir_loc >= 0) && (delp_dir_loc == m_boundary_conditions.delp_dir()))
     {
-      if (!IC::ic[icv].fluid.pressure_defined)
+      if (!m_initial_conditions.ic(icv).fluid.pressure_defined)
       {
         std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
         exit(0);
       }
-      pj = IC::ic[icv].fluid.pressure;
+      pj = m_initial_conditions.ic(icv).fluid.pressure;
     }
-    else if((delp_dir_loc >= 0) && (delp_dir_loc != BC::delp_dir))
+    else if((delp_dir_loc >= 0) && (delp_dir_loc != m_boundary_conditions.delp_dir()))
     {
-      if( IC::ic[icv].fluid.pressure_defined)
+      if( m_initial_conditions.ic(icv).fluid.pressure_defined)
       {
         std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
         exit(0);
@@ -220,18 +221,19 @@ mfix::set_p0 (const Box& bx,
       const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
-      if( !IC::ic[icv].fluid.pressure || gravity_square_module > tolerance)
+      if( !m_initial_conditions.ic(icv).fluid.pressure || gravity_square_module > tolerance)
       {
-        const Real ro_g0 = IC::ic[icv].fluid.density;
+        const Real ro_g0 = m_initial_conditions.ic(icv).fluid.density;
 
         compute_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, pj, gravity, dx, dy,
                        dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
-                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0);
+                       nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0,
+                       m_boundary_conditions);
 
         return;
       }
 
-      const Real ic_p_g = IC::ic[icv].fluid.pressure;
+      const Real ic_p_g = m_initial_conditions.ic(icv).fluid.pressure;
 
       amrex::ParallelFor(sbx, [array4_p0_g,ic_p_g]
           AMREX_GPU_DEVICE (int i, int j, int k) noexcept
@@ -249,7 +251,7 @@ mfix::set_p0 (const Box& bx,
   //  This hack allows to set the IC pressure  at L-dx/2 orboth
   //  nodalandCC pressure -> reference value orpressure, AKA IC_P_G,
   //  is set at the last cell center location.
-  if(delp_dir_loc != BC::delp_dir)
+  if(delp_dir_loc != m_boundary_conditions.delp_dir())
     offset = -1.;
 
   if(amrex::Math::abs(delp_x) > tolerance)
@@ -326,7 +328,8 @@ void compute_p0_bcs (const Box& sbx,
                      const int ndwn,
                      const int nup,
                      const int nghost,
-                     const Real ro_g0)
+                     const Real ro_g0,
+                     const MFIXBoundaryConditions& boundary_conditions)
 {
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -340,10 +343,12 @@ void compute_p0_bcs (const Box& sbx,
   const Real undefined = 9.87654321e31;
   pj = undefined;
 
-  for(int bcv(0); bcv < BC::bc.size(); ++bcv)
+  for(int bcv(0); bcv < boundary_conditions.bc().size(); ++bcv)
   {
-    if (BC::bc[bcv].type == BCList::pout)
-      pj = BC::bc[bcv].fluid.pressure;
+    const BC_t& bc = boundary_conditions.bc(bcv);
+
+    if (bc.type == BCList::pout)
+      pj = bc.fluid.pressure;
   }
 
   // Either a PO was not specified or PO was specified but not the

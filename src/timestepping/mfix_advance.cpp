@@ -2,12 +2,12 @@
 
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
-#include <mfix_dem_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_eb_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_dem.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
+#include <mfix_reactions.H>
+#include <mfix_eb.H>
+#include <mfix_pic.H>
 #include <mfix_solvers.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -37,13 +37,13 @@ mfix::mfix_project_velocity ()
       depdt[lev] = new MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
       depdt[lev]->setVal(0.);
 
-      if (EB::has_flow) {
+      if (m_embedded_boundaries.has_flow()) {
         eb_flow_vel[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost_state(), MFInfo(), *ebfactory[lev]);
         eb_flow_vel[lev]->setVal(0.0);
       }
     }
 
-    if (EB::has_flow) {
+    if (m_embedded_boundaries.has_flow()) {
        mfix_set_eb_velocity_bcs(time, eb_flow_vel);
     }
 
@@ -54,7 +54,7 @@ mfix::mfix_project_velocity ()
 
     for (int lev(0); lev <= finest_level; ++lev) {
       delete depdt[lev];
-      if (EB::has_flow) {
+      if (m_embedded_boundaries.has_flow()) {
         delete eb_flow_vel[lev];
       }
     }
@@ -84,15 +84,15 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   mfix_set_density_bcs(time, get_ro_g());
   mfix_set_tracer_bcs(time, get_trac());
 
-  if (fluid.solve_enthalpy) {
+  if (fluid.solve_enthalpy()) {
     mfix_set_temperature_bcs(time, get_T_g());
     mfix_set_enthalpy_bcs(time, get_h_g());
   }
 
-  if (fluid.solve_enthalpy && EB::fix_temperature)
+  if (fluid.solve_enthalpy() && m_embedded_boundaries.fix_temperature())
     mfix_set_eb_temperature_bcs(get_T_g_on_eb());
 
-  if (fluid.solve_species)
+  if (fluid.solve_species())
     mfix_set_species_bcs(time, get_X_gk());
 
   // Copy vel_g and p_g into vel_go and p_go
@@ -104,7 +104,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                    m_leveldata[lev]->p_g->nComp(), m_leveldata[lev]->p_g->nGrow());
   }
 
-  if (DEM::solve || PIC::solve) {
+  if (m_dem.solve() || m_pic.solve()) {
     mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(), get_ro_g(),
                          get_vel_g(), get_T_g(), get_X_gk(), get_thermodynamic_p_g(),
                          time);
@@ -138,46 +138,46 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     conv_s[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, 0, MFInfo(), *ebfactory[lev]);
     conv_s[lev]->setVal(0.0);
 
-    if (fluid.solve_density) {
+    if (fluid.solve_density()) {
       ro_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       ro_RHS_old[lev]->setVal(0.0);
     }
 
-    if (fluid.solve_tracer) {
+    if (fluid.solve_tracer()) {
       lap_trac_old[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
       lap_trac_old[lev]->setVal(0.0);
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       enthalpy_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       enthalpy_RHS_old[lev]->setVal(0.0);
       lap_T_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       lap_T_old[lev]->setVal(0.0);
     }
 
-    if (fluid.solve_species) {
-      div_J_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+    if (fluid.solve_species()) {
+      div_J_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
       div_J_old[lev]->setVal(0.0);
     }
 
-    if (fluid.solve_enthalpy && fluid.solve_species) {
+    if (fluid.solve_enthalpy() && fluid.solve_species()) {
       div_hJ_old[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
       div_hJ_old[lev]->setVal(0.0);
     }
 
-    if (fluid.solve_species) {
-      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+    if (fluid.solve_species()) {
+      conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
       conv_X[lev]->setVal(0.0);
 
-      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      species_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
       species_RHS_old[lev]->setVal(0.0);
     }
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       vel_RHS_old[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
     }
 
-    if (EB::has_flow) {
+    if (m_embedded_boundaries.has_flow()) {
 
       eb_flow_vel[lev] = new MultiFab(grids[lev], dmap[lev], 3, nghost_state(), MFInfo(), *ebfactory[lev]);
       eb_flow_vel[lev]->setVal(0.0);
@@ -185,15 +185,15 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       eb_flow_scalars[lev] = new MultiFab(grids[lev], dmap[lev], 2+ntrac, nghost_state(), MFInfo(), *ebfactory[lev]);
       eb_flow_scalars[lev]->setVal(0.0);
 
-      if (fluid.solve_species) {
-        eb_flow_species[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, nghost_state(), MFInfo(), *ebfactory[lev]);
+      if (fluid.solve_species()) {
+        eb_flow_species[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), nghost_state(), MFInfo(), *ebfactory[lev]);
         eb_flow_species[lev]->setVal(0.0);
       }
     }
   }//nlev
 
 
-  if (EB::has_flow) {
+  if (m_embedded_boundaries.has_flow()) {
      mfix_set_eb_velocity_bcs(time, eb_flow_vel);
      mfix_set_eb_scalar_bcs(eb_flow_scalars, eb_flow_species);
   }
@@ -220,27 +220,27 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
       MultiFab::Copy(*m_leveldata[lev]->vel_g, *m_leveldata[lev]->vel_go, 0, 0,
                      m_leveldata[lev]->vel_g->nComp(), m_leveldata[lev]->vel_g->nGrow());
 
-      if (fluid.solve_density)
+      if (fluid.solve_density())
         MultiFab::Copy(*m_leveldata[lev]->ro_g, *m_leveldata[lev]->ro_go, 0, 0,
                        m_leveldata[lev]->ro_g->nComp(), m_leveldata[lev]->ro_g->nGrow());
 
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         MultiFab::Copy(*m_leveldata[lev]->T_g, *m_leveldata[lev]->T_go, 0, 0,
                        m_leveldata[lev]->T_g->nComp(), m_leveldata[lev]->T_g->nGrow());
         MultiFab::Copy(*m_leveldata[lev]->h_g, *m_leveldata[lev]->h_go, 0, 0,
                        m_leveldata[lev]->h_g->nComp(), m_leveldata[lev]->h_g->nGrow());
       }
 
-      if (fluid.solve_tracer)
+      if (fluid.solve_tracer())
         MultiFab::Copy(*m_leveldata[lev]->trac, *m_leveldata[lev]->trac_o, 0, 0,
                        m_leveldata[lev]->trac->nComp(), m_leveldata[lev]->trac->nGrow());
 
-      if (fluid.solve_species) {
+      if (fluid.solve_species()) {
         MultiFab::Copy(*m_leveldata[lev]->X_gk, *m_leveldata[lev]->X_gko, 0, 0,
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem && fluid.solve_enthalpy) {
+      if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem && fluid.solve_enthalpy()) {
         MultiFab::Copy(*m_leveldata[lev]->thermodynamic_p_g, *m_leveldata[lev]->thermodynamic_p_go, 0, 0,
                         m_leveldata[lev]->thermodynamic_p_g->nComp(), m_leveldata[lev]->thermodynamic_p_g->nGrow());
       }
@@ -251,13 +251,13 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     mfix_set_density_bcs(time, get_ro_g());
     mfix_set_tracer_bcs(time, get_trac());
 
-    if (fluid.solve_enthalpy)
+    if (fluid.solve_enthalpy())
       mfix_set_temperature_bcs(time, get_T_g());
 
-    if (fluid.solve_enthalpy)
+    if (fluid.solve_enthalpy())
       mfix_set_enthalpy_bcs(time, get_h_g());
 
-    if (fluid.solve_species)
+    if (fluid.solve_species())
       mfix_set_species_bcs(time, get_X_gk());
   }
 
@@ -266,34 +266,34 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
      delete conv_u[lev];
      delete conv_s[lev];
 
-     if (fluid.solve_density)
+     if (fluid.solve_density())
        delete ro_RHS_old[lev];
 
-     if (fluid.solve_tracer)
+     if (fluid.solve_tracer())
        delete lap_trac_old[lev];
 
-     if (fluid.solve_enthalpy) {
+     if (fluid.solve_enthalpy()) {
        delete enthalpy_RHS_old[lev];
        delete lap_T_old[lev];
      }
 
-     if (fluid.solve_enthalpy && fluid.solve_species) {
+     if (fluid.solve_enthalpy() && fluid.solve_species()) {
        delete div_hJ_old[lev];
      }
 
-     if (fluid.solve_species) {
+     if (fluid.solve_species()) {
        delete conv_X[lev];
        delete species_RHS_old[lev];
        delete div_J_old[lev];
      }
 
-     if (reactions.solve)
+     if (reactions.solve())
        delete vel_RHS_old[lev];
 
-     if (EB::has_flow) {
+     if (m_embedded_boundaries.has_flow()) {
        delete eb_flow_vel[lev];
        delete eb_flow_scalars[lev];
-       if (fluid.solve_species) {
+       if (fluid.solve_species()) {
          delete eb_flow_species[lev];
        }
     }
@@ -374,7 +374,7 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_enthalpy_txfr_explicit");
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
@@ -398,8 +398,8 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      const int nspecies_g = fluid.nspecies;
-      const int fluid_is_a_mixture = fluid.is_a_mixture;
+      const int nspecies_g = fluid.nspecies();
+      const int fluid_is_a_mixture = fluid.isMixture();
 
       const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
@@ -562,7 +562,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_energy_txfr_implicit");
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   for (int lev = 0; lev <= finest_level; lev++) {
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
@@ -580,7 +580,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
       Array4<Real const> const& ro_array   = rho_in[lev]->const_array(mfi);
       Array4<Real const> const& ep_array   = ep_g_in[lev]->const_array(mfi);
 
-      const int fluid_is_a_mixture = fluid.is_a_mixture;
+      const int fluid_is_a_mixture = fluid.isMixture();
 
       Array4<Real const> dummy_arr;
 
@@ -590,7 +590,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 

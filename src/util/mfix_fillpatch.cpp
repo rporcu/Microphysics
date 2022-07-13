@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 #include <mfix_fillpatch_bc.H>
 
 #include <AMReX_FillPatchUtil.H>
@@ -437,19 +437,19 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
     MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
 
 
-    if (fluid.solve_tracer) {
+    if (fluid.solve_tracer()) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Tracer,
                       m_bc_tracer.data(), get_tracer_bcrec());
       MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Enthalpy,
                       m_bc_h_g.data(), get_enthalpy_bcrec());
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, 1, h_g_in[lev]->nGrow());
     }
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       MultiFab Sborder_X(grids[lev], dmap[lev], X_gk_in[lev]->nComp(),
                          nghost_state(), MFInfo(), *ebfactory[lev]);
       Sborder_X.setVal(0);

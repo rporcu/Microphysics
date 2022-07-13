@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_bc_parms.H>
+#include <mfix_bc.H>
 #include <mfix_mf_helpers.H>
 #include <mfix_utils.H>
 #include <mfix_monitors.H>
@@ -44,12 +44,12 @@ mfix::mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,
   for (int lev(0); lev <= finest_level; ++lev)
     rhs[lev]->setVal(0.);
 
-  const int solve_enthalpy = fluid.solve_enthalpy;
-  const int solve_species = fluid.solve_species;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
-  const int nspecies_g = fluid.nspecies;
+  const int solve_enthalpy = fluid.solve_enthalpy();
+  const int solve_species = fluid.solve_species();
+  const int fluid_is_a_mixture = fluid.isMixture();
+  const int nspecies_g = fluid.nspecies();
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   if (solve_enthalpy || solve_species) {
 
@@ -172,11 +172,11 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
 
   mfix_idealgas_opensystem_rhs(Sigma, enthalpy_rhs, species_rhs, ro_g, T_g, X_gk);
 
-  const int solve_enthalpy = fluid.solve_enthalpy;
-  const int nspecies_g = fluid.nspecies;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int solve_enthalpy = fluid.solve_enthalpy();
+  const int nspecies_g = fluid.nspecies();
+  const int fluid_is_a_mixture = fluid.isMixture();
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   // Compute Theta
   for (int lev(0); lev <= finest_level; ++lev) {

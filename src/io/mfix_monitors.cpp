@@ -25,13 +25,13 @@ Monitors::~Monitors ()
 
 void
 Monitors::initialize (const std::string& pp_root,
-                      Regions& regions,
+                      MFIXRegions& regions,
                       amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                       amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                      FluidPhase& fluid,
+                      MFIXFluidPhase& fluid,
                       MFIXParticleContainer* pc,
                       amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory,
-                      SolidsPhase& solids)
+                      MFIXSolidsPhase& solids)
 {
   ParmParse pp(pp_root.c_str());
 
@@ -127,7 +127,7 @@ Monitors::initialize (const std::string& pp_root,
 Monitor::Monitor (const std::array<std::string,2> specs,
                   const std::string pparse,
                   Vector<std::unique_ptr<EBFArrayBoxFactory>>& ebfactory,
-                  Regions& regions)
+                  MFIXRegions& regions)
   : is_initialized(0)
   , m_nlev(0)
   , m_specs(specs)
@@ -153,7 +153,11 @@ Monitor::Monitor (const std::array<std::string,2> specs,
   // Remove any file having the same name to avoid appending values to an older
   // existing .csv file
   std::string cmd = "rm -f " + m_filename;
-  std::system(cmd.c_str());
+  int cmd_ok = std::system(cmd.c_str());
+  if (!cmd_ok) {
+    Print() << "Error: couldn't execute command: " << cmd << "\n";
+    amrex::Abort("Error");
+  }
 
   ppMonitor.getarr("variables", m_input_variables);
 
@@ -180,8 +184,8 @@ Monitor::initialize ()
 
   AMREX_ASSERT(m_nlev > 0);
 
-  AMREX_ASSERT(m_regions.is_initialized());
-  m_region = m_regions.get_region(m_region_name);
+  AMREX_ASSERT(m_regions.isInitialized());
+  m_region = m_regions.getRegion(m_region_name);
 
   AMREX_ASSERT_WITH_MESSAGE(m_region != nullptr, "Region does not exist");
 
@@ -545,9 +549,9 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("X_gk") == 0) {
 
-      for (int n_g(0); n_g < m_fluid.nspecies; ++n_g) {
+      for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
 
-        variables_names.push_back("X_gk_"+m_fluid.species_names[n_g]);
+        variables_names.push_back("X_gk_"+m_fluid.species_names(n_g));
         m_components.push_back(n_g);
  
         for (int lev(0); lev < m_nlev; lev++)
@@ -560,10 +564,10 @@ BaseMonitor::setup_variables ()
       const int var_name_size = var.size();
       const std::string var_species = var.substr(5,var_name_size-5);
 
-      for (int n_g(0); n_g < m_fluid.nspecies; ++n_g) {
-        if (var_species.compare(m_fluid.species_names[n_g]) == 0) {
+      for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
+        if (var_species.compare(m_fluid.species_names(n_g)) == 0) {
 
-          variables_names.push_back("X_gk_"+m_fluid.species_names[n_g]);
+          variables_names.push_back("X_gk_"+m_fluid.species_names(n_g));
           m_components.push_back(n_g);
  
           for (int lev(0); lev < m_nlev; lev++)
@@ -688,11 +692,11 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_X_gk") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
-      for (int n_g(0); n_g < m_fluid.nspecies; ++n_g) {
+      for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
 
-        variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names[n_g]);
+        variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
         m_components.push_back(chem_transfer.ro_gk_txfr+n_g);
 
         for (int lev(0); lev < m_nlev; lev++)
@@ -703,15 +707,15 @@ BaseMonitor::setup_variables ()
     } else if (var.substr(0,15).compare("chem_txfr_X_gk_") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       const int var_name_size = var.size();
       const std::string var_species = var.substr(15,var_name_size-15);
 
-      for (int n_g(0); n_g < m_fluid.nspecies; ++n_g) {
-        if (var_species.compare(m_fluid.species_names[n_g]) == 0) {
+      for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
+        if (var_species.compare(m_fluid.species_names(n_g)) == 0) {
 
-          variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names[n_g]);
+          variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
           m_components.push_back(chem_transfer.ro_gk_txfr+n_g);
 
           for (int lev(0); lev < m_nlev; lev++)
@@ -724,7 +728,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_velocity") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       variables_names.push_back("chem_txfr_vel_x");
       m_components.push_back(chem_transfer.vel_g_txfr+0);
@@ -747,7 +751,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_x") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       variables_names.push_back(var);
       m_components.push_back(chem_transfer.vel_g_txfr+0);
@@ -758,7 +762,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_y") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       variables_names.push_back(var);
       m_components.push_back(chem_transfer.vel_g_txfr+1);
@@ -769,7 +773,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_z") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       variables_names.push_back(var);
       m_components.push_back(chem_transfer.vel_g_txfr+2);
@@ -780,7 +784,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_h") == 0) {
 
       const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies, ld.reactions->nreactions);
+      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       variables_names.push_back(var);
       m_components.push_back(chem_transfer.h_g_txfr);
@@ -2782,8 +2786,8 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("X_sn") == 0) {
 
-      for (int n_s(0); n_s < m_solids.nspecies; ++n_s) {
-        variables_names.push_back("X_sn_"+m_solids.species_names[n_s]);
+      for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
+        variables_names.push_back("X_sn_"+m_solids.species_names(n_s));
         const int idx = 5+SoArealData::count+SoAintData::count;
         m_components.push_back(idx+n_s);
       }
@@ -2793,9 +2797,9 @@ BaseMonitor::setup_variables ()
       const int var_name_size = var.size();
       const std::string var_species = var.substr(5,var_name_size-5);
 
-      for (int n_s(0); n_s < m_solids.nspecies; ++n_s) {
-        if (var_species.compare(m_solids.species_names[n_s]) == 0) {
-          variables_names.push_back("X_sn_"+m_solids.species_names[n_s]);
+      for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
+        if (var_species.compare(m_solids.species_names(n_s)) == 0) {
+          variables_names.push_back("X_sn_"+m_solids.species_names(n_s));
           const int idx = 5+SoArealData::count+SoAintData::count;
           m_components.push_back(idx+n_s);
           break;
@@ -2856,8 +2860,8 @@ BaseMonitor::setup_variables ()
 
       const runtimeRealData& rrData = m_pc->m_runtimeRealData;
 
-      for (int n_s(0); n_s < m_solids.nspecies; ++n_s) {
-        variables_names.push_back("txfr_X_sn_"+m_solids.species_names[n_s]);
+      for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
+        variables_names.push_back("txfr_X_sn_"+m_solids.species_names(n_s));
         const int idx = 5+SoArealData::count+SoAintData::count;
         m_components.push_back(idx+rrData.mass_txfr+n_s);
       }
@@ -2869,9 +2873,9 @@ BaseMonitor::setup_variables ()
       const int var_name_size = var.size();
       const std::string var_species = var.substr(10,var_name_size-10);
 
-      for (int n_s(0); n_s < m_solids.nspecies; ++n_s) {
-        if (var_species.compare(m_solids.species_names[n_s]) == 0) {
-          variables_names.push_back("txfr_X_sn_"+m_solids.species_names[n_s]);
+      for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
+        if (var_species.compare(m_solids.species_names(n_s)) == 0) {
+          variables_names.push_back("txfr_X_sn_"+m_solids.species_names(n_s));
           const int idx = 5+SoArealData::count+SoAintData::count;
           m_components.push_back(idx+rrData.mass_txfr+n_s);
           break;

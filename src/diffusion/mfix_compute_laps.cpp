@@ -2,10 +2,10 @@
 
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 
 using namespace amrex;
 

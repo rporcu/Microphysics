@@ -7,8 +7,8 @@
 #include <mfix_des_K.H>
 #include <mfix_pic_K.H>
 
-#include <mfix_bc_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_bc.H>
+#include <mfix_pic.H>
 
 using namespace amrex;
 
@@ -281,24 +281,24 @@ MFIXParticleContainer::PICHydroStep (int lev,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
-  const Real en = (PIC::damping_factor + 1.0);
+  const Real en = (m_pic.damping_factor() + 1.0);
 
-  const Real en_w = PIC::damping_factor_wall_normal;
-  const Real et_w = PIC::damping_factor_wall_tangent;
+  const Real en_w = m_pic.damping_factor_wall_normal();
+  const Real et_w = m_pic.damping_factor_wall_tangent();
 
-  const Real vel_ref_frame = PIC::vel_ref_frame;
+  const Real vel_ref_frame = m_pic.vel_ref_frame();
 
-  const Real ep_cp = PIC::ep_cp;
+  const Real ep_cp = m_pic.ep_cp();
   const Real inv_ep_cp = 1.0/ep_cp;
 
   const Real three_sqrt_two(3.0*std::sqrt(2.0));
 
-  const int x_lo_bc = BC::domain_bc[0];
-  const int x_hi_bc = BC::domain_bc[1];
-  const int y_lo_bc = BC::domain_bc[2];
-  const int y_hi_bc = BC::domain_bc[3];
-  const int z_lo_bc = BC::domain_bc[4];
-  const int z_hi_bc = BC::domain_bc[5];
+  const int x_lo_bc = m_boundary_conditions.domain_bc(0);
+  const int x_hi_bc = m_boundary_conditions.domain_bc(1);
+  const int y_lo_bc = m_boundary_conditions.domain_bc(2);
+  const int y_hi_bc = m_boundary_conditions.domain_bc(3);
+  const int z_lo_bc = m_boundary_conditions.domain_bc(4);
+  const int z_hi_bc = m_boundary_conditions.domain_bc(5);
 
 
 #ifdef _OPENMP

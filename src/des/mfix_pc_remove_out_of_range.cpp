@@ -2,7 +2,7 @@
 #include <mfix_des_K.H>
 
 #include <mfix_pc.H>
-#include <mfix_dem_parms.H>
+#include <mfix_dem.H>
 
 using namespace amrex;
 
@@ -29,7 +29,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
 
         const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
-        const Real inv_ep_cp = (PIC::solve) ? 1.0/PIC::ep_cp : 1.0;
+        const Real inv_ep_cp = (m_pic.solve()) ? 1.0/m_pic.ep_cp() : 1.0;
 
         for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti)
         {
@@ -62,7 +62,7 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                     const auto&  phi_arr = ls_phi->array(pti);
 
                     amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,inv_ep_cp,
-                    dx_ls,phi_arr, ls_refinement, p_lo, dxi, cg_dem=DEM::cg_dem]
+                    dx_ls,phi_arr, ls_refinement, p_lo, dxi, cg_dem=m_dem.cg_dem()]
                     AMREX_GPU_DEVICE (int ip) noexcept
                     {
                         ParticleType& p = pstruct[ip];

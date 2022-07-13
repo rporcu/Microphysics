@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_bc_parms.H>
+#include <mfix_bc.H>
 #include <mfix_algorithm.H>
 #include <mfix_solvers.H>
 
@@ -50,8 +50,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
        * Move particles based on collision forces and torques             *
        *******************************************************************/
 
-      const int nspecies_s = solids.nspecies;
-      const int nreactions = reactions.nreactions;
+      const int nspecies_s = solids.nspecies();
+      const int nreactions = reactions.nreactions();
 
       // Particles SoA starting indexes for mass fractions and rate of
       // formations
@@ -59,15 +59,15 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const int idx_mass_sn_txfr = m_runtimeRealData.mass_txfr;
       const int idx_h_s_txfr = m_runtimeRealData.h_txfr;
 
-      const int update_mass      = solids.update_mass && reactions.solve;
-      const int solve_enthalpy  = solids.solve_enthalpy;
-      const int solve_reactions = reactions.solve;
+      const int update_mass      = solids.update_mass() && reactions.solve();
+      const int solve_enthalpy  = solids.solve_enthalpy();
+      const int solve_reactions = reactions.solve();
 
-      const Real enthalpy_source = solids.enthalpy_source;
+      const Real enthalpy_source = solids.enthalpy_source();
 
-      const int solid_is_a_mixture = solids.is_a_mixture;
+      const int solid_is_a_mixture = solids.isMixture();
 
-      auto& solids_parms = *solids.parameters;
+      const auto& solids_parms = solids.parameters();
 
       amrex::ParallelFor(nrp,
           [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
@@ -78,7 +78,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       {
         auto& p = pstruct[lp];
 
-        GpuArray<Real,Species::NMAX> X_sn;
+        GpuArray<Real, MFIXSpecies::NMAX> X_sn;
 
         // Get current particle's mass
         const Real p_mass_old = p_realarray[SoArealData::mass][lp];

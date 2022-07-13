@@ -15,9 +15,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
                                       Vector< MultiFab* > const& pressure_g_in)
 {
-  const amrex::Real small_num = DEM::small_number;
-  const amrex::Real large_num = DEM::large_number;
-  const amrex::Real eps = DEM::eps;
+  const amrex::Real small_num = m_dem.small_number();
+  const amrex::Real large_num = m_dem.large_number();
+  const amrex::Real eps = m_dem.eps();
 
   if (m_drag_type == DragType::WenYu) {
     mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
@@ -57,15 +57,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& pressure_g_in,
                                       F1 DragFunc)
 {
-  if (fluid.solve_enthalpy)
+  if (fluid.solve_enthalpy())
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
-                                ComputeConvRanzMarshall(DEM::small_number,DEM::large_number,DEM::eps));
+                                ComputeConvRanzMarshall(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
-                                ComputeConvGunn(DEM::small_number,DEM::large_number,DEM::eps));
+                                ComputeConvGunn(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::NullConvection) {
       mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
@@ -119,13 +119,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // Data for chemical reactions
   //***************************************************************************
   // Fluid species data
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
   // Fluid species data
-  const int nspecies_s = solids.nspecies;
+  const int nspecies_s = solids.nspecies();
 
-  // Reactions data
-  const int nreactions = reactions.nreactions;
+  // MFIXReactions data
+  const int nreactions = reactions.nreactions();
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
@@ -133,9 +133,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
-  auto& fluid_parms = *fluid.parameters;
-  auto& solids_parms = *solids.parameters;
-  auto& reactions_parms = *reactions.parameters;
+  const auto& fluid_parms = fluid.parameters();
+  const auto& solids_parms = solids.parameters();
+  const auto& reactions_parms = reactions.parameters();
 
   //***************************************************************************
   //
@@ -154,17 +154,17 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
     EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       EB_set_covered(*T_g_in[lev], 0, 1, 1, covered_val);
     }
 
-    if (fluid.solve_species) {
-      EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
+    if (fluid.solve_species()) {
+      EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies(), 1, covered_val);
     }
 
-    if (reactions.solve ||
-        (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-         fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
+    if (reactions.solve() ||
+        (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+         fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
       EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
     }
 
@@ -175,14 +175,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 5 + // 3 vel_g + 1 ep_g + 1 ro_g
-                            1*int(fluid.solve_enthalpy) +  // 1 T_g
-                            fluid.nspecies*int(fluid.solve_species) +  // Ng X_gk
-                            1*int(reactions.solve);  //  1 pressure_g
+                            1*int(fluid.solve_enthalpy()) +  // 1 T_g
+                            fluid.nspecies()*int(fluid.solve_species()) +  // Ng X_gk
+                            1*int(reactions.solve());  //  1 pressure_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
     pressure_cc.setVal(0.);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       MultiFab pressure_nd(pressure_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
       pressure_nd.setVal(0.);
       EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
@@ -215,19 +215,19 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       MultiFab::Copy(*interp_ptr, *ro_g_in[lev],  0, components_count, 1, interp_ng);
       components_count += 1;
 
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         // Copy fluid temperature
         MultiFab::Copy(*interp_ptr, *T_g_in[lev],  0, components_count, 1, interp_ng);
         components_count += 1;
       }
 
-      if (fluid.solve_species) {
+      if (fluid.solve_species()) {
         // Copy species mass fractions
-        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
-        components_count += fluid.nspecies;
+        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng);
+        components_count += fluid.nspecies();
       }
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         // Copy thermodynamic pressure
         MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
         components_count += 1;
@@ -258,19 +258,19 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       interp_ptr->ParallelCopy(*ro_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
       components_count += 1;
 
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         // Copy fluid temperature
         interp_ptr->ParallelCopy(*T_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
       }
 
-      if (fluid.solve_species) {
+      if (fluid.solve_species()) {
         // Copy fluid species
-        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng, interp_ng);
-        components_count += fluid.nspecies;
+        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng, interp_ng);
+        components_count += fluid.nspecies();
       }
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         // Copy fluid species
         interp_ptr->ParallelCopy(pressure_cc,  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
@@ -335,28 +335,27 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int solve_enthalpy = fluid.solve_enthalpy;
-          const int fluid_is_a_mixture = fluid.is_a_mixture;
-          const int solve_reactions = reactions.solve;
+          const int solve_enthalpy = fluid.solve_enthalpy();
+          const int fluid_is_a_mixture = fluid.isMixture();
+          const int solve_reactions = reactions.solve();
 
-          const Real mu_g0 = fluid.mu_g0;
+          auto local_cg_dem = m_dem.cg_dem();
 
-          auto local_cg_dem = DEM::cg_dem;
+          const Real mu_g0 = fluid.mu_g();
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
-               mu_g0,nspecies_g,interp_comp,local_cg_dem,
-               ptile_data,nreactions,nspecies_s,
-               idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
-               fluid_parms,solids_parms,reactions_parms,flags_array,
+               nspecies_g,interp_comp,local_cg_dem,ptile_data,nreactions,
+               nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
+               fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
                apz_fab,solve_reactions]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            GpuArray<Real,7+Species::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
+            GpuArray<Real, 7+MFIXSpecies::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
             interp_loc.fill(0.);
 
             // Indices of cell where particle is located
@@ -534,7 +533,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
             if (solve_reactions) {
               // Extract species mass fractions
-              GpuArray<Real,Species::NMAX> X_sn;
+              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
               X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
@@ -546,7 +545,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
               const Real ro_p = p_realarray[SoArealData::density][p_id];
 
-              GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
+              GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
               R_q_heterogeneous.fill(0.);
 
               const Real T_p = p_realarray[SoArealData::temperature][p_id];

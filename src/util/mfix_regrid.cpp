@@ -1,7 +1,7 @@
 #include <mfix.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 void
 mfix::Regrid ()
@@ -17,17 +17,17 @@ mfix::Regrid ()
   {
     amrex::Print() << "Load balancing using " << load_balance_type << std::endl;
 
-    if (DEM::solve  || PIC::solve)
+    if (m_dem.solve()  || m_pic.solve())
        AMREX_ALWAYS_ASSERT(particle_cost[0] != nullptr);
 
-    if (fluid.solve)
+    if (fluid.solve())
        AMREX_ALWAYS_ASSERT(fluid_cost[0] != nullptr);
 
     if (ParallelDescriptor::NProcs() == 1) return;
 
     if (dual_grid)  //  Beginning of dual grid regridding
     {
-      AMREX_ALWAYS_ASSERT(fluid.solve);
+      AMREX_ALWAYS_ASSERT(fluid.solve());
 
       if (load_balance_fluid > 0)
       {
@@ -118,7 +118,7 @@ mfix::Regrid ()
 
         // This calls re-creates a proper particle_ebfactories
         //  and regrids all the multifabs that depend on it
-        if (DEM::solve || PIC::solve)
+        if (m_dem.solve() || m_pic.solve())
           RegridLevelSetArray(lev);
       }
 
@@ -131,14 +131,14 @@ mfix::Regrid ()
       Print() << "grids = " << grids[base_lev] << std::endl;
       Print() << "costs ba = " << costs.boxArray() << std::endl;
 
-      if(DEM::solve)
+      if(m_dem.solve())
         Print() << "particle_cost ba = "
                 << particle_cost[base_lev]->boxArray()
                 << std::endl;
 
       //Print() << "fluid cost ba = " << fluid_cost[base_lev]->boxArray() << std::endl;
 
-      if (DEM::solve) {
+      if (m_dem.solve()) {
         // costs.plus(* particle_cost[base_lev], 0, 1, 0);
 
         // MultiFab particle_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -149,7 +149,7 @@ mfix::Regrid ()
 
         costs.plus(particle_cost_loc, 0, 1, 0);
       }
-      if (fluid.solve) {
+      if (fluid.solve()) {
         // costs.plus(* fluid_cost[base_lev], 0, 1, 0);
 
         // MultiFab fluid_cost_loc(grids[base_lev], dmap[base_lev], 1, 0);
@@ -171,10 +171,10 @@ mfix::Regrid ()
                                      MLMG::Location::CellCenter,    // Location of solution variable phi
                                      MLMG::Location::CellCentroid);// Location of MAC RHS
 
-      if (fluid.solve)
+      if (fluid.solve())
         RegridArrays(base_lev);
 
-      if (fluid.solve)
+      if (fluid.solve())
       {
         if (fluid_cost[base_lev] != nullptr)
           delete fluid_cost[base_lev];
@@ -190,7 +190,7 @@ mfix::Regrid ()
         fluid_proc[base_lev]->setVal(proc);
       }
 
-      if (DEM::solve)
+      if (m_dem.solve())
       {
         if (particle_cost[base_lev] != nullptr)
           delete particle_cost[base_lev];
@@ -206,22 +206,22 @@ mfix::Regrid ()
         particle_proc[base_lev]->setVal(proc);
       }
 
-      if (DEM::solve || PIC::solve){
+      if (m_dem.solve() || m_pic.solve()){
         pc->Regrid(dmap[base_lev], grids[base_lev], base_lev);
       }
 
-      if (fluid.solve) mfix_set_bc0();
+      if (fluid.solve()) mfix_set_bc0();
 
       // This calls re-creates a proper particles_ebfactory and regrids
       // all the multifab that depend on it
-      if (DEM::solve || PIC::solve)
+      if (m_dem.solve() || m_pic.solve())
         RegridLevelSetArray(base_lev);
       }
   } else {
       amrex::Abort("load_balance_type must be KnapSack, SFC or Greedy");
   }
 
-  if (DEM::solve)
+  if (m_dem.solve())
     for (int i_lev = base_lev; i_lev < nlev; i_lev++)
     {
       // This calls re-creates a proper particle_ebfactories and regrids
@@ -230,7 +230,7 @@ mfix::Regrid ()
     }
 
   // This call resets both the nodal and the diffusion solvers
-  if (fluid.solve)
+  if (fluid.solve())
     mfix_setup_solvers();
 
   BL_PROFILE_REGION_STOP("mfix::Regrid()");

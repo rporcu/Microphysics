@@ -6,10 +6,10 @@
 
 #include <mfix_rw.H>
 #include <mfix_pc.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 using namespace amrex;
 
@@ -31,7 +31,7 @@ MfixRW::InitIOPltData ()
 
   ParmParse pp("amr");
 
-  if (fluid.solve) {
+  if (fluid.solve()) {
 
       pp.query("plt_vel_g",     plt_vel_g    );
       pp.query("plt_ep_g",      plt_ep_g     );
@@ -69,7 +69,7 @@ MfixRW::InitIOPltData ()
         plt_ep_g      = 1;
         plt_p_g       = 0;
         plt_ro_g      = 1;
-        plt_MW_g      = reactions.solve;
+        plt_MW_g      = reactions.solve();
         plt_h_g       = 1;
         plt_T_g       = 1;
         plt_trac      = 1;
@@ -80,12 +80,12 @@ MfixRW::InitIOPltData ()
         plt_diveu     = 1;
         plt_volfrac   = 1;
         plt_gradp_g   = 1;
-        plt_X_gk      = fluid.solve_species;
-        plt_D_gk      = fluid.solve_species;
-        plt_cp_gk     = 0; //fluid.solve_species && fluid.solve_enthalpy;
-        plt_h_gk      = 0; //fluid.solve_species && fluid.solve_enthalpy;
+        plt_X_gk      = fluid.solve_species();
+        plt_D_gk      = fluid.solve_species();
+        plt_cp_gk     = 0; //fluid.solve_species() )&&)&& fluid.solve_enthalpy();
+        plt_h_gk      = 0; //fluid.solve_species() )&&)&& fluid.solve_enthalpy();
         plt_txfr      = 0;
-        plt_chem_txfr = fluid.solve_species && reactions.solve;
+        plt_chem_txfr = fluid.solve_species() && reactions.solve();
         plt_proc      = 0;
         plt_proc_p    = 0;
         plt_cost_p    = 0;
@@ -107,34 +107,34 @@ MfixRW::InitIOPltData ()
       if (plt_proc_p  == 1) pltVarCount += 1;
       if (plt_cost_p  == 1) pltVarCount += 1;
 
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         if (plt_T_g  == 1) pltVarCount += 1;
         if (plt_cp_g == 1) pltVarCount += 1;
         if (plt_k_g  == 1) pltVarCount += 1;
         if (plt_h_g  == 1) pltVarCount += 1;
       }
 
-      if (fluid.solve_species) {
-        if (plt_X_gk == 1)  pltVarCount += fluid.nspecies;
-        if (plt_D_gk == 1)  pltVarCount += fluid.nspecies;
+      if (fluid.solve_species()) {
+        if (plt_X_gk == 1)  pltVarCount += fluid.nspecies();
+        if (plt_D_gk == 1)  pltVarCount += fluid.nspecies();
 
-        if (fluid.solve_enthalpy) {
-          if (plt_cp_gk == 1) pltVarCount += fluid.nspecies;
-          if (plt_h_gk == 1)  pltVarCount += fluid.nspecies;
+        if (fluid.solve_enthalpy()) {
+          if (plt_cp_gk == 1) pltVarCount += fluid.nspecies();
+          if (plt_h_gk == 1)  pltVarCount += fluid.nspecies();
         }
       }
 
-      if (DEM::solve || PIC::solve) {
+      if (m_dem.solve() || m_pic.solve()) {
         if (plt_txfr == 1) pltVarCount += Transfer::count;
       }
 
-      if (fluid.solve_species && reactions.solve) {
-        ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
+      if (fluid.solve_species() && reactions.solve()) {
+        ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
         if (plt_chem_txfr == 1) pltVarCount += chem_txfr_idxs.count;
       }
     }
 
-    if (DEM::solve || PIC::solve) {
+    if (m_dem.solve() || m_pic.solve()) {
 
       GetSolidsIOPltFlags(pp, write_real_comp, write_int_comp);
 
@@ -150,9 +150,9 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
   int plt_ccse_regtest = 0;
   pp.query("plt_regtest", plt_ccse_regtest);
 
-  const runtimeRealData rtData(solids.nspecies*solids.solve_species,
-                               fluid.nspecies*fluid.solve_species,
-                               reactions.nreactions*reactions.solve);
+  const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
+                               fluid.nspecies()*fluid.solve_species(),
+                               reactions.nreactions()*reactions.solve());
 
   // Runtime-added variables
   const int size = SoArealData::count + rtData.count;
@@ -219,17 +219,17 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
 
     int gap = SoArealData::count;
 
-    if (solids.solve_species)
+    if (solids.solve_species())
     {
       input_value = 0;
       pp.query("plt_X_s", input_value);
 
       const int start = gap + rtData.X_sn;
-      for(int n(0); n < solids.nspecies; ++n)
+      for(int n(0); n < solids.nspecies(); ++n)
         write_real_comp_out[start+n] = input_value;
     }
 
-    if (reactions.solve)
+    if (reactions.solve())
     {
       input_value = 0;
       pp.query("plt_vel_s_txfr", input_value);
@@ -239,7 +239,7 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
         write_real_comp_out[start+n] = input_value;
     }
 
-    if (reactions.solve)
+    if (reactions.solve())
     {
       input_value = 0;
       pp.query("plt_h_s_txfr", input_value);
@@ -248,17 +248,17 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       write_real_comp_out[start] = input_value;
     }
 
-    if (reactions.solve)
+    if (reactions.solve())
     {
       input_value = 0;
       pp.query("plt_mass_sn_txfr", input_value);
 
       const int start = gap + rtData.mass_txfr;
-      for(int n(0); n < amrex::max(solids.nspecies, fluid.nspecies); ++n)
+      for(int n(0); n < amrex::max(solids.nspecies(), fluid.nspecies()); ++n)
         // Since we allocated a number of components for mass transfer that
         // is equal to th max nb of species between solids and fluid, here
         // we check that n is smaller than solids species nb
-        if (n < solids.nspecies)
+        if (n < solids.nspecies())
           write_real_comp_out[start+n] = input_value;
         else // if n is larger, then we always set it to false
           write_real_comp_out[start+n] = 0;
@@ -290,8 +290,6 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
     const std::string& plotfilename = amrex::Concatenate(plot_file_in,nstep);
 
     amrex::Print() << "  Writing plotfile " << plotfilename <<  " at time " << time << std::endl;
-
-    auto& fluid_params = *fluid.parameters;
 
     if (pltVarCount > 0) {
 
@@ -331,11 +329,11 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         pltFldNames.push_back("MW_g");
 
       // Fluid enthalpy
-      if (fluid.solve_enthalpy && plt_h_g == 1)
+      if (fluid.solve_enthalpy() && plt_h_g == 1)
         pltFldNames.push_back("h_g");
 
       // Temperature in fluid
-      if (fluid.solve_enthalpy && plt_T_g == 1)
+      if (fluid.solve_enthalpy() && plt_T_g == 1)
         pltFldNames.push_back("T_g");
 
       // Tracer in fluid
@@ -343,11 +341,11 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         pltFldNames.push_back("trac");
 
       // Specific heat
-      if (fluid.solve_enthalpy && plt_cp_g == 1)
+      if (fluid.solve_enthalpy() && plt_cp_g == 1)
         pltFldNames.push_back("cp_g");
 
       // Thermal conductivity
-      if (fluid.solve_enthalpy && plt_k_g == 1)
+      if (fluid.solve_enthalpy() && plt_k_g == 1)
         pltFldNames.push_back("k_g");
 
       // Fluid viscosity
@@ -379,23 +377,23 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         pltFldNames.push_back("cost_p");
 
       // Fluid species mass fractions
-      if (fluid.solve_species && plt_X_gk == 1)
-        for (std::string specie: fluid.species_names)
+      if (fluid.solve_species() && plt_X_gk == 1)
+        for (std::string specie: fluid.species_names())
           pltFldNames.push_back("X_"+specie+"_g");
 
       // Fluid species mass diffusivities
-      if (fluid.solve_species && plt_D_gk == 1)
-        for (std::string specie: fluid.species_names)
+      if (fluid.solve_species() && plt_D_gk == 1)
+        for (std::string specie: fluid.species_names())
           pltFldNames.push_back("D_"+specie+"_g");
 
       // Fluid species specific heat
-      if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1)
-        for (std::string specie: fluid.species_names)
+      if (fluid.solve_species() && fluid.solve_enthalpy() && plt_cp_gk == 1)
+        for (std::string specie: fluid.species_names())
           pltFldNames.push_back("cp_"+specie+"_g");
 
       // Fluid species enthalpy
-      if (fluid.solve_species && fluid.solve_enthalpy && plt_h_gk == 1)
-        for (std::string specie: fluid.species_names)
+      if (fluid.solve_species() && fluid.solve_enthalpy() && plt_h_gk == 1)
+        for (std::string specie: fluid.species_names())
           pltFldNames.push_back("h_"+specie+"_g");
 
       // Fluid species density reaction rates
@@ -409,8 +407,8 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
       }
 
       // Fluid species density reaction rates
-      if (fluid.solve_species && reactions.solve && plt_chem_txfr == 1) {
-        for(std::string specie: fluid.species_names)
+      if (fluid.solve_species() && reactions.solve() && plt_chem_txfr == 1) {
+        for(std::string specie: fluid.species_names())
           pltFldNames.push_back("chem_ro_txfr_"+specie);
 
         pltFldNames.push_back("chem_velx_txfr");
@@ -465,16 +463,14 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         // Fluid molecular weight
         if (plt_MW_g == 1) {
 
-          const int nspecies_g = fluid.nspecies;
+          const int nspecies_g = fluid.nspecies();
+          const auto& fluid_parms = fluid.parameters();
+          const int fluid_is_a_mixture = fluid.isMixture();
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
           MultiFab MW_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
                         T_g.nGrow(), MFInfo(), T_g.Factory());
-
-          const int fluid_is_a_mixture = fluid.is_a_mixture;
-
-          auto& fluid_parms = *fluid.parameters;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -484,7 +480,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& MW_g_array = MW_g.array(mfi);
-            Array4<Real const> const& X_gk_array = fluid_is_a_mixture ?
+            Array4<Real const> const& X_gk_array = fluid.isMixture() ?
               m_leveldata[lev]->X_gk->const_array(mfi) : Array4<const Real>();
 
             ParallelFor(bx, [MW_g_array,X_gk_array,nspecies_g,fluid_is_a_mixture,
@@ -515,13 +511,13 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Fluid enthalpy
-        if (fluid.solve_enthalpy && plt_h_g == 1) {
+        if (fluid.solve_enthalpy() && plt_h_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->h_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid temperature
-        if (fluid.solve_enthalpy && plt_T_g == 1) {
+        if (fluid.solve_enthalpy() && plt_T_g == 1) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
@@ -533,16 +529,16 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Specific heat
-        if (fluid.solve_enthalpy && plt_cp_g == 1) {
+        if (fluid.solve_enthalpy() && plt_cp_g == 1) {
+
+          const auto& fluid_parms = fluid.parameters();
+          int fluid_is_a_mixture = fluid.isMixture();
+          int nspecies_g = fluid.nspecies();
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
           MultiFab cp_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
                         T_g.nGrow(), MFInfo(), T_g.Factory());
-
-          auto& fluid_parms = *fluid.parameters;
-          int fluid_is_a_mixture = fluid.is_a_mixture;
-          int nspecies_g = fluid.nspecies;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -556,7 +552,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Array4<Real      > const& cp_g_array = cp_g.array(mfi);
             Array4<Real const> const& T_g_array  = T_g.const_array(mfi);
 
-            Array4<Real const> const& X_gk_array = fluid_is_a_mixture ? 
+            Array4<Real const> const& X_gk_array = fluid.isMixture() ? 
               m_leveldata[lev]->X_gk->const_array(mfi) : dummy_arr;
 
             ParallelFor(bx, [cp_g_array,T_g_array,X_gk_array,fluid_parms,
@@ -589,14 +585,14 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Thermal conductivity
-        if (fluid.solve_enthalpy && plt_k_g == 1) {
+        if (fluid.solve_enthalpy() && plt_k_g == 1) {
+
+          const auto& fluid_parms = fluid.parameters();
 
           MultiFab& T_g = *(m_leveldata[lev]->T_g);
 
           MultiFab k_g(T_g.boxArray(), T_g.DistributionMap(), T_g.nComp(),
                        T_g.nGrow(), MFInfo(), T_g.Factory());
-
-          auto& fluid_parms = *fluid.parameters;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -629,8 +625,6 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
           MultiFab mu_g(ep_g.boxArray(), ep_g.DistributionMap(), ep_g.nComp(),
                         ep_g.nGrow(), MFInfo(), ep_g.Factory());
 
-          const Real mu_g0 = fluid.mu_g0;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -639,16 +633,19 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& mu_g_array = mu_g.array(mfi);
-            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy()?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<Real const>();
 
-            const int adv_enthalpy = fluid.solve_enthalpy;
+            const int solve_enthalpy = fluid.solve_enthalpy();
+            const auto& fluid_parms = fluid.parameters();
 
-            ParallelFor(bx, [mu_g_array,T_g_array,adv_enthalpy,mu_g0,fluid_params]
+            const Real mu_g0 = fluid.mu_g();
+
+            ParallelFor(bx, [mu_g_array,T_g_array,solve_enthalpy,fluid_parms,mu_g0]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
-              if (adv_enthalpy)
-                mu_g_array(i,j,k) = fluid_params.calc_mu_g(T_g_array(i,j,k));
+              if (solve_enthalpy)
+                mu_g_array(i,j,k) = fluid_parms.calc_mu_g(T_g_array(i,j,k));
               else
                 mu_g_array(i,j,k) = mu_g0;
             });
@@ -701,15 +698,16 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Fluid species mass fractions
-        if (fluid.solve_species && plt_X_gk == 1) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
-          lc += fluid.nspecies;
+        if (fluid.solve_species() && plt_X_gk == 1) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies(), 0);
+          lc += fluid.nspecies();
         }
 
         // Species mass fraction
-        if (fluid.solve_species && plt_D_gk == 1) {
+        if (fluid.solve_species() && plt_D_gk == 1) {
 
-          const int nspecies_g = fluid.nspecies;
+          const auto& fluid_parms = fluid.parameters();
+          const int nspecies_g = fluid.nspecies();
 
           MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
 
@@ -725,11 +723,11 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 
             Array4<Real      > const& D_gk_array = D_gk.array(mfi);
 
-            ParallelFor(bx, [D_gk_array,nspecies_g,fluid_params]
+            ParallelFor(bx, [D_gk_array,nspecies_g,fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n(0); n < nspecies_g; ++n) {
-                D_gk_array(i,j,k,n) = fluid_params.get_D_g();
+                D_gk_array(i,j,k,n) = fluid_parms.get_D_g();
               }
             });
           }
@@ -742,9 +740,10 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Fluid species specific heat
-        if (fluid.solve_species && fluid.solve_enthalpy && plt_cp_gk == 1) {
+        if (fluid.solve_species() && fluid.solve_enthalpy() && plt_cp_gk == 1) {
 
-          const int nspecies_g = fluid.nspecies;
+          const auto& fluid_parms = fluid.parameters();
+          const int nspecies_g = fluid.nspecies();
 
           MultiFab& X_gk = *(m_leveldata[lev]->X_gk);
 
@@ -759,16 +758,16 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& cp_gk_array = cp_gk.array(mfi);
-            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy ?
+            Array4<Real const> const& T_g_array  = fluid.solve_enthalpy()?
               m_leveldata[lev]->T_g->const_array(mfi) : Array4<const Real>();
 
-            ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_params]
+            ParallelFor(bx, [cp_gk_array,T_g_array,nspecies_g,fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               for (int n(0); n < nspecies_g; ++n) {
                 const Real T_g = T_g_array(i,j,k);
 
-                cp_gk_array(i,j,k,n) = fluid_params.calc_cp_gk<run_on>(T_g,n);
+                cp_gk_array(i,j,k,n) = fluid_parms.calc_cp_gk<run_on>(T_g,n);
               }
             });
           }
@@ -781,9 +780,10 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         // Fluid species enthalpy
-        if (fluid.solve_species && plt_h_gk == 1) {
+        if (fluid.solve_species() && plt_h_gk == 1) {
 
-          const int nspecies_g = fluid.nspecies;
+          const auto& fluid_parms = fluid.parameters();
+          const int nspecies_g = fluid.nspecies();
 
           auto& ld = *m_leveldata[lev];
 
@@ -805,11 +805,12 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Array4<const Real> dummy_arr;
 
             Array4<      Real> const& h_gk_array = h_gk.array(mfi);
-            Array4<const Real> const& T_g_array  = fluid.solve_enthalpy ? (ld.T_g)->const_array(mfi) : dummy_arr;
+            Array4<const Real> const& T_g_array  = fluid.solve_enthalpy() ?
+              (ld.T_g)->const_array(mfi) : dummy_arr;
 
             auto const& flags_arr = flags.const_array();
 
-            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_params,flags_arr]
+            ParallelFor(bx, [h_gk_array,T_g_array,nspecies_g,fluid_parms,flags_arr]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -817,7 +818,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
               const Real Tg_loc = T_g_array(i,j,k);
 
               for (int n(0); n < nspecies_g; ++n)
-                h_gk_array(i,j,k,n) = fluid_params.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
+                h_gk_array(i,j,k,n) = fluid_parms.calc_h_gk<run_on>(Tg_loc, n, cell_is_covered);
             });
           }
 
@@ -833,8 +834,8 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
           lc += Transfer::count;
         }
 
-        if (fluid.solve_species && reactions.solve && plt_chem_txfr == 1) {
-          ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
+        if (fluid.solve_species() && reactions.solve() && plt_chem_txfr == 1) {
+          ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, 0, lc, chem_txfr_idxs.count, 0);
           lc += chem_txfr_idxs.count;
         }
@@ -887,7 +888,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 
     WriteJobInfo(plotfilename);
 
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
     {
         pc->WritePlotFile(plotfilename, "particles", write_real_comp,
                           write_int_comp, real_comp_names, int_comp_names);
@@ -901,7 +902,7 @@ MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
                              int nstep,
                              Real time)
 {
-  if ((DEM::solve || PIC::solve) && (solids_plot_regions() == true)) {
+  if ((m_dem.solve() || m_pic.solve()) && (solids_plot_regions() == true)) {
 
     // If we've already written this plotfile, don't do it again!
     if (nstep == plot_region.m_last_solids_plt) return;

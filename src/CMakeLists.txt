@@ -44,8 +44,8 @@ add_subdirectory(setup)
 # Utility functions
 add_subdirectory(util)
 
-# Global module files
-add_subdirectory(mods)
+# Problem classes
+add_subdirectory(prob)
 
 # User hooks (UDFs)
 add_subdirectory(usr)

@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <mfix.H>
-#include <mfix_bc_parms.H>
+#include <mfix_bc.H>
 #include <AMReX_EB2.H>
 #include <AMReX_EB_utils.H>
 #include <AMReX_EB2_IF_Cylinder.H>
@@ -157,7 +157,7 @@ void mfix::make_eb_factories () {
 
         // Grow EB factory by +2 in order to avoid edge cases. This is not
         // necessary for multi-level mfix.
-        if (DEM::solve || PIC::solve) {
+        if (m_dem.solve() || m_pic.solve()) {
             particle_ebfactory[lev] =
                 std::make_unique<EBFArrayBoxFactory>(*particle_eb_levels[lev], geom[lev],
                                                      pc->ParticleBoxArray(lev),
@@ -394,7 +394,7 @@ void mfix::fill_eb_levelsets ()
 void mfix::intersect_ls_walls ()
 {
 
-    bool has_walls = BC::flow_plane.any();
+    bool has_walls = m_boundary_conditions.flow_plane().any();
 
     if (has_walls == false)
       return;
@@ -404,14 +404,14 @@ void mfix::intersect_ls_walls ()
     const auto plo = geom[0].ProbLoArray();
     const auto phi = geom[0].ProbHiArray();
 
-    Real xlo = BC::flow_plane.test(0) ? plo[0] + 1.0e-15 : 2.0*plo[0] - phi[0];
-    Real xhi = BC::flow_plane.test(1) ? phi[0] - 1.0e-15 : 2.0*phi[0] - plo[0];
+    Real xlo = m_boundary_conditions.flow_plane().test(0) ? plo[0] + 1.0e-15 : 2.0*plo[0] - phi[0];
+    Real xhi = m_boundary_conditions.flow_plane().test(1) ? phi[0] - 1.0e-15 : 2.0*phi[0] - plo[0];
 
-    Real ylo = BC::flow_plane.test(2) ? plo[1] + 1.0e-15 : 2.0*plo[1] - phi[1];
-    Real yhi = BC::flow_plane.test(3) ? phi[1] - 1.0e-15 : 2.0*phi[1] - plo[1];
+    Real ylo = m_boundary_conditions.flow_plane().test(2) ? plo[1] + 1.0e-15 : 2.0*plo[1] - phi[1];
+    Real yhi = m_boundary_conditions.flow_plane().test(3) ? phi[1] - 1.0e-15 : 2.0*phi[1] - plo[1];
 
-    Real zlo = BC::flow_plane.test(4) ? plo[2] + 1.0e-15 : 2.0*plo[2] - phi[2];
-    Real zhi = BC::flow_plane.test(5) ? phi[2] - 1.0e-15 : 2.0*phi[2] - plo[2];
+    Real zlo = m_boundary_conditions.flow_plane().test(4) ? plo[2] + 1.0e-15 : 2.0*plo[2] - phi[2];
+    Real zhi = m_boundary_conditions.flow_plane().test(5) ? phi[2] - 1.0e-15 : 2.0*phi[2] - plo[2];
 
     Array<Real,3>  point_lox{ xlo, 0.0, 0.0};
     Array<Real,3> normal_lox{-1.0, 0.0, 0.0};

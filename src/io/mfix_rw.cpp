@@ -1,6 +1,6 @@
 #include <mfix_rw.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 #include <AMReX_ParmParse.H>
 #include <AMReX_EBFArrayBox.H>
@@ -17,7 +17,7 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::Vector<amrex::BoxArray>& grids_in,
                 amrex::Vector<amrex::Geometry>& geom_in,
                 MFIXParticleContainer* pc_in,
-                FluidPhase& fluid_in,
+                MFIXFluidPhase& fluid_in,
                 amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
                 amrex::Vector<amrex::DistributionMapping>& dmap_in,
@@ -28,8 +28,10 @@ MfixRW::MfixRW (int nlev_in,
                 int levelset_pad_in,
                 int levelset_eb_refinement_in,
                 int levelset_eb_pad_in,
-                SolidsPhase& solids_in,
-                Reactions& reactions_in,
+                MFIXSolidsPhase& solids_in,
+                MFIXDEM& dem,
+                MFIXPIC& pic,
+                MFIXReactions& reactions_in,
                 amrex::Vector<amrex::MultiFab*>& particle_cost_in,
                 amrex::Vector<amrex::MultiFab*>& particle_proc_in,
                 amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
@@ -43,7 +45,7 @@ MfixRW::MfixRW (int nlev_in,
                 std::string load_balance_type_in,
                 BCList& bc_list_in,
                 Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
-                Regions& regions_in)
+                MFIXRegions& regions_in)
   : finest_level(nlev_in-1)
   , nlev(nlev_in)
   , grids(grids_in)
@@ -61,6 +63,8 @@ MfixRW::MfixRW (int nlev_in,
   , levelset_eb_refinement(levelset_eb_refinement_in)
   , levelset_eb_pad(levelset_eb_pad_in)
   , solids(solids_in)
+  , m_dem(dem)
+  , m_pic(pic)
   , reactions(reactions_in)
   , particle_cost(particle_cost_in)
   , particle_proc(particle_proc_in)
@@ -200,7 +204,7 @@ void MfixRW::readParameters ()
      pp.queryarr("avg_vel_p", avg_vel_p);
      pp.queryarr("avg_T_p", avg_T_p);
 
-     // Regions geometry
+     // MFIXRegions geometry
      pp.queryarr("avg_region_x_e", avg_region_x_e);
      pp.queryarr("avg_region_x_w", avg_region_x_w);
      pp.queryarr("avg_region_y_n", avg_region_y_n);
@@ -237,7 +241,7 @@ void MfixRW::readParameters ()
 
 
 void
-MfixRW::Initialize (const Regions& regions)
+MfixRW::Initialize (const MFIXRegions& regions)
 {
   real_comp_names.clear();
   int_comp_names.clear();
@@ -249,7 +253,7 @@ MfixRW::Initialize (const Regions& regions)
     real_comp_names.push_back("mass");
     real_comp_names.push_back("density");
 
-    if (DEM::solve) {
+    if (m_dem.solve()) {
       real_comp_names.push_back("omoi");
     } else {
       real_comp_names.push_back("ep_s");
@@ -259,7 +263,7 @@ MfixRW::Initialize (const Regions& regions)
     real_comp_names.push_back("vely");
     real_comp_names.push_back("velz");
 
-    if (DEM::solve){
+    if (m_dem.solve()){
       real_comp_names.push_back("omegax");
       real_comp_names.push_back("omegay");
       real_comp_names.push_back("omegaz");
@@ -279,15 +283,15 @@ MfixRW::Initialize (const Regions& regions)
     real_comp_names.push_back("temperature");
     real_comp_names.push_back("convection");
 
-    if (solids.solve_species)
-      for (auto species: solids.species_names)
+    if (solids.solve_species())
+      for (auto species: solids.species_names())
         real_comp_names.push_back("X_"+species);
 
-    if (solids.solve_species && reactions.solve) {
-      for (int n(0); n < amrex::max(fluid.nspecies, solids.nspecies); ++n) {
-        if (n < solids.nspecies) {
+    if (solids.solve_species() && reactions.solve()) {
+      for (int n(0); n < amrex::max(fluid.nspecies(), solids.nspecies()); ++n) {
+        if (n < solids.nspecies()) {
 
-          auto species = solids.species_names[n];
+          auto species = solids.species_names(n);
           real_comp_names.push_back("chem_mass_txfr_"+species);
 
         } else {
@@ -297,13 +301,13 @@ MfixRW::Initialize (const Regions& regions)
       }
     }
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       real_comp_names.push_back("chem_velx_txfr");
       real_comp_names.push_back("chem_vely_txfr");
       real_comp_names.push_back("chem_velz_txfr");
     }
 
-    if (reactions.solve)
+    if (reactions.solve())
       real_comp_names.push_back("chem_h_txfr");
 
     int_comp_names.push_back("phase");
@@ -326,8 +330,8 @@ MfixRW::Initialize (const Regions& regions)
 
         int found(0);
 
-        for (int j(0); j < solids.names.size(); ++j) {
-          const std::string& solids_name = solids.names[j];
+        for (int j(0); j < solids.names().size(); ++j) {
+          const std::string& solids_name = solids.names(j);
 
           if (name.compare(solids_name) == 0) {
             // TODO TODO TODO check this
@@ -345,7 +349,7 @@ MfixRW::Initialize (const Regions& regions)
                 plot_region.m_h_plot_types.end(), plot_region.m_d_plot_types.begin());
     }
 
-    const RealBox* region_extents = regions.get_region(plot_region.m_region_name);
+    const RealBox* region_extents = regions.getRegion(plot_region.m_region_name);
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(region_extents != nullptr, "Invalid solids plot region!");
 
     plot_region.m_region_extents = *region_extents;
@@ -390,7 +394,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-        if (fluid.solve)
+        if (fluid.solve())
           ComputeVort();
 
         WritePlotFile(plot_file, nstep, time);
@@ -402,7 +406,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *                                     AMReX Solids Plot File Output Control
  *
  *------------------------------------------------------------------------------------------------*/
-    if ((DEM::solve || PIC::solve) && (solids_plot_regions() == true)) {
+    if ((m_dem.solve() || m_pic.solve()) && (solids_plot_regions() == true)) {
 
       BL_PROFILE("mfix::WriteSolidsPlotFile()");
 
@@ -618,13 +622,13 @@ void MfixRW::writeEBSurface() const
 
 void MfixRW::writeStaticPlotFile() const
 {
-   if ((DEM::solve || PIC::solve) && write_ls)
+   if ((m_dem.solve() || m_pic.solve()) && write_ls)
       WriteStaticPlotFile(static_plt_file);
 }
 
 void MfixRW::reportGridStats() const
 {
-   if (fluid.solve)
+   if (fluid.solve())
      ReportGridStats();
 }
 

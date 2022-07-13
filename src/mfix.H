@@ -28,12 +28,13 @@
 
 #include <mfix_diffusion_op.H>
 #include <mfix_pc.H>
-#include <mfix_bc_list.H>
+#include <mfix_ic.H>
+#include <mfix_bc.H>
 #include <mfix_eb_if.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
+#include <mfix_reactions.H>
 #include <mfix_leveldata.H>
 #include <mfix_mlmg_options.H>
 #include <mfix_run_on.H>
@@ -66,20 +67,35 @@ class mfix : public AmrCore
     // Destructor
     ~mfix ();
 
+    // Initial Conditions
+    MFIXInitialConditions m_initial_conditions;
+
+    // Boundary conditions
+    MFIXBoundaryConditions m_boundary_conditions;
+
+    // Embedded boundaries
+    MFIXEmbeddedBoundaries m_embedded_boundaries;
+
     // Regions
-    Regions regions;
+    MFIXRegions regions;
 
     // Chemical species
-    Species species;
+    MFIXSpecies species;
 
     // Chemical reactions
-    Reactions reactions;
+    MFIXReactions reactions;
 
     // Fluid phase
-    FluidPhase fluid;
+    MFIXFluidPhase fluid;
 
     // Solids phase
-    SolidsPhase solids;
+    MFIXSolidsPhase solids;
+
+    // DEM parameters
+    MFIXDEM m_dem;
+
+    // PIC parameters
+    MFIXPIC m_pic;
 
     // IO Class
     MfixIO::MfixRW* mfixRW;

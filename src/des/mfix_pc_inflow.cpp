@@ -1,10 +1,9 @@
 #include <mfix_des_K.H>
 
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_bc_list.H>
-#include <mfix_bc_parms.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_reactions.H>
+#include <mfix_bc.H>
 #include <mfix_solvers.H>
 #include <mfix_calc_cell.H>
 
@@ -41,12 +40,12 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 {
   BL_PROFILE("mfix_dem::mfix_pc_inflow()");
 
-  const int solve_species = solids.solve_species;
+  const int solve_species = solids.solve_species();
 
-  const int nspecies_s = solids.nspecies;
-  const int solid_is_a_mixture = solids.is_a_mixture;
+  const int nspecies_s = solids.nspecies();
+  const int solid_is_a_mixture = solids.isMixture();
 
-  auto& solids_parms = *solids.parameters;
+  const auto& solids_parms = solids.parameters();
 
   const auto  dx_array = Geom(lev).CellSizeArray();
   const auto idx_array = Geom(lev).InvCellSizeArray();
@@ -66,30 +65,30 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
   const int MyProc = ParallelDescriptor::MyProc();
 
   // Loop over BCs
-  for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+  for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
     // BCs with ep_g < 1 and are EB
-    if (BC::bc[bcv].type == BCList::eb && (1.0 - BC::bc[bcv].fluid.volfrac) > tolerance ) {
+    if (m_boundary_conditions.bc(bcv).type == BCList::eb && (1.0 - m_boundary_conditions.bc(bcv).fluid.volfrac) > tolerance ) {
 
       // This shouldn't be needed but "just in case"
-      if(BC::bc[bcv].solids.size() == 0)
+      if(m_boundary_conditions.bc(bcv).solids.size() == 0)
         continue;
 
-      const int  has_normal = BC::bc[bcv].eb.has_normal;
+      const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
       amrex::GpuArray<amrex::Real,3> normal{0.};
       if (has_normal) {
-         normal[0] = BC::bc[bcv].eb.normal[0];
-         normal[1] = BC::bc[bcv].eb.normal[1];
-         normal[2] = BC::bc[bcv].eb.normal[2];
+         normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
+         normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
+         normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
       }
 
       constexpr Real pad = std::numeric_limits<float>::epsilon();
-      const Real normal_tol = BC::bc[bcv].eb.normal_tol;
+      const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
 
       const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
       const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
 
-      const Box ic_bx = calc_ic_box(Geom(lev), BC::bc[bcv].region);
+      const Box ic_bx = calc_ic_box(Geom(lev), m_boundary_conditions.bc(bcv).region);
 
       for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
 
@@ -162,10 +161,10 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
           const int isize = nspecies_s+2; // Tp and cps
           Gpu::HostVector<Real> h_bc_inputs(isize);
 
-          for(int lcs(0); lcs < BC::bc[bcv].solids.size(); lcs++) {
-            if(BC::bc[bcv].solids[lcs].volfrac > tolerance) {
+          for(int lcs(0); lcs < m_boundary_conditions.bc(bcv).solids.size(); lcs++) {
+            if(m_boundary_conditions.bc(bcv).solids[lcs].volfrac > tolerance) {
 
-              const SOLIDS_t& bc_solid = BC::bc[bcv].solids[lcs];
+              const SOLIDS_t& bc_solid = m_boundary_conditions.bc(bcv).solids[lcs];
               const int phase = bc_solid.phase;
 
               Real Tp(0.0), cp_s(0.0);
@@ -394,7 +393,8 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
               // Store the particle volume underflow/overflow so we can account
               // for it on the next time step.
-              BC::bc[bcv].solids[lcs].vol_remainder = pvol_per_step - total_new_vol;
+              BC_t& bc = m_boundary_conditions.bc(bcv);
+              bc.solids[lcs].vol_remainder = pvol_per_step - total_new_vol;
 
             } // solids phase has volfrac > 0
           } // loop over solids phases

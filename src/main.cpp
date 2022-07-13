@@ -10,9 +10,9 @@
 #include <mfix.H>
 
 #include "build_info.H"
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
 #include <mfix_rw.H>
 
 #ifdef MFIX_CATALYST
@@ -143,7 +143,7 @@ int main (int argc, char* argv[])
     else
     {
 
-       if (DEM::solve || PIC::solve)
+       if (mfix.m_dem.solve() || mfix.m_pic.solve())
        {
            // Fill level-sets on each level
            mfix.fill_eb_levelsets();
@@ -170,7 +170,7 @@ int main (int argc, char* argv[])
            mfix.Restart(mfixRW.restart_file, &nstep, &dt, &time, Nrep);
        }
 
-       if (mfix.fluid.solve){
+       if (mfix.fluid.solve()){
          mfix.init_advection();
 
          mfix.mfix_init_solvers();
@@ -198,7 +198,7 @@ int main (int argc, char* argv[])
        int finish  = 0;
 
        // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
-       // only if fluid.solve = T
+       // only if fluid.solve() = T
        Real prev_dt = dt;
 
        if (mfixRW.restart_file.empty())
@@ -222,10 +222,10 @@ int main (int argc, char* argv[])
 
        for (int lev = 0; lev <= mfix.finestLevel(); lev++)
        {
-         if (DEM::restart_from_PIC) {
+         if (mfix.m_dem.restart_from_PIC()) {
 
-           PIC::solve = false;
-           DEM::solve = true;
+           mfix.m_pic.set_solve(false);
+           mfix.m_dem.set_solve(true);
 
            mfix.PIC_to_DEM(lev);
          }

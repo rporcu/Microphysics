@@ -1,9 +1,9 @@
 #include <mfix_particle_generator.H>
 #include <mfix_calc_cell.H>
-#include <mfix_ic_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_ic.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 #include <mfix_des_parts_gen_K.H>
 
 #include <AMReX_AmrParGDB.H>
@@ -35,7 +35,10 @@ ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
                                         const int id,
                                         const int cpu,
                                         const int icv,
-                                        const int phase)
+                                        const int phase,
+                                        MFIXInitialConditions& initial_conditions,
+                                        MFIXDEM& dem,
+                                        MFIXPIC& pic)
   : m_bx_lo(bx_lo)
   , m_bx_hi(bx_hi)
   , m_plo(plo)
@@ -44,6 +47,9 @@ ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
   , m_cpu(cpu)
   , m_icv(icv)
   , m_phase(phase)
+  , m_initial_conditions(initial_conditions)
+  , m_dem(dem)
+  , m_pic(pic)
 {}
 
 
@@ -51,7 +57,7 @@ void
 ParticlesGenerator::generate (int& particles_count,
                               ParticleTileType& particles)
 {
-  std::string ic_pack_type_str = IC::ic[m_icv].packing;
+  std::string ic_pack_type_str = m_initial_conditions.ic(m_icv).packing;
 
   int cube_base(-1);
 
@@ -71,47 +77,47 @@ ParticlesGenerator::generate (int& particles_count,
     cube_base = 2;
 
   // Call generate with specific positions generator
-  if (DEM::solve && ic_pack_type_str.compare("hcp") == 0) {
+  if (m_dem.solve() && ic_pack_type_str.compare("hcp") == 0) {
 
     Hex_ClosePack hex_close_pack(m_plo, m_dx);
-    hex_close_pack.setup(m_bx_lo, m_bx_hi, m_icv, m_phase);
+    hex_close_pack.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase);
     generate(particles_count, particles, hex_close_pack);
 
-  } else if (DEM::solve && ic_pack_type_str.compare("random") == 0) {
+  } else if (m_dem.solve() && ic_pack_type_str.compare("random") == 0) {
 
     m_h_data.clear();
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, false);
+    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, false);
     generate(particles_count, particles, random_fill_dem);
 
-  } else if (PIC::solve && ic_pack_type_str.compare("random") == 0) {
+  } else if (m_pic.solve() && ic_pack_type_str.compare("random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, false);
+    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase, false);
     generate(particles_count, particles, random_fill_pic);
 
-  } else if (DEM::solve && ic_pack_type_str.compare("pseudo_random") == 0) {
+  } else if (m_dem.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
     m_h_data.clear();
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, true);
+    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, true);
 
     generate(particles_count, particles, random_fill_dem);
 
-  } else if (PIC::solve && ic_pack_type_str.compare("pseudo_random") == 0) {
+  } else if (m_pic.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_bx_lo, m_bx_hi, m_icv, m_phase, true);
+    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase, true);
     generate(particles_count, particles, random_fill_pic);
 
   } else if (cube_base > 0) {
 
     nCubePer_Fill n_cube_per_fill(cube_base, m_plo, m_dx);
-    n_cube_per_fill.setup(m_bx_lo, m_bx_hi, m_icv, m_phase);
+    n_cube_per_fill.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase);
     generate(particles_count, particles, n_cube_per_fill);
 
   } else {
@@ -132,7 +138,7 @@ void ParticlesGenerator::generate (int& particles_count,
 
   particles.resize(current_size + particles_count);
 
-  const SOLIDS_t& ic_solid = *(IC::ic[m_icv].get_solid(m_phase));
+  const SOLIDS_t& ic_solid = *(m_initial_conditions.ic(m_icv).get_solid(m_phase));
 
   // Setup particle diameters parameters
 
@@ -166,10 +172,10 @@ void ParticlesGenerator::generate (int& particles_count,
   auto p_realarray = soa.realarray();
   auto p_intarray = soa.intarray();
 
-  const Real picmulti = (DEM::solve) ? 1.0 : 0.0;
+  const Real picmulti = (m_dem.solve()) ? 1.0 : 0.0;
 
   const int phase = m_phase;
-  const int local_cg_dem=DEM::cg_dem;
+  const int local_cg_dem=m_dem.cg_dem();
   const int id = m_id;
   const int cpu = m_cpu;
 

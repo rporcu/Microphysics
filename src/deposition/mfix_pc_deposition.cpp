@@ -3,10 +3,10 @@
 #include <mfix_pc.H>
 
 #include <mfix_deposition_K.H>
-#include <mfix_dem_parms.H>
-#include <mfix_species_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_dem.H>
+#include <mfix_species.H>
+#include <mfix_fluid.H>
+#include <mfix_reactions.H>
 #include <mfix_algorithm.H>
 
 using namespace amrex;
@@ -102,7 +102,7 @@ SolidsVolumeDeposition (F WeightFunc,
 
         amrex::ParallelFor(nrp,
           [pstruct,p_realarray,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
-           reg_cell_vol,WeightFunc,flagsarr,local_cg_dem=DEM::cg_dem]
+           reg_cell_vol,WeightFunc,flagsarr,local_cg_dem=m_dem.cg_dem()]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             const ParticleType& p = pstruct[ip];
@@ -207,14 +207,14 @@ InterphaseTxfrDeposition (F WeightFunc,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
-  const int nspecies_g = fluid.nspecies;
-  const int solve_reactions = reactions.solve;
+  const int nspecies_g = fluid.nspecies();
+  const int solve_reactions = reactions.solve();
 
   const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
   const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
   const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
-  ChemTransfer chem_txfr_idxs(fluid.nspecies, reactions.nreactions);
+  ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
   const int idx_Xg_txfr = chem_txfr_idxs.ro_gk_txfr;
   const int idx_velg_txfr = chem_txfr_idxs.vel_g_txfr;
   const int idx_hg_txfr = chem_txfr_idxs.h_g_txfr;
@@ -291,13 +291,13 @@ InterphaseTxfrDeposition (F WeightFunc,
         }
 #endif
 
-        const int solve_enthalpy = fluid.solve_enthalpy;
+        const int solve_enthalpy = fluid.solve_enthalpy();
 
         amrex::ParallelFor(nrp,
             [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
              reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
-             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,local_cg_dem=DEM::cg_dem]
+             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,local_cg_dem=m_dem.cg_dem()]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -337,7 +337,7 @@ InterphaseTxfrDeposition (F WeightFunc,
             pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
-          GpuArray<Real,Species::NMAX> ro_chem_txfr;
+          GpuArray<Real, MFIXSpecies::NMAX> ro_chem_txfr;
           ro_chem_txfr.fill(0.);
 
           if (solve_reactions) {

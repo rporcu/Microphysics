@@ -1,9 +1,9 @@
 #include <mfix_init_fluid.H>
 
 #include <mfix_calc_cell.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
-#include <mfix_ic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
+#include <mfix_ic.H>
 
 
 using namespace amrex;
@@ -12,28 +12,27 @@ using namespace amrex;
 namespace init_fluid_aux {
 
 // Forward declarations
-void set_ic_vel (const Box& sbx, const Box& domain,
-                 const Real dx, const Real dy, const Real dz,
-                 const GpuArray<Real, 3>& plo, FArrayBox& vel_g_fab);
+void set_ic_vel (const Box& sbx, const Box& domain, const Real dx,
+                 const Real dy, const Real dz, const GpuArray<Real,3>& plo,
+                 MFIXInitialConditions& initial_conditions, FArrayBox& vel_g_fab);
 
-void set_ic_temp (const Box& sbx, const Box& domain,
-                  const Real dx, const Real dy, const Real dz,
-                  const GpuArray<Real, 3>& plo, FArrayBox& T_g_fab,
-                  FArrayBox* h_g_fab, FArrayBox* X_gk_fab,
-                  FluidPhase& fluid);
+void set_ic_temp (const Box& sbx, const Box& domain, const Real dx,
+                  const Real dy, const Real dz, const GpuArray<Real,3>& plo,
+                  MFIXInitialConditions& initial_conditions, FArrayBox& T_g_fab,
+                  FArrayBox* h_g_fab, FArrayBox* X_gk_fab, MFIXFluidPhase& fluid);
 
-void set_ic_species_g (const Box& sbx, const Box& domain,
-                       const Real dx, const Real dy, const Real dz,
-                       const GpuArray<Real, 3>& plo, FArrayBox& X_gk_fab);
+void set_ic_species_g (const Box& sbx, const Box& domain, const Real dx,
+                       const Real dy, const Real dz, const GpuArray<Real,3>& plo,
+                       MFIXInitialConditions& initial_conditions, FArrayBox& X_gk_fab);
 
-void set_ic_ro_g (const Box& sbx, const Box& domain,
-                  const Real dx, const Real dy, const Real dz,
-                  const GpuArray<Real, 3>& plo, FArrayBox& ro_g_fab);
+void set_ic_ro_g (const Box& sbx, const Box& domain, const Real dx,
+                  const Real dy, const Real dz, const GpuArray<Real,3>& plo,
+                  MFIXInitialConditions& initial_conditions, FArrayBox& ro_g_fab);
 
-void set_ic_thermo_p_g (const Box& sbx, const Box& domain,
-                        const Real dx, const Real dy, const Real dz,
-                        const GpuArray<Real, 3>& plo, FArrayBox& p_g_fab,
-                        const FluidPhase& fluid);
+void set_ic_thermo_p_g (const Box& sbx, const Box& domain, const Real dx,
+                        const Real dy, const Real dz, const GpuArray<Real,3>& plo,
+                        MFIXInitialConditions& initial_conditions,
+                        FArrayBox& p_g_fab, const MFIXFluidPhase& fluid);
 
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
@@ -63,14 +62,15 @@ void init_fluid (const Box& sbx,
                  const Real /*zlength*/,
                  const GpuArray<Real, 3>& plo,
                  bool test_tracer_conservation,
-                 FluidPhase& fluid)
+                 MFIXInitialConditions& initial_conditions,
+                 MFIXFluidPhase& fluid)
 {
   // Set user specified initial conditions (IC)
 
   // **************************************************************************
   // Set initial fluid velocity
   // **************************************************************************
-  set_ic_vel(sbx, domain, dx, dy, dz, plo, (*ld.vel_g)[mfi]);
+  set_ic_vel(sbx, domain, dx, dy, dz, plo, initial_conditions, (*ld.vel_g)[mfi]);
 
   // init_periodic_vortices (bx, domain, vel_g_fab, dx, dy, dz);
   // init_helix (bx, domain, vel_g_fab, dx, dy, dz);
@@ -84,37 +84,41 @@ void init_fluid (const Box& sbx,
 
   } else {
 
-    const Real trac_0 = fluid.trac_0;
+    const Real trac_0 = fluid.tracer();
     Array4<Real> const& trac = ld.trac->array(mfi);
-    ParallelFor(sbx, [trac,trac_0] AMREX_GPU_DEVICE (int i, int j, int k) noexcept { trac(i,j,k) = trac_0; });
+
+    ParallelFor(sbx, [trac,trac_0]
+      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    { trac(i,j,k) = trac_0; });
   }
 
   // **************************************************************************
   // Set initial fluid species mass fractions
   // **************************************************************************
-  if (fluid.solve_species) {
+  if (fluid.solve_species()) {
     // Set the initial fluid species mass fractions
-    set_ic_species_g(sbx, domain, dx, dy, dz, plo, (*ld.X_gk)[mfi]);
+    set_ic_species_g(sbx, domain, dx, dy, dz, plo, initial_conditions, (*ld.X_gk)[mfi]);
   }
 
   // ************************************************************************
   // Set initial fluid density
   // ************************************************************************
-  set_ic_ro_g(sbx, domain, dx, dy, dz, plo, (*ld.ro_g)[mfi]);
+  set_ic_ro_g(sbx, domain, dx, dy, dz, plo, initial_conditions, (*ld.ro_g)[mfi]);
 
   // **************************************************************************
   // Set initial fluid temperature
   // **************************************************************************
-  if (fluid.solve_enthalpy ||
-      (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-       fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
+  if (fluid.solve_enthalpy() ||
+      (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+       fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
 
-    FArrayBox* X_gk_fab = fluid.is_a_mixture ? &((*ld.X_gk)[mfi]) : nullptr;
-    FArrayBox* h_g_fab = fluid.solve_enthalpy ? &((*ld.h_g)[mfi]) : nullptr;
+    FArrayBox* X_gk_fab = fluid.isMixture() ? &((*ld.X_gk)[mfi]) : nullptr;
+    FArrayBox* h_g_fab = fluid.solve_enthalpy()? &((*ld.h_g)[mfi]) : nullptr;
 
-    set_ic_temp(sbx, domain, dx, dy, dz, plo, (*ld.T_g)[mfi], h_g_fab, X_gk_fab, fluid);
+    set_ic_temp(sbx, domain, dx, dy, dz, plo, initial_conditions, (*ld.T_g)[mfi],
+        h_g_fab, X_gk_fab, fluid);
 
-    if (!fluid.solve_enthalpy) {
+    if (!fluid.solve_enthalpy()) {
       ((*ld.T_go)[mfi]).copy<run_on>((*ld.T_g)[mfi], 0, 0, 1);
     }
   }
@@ -122,10 +126,12 @@ void init_fluid (const Box& sbx,
   // ************************************************************************
   // Set initial fluid thermodynamic_pressure
   // ************************************************************************
-  if (fluid.solve_enthalpy &&
-      (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-       fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
-    set_ic_thermo_p_g(sbx, domain, dx, dy, dz, plo, (*ld.thermodynamic_p_g)[mfi], fluid);
+  if (fluid.solve_enthalpy() &&
+      (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+       fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
+
+    set_ic_thermo_p_g(sbx, domain, dx, dy, dz, plo, initial_conditions,
+        (*ld.thermodynamic_p_g)[mfi], fluid);
   }
 }
 
@@ -359,25 +365,25 @@ void init_periodic_tracer (const Box& bx,
 void init_fluid_parameters (const Box& bx,
                             const MFIter& mfi,
                             LevelData& ld,
-                            FluidPhase& fluid)
+                            MFIXFluidPhase& fluid)
 {
   const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ld.ep_g)[mfi]);
   const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
-  const int solve_enthalpy = fluid.solve_enthalpy;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
+  const int solve_enthalpy = fluid.solve_enthalpy();
+  const int fluid_is_a_mixture = fluid.isMixture();
 
   Array4<Real> dummy_arr;
 
-  Array4<Real> const& X_gk = fluid_is_a_mixture ? (ld.X_gk)->array(mfi) : dummy_arr;
-  Array4<Real> const& T_g  = fluid.solve_enthalpy ? (ld.T_g)->array(mfi) : dummy_arr;
-  Array4<Real> const& h_g  = fluid.solve_enthalpy ? (ld.h_g)->array(mfi) : dummy_arr;
+  Array4<Real> const& X_gk = fluid.isMixture() ? (ld.X_gk)->array(mfi) : dummy_arr;
+  Array4<Real> const& T_g  = fluid.solve_enthalpy()? (ld.T_g)->array(mfi) : dummy_arr;
+  Array4<Real> const& h_g  = fluid.solve_enthalpy()? (ld.h_g)->array(mfi) : dummy_arr;
 
   auto const& flags_arr = flags.const_array();
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   // Set the IC values
   amrex::ParallelFor(bx, [nspecies_g,T_g,h_g,X_gk,solve_enthalpy,fluid_parms,
@@ -424,6 +430,7 @@ void set_ic_vel (const Box& sbx,
                  const Real dy,
                  const Real dz,
                  const GpuArray<Real, 3>& plo,
+                 MFIXInitialConditions& initial_conditions,
                  FArrayBox& vel_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -435,22 +442,22 @@ void set_ic_vel (const Box& sbx,
   Array4<Real> const& velocity = vel_g_fab.array();
 
   // Set the initial conditions.
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
   {
 
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
     calc_cell_ic(dx, dy, dz,
-                 IC::ic[icv].region->lo(),
-                 IC::ic[icv].region->hi(),
+                 initial_conditions.ic(icv).region->lo(),
+                 initial_conditions.ic(icv).region->hi(),
                  plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
     // Use the volume fraction already calculated from particle data
-    const Real ugx = IC::ic[icv].fluid.velocity[0];
-    const Real vgx = IC::ic[icv].fluid.velocity[1];
-    const Real wgx = IC::ic[icv].fluid.velocity[2];
+    const Real ugx = initial_conditions.ic(icv).fluid.velocity[0];
+    const Real vgx = initial_conditions.ic(icv).fluid.velocity[1];
+    const Real wgx = initial_conditions.ic(icv).fluid.velocity[2];
 
     const int istart = amrex::max(slo[0], i_w);
     const int jstart = amrex::max(slo[1], j_s);
@@ -552,10 +559,11 @@ void set_ic_temp (const Box& sbx,
                   const Real dy,
                   const Real dz,
                   const GpuArray<Real, 3>& plo,
+                  MFIXInitialConditions& initial_conditions,
                   FArrayBox& T_g_fab,
                   FArrayBox* h_g_fab,
                   FArrayBox* X_gk_fab,
-                  FluidPhase& fluid)
+                  MFIXFluidPhase& fluid)
 {
   const EBFArrayBox& Tg_EB_fab = static_cast<EBFArrayBox const&>(T_g_fab);
   const EBCellFlagFab& flags = Tg_EB_fab.getEBCellFlagFab();
@@ -566,9 +574,9 @@ void set_ic_temp (const Box& sbx,
   const IntVect domlo(domain.loVect());
   const IntVect domhi(domain.hiVect());
 
-  const int solve_enthalpy = fluid.solve_enthalpy;
-  const int fluid_is_a_mixture = fluid.is_a_mixture;
-  const int nspecies_g = fluid.nspecies;
+  const int solve_enthalpy = fluid.solve_enthalpy();
+  const int fluid_is_a_mixture = fluid.isMixture();
+  const int nspecies_g = fluid.nspecies();
 
   Array4<Real> dummy_arr;
   Array4<const Real> dummy_const_arr;
@@ -579,21 +587,21 @@ void set_ic_temp (const Box& sbx,
 
   auto const& flags_arr = flags.const_array();
 
-  auto& fluid_parms = *fluid.parameters;
+  const auto& fluid_parms = fluid.parameters();
 
   // Set the initial conditions.
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
   {
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
     calc_cell_ic(dx, dy, dz,
-                 IC::ic[icv].region->lo(),
-                 IC::ic[icv].region->hi(),
+                 initial_conditions.ic(icv).region->lo(),
+                 initial_conditions.ic(icv).region->hi(),
                  plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
-    const Real temperature = IC::ic[icv].fluid.temperature;
+    const Real temperature = initial_conditions.ic(icv).fluid.temperature;
 
     const int istart = amrex::max(slo[0], i_w);
     const int jstart = amrex::max(slo[1], j_s);
@@ -712,6 +720,7 @@ void set_ic_species_g (const Box& sbx,
                        const Real dy,
                        const Real dz,
                        const GpuArray<Real, 3>& plo,
+                       MFIXInitialConditions& initial_conditions,
                        FArrayBox& X_gk_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -725,13 +734,13 @@ void set_ic_species_g (const Box& sbx,
   const int nspecies_g = X_gk_fab.nComp();
 
   // Set the initial conditions.
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
   {
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
     calc_cell_ic(dx, dy, dz,
-                 IC::ic[icv].region->lo(), IC::ic[icv].region->hi(),
+                 initial_conditions.ic(icv).region->lo(), initial_conditions.ic(icv).region->hi(),
                  plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
@@ -739,7 +748,7 @@ void set_ic_species_g (const Box& sbx,
     Gpu::DeviceVector< Real> mass_fractions_d(nspecies_g);
     Gpu::HostVector  < Real> mass_fractions_h(nspecies_g);
     for (int n(0); n < nspecies_g; n++) {
-      mass_fractions_h[n] = IC::ic[icv].fluid.species[n].mass_fraction;
+      mass_fractions_h[n] = initial_conditions.ic(icv).fluid.species[n].mass_fraction;
     }
     Gpu::copy(Gpu::hostToDevice, mass_fractions_h.begin(), mass_fractions_h.end(),
               mass_fractions_d.begin());
@@ -851,8 +860,9 @@ void set_ic_thermo_p_g (const Box& sbx,
                         const Real dy,
                         const Real dz,
                         const GpuArray<Real, 3>& plo,
+                        MFIXInitialConditions& initial_conditions,
                         FArrayBox& thermodynamic_pressure_fab,
-                        const FluidPhase& fluid)
+                        const MFIXFluidPhase& fluid)
 {
   const IntVect slo(sbx.loVect());
   const IntVect shi(sbx.hiVect());
@@ -863,13 +873,13 @@ void set_ic_thermo_p_g (const Box& sbx,
   Array4<Real> const& thermo_p_g = thermodynamic_pressure_fab.array();
 
   // Set the initial conditions.
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
   {
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
     calc_cell_ic(dx, dy, dz,
-                 IC::ic[icv].region->lo(), IC::ic[icv].region->hi(),
+                 initial_conditions.ic(icv).region->lo(), initial_conditions.ic(icv).region->hi(),
                  plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
@@ -880,7 +890,7 @@ void set_ic_thermo_p_g (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    const Real pressure = fluid.thermodynamic_pressure;
+    const Real pressure = fluid.thermodynamic_pressure();
 
     // Define the function
     auto set_pressure = [thermo_p_g,pressure]
@@ -975,6 +985,7 @@ void set_ic_ro_g (const Box& sbx,
                   const Real dy,
                   const Real dz,
                   const GpuArray<Real, 3>& plo,
+                  MFIXInitialConditions& initial_conditions,
                   FArrayBox& ro_g_fab)
 {
   const IntVect slo(sbx.loVect());
@@ -986,13 +997,13 @@ void set_ic_ro_g (const Box& sbx,
   Array4<Real> const& ro_g = ro_g_fab.array();
 
   // Set the initial conditions.
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
   {
     int i_w(0), j_s(0), k_b(0);
     int i_e(0), j_n(0), k_t(0);
 
     calc_cell_ic(dx, dy, dz,
-                 IC::ic[icv].region->lo(), IC::ic[icv].region->hi(),
+                 initial_conditions.ic(icv).region->lo(), initial_conditions.ic(icv).region->hi(),
                  plo.data(),
                  i_w, i_e, j_s, j_n, k_b, k_t);
 
@@ -1003,7 +1014,7 @@ void set_ic_ro_g (const Box& sbx,
     const int jend   = std::min(shi[1], j_n);
     const int kend   = std::min(shi[2], k_t);
 
-    const Real density = IC::ic[icv].fluid.density;
+    const Real density = initial_conditions.ic(icv).fluid.density;
 
     // Define the function
     auto set_density = [ro_g,density]

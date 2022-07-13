@@ -2,7 +2,7 @@
 
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 
 #ifdef AMREX_MEM_PROFILING
 #include <AMReX_MemProfiler.H>
@@ -11,7 +11,7 @@
 void
 mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 {
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
   for (int lev = 0; lev <= finest_level; lev++) {
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!X_gk[lev]->contains_nan(),
@@ -59,11 +59,10 @@ mfix::mfix_normalize_fluid_species(const Vector< MultiFab* >& X_gk)
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      auto& fluid_parms = *fluid.parameters;
-      const int adv_enthalpy = fluid.solve_enthalpy;
+      const auto& fluid_parms = fluid.parameters();
+      const int solve_enthalpy = fluid.solve_enthalpy();
 
-      amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g,
-          adv_enthalpy,fluid_parms]
+      amrex::ParallelFor(bx, [flags_arr,X_gk_arr,nspecies_g,solve_enthalpy,fluid_parms]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         for (int n(0); n < nspecies_g; ++n) {

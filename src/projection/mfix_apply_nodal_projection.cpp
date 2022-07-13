@@ -1,6 +1,6 @@
 #include <mfix.H>
-#include <mfix_bc_parms.H>
-#include <mfix_eb_parms.H>
+#include <mfix_bc.H>
+#include <mfix_eb.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
@@ -192,13 +192,13 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
                                                        a_S_cc);
 
     nodalproj_options->apply(*nodal_projector);
-    nodal_projector->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+    nodal_projector->setDomainBC(m_boundary_conditions.ppe_lobc(), m_boundary_conditions.ppe_hibc());
 
     // By setting alpha = ep_g, the nodal projection will correct the velocity by
     // (sigma / alpha) grad(phi) rather than sigma grad phi
     nodal_projector->setAlpha(GetVecOfConstPtrs(ep_g_in));
 
-    if (EB::has_flow) {
+    if (m_embedded_boundaries.has_flow()) {
        for (int lev(0); lev < nlev; ++lev) {
           nodal_projector->getLinOp().setEBInflowVelocity(lev, *eb_vel[lev]);
        }

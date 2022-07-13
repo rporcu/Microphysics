@@ -1,8 +1,8 @@
 #include <mfix.H>
 #include <AMReX_EB_utils.H>
-#include <mfix_eb_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_eb.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 
 void
 mfix::ResizeArrays ()
@@ -42,10 +42,9 @@ mfix::AllocateArrays (int lev)
     mfix_update_ebfactory(lev);
 
     if (mfixRW->only_print_grid_report) {
-        m_leveldata[lev] = std::make_unique<LevelData>(
-              true, 
-              grids[lev], dmap[lev], nghost_state(),
-              *ebfactory[lev]);
+        m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev],
+            nghost_state(), *ebfactory[lev], &m_embedded_boundaries, &fluid,
+            &reactions, true);
 
         m_leveldata[lev]->resetValues(init_value);
 
@@ -66,8 +65,9 @@ mfix::AllocateArrays (int lev)
     // Cell- or node-based arrays
     // ********************************************************************************
 
-    m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev], nghost_state(),
-                                                   *ebfactory[lev], &fluid, &reactions);
+    m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev],
+        nghost_state(), *ebfactory[lev], &m_embedded_boundaries, &fluid, &reactions);
+
     m_leveldata[lev]->resetValues(init_value);
 
     // ********************************************************************************
@@ -223,8 +223,8 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-        fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+    if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+        fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
       // Gas thermodynamic pressure
       MultiFab* thermodynamic_p_g_new = new MultiFab(grids[lev], dmap[lev],
                                                      m_leveldata[lev]->thermodynamic_p_g->nComp(),
@@ -252,9 +252,9 @@ mfix::RegridArrays (int lev)
       delete thermodynamic_p_go_new;
     }
 
-    if (fluid.solve_enthalpy ||
-        (fluid.constraint_type == ConstraintType::IdealGasOpenSystem ||
-         fluid.constraint_type == ConstraintType::IdealGasClosedSystem)) {
+    if (fluid.solve_enthalpy() ||
+        (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+         fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
       // Gas temperature
       MultiFab* T_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->T_g->nComp(),
@@ -278,7 +278,7 @@ mfix::RegridArrays (int lev)
       delete T_go_new;
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       // Gas enthalpy
       MultiFab* h_g_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->h_g->nComp(),
@@ -301,7 +301,7 @@ mfix::RegridArrays (int lev)
       std::swap(m_leveldata[lev]->h_go, h_go_new);
       delete h_go_new;
 
-      if (EB::fix_temperature) {
+      if (m_embedded_boundaries.fix_temperature()) {
         // Dirichlet temperature values on the EB
         MultiFab* T_g_on_eb_new = new MultiFab(grids[lev], dmap[lev],
             m_leveldata[lev]->T_g_on_eb->nComp(),
@@ -318,7 +318,7 @@ mfix::RegridArrays (int lev)
       }
     }
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       // Gas species mass fraction
       MultiFab* X_gk_new = new MultiFab(grids[lev], dmap[lev],
                                        m_leveldata[lev]->X_gk->nComp(),
@@ -399,7 +399,7 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (fluid.solve_species && reactions.solve) {
+    if (fluid.solve_species() && reactions.solve()) {
       // Species mass transfer rates
       MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
                                         m_leveldata[lev]->chem_txfr->nComp(),

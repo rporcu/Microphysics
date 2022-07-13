@@ -11,10 +11,10 @@
 //#include <fstream>
 //#include <sstream>
 
-#include <mfix_ic_parms.H>
-//#include <mfix_solids_parms.H>
-//#include <mfix_dem_parms.H>
-//#include <mfix_pic_parms.H>
+#include <mfix_ic.H>
+//#include <mfix_solids.H>
+//#include <mfix_dem.H>
+//#include <mfix_pic.H>
 
 #include <AMReX_IntVect.H>
 #include <AMReX_RealVect.H>
@@ -41,24 +41,25 @@ class Hex_ClosePack
       , m_np(0)
     {}
 
-    void setup (const amrex::IntVect& lo,
+    void setup (MFIXInitialConditions& initial_conditions,
+                const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
                 const int phase)
     {
       // physical volume of IC region
-      const amrex::Real ic_vol = IC::ic[icv].region->volume();
+      const amrex::Real ic_vol = initial_conditions.ic(icv).region->volume();
 
-      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+      const auto& ic_solid = *(initial_conditions.ic(icv).get_solid(phase));
       const amrex::Real mean = ic_solid.diameter.get_mean();
 
       // Total particle count is based on mean particle size
       const long seed =
         static_cast<long>(ic_vol * ic_solid.volfrac / ((M_PI/6.0)*mean*mean*mean));
 
-      const amrex::Real xlen = IC::ic[icv].region->hi(0) - IC::ic[icv].region->lo(0);
-      const amrex::Real ylen = IC::ic[icv].region->hi(1) - IC::ic[icv].region->lo(1);
-      const amrex::Real zlen = IC::ic[icv].region->hi(2) - IC::ic[icv].region->lo(2);
+      const amrex::Real xlen = initial_conditions.ic(icv).region->hi(0) - initial_conditions.ic(icv).region->lo(0);
+      const amrex::Real ylen = initial_conditions.ic(icv).region->hi(1) - initial_conditions.ic(icv).region->lo(1);
+      const amrex::Real zlen = initial_conditions.ic(icv).region->hi(2) - initial_conditions.ic(icv).region->lo(2);
 
       // This is the radius we need for spacing particles to get the
       // desired volume fraction and particle count.
@@ -73,13 +74,13 @@ class Hex_ClosePack
                              m_plo[1] + m_dx[1]*static_cast<amrex::Real>(hi[1]+1),
                              m_plo[2] + m_dx[2]*static_cast<amrex::Real>(hi[2]+1));
 
-      m_ic_dlo = amrex::RealVect(IC::ic[icv].region->lo(0),
-                                 IC::ic[icv].region->lo(1),
-                                 IC::ic[icv].region->lo(2));
+      m_ic_dlo = amrex::RealVect(initial_conditions.ic(icv).region->lo(0),
+                                 initial_conditions.ic(icv).region->lo(1),
+                                 initial_conditions.ic(icv).region->lo(2));
 
-      amrex::RealVect ic_dhi(IC::ic[icv].region->hi(0),
-                             IC::ic[icv].region->hi(1),
-                             IC::ic[icv].region->hi(2));
+      amrex::RealVect ic_dhi(initial_conditions.ic(icv).region->hi(0),
+                             initial_conditions.ic(icv).region->hi(1),
+                             initial_conditions.ic(icv).region->hi(2));
 
       // Verify that the IC region overlaps with the IC region.
       if (ic_dhi[0] < rbx_lo[0] || rbx_hi[0] < m_ic_dlo[0] ||
@@ -344,7 +345,8 @@ class nCubePer_Fill
       , m_np(0)
     {}
 
-    void setup (const amrex::IntVect& lo,
+    void setup (MFIXInitialConditions& initial_conditions,
+                const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
                 const int phase)
@@ -355,8 +357,8 @@ class nCubePer_Fill
 
       int i_w, i_e, j_s, j_n, k_b, k_t;
       calc_cell_ic(m_dx[0], m_dx[1], m_dx[2],
-                   IC::ic[icv].region->lo(),
-                   IC::ic[icv].region->hi(),
+                   initial_conditions.ic(icv).region->lo(),
+                   initial_conditions.ic(icv).region->hi(),
                    m_plo.dataPtr(),
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
@@ -374,7 +376,7 @@ class nCubePer_Fill
       // Intersection of mfi box and ic box
       const amrex::Box bx_int = mfi_bx&ic_bx;
 
-      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+      const auto& ic_solid = *(initial_conditions.ic(icv).get_solid(phase));
 
       const amrex::Real mean = ic_solid.diameter.get_mean();
       amrex::Real max_dp(mean);
@@ -481,7 +483,9 @@ class RandomFill_DEM
       , m_np(0)
     {}
 
-    void setup (const amrex::IntVect& lo,
+    void setup (MFIXInitialConditions& initial_conditions,
+                MFIXDEM& dem,
+                const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
                 const int phase,
@@ -498,8 +502,8 @@ class RandomFill_DEM
       amrex::Real max_dp, max_rp;
 
       calc_cell_ic(m_dx[0], m_dx[1], m_dx[2],
-                   IC::ic[icv].region->lo(),
-                   IC::ic[icv].region->hi(),
+                   initial_conditions.ic(icv).region->lo(),
+                   initial_conditions.ic(icv).region->hi(),
                    m_plo.dataPtr(),
                    i_w, i_e, j_s, j_n, k_b, k_t);
 
@@ -517,7 +521,7 @@ class RandomFill_DEM
                                  (ic_dhi[1] - ic_dlo[1]) *
                                  (ic_dhi[2] - ic_dlo[2]);
 
-      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+      const auto& ic_solid = *(initial_conditions.ic(icv).get_solid(phase));
 
       amrex::Real mean = ic_solid.diameter.get_mean();
 
@@ -528,7 +532,7 @@ class RandomFill_DEM
         max_dp = ic_solid.diameter.get_mean();
 
       // If coarse-grain DEM is activated
-      if (DEM::cg_dem)
+      if (dem.cg_dem())
       {
         amrex::Real statwt = ic_solid.statwt;
         mean = std::cbrt(statwt) * mean;
@@ -738,14 +742,15 @@ class RandomFill_PIC
       , m_np(0)
     {}
 
-    void setup (const amrex::IntVect& lo,
+    void setup (MFIXInitialConditions& initial_conditions,
+                const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
                 const int icv,
                 const int phase,
                 const bool /*fix_seed*/)
     {
-      const amrex::Real* ic_rlo = IC::ic[icv].region->lo();
-      const amrex::Real* ic_rhi = IC::ic[icv].region->hi();
+      const amrex::Real* ic_rlo = initial_conditions.ic(icv).region->lo();
+      const amrex::Real* ic_rhi = initial_conditions.ic(icv).region->hi();
 
       amrex::IntVect seed_hi;
 
@@ -766,7 +771,7 @@ class RandomFill_PIC
       // Number of cells in IC region
       const amrex::Real ic_cells = m_delta_bx[0] * m_delta_bx[1] * m_delta_bx[2];
 
-      const auto& ic_solid = *(IC::ic[icv].get_solid(phase));
+      const auto& ic_solid = *(initial_conditions.ic(icv).get_solid(phase));
 
       // Particle properties: Mean diameter, stat weight, volume
       const amrex::Real mean = ic_solid.diameter.get_mean();

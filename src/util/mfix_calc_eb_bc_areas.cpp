@@ -1,9 +1,8 @@
 #include <mfix.H>
 
 #include <mfix_calc_cell.H>
-#include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_list.H>
+#include <mfix_bc.H>
+#include <mfix_fluid.H>
 
 #include <AMReX_ParallelReduce.H>
 
@@ -14,10 +13,10 @@ mfix::mfix_calc_eb_bc_areas ()
 {
   BL_PROFILE("mfix::mfix_calc_eb_bc_areas()");
 
-  EB::compute_area = 0;
+  m_embedded_boundaries.set_compute_area(0);
 
   // Number of boundary conditions
-  const int nbc = BC::bc.size();
+  const int nbc = m_boundary_conditions.bc().size();
 
   amrex::Vector<Real> eb_areas(nbc, Real(0.));
 
@@ -32,22 +31,22 @@ mfix::mfix_calc_eb_bc_areas ()
 
     for(int bcv(0); bcv < nbc; ++bcv) {
 
-      if (BC::bc[bcv].type != BCList::eb) {
+      if (m_boundary_conditions.bc(bcv).type != BCList::eb) {
 
         eb_areas[bcv] = Real(0.0);
 
       } else {
 
-        const int  has_normal = BC::bc[bcv].eb.has_normal;
+        const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
         amrex::GpuArray<amrex::Real,3> normal{0.};
         if (has_normal) {
-           normal[0] = BC::bc[bcv].eb.normal[0];
-           normal[1] = BC::bc[bcv].eb.normal[1];
-           normal[2] = BC::bc[bcv].eb.normal[2];
+           normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
+           normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
+           normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
         }
 
         const Real pad = std::numeric_limits<float>::epsilon();
-        const Real normal_tol = BC::bc[bcv].eb.normal_tol;
+        const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
 
         const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
         const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
@@ -56,7 +55,7 @@ mfix::mfix_calc_eb_bc_areas ()
         ReduceData<Real> reduce_data(reduce_op);
         using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+        const Box ic_bx = calc_ic_box(geom[lev], m_boundary_conditions.bc(bcv).region);
 
         for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi) {
 
@@ -127,10 +126,13 @@ mfix::mfix_calc_eb_bc_areas ()
     ParallelAllReduce::Sum(eb_areas.data(), eb_areas.size(), ParallelContext::CommunicatorAll());
 
     for(int bcv(0); bcv < nbc; ++bcv) {
-      if (BC::bc[bcv].type == BCList::eb) {
-        BC::bc[bcv].eb.area = eb_areas[bcv];
+
+      BC_t& bc = m_boundary_conditions.bc(bcv);
+
+      if (bc.type == BCList::eb) {
+        bc.eb.area = eb_areas[bcv];
       }
     }
 
-  }//nlev
+  } //nlev
 }

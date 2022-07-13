@@ -1,5 +1,5 @@
 #include <mfix_diffusion_op.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 
 using namespace amrex;
 
@@ -36,7 +36,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
     species_matrix->setScalars(1.0, dt);
 
     // Number of fluid species
-    const int nspecies_g = fluid.nspecies;
+    const int nspecies_g = fluid.nspecies();
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -46,7 +46,7 @@ void DiffusionOp::diffuse_species (const Vector< MultiFab* >&    X_gk_in,
 
         ep_ro_D_gk.setVal(0.);
 
-        auto& fluid_parms = *fluid.parameters;
+        const auto& fluid_parms = fluid.parameters();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

@@ -1,7 +1,6 @@
-#include <mfix_bc_list.H>
-#include <mfix_bc_parms.H>
+#include <mfix_bc.H>
 #include <mfix_pc.H>
-#include <mfix_dem_parms.H>
+#include <mfix_dem.H>
 
 using namespace amrex;
 
@@ -11,13 +10,13 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   Vector<Real> max_dp, max_ro;
   Vector<Real> avg_dp, avg_ro;
 
-  max_dp.resize(solids.ntypes);
-  max_ro.resize(solids.ntypes);
-  avg_dp.resize(solids.ntypes);
-  avg_ro.resize(solids.ntypes);
+  max_dp.resize(solids.ntypes());
+  max_ro.resize(solids.ntypes());
+  avg_dp.resize(solids.ntypes());
+  avg_ro.resize(solids.ntypes());
 
   // Cycle through the different phases, starting from 1
-  for (const int& phase: solids.phases)
+  for (const int& phase: solids.phases())
   {
     Real h_pnum  = 0;   //number of particle
     Real h_pdiam = 0.0; //particle diameters
@@ -82,7 +81,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
     ParallelDescriptor::ReduceRealMax({h_maxdiam,h_maxdens});
 
     //calculate averages or set = zero if no particles of that phase
-    const int phase_idx = SolidsPhase::phase_to_index(phase);
+    const int phase_idx = MFIXSolidsPhase::phase_to_index(phase);
 
     if (h_pnum==0) {
        avg_dp[phase_idx] = 0.0;
@@ -101,16 +100,16 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   }
 
   // Loop over BCs
-  for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+  for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
     // EB flow with at least one solid
-    if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].solids.size() > 0) {
+    if (m_boundary_conditions.bc(bcv).type == BCList::eb && m_boundary_conditions.bc(bcv).solids.size() > 0) {
 
       const Real tolerance = std::numeric_limits<Real>::epsilon();
 
-      for(int lcs(0); lcs < BC::bc[bcv].solids.size(); lcs++) {
+      for(int lcs(0); lcs < m_boundary_conditions.bc(bcv).solids.size(); lcs++) {
 
-        const SOLIDS_t& bc_solid = BC::bc[bcv].solids[lcs];
+        const SOLIDS_t& bc_solid = m_boundary_conditions.bc(bcv).solids[lcs];
 
         if(bc_solid.volfrac > tolerance) {
 
@@ -138,9 +137,9 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
 
   Real max_max_dp(0.);
-  for (const int& phase: solids.phases)
+  for (const int& phase: solids.phases())
   {
-    const int phase_idx = SolidsPhase::phase_to_index(phase);
+    const int phase_idx = MFIXSolidsPhase::phase_to_index(phase);
 
      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(avg_dp[phase_idx] > 0.0,
         "Average particle diameter cannot be zero");
@@ -155,30 +154,30 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   }
 
   // (3*max_dp/2)^2
-  DEM::neighborhood = 2.25*max_max_dp*max_max_dp;
+  m_dem.set_neighborhood(2.25*max_max_dp*max_max_dp);
 
   Real tcoll(1.0);
 
-  DEM::A2D::array_type host_etan, host_etat, host_en;
-  DEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
+  MFIXDEM::A2D::array_type host_etan, host_etat, host_en;
+  MFIXDEM::A1D::array_type host_etan_w, host_etat_w, host_en_w;
 #ifdef AMREX_USE_GPU
-  amrex::Gpu::dtoh_memcpy_async(&host_en, DEM::en.arrayPtr(), sizeof(DEM::A2D::array_type));
-  amrex::Gpu::dtoh_memcpy_async(&host_en_w, DEM::en_w.arrayPtr(), sizeof(DEM::A1D::array_type));
+  amrex::Gpu::dtoh_memcpy_async(&host_en, m_dem.en().arrayPtr(), sizeof(MFIXDEM::A2D::array_type));
+  amrex::Gpu::dtoh_memcpy_async(&host_en_w, m_dem.en_w().arrayPtr(), sizeof(MFIXDEM::A1D::array_type));
   amrex::Gpu::synchronize();
 #else
-  host_en = *(DEM::en.arrayPtr());
-  host_en_w = *(DEM::en_w.arrayPtr());
+  host_en = *(m_dem.en().arrayPtr());
+  host_en_w = *(m_dem.en_w().arrayPtr());
 #endif
 
-  for (const int& phase: solids.phases) {
+  for (const int& phase: solids.phases()) {
 
-    const int phase_idx = SolidsPhase::phase_to_index(phase);
+    const int phase_idx = MFIXSolidsPhase::phase_to_index(phase);
 
     const Real dp_m = avg_dp[phase_idx];
     const Real mass_m = (M_PI/6.0)*(dp_m*dp_m*dp_m) * avg_ro[phase_idx];
 
     // Collision parameters between phase_idx M and all other phase_idxs
-    for (int other_phase_idx(phase_idx); other_phase_idx < solids.ntypes; ++other_phase_idx) {
+    for (int other_phase_idx(phase_idx); other_phase_idx < solids.ntypes(); ++other_phase_idx) {
 
       const Real dp_l = avg_dp[other_phase_idx];
       const Real mass_l = (M_PI/6.0)*(dp_l*dp_l*dp_l) * avg_ro[other_phase_idx];
@@ -186,19 +185,19 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
       const Real mass_eff = (mass_m * mass_l) / (mass_m + mass_l);
 
       //Calculate the M-L normal and tangential damping coefficients
-      host_etan(phase_idx,other_phase_idx) = 2.0*std::sqrt(DEM::kn*mass_eff);
+      host_etan(phase_idx,other_phase_idx) = 2.0*std::sqrt(m_dem.kn()*mass_eff);
       if(amrex::Math::abs(host_en(phase_idx,other_phase_idx)) > 0.0){
         const Real log_en = std::log(host_en(phase_idx,other_phase_idx));
         host_etan(phase_idx,other_phase_idx) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
       }
-      host_etat(phase_idx,other_phase_idx) = DEM::eta_fac * host_etan(phase_idx,other_phase_idx);
+      host_etat(phase_idx,other_phase_idx) = m_dem.eta_fac() * host_etan(phase_idx,other_phase_idx);
 
       // Store the symmetric components
       host_etan(other_phase_idx,phase_idx) = host_etan(phase_idx,other_phase_idx);
       host_etat(other_phase_idx,phase_idx) = host_etat(phase_idx,other_phase_idx);
 
       // Collision time scale for M-L interactions
-      Real tcoll_ml = M_PI/sqrt(DEM::kn/mass_eff -
+      Real tcoll_ml = M_PI/sqrt(m_dem.kn()/mass_eff -
          0.25*(host_etan(phase_idx,other_phase_idx)/mass_eff)*(host_etan(phase_idx,other_phase_idx)/mass_eff));
 
       tcoll = amrex::min(tcoll, tcoll_ml);
@@ -209,15 +208,15 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
       const Real mass_eff = mass_m;
 
       //Calculate the M-L normal and tangential damping coefficients
-      host_etan_w(phase_idx) = 2.0*std::sqrt(DEM::kn_w*mass_eff);
+      host_etan_w(phase_idx) = 2.0*std::sqrt(m_dem.kn_w()*mass_eff);
       if(amrex::Math::abs(host_en_w(phase_idx)) > 0.0){
          const Real log_en = std::log(host_en_w(phase_idx));
          host_etan_w(phase_idx) *= amrex::Math::abs(log_en)/(std::sqrt(M_PI*M_PI + log_en*log_en));
       }
-      host_etat_w(phase_idx) = DEM::eta_w_fac * host_etan_w(phase_idx);
+      host_etat_w(phase_idx) = m_dem.eta_w_fac() * host_etan_w(phase_idx);
 
       // Calculate the collision time scale.
-      Real tcoll_w = M_PI/std::sqrt(DEM::kn_w/mass_eff -
+      Real tcoll_w = M_PI/std::sqrt(m_dem.kn_w()/mass_eff -
          0.25*(host_etan_w(phase_idx)/mass_eff)*(host_etan_w(phase_idx)/mass_eff));
 
       tcoll = amrex::min(tcoll, tcoll_w);
@@ -225,21 +224,21 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   }
 
 #ifdef AMREX_USE_GPU
-  amrex::Gpu::htod_memcpy_async(DEM::etan.arrayPtr(), &host_etan, sizeof(DEM::A2D::array_type));
-  amrex::Gpu::htod_memcpy_async(DEM::etat.arrayPtr(), &host_etat, sizeof(DEM::A2D::array_type));
-  amrex::Gpu::htod_memcpy_async(DEM::etan_w.arrayPtr(), &host_etan_w, sizeof(DEM::A1D::array_type));
-  amrex::Gpu::htod_memcpy_async(DEM::etat_w.arrayPtr(), &host_etat_w, sizeof(DEM::A1D::array_type));
+  amrex::Gpu::htod_memcpy_async(m_dem.etan().arrayPtr(), &host_etan, sizeof(MFIXDEM::A2D::array_type));
+  amrex::Gpu::htod_memcpy_async(m_dem.etat().arrayPtr(), &host_etat, sizeof(MFIXDEM::A2D::array_type));
+  amrex::Gpu::htod_memcpy_async(m_dem.etan_w().arrayPtr(), &host_etan_w, sizeof(MFIXDEM::A1D::array_type));
+  amrex::Gpu::htod_memcpy_async(m_dem.etat_w().arrayPtr(), &host_etat_w, sizeof(MFIXDEM::A1D::array_type));
   amrex::Gpu::synchronize();
 #else
-  *(DEM::etan.arrayPtr()) = host_etan;
-  *(DEM::etat.arrayPtr()) = host_etat;
-  *(DEM::etan_w.arrayPtr()) = host_etan_w;
-  *(DEM::etat_w.arrayPtr()) = host_etat_w;
+  *(m_dem.etan().arrayPtr()) = host_etan;
+  *(m_dem.etat().arrayPtr()) = host_etat;
+  *(m_dem.etan_w().arrayPtr()) = host_etan_w;
+  *(m_dem.etat_w().arrayPtr()) = host_etat_w;
 #endif
 
   ParmParse pp("mfix");
   Real tcoll_ratio = 50.;
   pp.query("tcoll_ratio", tcoll_ratio);
 
-  DEM::dtsolid = tcoll / tcoll_ratio;
+  m_dem.set_dtsolid(tcoll / tcoll_ratio);
 }

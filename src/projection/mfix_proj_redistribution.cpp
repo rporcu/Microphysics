@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <hydro_redistribution.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 void
 mfix::PostProjectionRedistribution (Real l_time, Real l_dt, 
                                     const Vector<MultiFab*>& sigma)

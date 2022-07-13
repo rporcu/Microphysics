@@ -5,8 +5,8 @@
 #include <mfix_pc.H>
 #include <mfix_mf_helpers.H>
 
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 void mfix::pic_iteration (const bool apply_forces,
                           const bool update_parcels,
@@ -108,7 +108,7 @@ void mfix::pic_iteration (const bool apply_forces,
     // your grid from an adjacent grid.
     ep_s_out[lev]->SumBoundary(gm.periodicity());
 
-    // const Real max_eps(1.1*PIC::ep_cp);
+    // const Real max_eps(1.1*m_pic.ep_cp());
     const Real max_eps(0.95);
 
     for (MFIter mfi(*ep_s_out[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {

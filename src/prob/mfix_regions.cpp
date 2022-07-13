@@ -4,10 +4,10 @@
 #include <AMReX_RealBox.H>
 
 #include <AMReX_ParmParse.H>
-#include <mfix_regions_parms.H>
+#include <mfix_regions.H>
 
 void
-Regions::Initialize ()
+MFIXRegions::Initialize ()
 {
   m_is_initialized = 1;
 
@@ -39,28 +39,7 @@ Regions::Initialize ()
     }
   }
 
-#if 0
-
-  if(m_names.size() > 0 ) {
-    amrex::Print() << std::endl << "Found regions!"  << std::endl;
-    for (int lc=0; lc < m_names.size(); ++lc ) {
-
-      amrex::RealBox myBox = m_extents[lc];
-
-      amrex::Print() <<
-        std::endl << " Index: " << lc <<
-        std::endl << "  Name: " << m_names[lc] <<
-        std::endl << "    Lo: " << myBox.lo(0) << "  " << myBox.lo(1) << "  " << myBox.lo(2) <<
-        std::endl << "    Hi: " << myBox.hi(0) << "  " << myBox.hi(1) << "  " << myBox.hi(2) <<
-        std::endl;
-    }
-
-  } else {
-    amrex::Print() << std::endl << "No regions found :(" << std::endl;
-  }
-#endif
-
-} // End Initialize
+} // end Initialize
 
 
 /*-----------------------------------------------------------------\
@@ -68,7 +47,7 @@ Regions::Initialize ()
 |  the matching name.                                              |
 \-----------------------------------------------------------------*/
 int
-Regions::get_index (const std::string& name) const
+MFIXRegions::getIndex (const std::string& name) const
 {
   for (int lc=0; lc < m_names.size(); lc++) {
     if (name.compare(m_names[lc]) == 0) {
@@ -85,7 +64,7 @@ Regions::get_index (const std::string& name) const
 |  with the matching name.                                         |
 \-----------------------------------------------------------------*/
 const amrex::RealBox*
-Regions::get_region (const std::string& name) const
+MFIXRegions::getRegion (const std::string& name) const
 {
   for (int lc=0; lc < m_names.size(); lc++) {
     if (name.compare(m_names[lc]) == 0) {

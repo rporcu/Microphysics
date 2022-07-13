@@ -1,7 +1,7 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 
 using namespace amrex;
 
@@ -86,7 +86,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
   const Box bx_xy_lo_3D(X_gk_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, X_gk_hi);
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
   set_species_bc_values(time);
   Real** p_bc_X_gk = m_bc_X_gk_ptr.data();

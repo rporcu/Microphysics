@@ -1,6 +1,6 @@
 #include <AMReX_MultiFabUtil.H>
 #include <mfix_diffusion_op.H>
-#include <mfix_eb_parms.H>
+#include <mfix_eb.H>
 
 using namespace amrex;
 
@@ -22,7 +22,7 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
     Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
     bcs_dummy.resize(3);
 
-    auto& fluid_parms = *fluid.parameters;
+    const auto& fluid_parms = fluid.parameters();
 
     for(int lev = 0; lev <= finest_level; lev++)
     {
@@ -32,8 +32,6 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
 
       mu_g[lev]->setVal(0);
 
-      const Real mu_g0 = fluid.mu_g0;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -42,13 +40,15 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
         Box const& bx = mfi.growntilebox(vel_in[lev]->nGrowVect());
 
         if (bx.ok()) {
-          const int solve_enthalpy = fluid.solve_enthalpy;
+          const int solve_enthalpy = fluid.solve_enthalpy();
 
           Array4<Real      > const& mu_g_array = mu_g[lev]->array(mfi);
           Array4<Real const> const& T_g_array  = solve_enthalpy ?
             T_g_in[lev]->const_array(mfi) : Array4<const Real>();
 
-          ParallelFor(bx, [mu_g_array,T_g_array,solve_enthalpy,mu_g0,fluid_parms]
+          const Real mu_g0 = fluid.mu_g();
+
+          ParallelFor(bx, [mu_g_array,T_g_array,solve_enthalpy,fluid_parms,mu_g0]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             if (solve_enthalpy)
@@ -90,7 +90,7 @@ void DiffusionOp::diffuse_velocity (const Vector< MultiFab* >& vel_in,
         vel_matrix->setShearViscosity  (lev, GetArrOfConstPtrs(b[lev]), MLMG::Location::FaceCentroid);
         vel_matrix->setEBShearViscosity(lev, (*mu_g[lev]));
 
-        if (EB::has_flow) {
+        if (m_embedded_boundaries.has_flow()) {
             vel_matrix->setEBShearViscosityWithInflow(lev, (*mu_g[lev]), *eb_flow_vel[lev]);
         }
     }

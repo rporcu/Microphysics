@@ -1,6 +1,6 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 
 using namespace amrex;
 
@@ -13,7 +13,7 @@ mfix::mfix_set_tracer_bcs (Real time,
 {
   BL_PROFILE("mfix::mfix_set_tracer_bcs()");
 
-  if (fluid.solve_tracer)
+  if (fluid.solve_tracer())
   {
     for (int lev = 0; lev < nlev; lev++)
     {
@@ -27,7 +27,7 @@ mfix::mfix_set_tracer_bcs (Real time,
         set_tracer_bcs(time, lev, (*trac_in[lev])[mfi], domain);
       }
 
-      trac_in[lev] -> FillBoundary (geom[lev].periodicity());
+      trac_in[lev]->FillBoundary(geom[lev].periodicity());
 
       EB_set_covered(*trac_in[lev], 0, trac_in[lev]->nComp(), trac_in[lev]->nGrow(), covered_val);
     }
@@ -56,7 +56,7 @@ mfix::set_tracer_bcs (Real /*time*/,
 
   Array4<Real> const& scal_arr = scal_fab.array();
 
-  Real bc0 = fluid.trac_0;
+  Real bc0 = fluid.tracer();
 
   IntVect scal_lo(scal_fab.loVect());
   IntVect scal_hi(scal_fab.hiVect());

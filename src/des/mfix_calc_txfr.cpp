@@ -9,7 +9,7 @@
 #include <AMReX_FillPatchUtil.H>
 
 #include <mfix_mf_helpers.H>
-#include <mfix_dem_parms.H>
+#include <mfix_dem.H>
 #include <mfix_des_rrates_K.H>
 #include <mfix_algorithm.H>
 
@@ -37,7 +37,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
   for (int lev = 0; lev < nlev; lev++) {
     txfr_out[lev]->setVal(0);
 
-    if (reactions.solve)
+    if (reactions.solve())
       chem_txfr_out[lev]->setVal(0);
   }
 
@@ -70,7 +70,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    txfr_out[lev]->nComp(),
                                    txfr_out[lev]->nGrow());
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                           pc->ParticleDistributionMap(lev),
                                           chem_txfr_out[lev]->nComp(),
@@ -93,14 +93,14 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     if (txfr_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       if (chem_txfr_ptr[lev]->nGrow() < 1)
         amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
     }
 
     txfr_ptr[lev]->setVal(0.0, 0, txfr_out[lev]->nComp(), txfr_ptr[lev]->nGrow());
 
-    if (reactions.solve)
+    if (reactions.solve())
       chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr_out[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
   }
 
@@ -151,7 +151,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // when BC is either a pressure inlet or mass inflow.
     mfix_deposition_bcs(lev, *txfr_ptr[lev]);
 
-    if (reactions.solve)
+    if (reactions.solve())
       mfix_deposition_bcs(lev, *chem_txfr_ptr[lev]);
 
     // Sum grid boundaries to capture any material that was deposited into
@@ -159,7 +159,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->setBndry(0.0);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
       chem_txfr_ptr[lev]->setBndry(0.0);
     }
@@ -174,7 +174,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev], flags[lev],
                                  mfix::m_max_solids_volume_fraction);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       mfix_redistribute_deposition(lev, *tmp_eps[lev], *chem_txfr_ptr[lev], volfrac[lev], flags[lev],
                                    mfix::m_max_solids_volume_fraction);
     }
@@ -184,7 +184,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
       chem_txfr_ptr[lev]->FillBoundary(gm.periodicity());
     }
@@ -207,7 +207,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     txfr_ptr[0]->ParallelCopy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
         ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       chem_txfr_ptr[0]->ParallelCopy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(), ng_to_copy,
           ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
     }
@@ -237,7 +237,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    ref_ratio[0], mapper,
                                    bcs, 0);
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         chem_txfr_out[lev]->setVal(0);
         amrex::InterpFromCoarseLevel(*chem_txfr_out[lev], time, *chem_txfr_ptr[lev-1],
                                      0, 0, 1, Geom(lev-1), Geom(lev),
@@ -256,7 +256,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     txfr_out[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr_out[0]->nComp());
   }
 
-  if (reactions.solve) {
+  if (reactions.solve()) {
     if (chem_txfr_ptr[0] != chem_txfr_out[0]) {
       chem_txfr_out[0]->ParallelCopy(*chem_txfr_ptr[0], 0, 0, chem_txfr_out[0]->nComp());
     }
@@ -324,13 +324,13 @@ mfix::mfix_calc_txfr_particle (Real time,
   // Data for chemical reactions
   //***************************************************************************
   // Solid species data
-  const int nspecies_s = solids.nspecies;
+  const int nspecies_s = solids.nspecies();
 
   // Fluid species data
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
-  // Reactions data
-  const int nreactions = reactions.nreactions;
+  // MFIXReactions data
+  const int nreactions = reactions.nreactions();
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
@@ -338,9 +338,9 @@ mfix::mfix_calc_txfr_particle (Real time,
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
 
-  auto& fluid_parms = *fluid.parameters;
-  auto& solids_parms = *solids.parameters;
-  auto& reactions_parms = *reactions.parameters;
+  const auto& fluid_parms = fluid.parameters();
+  const auto& solids_parms = solids.parameters();
+  const auto& reactions_parms = reactions.parameters();
 
   //***************************************************************************
   //
@@ -351,11 +351,11 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
-  if (fluid.solve_enthalpy) {
+  if (fluid.solve_enthalpy()) {
     mfix_set_temperature_bcs(time, T_g_in);
   }
 
-  if (reactions.solve) {
+  if (reactions.solve()) {
 
     const int dir_bc_in = 2;
     mfix_set_epg_bcs(ep_g_in, dir_bc_in);
@@ -402,25 +402,25 @@ mfix::mfix_calc_txfr_particle (Real time,
     EB_set_covered(*vel_g_in[lev], 0, 3, 1, covered_val);
     EB_set_covered(gp_tmp, 0, 3, 1, covered_val);
 
-    if (fluid.solve_enthalpy)
+    if (fluid.solve_enthalpy())
       EB_set_covered(*T_g_in[lev], 0, 1, 1, covered_val);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
       EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
-      EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies, 1, covered_val);
+      EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies(), 1, covered_val);
       EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
     }
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 6 +  // 3 vel_g + 3 gp
-                            1*int(fluid.solve_enthalpy) +  // 1 T_g
-                            (3+fluid.nspecies)*int(reactions.solve); // ep_g + ro_g + X_gk + pressure_g
+                            1*int(fluid.solve_enthalpy()) +  // 1 T_g
+                            (3+fluid.nspecies())*int(reactions.solve()); // ep_g + ro_g + X_gk + pressure_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
     pressure_cc.setVal(0.);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       MultiFab pressure_nd(pressure_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
       pressure_nd.setVal(0.);
       EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
@@ -450,12 +450,12 @@ mfix::mfix_calc_txfr_particle (Real time,
       components_count += 3;
 
       // Copy fluid temperature
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         MultiFab::Copy(*interp_ptr, *T_g_in[lev], 0, components_count, 1, interp_ng);
         components_count += 1;
       }
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         // Copy volume fraction
         MultiFab::Copy(*interp_ptr, *ep_g_in[lev],  0, components_count, 1, interp_ng);
         components_count += 1;
@@ -465,8 +465,8 @@ mfix::mfix_calc_txfr_particle (Real time,
         components_count += 1;
 
         // Copy species mass fractions
-        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng);
-        components_count += fluid.nspecies;
+        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng);
+        components_count += fluid.nspecies();
 
         // Copy thermodynamic pressure
         MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
@@ -494,12 +494,12 @@ mfix::mfix_calc_txfr_particle (Real time,
       components_count += 3;
 
       // Copy fluid temperature
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         interp_ptr->ParallelCopy(*T_g_in[lev], 0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
       }
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         // Copy volume fraction
         interp_ptr->ParallelCopy(*ep_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
@@ -509,8 +509,8 @@ mfix::mfix_calc_txfr_particle (Real time,
         components_count += 1;
 
         // Copy species mass fractions
-        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies, interp_ng, interp_ng);
-        components_count += fluid.nspecies;
+        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng, interp_ng);
+        components_count += fluid.nspecies();
 
         // Copy thermodynamic pressure
         interp_ptr->ParallelCopy(pressure_cc,  0, components_count, 1, interp_ng, interp_ng);
@@ -581,13 +581,13 @@ mfix::mfix_calc_txfr_particle (Real time,
           const auto& apy_fab = grown_bx_is_regular ? empty_array : areafrac[1]->const_array(pti);
           const auto& apz_fab = grown_bx_is_regular ? empty_array : areafrac[2]->const_array(pti);
 
-          const int solve_enthalpy = fluid.solve_enthalpy;
-          const int solve_reactions = reactions.solve;
+          const int solve_enthalpy = fluid.solve_enthalpy();
+          const int solve_reactions = reactions.solve();
 
           // We need this until we remove static attribute from mfix::gp0;
           const RealVect gp0_dev(gp0);
 
-          const Real pmult = DEM::solve ? 1.0 : 0.0;
+          const Real pmult = m_dem.solve() ? 1.0 : 0.0;
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,p_intarray, interp_array,gp0_dev,plo,dxi,pmult,dx,
@@ -604,7 +604,7 @@ mfix::mfix_calc_txfr_particle (Real time,
               return;
 
             // Local array storing interpolated values
-            GpuArray<Real,10+Species::NMAX> interp_loc;
+            GpuArray<Real, 10+MFIXSpecies::NMAX> interp_loc;
             interp_loc.fill(0.);
 
             if (grown_bx_is_regular) {
@@ -745,7 +745,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
             if (solve_reactions) {
               // Extract species mass fractions
-              GpuArray<Real,Species::NMAX> X_sn;
+              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
               X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
@@ -761,7 +761,7 @@ mfix::mfix_calc_txfr_particle (Real time,
               const Real ep_s = 1. - ep_g;
               const Real ro_p = p_realarray[SoArealData::density][p_id];
 
-              GpuArray<Real,Reactions::NMAX> R_q_heterogeneous;
+              GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
               R_q_heterogeneous.fill(0.);
 
               const RealVect pvel(p_realarray[SoArealData::velx][p_id],

@@ -1,9 +1,8 @@
 #include <mfix.H>
 
 #include <mfix_calc_cell.H>
-#include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_list.H>
+#include <mfix_bc.H>
+#include <mfix_fluid.H>
 
 using namespace amrex;
 
@@ -13,7 +12,7 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
 {
   BL_PROFILE("mfix::mfix_set_eb_scalar_bcs()");
 
-  if(EB::compute_area) {
+  if(m_embedded_boundaries.compute_area()) {
     mfix_calc_eb_bc_areas();
   }
 
@@ -37,32 +36,32 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
        if (t == FabType::singlevalued) {
 
            const auto &eb_scalars_arr = (*eb_scalars[lev])[mfi].array();
-           const auto &eb_species_arr = fluid.solve_species ? (*eb_species[lev])[mfi].array() : Array4<Real>{};
+           const auto &eb_species_arr = fluid.solve_species()? (*eb_species[lev])[mfi].array() : Array4<Real>{};
 
            const auto &flags_arr    = factory.getMultiEBCellFlagFab()[mfi].const_array();
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+           for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
-             if (BC::bc[bcv].type == BCList::eb && BC::bc[bcv].fluid.flow_thru_eb) {
+             if (m_boundary_conditions.bc(bcv).type == BCList::eb && m_boundary_conditions.bc(bcv).fluid.flow_thru_eb) {
 
-               const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+               const Box ic_bx = calc_ic_box(geom[lev], m_boundary_conditions.bc(bcv).region);
 
                if (ic_bx.intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(ic_bx);
 
-                 const int  has_normal = BC::bc[bcv].eb.has_normal;
+                 const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
                  amrex::GpuArray<amrex::Real,3> normal{0.};
                  if (has_normal) {
-                    normal[0] = BC::bc[bcv].eb.normal[0];
-                    normal[1] = BC::bc[bcv].eb.normal[1];
-                    normal[2] = BC::bc[bcv].eb.normal[2];
+                    normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
+                    normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
+                    normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
                  }
 
                  const Real pad = std::numeric_limits<float>::epsilon();
-                 const Real normal_tol = BC::bc[bcv].eb.normal_tol;
+                 const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
 
                  const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
                  const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
@@ -74,9 +73,9 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
                  Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
 
                  const int num_trac = ntrac;
-                 const int nspecies_g = fluid.nspecies;
+                 const int nspecies_g = fluid.nspecies();
 
-                 const int solve_species = fluid.solve_species;
+                 const int solve_species = fluid.solve_species();
 
                  ParallelFor(bx_int, [bcv, num_trac, flags_arr, eb_scalars_arr,
                  solve_species, nspecies_g, eb_species_arr, eb_norm_arr,

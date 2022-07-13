@@ -6,10 +6,10 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 #ifdef AMREX_USE_CONDUIT
 #include <AMReX_Conduit_Blueprint.H>
@@ -23,7 +23,7 @@ mfix::RunCatalystAdaptor ( int nstep, Real time )
 #ifdef AMREX_USE_CONDUIT
   BL_PROFILE("mfix::RunCatalystAdaptor()");
 
-  if ( DEM::solve || PIC::solve ) {
+  if ( m_dem.solve() || m_pic.solve() ) {
 
     Vector<std::string> real_comp_names;
     Vector<std::string>  int_comp_names;
@@ -33,7 +33,7 @@ mfix::RunCatalystAdaptor ( int nstep, Real time )
     real_comp_names.push_back("mass");
     real_comp_names.push_back("density");
 
-    if(DEM::solve){
+    if(m_dem.solve()){
       real_comp_names.push_back("omoi");
     } else {
       real_comp_names.push_back("ep_s");
@@ -43,7 +43,7 @@ mfix::RunCatalystAdaptor ( int nstep, Real time )
     real_comp_names.push_back("vely");
     real_comp_names.push_back("velz");
 
-    if(DEM::solve){
+    if(m_dem.solve()){
       real_comp_names.push_back("omegax");
       real_comp_names.push_back("omegay");
       real_comp_names.push_back("omegaz");
@@ -63,21 +63,21 @@ mfix::RunCatalystAdaptor ( int nstep, Real time )
     real_comp_names.push_back("temperature");
     real_comp_names.push_back("convection");
 
-    if (solids.solve_species)
+    if (solids.solve_species())
       for(auto species: solids.species)
         real_comp_names.push_back("X_"+species+"_s");
 
-    if (solids.solve_species && reactions.solve)
+    if (solids.solve_species() && reactions.solve())
       for(auto species: solids.species)
         real_comp_names.push_back("chem_ro_txfr_"+species);
 
-    if (reactions.solve) {
+    if (reactions.solve()) {
       real_comp_names.push_back("chem_velx_txfr");
       real_comp_names.push_back("chem_vely_txfr");
       real_comp_names.push_back("chem_velz_txfr");
     }
 
-    if (reactions.solve)
+    if (reactions.solve())
       real_comp_names.push_back("chem_h_txfr");
 
     int_comp_names.push_back("phase");

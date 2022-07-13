@@ -1,7 +1,7 @@
 #include <mfix_rw.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
+#include <mfix_reactions.H>
 #include <mfix_monitors.H>
 
 #include <AMReX_MultiCutFab.H>
@@ -22,8 +22,8 @@ MfixRW::WriteMassBalanceReport (const Real new_time)
   // Compute current mass in system
   ComputeMassAccum(1);
 
-  const int offset = Species::NMAX;
-  const int nspecies_g = fluid.nspecies;
+  const int offset = MFIXSpecies::NMAX;
+  const int nspecies_g = fluid.nspecies();
 
 
   if(ParallelDescriptor::IOProcessor()) {
@@ -56,7 +56,7 @@ MfixRW::WriteMassBalanceReport (const Real new_time)
       if( tot_flux_in > 0.) {
         error[n] = Math::abs((bc_flux[n] - delta_accum[n]) / tot_flux_in )*100.0;
       }
-      printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", fluid.species_names[n].c_str(),
+      printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", fluid.species_names(n).c_str(),
              mass_accum[n+offset], mass_accum[n],mass_prod[n],
              mass_inflow[n], mass_outflow[n],
              delta_accum[n], bc_flux[n], error[n]);
@@ -90,9 +90,9 @@ MfixRW::ComputeMassAccum (const int offset)
     return;
   }
 
-  GpuArray<Real,Species::NMAX> accum;
+  GpuArray<Real, MFIXSpecies::NMAX> accum;
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
   for (int lev = 0; lev < nlev; lev++) {
 
     const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
@@ -136,7 +136,7 @@ MfixRW::ComputeMassAccum (const int offset)
   // Global sum and copy to global variable with offset
   ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
   for (int n=0; n < nspecies_g; ++n) {
-    mass_accum[n + offset*Species::NMAX] = accum[n];
+    mass_accum[n + offset*MFIXSpecies::NMAX] = accum[n];
   }
 }
 
@@ -147,10 +147,10 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
 {
   BL_PROFILE("mfix::ComputeMassProduction()");
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
   std::vector<Real> prod(nspecies_g, 0.);
 
-  ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions);
+  ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions());
 
   const int scomp = chem_txfr_idxs.ro_gk_txfr;
 
@@ -199,7 +199,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 {
   amrex::ignore_unused(ncomp, fluxes_are_area_weighted);
 
-  const int nspecies_g = fluid.nspecies;
+  const int nspecies_g = fluid.nspecies();
 
   std::vector<Real> mass_flow(2*nspecies_g, 0.);
 

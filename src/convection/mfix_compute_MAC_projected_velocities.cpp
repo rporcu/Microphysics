@@ -1,6 +1,6 @@
 #include <hydro_utils.H>
-#include <mfix_bc_parms.H>
-#include <mfix_eb_parms.H>
+#include <mfix_bc.H>
+#include <mfix_eb.H>
 #include <mfix_mf_helpers.H>
 #include <mfix.H>
 
@@ -112,7 +112,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
       lp_info.setAgglomerationGridSize(agg_grid_size);
       macproj->initProjector(lp_info, const_bcoeff);
       macproj_options->apply(*macproj);
-      macproj->setDomainBC(BC::ppe_lobc, BC::ppe_hibc);
+      macproj->setDomainBC(m_boundary_conditions.ppe_lobc(), m_boundary_conditions.ppe_hibc());
     } else {
     macproj->updateBeta(const_bcoeff);
   }
@@ -172,7 +172,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
     else
         advection_string = "MOL";
 
-    if (EB::has_flow) {
+    if (m_embedded_boundaries.has_flow()) {
        HydroUtils::ExtrapVelToFaces(*vel_in[lev], *vel_forces[lev],
                                     *ep_u_mac[lev], *ep_v_mac[lev], *ep_w_mac[lev],
                                      get_hydro_velocity_bcrec(), get_hydro_velocity_bcrec_device_ptr(),
@@ -263,7 +263,7 @@ mfix::compute_MAC_projected_velocities (Real time, const amrex::Real l_dt,
   macproj->setUMAC(mac_vec);
   macproj->setDivU(rhs_mac_in);
 
-  if (EB::has_flow) {
+  if (m_embedded_boundaries.has_flow()) {
      for (int lev = 0; lev <= finest_level; ++lev) {
         macproj->setEBInflowVelocity(lev, *eb_flow_vel[lev]);
      }

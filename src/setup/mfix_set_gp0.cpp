@@ -1,8 +1,8 @@
 #include <mfix.H>
 
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_parms.H>
-#include <mfix_ic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_bc.H>
+#include <mfix_ic.H>
 
 #include <AMReX_GpuDevice.H>
 
@@ -44,11 +44,11 @@ mfix::set_gp0 (const int lev,
   Array4<const int> const& bct_klo = bc_klo_host.const_array();
   Array4<const int> const& bct_khi = bc_khi_host.const_array();
 
-  int delp_dir_loc(BC::delp_dir);
+  int delp_dir_loc(m_boundary_conditions.delp_dir());
 
-  Real delp_x = BC::delp[0];
-  Real delp_y = BC::delp[1];
-  Real delp_z = BC::delp[2];
+  Real delp_x = m_boundary_conditions.delp(0);
+  Real delp_y = m_boundary_conditions.delp(1);
+  Real delp_z = m_boundary_conditions.delp(2);
 
   // ---------------------------------------------------------------->>>
   //     If the bc's are pressure inflow/outflow then be sure to
@@ -110,19 +110,19 @@ mfix::set_gp0 (const int lev,
   // ---------------------------------------------------------------->>>
 
   //  Make sure that ic_p_g is set if using delp pressure conditions
-  for(int icv(0); icv < IC::ic.size(); ++icv)
+  for(int icv(0); icv < m_initial_conditions.ic().size(); ++icv)
   {
 
-    if((delp_dir_loc >= 0) && (delp_dir_loc == BC::delp_dir)) {
+    if((delp_dir_loc >= 0) && (delp_dir_loc == m_boundary_conditions.delp_dir())) {
 
-      if (!IC::ic[icv].fluid.pressure_defined) {
+      if (!m_initial_conditions.ic(icv).fluid.pressure_defined) {
         std::cout << "MUST DEFINE ic_p_g if using the DELP pressure condition" << std::endl;
         exit(0);
       }
 
     }
-    else if((delp_dir_loc >= 0) && (delp_dir_loc != BC::delp_dir)) {
-      if( IC::ic[icv].fluid.pressure_defined ) {
+    else if((delp_dir_loc >= 0) && (delp_dir_loc != m_boundary_conditions.delp_dir())) {
+      if( m_initial_conditions.ic(icv).fluid.pressure_defined ) {
         std::cout << "MUST not define ic_p_g if setting p_inflowandp_outflow" << std::endl;
         exit(0);
       }
@@ -132,12 +132,12 @@ mfix::set_gp0 (const int lev,
       const Real gravity_square_module =
         gravity[0]*gravity[0] + gravity[1]*gravity[1] + gravity[2]*gravity[2];
 
-      if( !IC::ic[icv].fluid.pressure_defined || gravity_square_module > tolerance)
+      if( !m_initial_conditions.ic(icv).fluid.pressure_defined || gravity_square_module > tolerance)
         {
 
           // HACK: This should probably take into consideration
           // variable fluid density.
-          const Real ro_g0 = IC::ic[icv].fluid.density;
+          const Real ro_g0 = m_initial_conditions.ic(icv).fluid.density;
 
           for (int dim=0; dim<3; dim++){
             if (gravity[dim]*gravity[dim] > tolerance ) {

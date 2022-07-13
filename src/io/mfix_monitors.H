@@ -9,11 +9,10 @@
 #include <AMReX_EBFArrayBox.H>
 
 #include <mfix_pc.H>
-#include <mfix_regions_parms.H>
+#include <mfix_regions.H>
 #include <mfix_leveldata.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_pc.H>
-#include <mfix_solids_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
 
 #include <iostream>
 #include <map>
@@ -36,13 +35,13 @@ class Monitors {
 
     void
     initialize (const std::string& pp_root,
-                Regions& regions,
+                MFIXRegions& regions,
                 amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                FluidPhase& fluid,
+                MFIXFluidPhase& fluid,
                 MFIXParticleContainer* pc,
                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory,
-                SolidsPhase& solids);
+                MFIXSolidsPhase& solids);
 
     Monitor& get (const int i)
     { return *m_monitors[i]; }
@@ -63,7 +62,7 @@ class Monitor {
     Monitor (const std::array<std::string,2> specs,
              const std::string pparse,
              amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-             Regions& regions);
+             MFIXRegions& regions);
 
     // Destructor
     virtual ~Monitor () = default;
@@ -109,7 +108,7 @@ class Monitor {
     amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& m_ebfactory;
 
     // Reference to the mfix regions object
-    Regions& m_regions;
+    MFIXRegions& m_regions;
 
     // Filename for the output file
     std::string m_filename;
@@ -163,8 +162,8 @@ class BaseMonitor: public Monitor {
                  const std::string& pparse,
                  amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                 FluidPhase& fluid,
-                 Regions& regions)
+                 MFIXFluidPhase& fluid,
+                 MFIXRegions& regions)
       : Monitor(specs, pparse, ebfactory, regions)
       , m_leveldata(leveldata)
       , m_fluid(fluid)
@@ -383,7 +382,7 @@ class BaseMonitor: public Monitor {
     amrex::Vector<const amrex::MultiFab*> m_velocity;
 
     // Reference to the FluidPhase class
-    FluidPhase& m_fluid;
+    MFIXFluidPhase& m_fluid;
 
     // The function to actually execute monitoring
     virtual
@@ -429,8 +428,8 @@ class PointRegion final: public BaseMonitor {
                  const std::string& pparse,
                  amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                 FluidPhase& fluid,
-                 Regions& regions)
+                 MFIXFluidPhase& fluid,
+                 MFIXRegions& regions)
       : BaseMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(0);
@@ -518,8 +517,8 @@ class AreaMonitor: public BaseMonitor {
                  const std::string& pparse,
                  amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                 FluidPhase& fluid,
-                 Regions& regions)
+                 MFIXFluidPhase& fluid,
+                 MFIXRegions& regions)
       : BaseMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(1);
@@ -596,8 +595,8 @@ class VolumeMonitor: public BaseMonitor {
                    const std::string& pparse,
                    amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                    amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                   FluidPhase& fluid,
-                   Regions& regions)
+                   MFIXFluidPhase& fluid,
+                   MFIXRegions& regions)
       : BaseMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(0);
@@ -663,8 +662,8 @@ class AreaRegion final: public AreaMonitor {
                 const std::string& pparse,
                 amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                 amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                FluidPhase& fluid,
-                Regions& regions)
+                MFIXFluidPhase& fluid,
+                MFIXRegions& regions)
       : AreaMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(1);
@@ -720,8 +719,8 @@ class VolumeRegion final: public VolumeMonitor {
                   const std::string& pparse,
                   amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                   amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                  FluidPhase& fluid,
-                  Regions& regions)
+                  MFIXFluidPhase& fluid,
+                  MFIXRegions& regions)
       : VolumeMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(0);
@@ -773,8 +772,8 @@ class SurfaceIntegral final: public AreaMonitor {
                      const std::string& pparse,
                      amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                      amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                     FluidPhase& fluid,
-                     Regions& regions)
+                     MFIXFluidPhase& fluid,
+                     MFIXRegions& regions)
       : AreaMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(1);
@@ -849,8 +848,8 @@ class VolumeIntegral final: public VolumeMonitor {
                     const std::string& pparse,
                     amrex::Vector<std::unique_ptr<LevelData>>& leveldata,
                     amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                    FluidPhase& fluid,
-                    Regions& regions)
+                    MFIXFluidPhase& fluid,
+                    MFIXRegions& regions)
       : VolumeMonitor(specs, pparse, leveldata, ebfactory, fluid, regions)
     {
       m_is_covered = isCovered(0);
@@ -924,8 +923,8 @@ class BaseMonitor: public Monitor {
                  const std::string& pparse,
                  MFIXParticleContainer* pc,
                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                 SolidsPhase& solids,
-                 Regions& regions)
+                 MFIXSolidsPhase& solids,
+                 MFIXRegions& regions)
       : Monitor(specs, pparse, ebfactory, regions)
       , m_pc(pc)
       , m_solids(solids)
@@ -1064,8 +1063,8 @@ class BaseMonitor: public Monitor {
     // Pointer to the particle container
     MFIXParticleContainer* m_pc;
 
-    // Reference to the SolidsPhase class
-    SolidsPhase& m_solids;
+    // Reference to the MFIXSolidsPhase class
+    MFIXSolidsPhase& m_solids;
 
     // The function to actually execute monitoring
     virtual
@@ -1085,8 +1084,8 @@ class GeneralProperty final: public BaseMonitor {
                      const std::string& pparse,
                      MFIXParticleContainer* pc,
                      amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                     SolidsPhase& solids,
-                     Regions& regions)
+                     MFIXSolidsPhase& solids,
+                     MFIXRegions& regions)
       : BaseMonitor(specs, pparse, pc, ebfactory, solids, regions)
     {}
 
@@ -1123,8 +1122,8 @@ class AveragedProperty final: public BaseMonitor {
                       const std::string& pparse,
                       MFIXParticleContainer* pc,
                       amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-                      SolidsPhase& solids,
-                      Regions& regions)
+                      MFIXSolidsPhase& solids,
+                      MFIXRegions& regions)
       : BaseMonitor(specs, pparse, pc, ebfactory, solids, regions)
     {}
 
@@ -1170,8 +1169,8 @@ class FlowRate final: public BaseMonitor {
               const std::string& pparse,
               MFIXParticleContainer* pc,
               amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory,
-              SolidsPhase& solids,
-              Regions& regions)
+              MFIXSolidsPhase& solids,
+              MFIXRegions& regions)
       : BaseMonitor(specs, pparse, pc, ebfactory, solids, regions)
     {}
 
@@ -1213,7 +1212,7 @@ class FlowRate final: public BaseMonitor {
     {
       BaseMonitor::initialize();
 
-      m_plane = m_regions.get_region(m_plane_name);
+      m_plane = m_regions.getRegion(m_plane_name);
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_plane != nullptr, "Region does not exist");
 
       this->check_plane_is_ok();

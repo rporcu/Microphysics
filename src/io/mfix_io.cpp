@@ -8,9 +8,9 @@
 #include <AMReX_buildInfo.H>
 
 #include <mfix_rw.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 #include <mfix_utils.H>
 #include <mfix_monitors.H>
 
@@ -131,7 +131,7 @@ MfixRW::WriteParticleAscii (std::string& par_ascii_file_in, int nstep) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
-    if(DEM::solve || PIC::solve) {
+    if(m_dem.solve() || m_pic.solve()) {
 
         const std::string& par_filename = amrex::Concatenate(par_ascii_file_in,nstep);
         pc->WriteAsciiFile(par_filename);
@@ -146,14 +146,14 @@ MfixRW::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time)
 
   for (int lev = 0; lev < nlev; lev++)
     {
-      if (fluid.solve) {
+      if (fluid.solve()) {
         ComputeAverageFluidVars(lev,
                                 time,
                                 avg_file_in);
       }
 
       //  Compute Eulerian velocities in selected regions
-      if(DEM::solve || PIC::solve) {
+      if(m_dem.solve() || m_pic.solve()) {
         pc->ComputeAverageDensities(lev,
                                     time,
                                     avg_file_in,
@@ -170,7 +170,7 @@ MfixRW::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time)
                                      avg_region_y_s, avg_region_y_n,
                                      avg_region_z_b, avg_region_z_t);
 
-        if (fluid.solve_enthalpy)
+        if (fluid.solve_enthalpy())
           pc->ComputeAverageTemperatures(lev,
                                          time,
                                          avg_file_in,
@@ -194,7 +194,7 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
   const int size_ep_g  = avg_ep_g.size();
   const int size_vel_g = avg_vel_g.size();
 
-  const int size_T_g   = fluid.solve_enthalpy ? avg_T_g.size() : 0;
+  const int size_T_g   = fluid.solve_enthalpy()? avg_T_g.size() : 0;
 
   const Real * dx   = geom[lev].CellSize();
   const Real * dxi  = geom[lev].InvCellSize();
@@ -213,7 +213,7 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
     return;
   }
 
-  const int var_count = fluid.solve_enthalpy ? 7 : 6;
+  const int var_count = fluid.solve_enthalpy()? 7 : 6;
 
   // Array to hold the data for global collection.
   std::vector<Real> regions_data(var_count*nregions, 0.0);
@@ -282,7 +282,7 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
     regions_data[var_count*nr + 4] = Utils::volWgtSumBox(lev, *pg_cc                    , 0, ebfactory, avg_box, local);
     regions_data[var_count*nr + 5] = Utils::volWgtSumBox(lev, *(m_leveldata[lev]->ep_g) , 0, ebfactory, avg_box, local);
 
-    if (fluid.solve_enthalpy)
+    if (fluid.solve_enthalpy())
       regions_data[var_count*nr + 6] = Utils::volWgtSumBox(lev, *(m_leveldata[lev]->T_g), 0, ebfactory, avg_box, local);
   }
 
@@ -305,7 +305,7 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
           Real sum_p_g  = regions_data[var_count*nr + 4];
           Real sum_ep_g = regions_data[var_count*nr + 5];
 
-          Real sum_T_g  = fluid.solve_enthalpy ? regions_data[var_count*nr + 6] : 0;
+          Real sum_T_g  = fluid.solve_enthalpy()? regions_data[var_count*nr + 6] : 0;
 
           std::ofstream  ofs;
           std::string    fname;

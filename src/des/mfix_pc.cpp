@@ -1,10 +1,9 @@
 #include <mfix_des_K.H>
 
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_bc_list.H>
-#include <mfix_bc_parms.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_reactions.H>
+#include <mfix_bc.H>
 #include <mfix_solvers.H>
 #include <mfix_monitors.H>
 #include <mfix_calc_cell.H>
@@ -17,38 +16,53 @@ int  MFIXParticleContainer::domain_bc[6] {0};
 
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
-                                              SolidsPhase& solids_in,
-                                              FluidPhase& fluid_in,
-                                              Reactions& reactions_in)
+                                              MFIXInitialConditions& initial_conditions,
+                                              MFIXBoundaryConditions& boundary_conditions,
+                                              MFIXSolidsPhase& solids_in,
+                                              MFIXDEM& dem,
+                                              MFIXPIC& pic,
+                                              MFIXFluidPhase& fluid_in,
+                                              MFIXReactions& reactions_in)
     : NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
-    , m_runtimeRealData(solids_in.nspecies*solids_in.solve_species,
-                        fluid_in.nspecies*fluid_in.solve_species,
-                        reactions_in.nreactions*reactions_in.solve)
+    , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
+                        fluid_in.nspecies()*fluid_in.solve_species(),
+                        reactions_in.nreactions()*reactions_in.solve())
     , nlev (amr_core->maxLevel() + 1)
+    , m_initial_conditions(initial_conditions)
+    , m_boundary_conditions(boundary_conditions)
     , fluid(fluid_in)
     , solids(solids_in)
+    , m_dem(dem)
+    , m_pic(pic)
     , reactions(reactions_in)
 {
     define();
 }
 
 
-MFIXParticleContainer::MFIXParticleContainer (const Geometry&            geom,
+MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
                                               const DistributionMapping& dmap,
-                                              const BoxArray&            ba,
-                                              const int                  nlevel,
-                                              SolidsPhase&               solids_in,
-                                              FluidPhase&                fluid_in,
-                                              Reactions&                 reactions_in)
+                                              const BoxArray& ba,
+                                              const int nlevel,
+                                              MFIXInitialConditions& initial_conditions,
+                                              MFIXBoundaryConditions& boundary_conditions,
+                                              MFIXSolidsPhase& solids_in,
+                                              MFIXDEM& dem,
+                                              MFIXPIC& pic,
+                                              MFIXFluidPhase& fluid_in,
+                                              MFIXReactions& reactions_in)
     : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
-    , m_runtimeRealData(solids_in.nspecies*solids_in.solve_species,
-                        fluid_in.nspecies*fluid_in.solve_species,
-                        reactions_in.nreactions*reactions_in.solve)
+    , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
+                        fluid_in.nspecies()*fluid_in.solve_species(),
+                        reactions_in.nreactions()*reactions_in.solve())
     , nlev(nlevel)
+    , m_initial_conditions(initial_conditions)
+    , m_boundary_conditions(boundary_conditions)
     , fluid(fluid_in)
     , solids(solids_in)
+    , m_dem(dem)
+    , m_pic(pic)
     , reactions(reactions_in)
-
 {
     define();
 }
@@ -95,7 +109,7 @@ void MFIXParticleContainer::define ()
     setIntCommComp(2, true);  // phase
     setIntCommComp(3, true); // state
 
-    // Add solids.nspecies components
+    // Add solids nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
       AddRealComp(true); // Turn on comm for redistribute on ghosting
       setRealCommComp(21+n, false); // turn off for ghosting
@@ -173,9 +187,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     Real subdt;
     // des_init_time_loop(&dt, &nsubsteps, &subdt);
-    if ( dt >= DEM::dtsolid )
+    if ( dt >= m_dem.dtsolid() )
     {
-       nsubsteps = static_cast<int>(amrex::Math::ceil(dt / static_cast<amrex::Real>(DEM::dtsolid)));
+       nsubsteps = static_cast<int>(amrex::Math::ceil(dt / static_cast<amrex::Real>(m_dem.dtsolid())));
        subdt     = dt / nsubsteps;
     } else {
        nsubsteps = 1;
@@ -191,8 +205,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
      * Get EB wall temps/rbox in device array
      ***************************************************************************/
     int bc_tw_count(0);
-    for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
-      if (BC::bc[bcv].type == BCList::eb) {
+    for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+      if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
         bc_tw_count++;
       }
     }
@@ -201,10 +215,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     Gpu::HostVector<Real>    h_bc_twv(bc_tw_count);
     if (bc_tw_count > 0) {
       int lc0(0);
-      for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
-        if (BC::bc[bcv].type == BCList::eb) {
-          h_bc_rbv[lc0] = *(BC::bc[bcv].region);
-          h_bc_twv[lc0] =   BC::bc[bcv].eb.temperature;
+      for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+        if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
+          h_bc_rbv[lc0] = *(m_boundary_conditions.bc(bcv).region);
+          h_bc_twv[lc0] =   m_boundary_conditions.bc(bcv).eb.temperature;
           lc0++;
         }
       }
@@ -281,7 +295,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     // Particle inflow
     if (ebfactory != NULL)
-      mfix_pc_inflow(lev, dt, time, solids.solve_enthalpy, ebfactory);
+      mfix_pc_inflow(lev, dt, time, solids.solve_enthalpy(), ebfactory);
 
 
     // sort particles by cell, this can significantly improve the locality
@@ -301,18 +315,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         // Redistribute particles ever so often BUT always update the neighbour
         // list (Note that this fills the neighbour list after every
         // redistribute operation)
-        if (solids.update_momentum) {
+        if (solids.update_momentum()) {
           if (n % 25 == 0) {
               clearNeighbors();
               Redistribute(0, 0, 0, 1);
               fillNeighbors();
 #ifdef AMREX_USE_GPU
               if (reduceGhostParticles) {
-                selectActualNeighbors(MFIXCheckPair(DEM::neighborhood));
+                selectActualNeighbors(MFIXCheckPair(m_dem.neighborhood()));
                 updateNeighbors(true);
               }
 #endif
-              buildNeighborList(MFIXCheckPair(DEM::neighborhood), false);
+              buildNeighborList(MFIXCheckPair(m_dem.neighborhood()), false);
           } else {
               updateNeighbors();
           }
@@ -361,7 +375,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             Real* tow_ptr  = tow[index].dataPtr();
             Real* cond_ptr = cond[index].dataPtr();
 
-            if (solids.update_momentum) {
+            if (solids.update_momentum()) {
 
               // For debugging: keep track of particle-particle (pfor) and
               // particle-wall (wfor) forces
@@ -383,16 +397,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
               constexpr Real small_number = 1.0e-15;
 
-              auto& solids_parms = *solids.parameters;
-              const int solve_enthalpy = solids.solve_enthalpy;
+              const auto& solids_parms = solids.parameters();
+              const int solve_enthalpy = solids.solve_enthalpy();
 
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nrp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,cond_ptr,nbor_data,
                    subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,solids_parms,
-                   solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,local_mew=DEM::mew,
-                   local_mew_w=DEM::mew_w,local_kn=DEM::kn,local_kn_w=DEM::kn_w,
-                   local_etan=DEM::etan,local_etan_w=DEM::etan_w,local_k_g=DEM::k_g_dem]
+                   solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,local_mew=m_dem.mew(),
+                   local_mew_w=m_dem.mew_w(),local_kn=m_dem.kn(),local_kn_w=m_dem.kn_w(),
+                   local_etan=m_dem.etan(),local_etan_w=m_dem.etan_w(),local_k_g=m_dem.k_g_dem()]
                 AMREX_GPU_DEVICE (int i) noexcept
                 {
                     auto particle = pstruct[i];
@@ -485,15 +499,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
 
                         const int phase = p_intarray[SoAintData::phase][i];
-                        const int phase_idx = SolidsPhase::phase_to_index(phase);
+                        const int phase_idx = MFIXSolidsPhase::phase_to_index(phase);
 
                         Real kn_des_w   = local_kn_w;
                         Real etan_des_w = local_etan_w(phase_idx);
 
                         // NOTE - we don't use the tangential components right now,
                         // but we might in the future
-                        // Real kt_des_w = DEM::kt_w;
-                        // Real etat_des_w = DEM::etat_w[phase_idx];
+                        // Real kt_des_w = m_dem.kt_w;
+                        // Real etat_des_w = m_dem.etat_w()[phase_idx];
 
                         RealVect local_fn(0.);
                         RealVect local_ft(0.);
@@ -695,16 +709,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             const int phase1 = p_intarray[SoAintData::phase][i];
                             const int phase2 = p_intarray[SoAintData::phase][j];
 
-                            const int phase1_idx = SolidsPhase::phase_to_index(phase1);
-                            const int phase2_idx = SolidsPhase::phase_to_index(phase2);
+                            const int phase1_idx = MFIXSolidsPhase::phase_to_index(phase1);
+                            const int phase2_idx = MFIXSolidsPhase::phase_to_index(phase2);
 
                             Real kn_des = local_kn;
                             Real etan_des = local_etan(phase1_idx, phase2_idx);
 
                             // NOTE - we don't use the tangential components right now,
                             // but we might in the future
-                            // Real kt_des = DEM::kt;
-                            // Real etat_des = DEM::etat[phase1_idx][phase2_idx];
+                            // Real kt_des = m_dem.kt;
+                            // Real etat_des = m_dem.etat[phase1_idx][phase2_idx];
 
                             RealVect local_fn(0.);
                             RealVect local_ft(0.);
@@ -823,33 +837,33 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const auto p_lo = Geom(lev).ProbLoArray();
             const auto p_hi = Geom(lev).ProbHiArray();
 
-            int x_lo_bc = BC::domain_bc[0];
-            int x_hi_bc = BC::domain_bc[1];
-            int y_lo_bc = BC::domain_bc[2];
-            int y_hi_bc = BC::domain_bc[3];
-            int z_lo_bc = BC::domain_bc[4];
-            int z_hi_bc = BC::domain_bc[5];
+            int x_lo_bc = m_boundary_conditions.domain_bc(0);
+            int x_hi_bc = m_boundary_conditions.domain_bc(1);
+            int y_lo_bc = m_boundary_conditions.domain_bc(2);
+            int y_hi_bc = m_boundary_conditions.domain_bc(3);
+            int z_lo_bc = m_boundary_conditions.domain_bc(4);
+            int z_hi_bc = m_boundary_conditions.domain_bc(5);
 
             //Access to added variables
             auto ptile_data = ptile.getParticleTileData();
 
-            const int nspecies_s = solids.nspecies;
+            const int nspecies_s = solids.nspecies();
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
             const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
             const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
             const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
-            const int update_mass = solids.update_mass && solids.solve_species && reactions.solve;
-            const int update_momentum = solids.update_momentum;
-            const int solve_enthalpy = solids.solve_enthalpy && fluid.solve_enthalpy;
-            const int solve_reactions = reactions.solve;
+            const int update_mass = solids.update_mass() && solids.solve_species() && reactions.solve();
+            const int update_momentum = solids.update_momentum();
+            const int solve_enthalpy = solids.solve_enthalpy() && fluid.solve_enthalpy();
+            const int solve_reactions = reactions.solve();
 
-            const Real enthalpy_source = solids.enthalpy_source;
+            const Real enthalpy_source = solids.enthalpy_source();
 
-            const int solid_is_a_mixture = solids.is_a_mixture;
+            const int solid_is_a_mixture = solids.isMixture();
 
-            auto& solids_parms = *solids.parameters;
+            const auto& solids_parms = solids.parameters();
 
             amrex::ParallelFor(nrp,
                [pstruct,p_realarray,p_intarray,subdt,
@@ -863,7 +877,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             {
               ParticleType& p = pstruct[i];
 
-              GpuArray<Real,Species::NMAX> X_sn;
+              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
               X_sn.fill(0.);
 
               // Get current particle's species mass fractions
@@ -1174,7 +1188,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
     // Redistribute particles at the end of all substeps (note that the particle
     // neighbour list needs to be reset when redistributing).
-    if (solids.update_momentum) {
+    if (solids.update_momentum()) {
       clearNeighbors();
       Redistribute(0, 0, 0, 1);
     }

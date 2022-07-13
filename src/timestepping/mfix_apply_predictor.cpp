@@ -2,10 +2,10 @@
 
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 #include <mfix_solvers.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -76,13 +76,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       if (fluid.solve_enthalpy) {
+       if (fluid.solve_enthalpy()) {
          enthalpy_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
          enthalpy_RHS[lev]->setVal(0.0);
        }
 
-       if (fluid.solve_species) {
-         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+       if (fluid.solve_species()) {
+         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
          species_RHS[lev]->setVal(0.0);
        }
     }
@@ -108,7 +108,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                               MFInfo(), EBFactory(lev));
       vel_forces[lev].setVal(0.);
 
-      if (fluid.solve_tracer) {
+      if (fluid.solve_tracer()) {
         tra_forces.emplace_back(grids[lev], dmap[lev], ntrac, nghost_force(),
                                 MFInfo(), EBFactory(lev));
         tra_forces[lev].setVal(0.);
@@ -117,7 +117,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       vel_eta.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
       vel_eta[lev].setVal(0.);
 
-      if (fluid.solve_tracer) {
+      if (fluid.solve_tracer()) {
         tra_eta.emplace_back(grids[lev], dmap[lev], ntrac, 1, MFInfo(), EBFactory(lev));
         tra_eta[lev].setVal(0.);
       }
@@ -175,9 +175,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector<Array<MultiFab*, AMREX_SPACEDIM>> J_gk(finest_level+1);
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       for (int lev = 0; lev <= finest_level; ++lev) {
-        const int nspecies_g = fluid.nspecies;
+        const int nspecies_g = fluid.nspecies();
 
         for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
           J_gk[lev][dir] = new MultiFab(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
@@ -192,19 +192,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     {
-      const bool constraint = !(fluid.constraint_type == ConstraintType::IncompressibleFluid);
+      const bool constraint = !(fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IncompressibleFluid);
 
-      const bool update_lapT = (fluid.solve_enthalpy && (l_explicit_diff || constraint));
-      const bool update_lapS = (fluid.solve_tracer   &&  l_explicit_diff);
-      const bool update_flux = (fluid.solve_species  && (l_explicit_diff || constraint));
+      const bool update_lapT = (fluid.solve_enthalpy() && (l_explicit_diff || constraint));
+      const bool update_lapS = (fluid.solve_tracer() &&  l_explicit_diff);
+      const bool update_flux = (fluid.solve_species() && (l_explicit_diff || constraint));
 
-      if (fluid.solve_enthalpy)
+      if (fluid.solve_enthalpy())
       {
         mfix_set_temperature_bcs(time, get_T_g_old());
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk_old());
 
       compute_laps(update_lapT, update_lapS, update_flux, lap_T_old, lap_trac_old,
@@ -213,13 +213,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       // We call the bc routines again to enforce the ext_dir condition
       // on the faces (the diffusion operator may move those to ghost cell centers)
-      if (fluid.solve_enthalpy)
+      if (fluid.solve_enthalpy())
       {
         mfix_set_temperature_bcs(time, get_T_g_old());
         mfix_set_enthalpy_bcs(time, get_h_g_old());
       }
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk_old());
     }
 
@@ -227,7 +227,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // 
     // *************************************************************************************
-    if (fluid.solve_species)
+    if (fluid.solve_species())
       diffusion_op->ComputeDivJ(div_J_old, get_X_gk_old_const(), J_gk);
 
 
@@ -236,11 +236,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector< Array<MultiFab, AMREX_SPACEDIM> > h_gk_fc(finest_level+1);
 
-    if (fluid.solve_enthalpy && fluid.solve_species) {
+    if (fluid.solve_enthalpy() && fluid.solve_species()) {
       for (int lev = 0; lev <= finest_level; ++lev) {
         for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
           h_gk_fc[lev][dir].define(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
-                                   dmap[lev], fluid.nspecies, 1, MFInfo(), EBFactory(lev));
+                                   dmap[lev], fluid.nspecies(), 1, MFInfo(), EBFactory(lev));
           h_gk_fc[lev][dir].setVal(0.);
         }
       }
@@ -253,13 +253,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute right hand side terms on the old status
     // *************************************************************************************
-    if (fluid.solve_density) {
+    if (fluid.solve_density()) {
       mfix_density_rhs(ro_RHS_old, get_chem_txfr_const());
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk_old());
 
       mfix_set_temperature_bcs(time, get_T_g_old());
@@ -267,14 +267,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
           get_X_gk_old(), get_T_g_old_const(), get_chem_txfr_const());
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk_old());
 
       mfix_set_temperature_bcs(time, get_T_g_old());
     }
 
     // Species
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       mfix_set_species_bcs(time, get_X_gk_old());
 
       mfix_species_X_rhs(species_RHS_old, get_chem_txfr_const());
@@ -283,7 +283,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     // Linear momentum
-    if (reactions.solve) {
+    if (reactions.solve()) {
       mfix_momentum_rhs(vel_RHS_old, get_ep_g_const(), get_chem_txfr_const());
     }
 
@@ -291,35 +291,35 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute RHS for the MAC projection
     // *************************************************************************************
-    if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+    if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IncompressibleFluid) {
 
       mfix_incompressible_fluid_rhs(GetVecOfPtrs(rhs_mac));
 
     } else {
 
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev(0); lev < nlev; ++lev) {
-        if (fluid.solve_enthalpy) {
+        if (fluid.solve_enthalpy()) {
           MultiFab::Add(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
 
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
             MultiFab::Subtract(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
           }
         }
 
-        if (fluid.solve_species) {
+        if (fluid.solve_species()) {
           MultiFab::Subtract(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
         }
       }
 
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+      if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
 
         mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
             get_ro_g_old_const(), get_T_g_old_const(), get_X_gk_old_const());
 
-      } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+      } else if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS_old), GetVecOfConstPtrs(species_RHS_old),
@@ -329,15 +329,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       }
 
       for (int lev(0); lev < nlev; ++lev) {
-        if (fluid.solve_enthalpy) {
+        if (fluid.solve_enthalpy()) {
           MultiFab::Subtract(*enthalpy_RHS_old[lev], *lap_T_old[lev], 0, 0, 1, 0);
 
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
             MultiFab::Add(*enthalpy_RHS_old[lev], *div_hJ_old[lev], 0, 0, 1, 0);
           }
         }
 
-        if (fluid.solve_species) {
+        if (fluid.solve_species()) {
           MultiFab::Add(*species_RHS_old[lev], *div_J_old[lev], 0, 0, nspecies_g, 0);
         }
       }
@@ -351,10 +351,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     mfix_set_density_bcs(time, get_ro_g_old());
 
-    if (fluid.solve_enthalpy)
+    if (fluid.solve_enthalpy())
       mfix_set_temperature_bcs(time, get_T_g_old());
 
-    if (fluid.solve_species)
+    if (fluid.solve_species())
       mfix_set_species_bcs(time, get_X_gk_old());
 
 
@@ -368,7 +368,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
-    if (fluid.solve_species)
+    if (fluid.solve_species())
       mfix_set_species_bcs(time, get_X_gk_old());
 
     mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
@@ -383,15 +383,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update density first
     // *************************************************************************************
-    if (!fluid.solve_density)
+    if (!fluid.solve_density())
     {
         for (int lev = 0; lev <= finest_level; lev++)
             MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
 
-        const int nspecies_g = fluid.nspecies;
-        const int use_species_advection = fluid.is_a_mixture && fluid.solve_species;
+        const int nspecies_g = fluid.nspecies();
+        const int use_species_advection = fluid.isMixture() && fluid.solve_species();
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -448,9 +448,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     // Update species mass fractions
     // *************************************************************************
-    if (fluid.solve_species)
+    if (fluid.solve_species())
     {
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -574,7 +574,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       // ***********************************************************************
       // Rescale species in order to respect sum = 1
       // ***********************************************************************
-      if (fluid.is_a_mixture) {
+      if (fluid.isMixture()) {
         mfix_normalize_fluid_species(get_X_gk());
       }
 
@@ -584,7 +584,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     // Update thermodynamic pressure
     // *************************************************************************
-    if (fluid.solve_enthalpy && (fluid.constraint_type == ConstraintType::IdealGasClosedSystem))
+    if (fluid.solve_enthalpy() && (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem))
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
         rhs_pressure_g_old[lev] = avgSigma[lev] / avgTheta[lev];
@@ -614,15 +614,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update enthalpy and temperature
     // *************************************************************************************
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
 
-      auto& fluid_parms = *fluid.parameters;
-      const int fluid_is_a_mixture = fluid.is_a_mixture;
-      const int nspecies_g = fluid.nspecies;
+      const auto& fluid_parms = fluid.parameters();
+      const int fluid_is_a_mixture = fluid.isMixture();
+      const int nspecies_g = fluid.nspecies();
 
-      const int closed_system = (fluid.constraint_type == ConstraintType::IdealGasClosedSystem);
+      const int closed_system = (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem);
 
-      if (!l_explicit_diff && fluid.solve_species) {
+      if (!l_explicit_diff && fluid.solve_species()) {
         const int update_enthalpies = 0;
         diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(), update_enthalpies);
       }
@@ -655,14 +655,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& epg      = ld.ep_g->const_array(mfi);
           Array4<Real const> const& dhdt_o   = conv_s_old[lev]->const_array(mfi);
           Array4<Real const> const& lap_T_o  = lap_T_old[lev]->const_array(mfi);
-          Array4<Real const> const& div_hJ_o = fluid.solve_species ?
+          Array4<Real const> const& div_hJ_o = fluid.solve_species()?
             div_hJ_old[lev]->const_array(mfi) : dummy_arr;
 
           const Real Dpressure_Dt = rhs_pressure_g_old[lev];
 
           auto const& flags_arr = flags.const_array(mfi);
 
-          const int solve_species = fluid.solve_species;
+          const int solve_species = fluid.solve_species();
 
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,dhdt_o,
               l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,closed_system,
@@ -771,7 +771,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       // ***********************************************************************
       // Add the dconvective heat transfer terms implicitly to h_g
       // ***********************************************************************
-      if (DEM::solve || PIC::solve)
+      if (m_dem.solve() || m_pic.solve())
         mfix_add_enthalpy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
             get_txfr_const(), get_ro_g_const(), get_ep_g_const());
 
@@ -781,7 +781,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update tracer(s)
     // *************************************************************************************
-    if (fluid.solve_tracer)
+    if (fluid.solve_tracer())
     {
         int l_ntrac = ntrac;
 
@@ -885,10 +885,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& dudt_o    = conv_u_old[lev]->const_array(mfi);
          Array4<Real const> const& gp        = ld.gp->const_array(mfi);
          Array4<Real const> const& vel_f     = vel_forces[lev].const_array(mfi);
-         Array4<Real const> const& vel_rhs_o = reactions.solve ?
+         Array4<Real const> const& vel_rhs_o = reactions.solve() ?
                                                vel_RHS_old[lev]->const_array(mfi) : empty_array;
 
-         const int l_solve_reactions = reactions.solve;
+         const int l_solve_reactions = reactions.solve();
 
          amrex::ParallelFor(bx, [epg,rog_nph,vel_o,dudt_o,divtau_o,gp,l_dt,vel_n,
              vel_f,l_explicit_diff,vel_rhs_o,l_solve_reactions]
@@ -933,7 +933,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Add the drag transfer terms implicitly to vel_g
     // *************************************************************************************
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
       mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
           GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
@@ -974,15 +974,15 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       S_cc[lev]->setVal(0.);
     }
 
-    if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+    if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IncompressibleFluid) {
 
       mfix_incompressible_fluid_rhs(S_cc);
 
     } else {
 
-      const int closed_system = int(fluid.constraint_type == ConstraintType::IdealGasClosedSystem);
+      const int closed_system = int(fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem);
 
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -992,8 +992,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 #endif
           for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi)
           {
-              const int solve_species = fluid.solve_species;
-              const int solve_enthalpy = fluid.solve_enthalpy;
+              const int solve_species = fluid.solve_species();
+              const int solve_enthalpy = fluid.solve_enthalpy();
 
               Box const& bx = mfi.tilebox();
 
@@ -1043,13 +1043,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           } // mfi
       } // lev
 
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+      if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
   
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
             get_T_g_const(), get_X_gk_const());
 
-      } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+      } else if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
@@ -1059,7 +1059,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // Update the thermodynamic pressure rhs in here so we do not have to call
         // the closed_system_rhs again in the corrector
         for (int lev = 0; lev <= finest_level; ++lev) {
-          rhs_pressure_g[lev] = fluid.solve_enthalpy ? avgSigma[lev] / avgTheta[lev] : 0.;
+          rhs_pressure_g[lev] = fluid.solve_enthalpy()? avgSigma[lev] / avgTheta[lev] : 0.;
         }
       }
     }
@@ -1093,10 +1093,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     for (int lev = 0; lev <= finest_level; lev++)
     {
-      if (fluid.solve_enthalpy)
+      if (fluid.solve_enthalpy())
         delete enthalpy_RHS[lev];
 
-      if (fluid.solve_species) {
+      if (fluid.solve_species()) {
          delete species_RHS[lev];
       }
     }

@@ -2,10 +2,10 @@
 #include <AMReX_ParmParse.H>
 
 #include <mfix_rw.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 
 #ifdef AMREX_USE_ASCENT
 #include <AMReX_Conduit_Blueprint.H>
@@ -33,7 +33,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     amrex::Vector<std::string> pltFldNames;
     amrex::Vector< MultiFab* > mf(nlev);
 
-    if (fluid.solve) {
+    if (fluid.solve()) {
 
       const int ngrow = 0;
       int ncomp = 5;
@@ -46,13 +46,13 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       pltFldNames.push_back("volfrac");
 
       // Temperature in fluid
-      if (fluid.solve_enthalpy) {
+      if (fluid.solve_enthalpy()) {
         pltFldNames.push_back("T_g");
         ncomp += 1;
       }
 
-      if ( fluid.solve_species ) {
-        for (std::string specie: fluid.species_names) {
+      if ( fluid.solve_species()) {
+        for (std::string specie: fluid.species_names()) {
           pltFldNames.push_back("Xg_"+specie);
           ncomp += 1;
         }
@@ -75,15 +75,15 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
         MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, 4, 1, 0);
 
         int lc=5;
-        if (fluid.solve_enthalpy) {
+        if (fluid.solve_enthalpy()) {
           MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
           lc += 1;
         }
 
         // Fluid species mass fractions
-        if (fluid.solve_species) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies, 0);
-          lc += fluid.nspecies;
+        if (fluid.solve_species()) {
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->X_gk, 0, lc, fluid.nspecies(), 0);
+          lc += fluid.nspecies();
         }
 
         amrex::EB_set_covered(*mf[lev], 0.0);
@@ -96,7 +96,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
     }
 
 
-    if ( DEM::solve || PIC::solve ) {
+    if ( m_dem.solve() || m_pic.solve() ) {
 
       Vector<std::string> real_comp_names;
       Vector<std::string>  int_comp_names;
@@ -106,7 +106,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       real_comp_names.push_back("mass");
       real_comp_names.push_back("density");
 
-      if(DEM::solve){
+      if(m_dem.solve()){
         real_comp_names.push_back("omoi");
       } else {
         real_comp_names.push_back("ep_s");
@@ -116,7 +116,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       real_comp_names.push_back("vely");
       real_comp_names.push_back("velz");
 
-      if(DEM::solve){
+      if(m_dem.solve()){
         real_comp_names.push_back("omegax");
         real_comp_names.push_back("omegay");
         real_comp_names.push_back("omegaz");
@@ -136,21 +136,21 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       real_comp_names.push_back("temperature");
       real_comp_names.push_back("convection");
 
-      if (solids.solve_species)
-        for(auto species: solids.species_names)
+      if (solids.solve_species())
+        for(auto species: solids.species_names())
           real_comp_names.push_back("X_"+species+"_s");
 
-      if (solids.solve_species && reactions.solve)
-        for(auto species: solids.species_names)
+      if (solids.solve_species() && reactions.solve())
+        for(auto species: solids.species_names())
           real_comp_names.push_back("chem_ro_txfr_"+species);
 
-      if (reactions.solve) {
+      if (reactions.solve()) {
         real_comp_names.push_back("chem_velx_txfr");
         real_comp_names.push_back("chem_vely_txfr");
         real_comp_names.push_back("chem_velz_txfr");
       }
 
-      if (reactions.solve)
+      if (reactions.solve())
         real_comp_names.push_back("chem_h_txfr");
 
       int_comp_names.push_back("phase");

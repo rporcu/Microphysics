@@ -15,11 +15,13 @@
 #include <AMReX_Particles.H>
 #include <AMReX_NeighborParticles.H>
 
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_solids_parms.H>
-#include <mfix_reactions_parms.H>
-#include <mfix_bc_list.H>
+#include <mfix_ic.H>
+#include <mfix_bc.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
+#include <mfix_solids.H>
+#include <mfix_dem.H>
+#include <mfix_reactions.H>
 #include <mfix_leveldata.H>
 #include <mfix_run_on.H>
 
@@ -145,17 +147,25 @@ class MFIXParticleContainer final
     }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
-                           SolidsPhase& solids,
-                           FluidPhase& fluid,
-                           Reactions& reactions);
+                           MFIXInitialConditions& initial_conditions,
+                           MFIXBoundaryConditions& boundary_conditions,
+                           MFIXSolidsPhase& solids,
+                           MFIXDEM& dem,
+                           MFIXPIC& pic,
+                           MFIXFluidPhase& fluid,
+                           MFIXReactions& reactions);
 
-    MFIXParticleContainer (const amrex::Geometry&            geom,
+    MFIXParticleContainer (const amrex::Geometry& geom,
                            const amrex::DistributionMapping& dmap,
-                           const amrex::BoxArray&            ba,
-                           const int                         nlev,
-                           SolidsPhase&                      solids,
-                           FluidPhase&                       fluid,
-                           Reactions&                        reactions);
+                           const amrex::BoxArray& ba,
+                           const int nlev,
+                           MFIXInitialConditions& initial_conditions,
+                           MFIXBoundaryConditions& boundary_conditions,
+                           MFIXSolidsPhase& solids,
+                           MFIXDEM& dem,
+                           MFIXPIC& pic,
+                           MFIXFluidPhase& fluid,
+                           MFIXReactions& reactions);
 
     void define();
 
@@ -404,9 +414,19 @@ class MFIXParticleContainer final
 
     void usr3_des (int np,void*&);
 
-    FluidPhase& fluid;
-    SolidsPhase& solids;
-    Reactions& reactions;
+    MFIXInitialConditions& m_initial_conditions;
+
+    MFIXBoundaryConditions& m_boundary_conditions;
+
+    MFIXFluidPhase& fluid;
+
+    MFIXSolidsPhase& solids;
+
+    MFIXDEM& m_dem;
+
+    MFIXPIC& m_pic;
+
+    MFIXReactions& reactions;
 };
 
 #endif

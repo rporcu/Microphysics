@@ -34,10 +34,10 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
     const auto& factory = *particle_ebfactory[lev];
     const auto& flags = factory.getMultiEBCellFlagFab();
 
-    const Real Ps0 = PIC::Ps;
-    const Real beta = PIC::beta;
-    const Real ep_cp = PIC::ep_cp;
-    const Real small_number = PIC::small_number;
+    const Real Ps0 = m_pic.Ps();
+    const Real beta = m_pic.beta();
+    const Real ep_cp = m_pic.ep_cp();
+    const Real small_number = m_pic.small_number();
 
     constexpr Real max_eps = 0.95;
 

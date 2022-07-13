@@ -1,16 +1,16 @@
-#ifndef MFIX_REGIONS_PARMS_H_
-#define MFIX_REGIONS_PARMS_H_
+#ifndef _MFIXREGIONS_H_
+#define _MFIXREGIONS_H_
 
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <AMReX_Vector.H>
 
 // Name and extents of regions
-class Regions
+class MFIXRegions
 {
   public:
     // Constructor
-    Regions ()
+    MFIXRegions ()
       : m_is_initialized(0)
     {}
 
@@ -19,12 +19,12 @@ class Regions
 
     // Returns the index of region with matching name.
     // -1 is returned if the region is not matched.
-    int get_index(const std::string& input) const;
+    int getIndex(const std::string& input) const;
 
     // Return region extents by region name
-    const amrex::RealBox* get_region(const std::string& name) const;
+    const amrex::RealBox* getRegion(const std::string& name) const;
 
-    int is_initialized() const
+    int isInitialized() const
     { return m_is_initialized; }
 
   private:

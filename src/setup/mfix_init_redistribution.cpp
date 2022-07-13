@@ -1,7 +1,7 @@
 #include <mfix.H>
 #include <hydro_redistribution.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_fluid.H>
 void
 mfix::InitialRedistribution (Real l_time)
 {
@@ -55,7 +55,7 @@ mfix::InitialRedistribution (Real l_time)
                                           bc_vel, geom[lev],
                                           m_redistribution_type);
 
-                if (fluid.solve_density) {
+                if (fluid.solve_density()) {
 
                   ncomp = 1;
 
@@ -66,7 +66,7 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_den, geom[lev],
                                            m_redistribution_type);
                 }
-                if (fluid.solve_enthalpy) {
+                if (fluid.solve_enthalpy()) {
 
                   ncomp = 1;
 
@@ -77,7 +77,7 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_h, geom[lev],
                                            m_redistribution_type);
                 }
-                if (fluid.solve_tracer) {
+                if (fluid.solve_tracer()) {
 
                   ncomp = ntrac;
 
@@ -88,9 +88,9 @@ mfix::InitialRedistribution (Real l_time)
                                            bc_t, geom[lev],
                                            m_redistribution_type);
                 }
-                if (fluid.solve_species) {
+                if (fluid.solve_species()) {
 
-                  ncomp = fluid.nspecies;
+                  ncomp = fluid.nspecies();
 
                   auto const& bc_X = get_species_bcrec_device_ptr();
                   Redistribution::ApplyToInitialData( bx,ncomp,
@@ -106,16 +106,16 @@ mfix::InitialRedistribution (Real l_time)
         // We fill internal ghost values after calling redistribution
         ld.vel_g->FillBoundary();
 
-        if (fluid.solve_density)
+        if (fluid.solve_density())
           ld.ro_g->FillBoundary();
 
-        if (fluid.solve_enthalpy)
+        if (fluid.solve_enthalpy())
           ld.h_g->FillBoundary();
 
-        if (fluid.solve_tracer)
+        if (fluid.solve_tracer())
           ld.trac->FillBoundary();
 
-        if (fluid.solve_species)
+        if (fluid.solve_species())
           ld.X_gk->FillBoundary();
     }
   }

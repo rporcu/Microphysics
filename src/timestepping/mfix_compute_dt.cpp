@@ -35,7 +35,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
-    auto& fluid_parms = *fluid.parameters;
+    const auto& fluid_parms = fluid.parameters();
 
     for (int lev(0); lev <= finest_level; ++lev)
     {
@@ -60,7 +60,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->array(mfi);
           const auto& ep        = ld.ep_g->array(mfi);
           const auto& ro        = ld.ro_g->array(mfi);
-          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy()? ld.T_g->array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->array(mfi);
           const auto& txfr_fab  = ld.txfr->array(mfi);
 
@@ -75,16 +75,16 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = fluid.solve_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy();
 
-          const Real mu_g0 = fluid.mu_g0;
+          const Real mu_g0 = fluid.mu_g();
 
           // Compute CFL on a per cell basis
-          if (flags.getType(bx) != FabType::covered)
-          {
+          if (flags.getType(bx) != FabType::covered) {
+
             reduce_op.eval(bx, reduce_data,
-              [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,
-               flags_fab,T_g,adv_enthalpy,mu_g0,fluid_parms]
+              [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,mu_g0,
+               flags_fab,T_g,adv_enthalpy,fluid_parms]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
             {
               Real l_cfl_max = 0._rt;
@@ -106,9 +106,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }
 
-                Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
-                               amrex::Math::abs(vel(i,j,k,1))*ody +
-                               amrex::Math::abs(vel(i,j,k,2))*odz;
+                Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
+                             amrex::Math::abs(vel(i,j,k,1))*ody +
+                             amrex::Math::abs(vel(i,j,k,2))*odz;
 
                 Real mu_g(0);
 
@@ -149,7 +149,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const auto& vel       = ld.vel_g->const_array(mfi);
           const auto& ep        = ld.ep_g->const_array(mfi);
           const auto& ro        = ld.ro_g->const_array(mfi);
-          const auto& T_g       = fluid.solve_enthalpy ? ld.T_g->const_array(mfi) : Array4<const Real>();
+          const auto& T_g       = fluid.solve_enthalpy()? ld.T_g->const_array(mfi) : Array4<const Real>();
           const auto& gradp     = ld.gp->const_array(mfi);
           const auto& txfr_fab  = ld.txfr->const_array(mfi);
 
@@ -165,9 +165,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
           const RealVect gp0_dev(gp0);
           const RealVect gravity_dev(gravity);
 
-          const int adv_enthalpy = fluid.solve_enthalpy;
+          const int adv_enthalpy = fluid.solve_enthalpy();
 
-          const Real mu_g0 = fluid.mu_g0;
+          const Real mu_g0 = fluid.mu_g();
 
           // Compute CFL on a per cell basis
           if (flags.getType(bx) != FabType::covered)
@@ -191,9 +191,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }
 
-                Real c_cfl   = amrex::Math::abs(vel(i,j,k,0))*odx +
-                               amrex::Math::abs(vel(i,j,k,1))*ody +
-                               amrex::Math::abs(vel(i,j,k,2))*odz;
+                Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
+                             amrex::Math::abs(vel(i,j,k,1))*ody +
+                             amrex::Math::abs(vel(i,j,k,2))*odz;
 
                 Real mu_g(0);
 

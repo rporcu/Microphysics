@@ -4,8 +4,8 @@
 #include <mfix_mf_helpers.H>
 #include <mfix_utils.H>
 #include <mfix_monitors.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
 #include <mfix_diffusion_op.H>
 
 #include <AMReX_FillPatchUtil.H>
@@ -18,7 +18,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   // Start the timers ...
   const Real strttime = ParallelDescriptor::second();
 
-  if (DEM::solve || PIC::solve)
+  if (m_dem.solve() || m_pic.solve())
   {
     // This re-calculates the volume fraction within the domain
     // but does not change the values outside the domain

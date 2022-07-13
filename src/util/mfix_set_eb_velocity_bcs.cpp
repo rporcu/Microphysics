@@ -1,9 +1,8 @@
 #include <mfix.H>
 
 #include <mfix_calc_cell.H>
-#include <mfix_bc_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_bc_list.H>
+#include <mfix_bc.H>
+#include <mfix_fluid.H>
 
 #include <AMReX_ParallelReduce.H>
 
@@ -14,7 +13,7 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 {
   BL_PROFILE("mfix::mfix_set_eb_velocity_bcs()");
 
-  if(EB::compute_area) {
+  if(m_embedded_boundaries.compute_area()) {
     mfix_calc_eb_bc_areas();
   }
 
@@ -43,27 +42,27 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           for (int bcv(0); bcv < BC::bc.size(); ++bcv) {
+           for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
-             if (BC::bc[bcv].type == BCList::eb) {
+             if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
 
-               const Box ic_bx = calc_ic_box(geom[lev], BC::bc[bcv].region);
+               const Box ic_bx = calc_ic_box(geom[lev], m_boundary_conditions.bc(bcv).region);
 
                if (ic_bx.intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(ic_bx);
 
-                 const int  has_normal = BC::bc[bcv].eb.has_normal;
+                 const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
                  amrex::GpuArray<amrex::Real,3> normal{0.};
                  if (has_normal) {
-                    normal[0] = BC::bc[bcv].eb.normal[0];
-                    normal[1] = BC::bc[bcv].eb.normal[1];
-                    normal[2] = BC::bc[bcv].eb.normal[2];
+                    normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
+                    normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
+                    normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
                  }
 
                  const Real pad = std::numeric_limits<float>::epsilon();
-                 const Real normal_tol = BC::bc[bcv].eb.normal_tol;
+                 const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
 
                  const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
                  const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
@@ -74,23 +73,23 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
                  GpuArray<amrex::Real,3> vel_comps{0.};
 
                  // Flow is specified as a velocity magnitude
-                 if ( BC::bc[bcv].fluid.eb_vel_is_mag ) {
+                 if ( m_boundary_conditions.bc(bcv).fluid.eb_vel_is_mag ) {
 
-                   vel_mag = BC::bc[bcv].fluid.get_velocity_mag();
+                   vel_mag = m_boundary_conditions.bc(bcv).fluid.get_velocity_mag();
 
                  // Volumetric flowrate is specified
-                 } else if ( BC::bc[bcv].fluid.eb_has_volflow ) {
+                 } else if ( m_boundary_conditions.bc(bcv).fluid.eb_has_volflow ) {
 
-                   Real eb_area = BC::bc[bcv].eb.area;
+                   Real eb_area = m_boundary_conditions.bc(bcv).eb.area;
                    if ( eb_area > Real(0.0) ) {
-                     Real volflow = BC::bc[bcv].fluid.get_volflow();
+                     Real volflow = m_boundary_conditions.bc(bcv).fluid.get_volflow();
                      vel_mag = volflow / eb_area;
                    }
 
                  // Flow is defined by velocity components
                  } else {
                     has_comps = 1;
-                    const auto& bc_vels = BC::bc[bcv].fluid.get_velocity(time_in);
+                    const auto& bc_vels = m_boundary_conditions.bc(bcv).fluid.get_velocity(time_in);
                     vel_comps[0] = bc_vels[0];
                     vel_comps[1] = bc_vels[1];
                     vel_comps[2] = bc_vels[2];

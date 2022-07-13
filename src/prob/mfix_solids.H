@@ -8,20 +8,155 @@
 #include <AMReX_Array.H>
 #include <AMReX_RandomEngine.H>
 
-#include <mfix_species_parms.H>
-#include <mfix_reactions_parms.H>
+#include <mfix_species.H>
+#include <mfix_reactions.H>
 
 
 // Forward declaration
-class SolidsPhase;
-
-struct SOLIDSTHERMALCONDUCTIVITYMODEL { enum {Invalid=-1, Constant}; };
+class MFIXSolidsParms;
 
 
-class SolidsParms {
+class MFIXSolidsPhase {
+
+  public:
+    // Constructor
+    MFIXSolidsPhase();
+
+    // Destructor
+    ~MFIXSolidsPhase();
+
+    struct ThermalConductivityModel { enum {Invalid=-1, Constant}; };
+
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    static int phase_to_index (const int phase)
+    { return phase-1; }
+
+    void Initialize (const MFIXSpecies& species,
+                     const MFIXReactions& reactions);
+
+    int ntypes () const { return m_ntypes; };
+
+    const amrex::Vector<std::string>& names () const { return m_names; };
+    const std::string& names (const int n) const { return m_names[n]; };
+
+    const amrex::Vector<int>& phases () const { return m_phases; };
+    int phases (const int n) const { return m_phases[n]; };
+
+    // Return phase ID given a solids type
+    int name_to_phase (const std::string& name) const;
+
+    int update_mass () const { return m_update_mass; };
+
+    int solve_species () const { return m_solve_species; };
+
+    int update_momentum () const { return m_update_momentum; };
+
+    amrex::Real enthalpy_source () const { return m_enthalpy_source; };
+
+    int update_enthalpy () const { return m_update_enthalpy; };
+
+    int solve_enthalpy () const { return m_solve_enthalpy; };
+
+    const amrex::Vector<std::string>& species_names () const { return m_species_names; };
+    const std::string& species_names (const int n) const { return m_species_names[n]; };
+
+    int nspecies () const { return m_nspecies; };
+
+    int isMixture () const { return m_is_a_mixture; };
+
+    const MFIXSolidsParms& parameters () const { return *m_parameters; };
+
+    int isInitialized () const { return m_is_initialized; };
 
   private:
-    friend class SolidsPhase;
+    int m_ntypes;
+
+    // List of recognized fluid specific heat models
+    int m_specific_heat_model;
+
+    // List of recognized fluid thermal conductivity models
+    int m_thermal_conductivity_model;
+
+    // Names of solids used in IC/BC setups
+    amrex::Vector<std::string> m_names;
+
+    // Phases IDs for each solids type
+    amrex::Vector<int> m_phases;
+
+    // Flag to turn on/off particles mass update
+    int m_update_mass;
+
+    // Flag to solve species
+    int m_solve_species;
+
+    // Flag to turn on/off particles velocity update
+    int m_update_momentum;
+
+    // Specified constant gas reference temperature
+    amrex::Real m_T_ref;
+
+    // User-defined enthalpy volumetric source for particles
+    amrex::Real m_enthalpy_source;
+
+    // Flag to turn on/off particles enthalpy update
+    int m_update_enthalpy;
+
+    // Flag to solve enthalpy
+    int m_solve_enthalpy;
+
+    // Particle species
+    amrex::Vector<std::string> m_species_names;
+
+    // Species unique identifying code
+    amrex::Gpu::HostVector<int> m_species_IDs;
+    amrex::Gpu::DeviceVector<int> m_d_species_IDs;
+
+    // Total number of dem species
+    int m_nspecies;
+
+    // Specified constant solid phase species molecular weight
+    amrex::Gpu::HostVector<amrex::Real> m_MW_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_MW_sn0;
+
+    // Flag to set solids as a mixture of solids species
+    int m_is_a_mixture;
+
+    // Specified constant specific heat
+    amrex::Gpu::HostVector<amrex::Real> m_cp_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_cp_sn0;
+
+    // Specified constant species enthalpy of formation
+    amrex::Gpu::HostVector<amrex::Real> m_H_fn0;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_H_fn0;
+
+    // Tables for stoichiometric coefficients for each species in each reaction
+    amrex::Gpu::HostVector<amrex::Real> m_stoich_coeffs;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_stoich_coeffs;
+
+    // Specified conductivity
+    amrex::Gpu::HostVector<amrex::Real> m_kp_sn0;
+    amrex::Gpu::DeviceVector<amrex::Real> m_d_kp_sn0;
+
+    // Specified fluid-lens constant
+    amrex::Real m_flpc;
+
+    // Specified roughness constant
+    amrex::Real m_rough;
+
+    // Flag to do pfp conduction
+    int m_do_conduction;
+
+    // Solids parameters for GPU access
+    MFIXSolidsParms* m_parameters;
+
+    int m_is_initialized;
+};
+
+
+class MFIXSolidsParms {
+
+  private:
+    friend class MFIXSolidsPhase;
 
     static constexpr amrex::Real R =  8.31446261815324;
 
@@ -58,7 +193,7 @@ class SolidsParms {
 
   public:
     AMREX_GPU_HOST_DEVICE
-    SolidsParms (const amrex::Real T_ref)
+    MFIXSolidsParms (const amrex::Real T_ref)
       : m_T_ref(T_ref)
       , m_h_species_id(nullptr)
       , m_d_species_id(nullptr)
@@ -76,8 +211,8 @@ class SolidsParms {
       , m_flpc(0.4)
       , m_rough(2E-8)
       , m_do_pfp_cond(0)
-      , m_specific_heat_model(SPECIFICHEATMODEL::Invalid)
-      , m_thermal_conductivity_model(SOLIDSTHERMALCONDUCTIVITYMODEL::Invalid)
+      , m_specific_heat_model(MFIXSpecies::SpecificHeatModel::Invalid)
+      , m_thermal_conductivity_model(MFIXSolidsPhase::ThermalConductivityModel::Invalid)
     {}
 
     // Driver molecular weight
@@ -182,7 +317,7 @@ class SolidsParms {
     {
       amrex::Real result(0);
 
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+      if (m_specific_heat_model == MFIXSpecies::SpecificHeatModel::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
 
@@ -193,7 +328,7 @@ class SolidsParms {
           result = m_h_cp_sn[n];
         }
 
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+      } else if (m_specific_heat_model == MFIXSpecies::SpecificHeatModel::NASA7Polynomials) {
 
         amrex::Real coeff(1);
 
@@ -225,7 +360,7 @@ class SolidsParms {
     {
       amrex::Real result(0);
 
-      if (m_specific_heat_model == SPECIFICHEATMODEL::Constant) {
+      if (m_specific_heat_model == MFIXSpecies::SpecificHeatModel::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
 
@@ -236,7 +371,7 @@ class SolidsParms {
           result = m_h_H_fn[n] + m_h_cp_sn[n]*(T_s - m_T_ref);
         }
 
-      } else if (m_specific_heat_model == SPECIFICHEATMODEL::NASA7Polynomials) {
+      } else if (m_specific_heat_model == MFIXSpecies::SpecificHeatModel::NASA7Polynomials) {
 
         amrex::Real coeff(T_s);
 
@@ -282,7 +417,7 @@ class SolidsParms {
     {
       amrex::Real result(0);
 
-      if (m_thermal_conductivity_model == SOLIDSTHERMALCONDUCTIVITYMODEL::Constant) {
+      if (m_thermal_conductivity_model == MFIXSolidsPhase::ThermalConductivityModel::Constant) {
 
         if (run_on == amrex::RunOn::Gpu) {
 
@@ -297,109 +432,6 @@ class SolidsParms {
 
       return result;
     }
-};
-
-
-class SolidsPhase
-{
-  public:
-    // Constructor
-    SolidsPhase();
-
-    // Destructor
-    ~SolidsPhase();
-
-    int ntypes;
-
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    static int phase_to_index (const int phase)
-    { return phase-1; }
-
-    // List of recognized fluid specific heat models
-    int specific_heat_model;
-
-    // List of recognized fluid thermal conductivity models
-    int thermal_conductivity_model;
-
-    // Names of solids used in IC/BC setups
-    amrex::Vector<std::string> names;
-
-    // Phases IDs for each solids type
-    amrex::Vector<int> phases;
-
-    // Return phase ID given a solids type
-    int name_to_phase (const std::string& name) const;
-
-    // Flag to turn on/off particles mass update
-    int update_mass;
-
-    // Flag to solve species
-    int solve_species;
-
-    // Flag to turn on/off particles velocity update
-    int update_momentum;
-
-    // Specified constant gas reference temperature
-    amrex::Real T_ref;
-
-    // User-defined enthalpy volumetric source for particles
-    amrex::Real enthalpy_source;
-
-    // Flag to turn on/off particles enthalpy update
-    int update_enthalpy;
-
-    // Flag to solve enthalpy
-    int solve_enthalpy;
-
-    // Particle species
-    amrex::Vector<std::string> species_names;
-
-    // Species unique identifying code
-    amrex::Gpu::HostVector<int> species_IDs;
-    amrex::Gpu::DeviceVector<int> d_species_IDs;
-
-    // Total number of dem species
-    int nspecies;
-
-    // Specified constant solid phase species molecular weight
-    amrex::Gpu::HostVector<amrex::Real> MW_sn0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_MW_sn0;
-
-    // Flag to set solids as a mixture of solids species
-    int is_a_mixture;
-
-    // Specified constant specific heat
-    amrex::Gpu::HostVector<amrex::Real> cp_sn0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_cp_sn0;
-
-    // Specified constant species enthalpy of formation
-    amrex::Gpu::HostVector<amrex::Real> H_fn0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_H_fn0;
-
-    // Tables for stoichiometric coefficients for each species in each reaction
-    amrex::Gpu::HostVector<amrex::Real> stoich_coeffs;
-    amrex::Gpu::DeviceVector<amrex::Real> d_stoich_coeffs;
-
-    // Specified conductivity
-    amrex::Gpu::HostVector<amrex::Real> kp_sn0;
-    amrex::Gpu::DeviceVector<amrex::Real> d_kp_sn0;
-
-    // Specified fluid-lens constant
-    amrex::Real flpc;
-
-    // Specified roughness constant
-    amrex::Real rough;
-
-    // Flag to do pfp conduction
-    int do_pfp_cond;
-
-    // Solids parameters for GPU access
-    SolidsParms* parameters;
-
-    int is_initialized;
-
-    void Initialize (const Species& species,
-                     const Reactions& reactions);
 };
 
 

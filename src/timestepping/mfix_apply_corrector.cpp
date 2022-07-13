@@ -2,10 +2,10 @@
 
 #include <AMReX_VisMF.H>
 #include <mfix_mf_helpers.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
-#include <mfix_species_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
+#include <mfix_species.H>
 #include <mfix_solvers.H>
 
 #ifdef AMREX_MEM_PROFILING
@@ -80,7 +80,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
     for (int lev = 0; lev <= finest_level; lev++)
     {
-       if (fluid.solve_enthalpy) {
+       if (fluid.solve_enthalpy()) {
          lap_T[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
          lap_T[lev]->setVal(0.0);
 
@@ -88,22 +88,22 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          enthalpy_RHS[lev]->setVal(0.0);
        }
 
-       if (fluid.solve_tracer) {
+       if (fluid.solve_tracer()) {
          lap_trac[lev] = new MultiFab(grids[lev], dmap[lev], ntrac, 0, MFInfo(), *ebfactory[lev]);
          lap_trac[lev]->setVal(0.0);
        }
 
-       if (fluid.solve_density) {
+       if (fluid.solve_density()) {
          ro_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), *ebfactory[lev]);
          ro_RHS[lev]->setVal(0.0);
        }
 
-       if (fluid.solve_species) {
-         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+       if (fluid.solve_species()) {
+         species_RHS[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
          species_RHS[lev]->setVal(0.0);
        }
 
-       if (reactions.solve) {
+       if (reactions.solve()) {
          vel_RHS[lev] = new MultiFab(grids[lev], dmap[lev], 3, 0, MFInfo(), *ebfactory[lev]);
          vel_RHS[lev]->setVal(0.0);
        }
@@ -129,7 +129,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       vel_eta.emplace_back(grids[lev], dmap[lev], 1, 1, MFInfo(), EBFactory(lev));
 
-      if (fluid.solve_tracer) {
+      if (fluid.solve_tracer()) {
         tra_forces.emplace_back(grids[lev], dmap[lev], ntrac, nghost_force(),
                                 MFInfo(), EBFactory(lev));
 
@@ -158,8 +158,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       conv_u[lev]->setVal(0.0);
       conv_s[lev]->setVal(0.0);
 
-      if (fluid.solve_species) {
-        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), *ebfactory[lev]);
+      if (fluid.solve_species()) {
+        conv_X[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), *ebfactory[lev]);
         conv_X[lev]->setVal(0.0);
       }
     }
@@ -197,9 +197,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     Vector<Array<MultiFab*, AMREX_SPACEDIM>> J_gk(finest_level+1);
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       for (int lev = 0; lev <= finest_level; ++lev) {
-        const int nspecies_g = fluid.nspecies;
+        const int nspecies_g = fluid.nspecies();
 
         for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
           J_gk[lev][dir] = new MultiFab(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
@@ -217,19 +217,19 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     mfix_set_density_bcs(time, get_ro_g());
 
     {
-      const bool constraint = !(fluid.constraint_type == ConstraintType::IncompressibleFluid);
+      const bool constraint = !(fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IncompressibleFluid);
 
-      const bool update_lapT = (fluid.solve_enthalpy && (explicit_diffusive_enthalpy || constraint));
-      const bool update_lapS = (fluid.solve_tracer   &&  explicit_diffusive_trac);
-      const bool update_flux = (fluid.solve_species  && (explicit_diffusive_species || constraint));
+      const bool update_lapT = (fluid.solve_enthalpy() && (explicit_diffusive_enthalpy || constraint));
+      const bool update_lapS = (fluid.solve_tracer()   &&  explicit_diffusive_trac);
+      const bool update_flux = (fluid.solve_species() && (explicit_diffusive_species || constraint));
 
-      if (fluid.solve_enthalpy)
+      if (fluid.solve_enthalpy())
       {
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk());
 
       compute_laps(update_lapT, update_lapS, update_flux, lap_T, lap_trac, J_gk,
@@ -238,13 +238,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       // We call the bc routines again to enforce the ext_dir condition
       // on the faces (the diffusion operator can move those to ghost cell centers)
-      if (fluid.solve_enthalpy)
+      if (fluid.solve_enthalpy())
       {
         mfix_set_temperature_bcs(time, get_T_g());
         mfix_set_enthalpy_bcs(time, get_h_g());
       }
 
-      if (fluid.solve_species)
+      if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk());
     }
 
@@ -254,9 +254,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     Vector<MultiFab*> div_J(finest_level+1);
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       for (int lev = 0; lev <= finest_level; ++lev) {
-        div_J[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies, 0, MFInfo(), EBFactory(lev));
+        div_J[lev] = new MultiFab(grids[lev], dmap[lev], fluid.nspecies(), 0, MFInfo(), EBFactory(lev));
         div_J[lev]->setVal(0.);
       }
 
@@ -270,14 +270,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     Vector<MultiFab*> div_hJ(finest_level+1);
     Vector< Array<MultiFab, AMREX_SPACEDIM> > h_gk_fc(finest_level+1);
 
-    if (fluid.solve_enthalpy && fluid.solve_species) {
+    if (fluid.solve_enthalpy() && fluid.solve_species()) {
       for (int lev = 0; lev <= finest_level; ++lev) {
         div_hJ[lev] = new MultiFab(grids[lev], dmap[lev], 1, 0, MFInfo(), EBFactory(lev));
         div_hJ[lev]->setVal(0.);
 
         for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
           h_gk_fc[lev][dir].define(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
-                                   dmap[lev], fluid.nspecies, 1, MFInfo(), EBFactory(lev));
+                                   dmap[lev], fluid.nspecies(), 1, MFInfo(), EBFactory(lev));
           h_gk_fc[lev][dir].setVal(0.);
         }
       }
@@ -290,21 +290,21 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // ************************************************************************
     // Compute right hand side terms on the intermediate status
     // ************************************************************************
-    if (fluid.solve_density) {
+    if (fluid.solve_density()) {
       mfix_density_rhs(ro_RHS, get_chem_txfr_const());
     }
 
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
       mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
            get_X_gk(), get_T_g_const(), get_chem_txfr_const());
     }
 
-    if (fluid.solve_species) {
+    if (fluid.solve_species()) {
       mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
     }
 
     // Linear momentum RHS
-    if (reactions.solve) {
+    if (reactions.solve()) {
       mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_chem_txfr_const());
     }
 
@@ -312,35 +312,35 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute RHS for the MAC projection
     // *************************************************************************************
-    if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+    if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IncompressibleFluid) {
 
       mfix_incompressible_fluid_rhs(GetVecOfPtrs(rhs_mac));
 
     } else {
 
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev(0); lev < nlev; ++lev) {
-        if (fluid.solve_enthalpy) {
+        if (fluid.solve_enthalpy()) {
           MultiFab::Add(*enthalpy_RHS[lev], *lap_T[lev], 0, 0, 1, 0);
 
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
             MultiFab::Subtract(*enthalpy_RHS[lev], *div_hJ[lev], 0, 0, 1, 0);
           }
         }
 
-        if (fluid.solve_species) {
+        if (fluid.solve_species()) {
           MultiFab::Subtract(*species_RHS[lev], *div_J[lev], 0, 0, nspecies_g, 0);
         }
       }
 
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+      if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
 
         mfix_idealgas_opensystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(species_RHS),
             get_ro_g_const(), get_T_g_const(), get_X_gk_const());
 
-      } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+      } else if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(GetVecOfPtrs(rhs_mac),
             GetVecOfConstPtrs(enthalpy_RHS), GetVecOfConstPtrs(species_RHS),
@@ -349,15 +349,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       }
 
       for (int lev(0); lev < nlev; ++lev) {
-        if (fluid.solve_enthalpy) {
+        if (fluid.solve_enthalpy()) {
           MultiFab::Subtract(*enthalpy_RHS[lev], *lap_T[lev], 0, 0, 1, 0);
 
-          if (fluid.solve_species) {
+          if (fluid.solve_species()) {
             MultiFab::Add(*enthalpy_RHS[lev], *div_hJ[lev], 0, 0, 1, 0);
           }
         }
 
-        if (fluid.solve_species) {
+        if (fluid.solve_species()) {
           MultiFab::Add(*species_RHS[lev], *div_J[lev], 0, 0, nspecies_g, 0);
         }
       }
@@ -372,7 +372,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         get_ep_g_const(), get_ro_g_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
-    if (fluid.solve_species)
+    if (fluid.solve_species())
       mfix_set_species_bcs(time, get_X_gk());
 
     mfix_compute_convective_term(conv_u, conv_s, conv_X, GetVecOfPtrs(vel_forces),
@@ -386,15 +386,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update density first
     // *************************************************************************************
-    if (!fluid.solve_density)
+    if (!fluid.solve_density())
     {
         for (int lev = 0; lev <= finest_level; lev++)
             MultiFab::Copy(density_nph[lev], *(m_leveldata[lev]->ro_go), 0, 0, 1, nghost_state());
 
     } else {
 
-        const int nspecies_g = fluid.nspecies;
-        const int use_species_advection = fluid.is_a_mixture && fluid.solve_species;
+        const int nspecies_g = fluid.nspecies();
+        const int use_species_advection = fluid.isMixture() && fluid.solve_species();
 
         for (int lev = 0; lev <= finest_level; lev++)
         {
@@ -458,9 +458,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************
     // Update species mass fraction
     // *************************************************************************
-    if (fluid.solve_species)
+    if (fluid.solve_species())
     {
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -596,7 +596,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // *************************************************************************************
       // Normalize species mass fractions in order to respect sum = 1
       // *************************************************************************************
-      if (fluid.is_a_mixture) {
+      if (fluid.isMixture()) {
         mfix_normalize_fluid_species(get_X_gk());
       }
     } // fluid.solve_species
@@ -605,7 +605,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // **************************************************************************
     // Update thermodynamic pressure
     // **************************************************************************
-    if (fluid.solve_enthalpy && (fluid.constraint_type == ConstraintType::IdealGasClosedSystem))
+    if (fluid.solve_enthalpy() && (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem))
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
         auto& ld = *m_leveldata[lev];
@@ -635,15 +635,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update enthalpy and temperature
     // *************************************************************************************
-    if (fluid.solve_enthalpy) {
+    if (fluid.solve_enthalpy()) {
 
-      auto& fluid_parms = *fluid.parameters;
-      const int fluid_is_a_mixture = fluid.is_a_mixture;
-      const int nspecies_g = fluid.nspecies;
+      const auto& fluid_parms = fluid.parameters();
+      const int fluid_is_a_mixture = fluid.isMixture();
+      const int nspecies_g = fluid.nspecies();
 
-      const int closed_system = (fluid.constraint_type == ConstraintType::IdealGasClosedSystem);
+      const int closed_system = (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem);
 
-      if (!explicit_diffusive_species && fluid.solve_species) {
+      if (!explicit_diffusive_species && fluid.solve_species()) {
         const int update_enthalpies = 0;
         diffusion_op->ComputeDivhJ(div_hJ, h_gk_fc, J_gk, get_T_g_const(), update_enthalpies);
       }
@@ -662,7 +662,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 #endif
         for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-          const int solve_species = fluid.solve_species;
+          const int solve_species = fluid.solve_species();
 
           Box const& bx = mfi.tilebox();
 
@@ -814,7 +814,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             Array4<Real const> const& T_g_o   = ld.T_go->array(mfi);
             Array4<Real const> const& ep_g    = ld.ep_g->const_array(mfi);
             Array4<Real const> const& ro_g_n  = ld.ro_g->const_array(mfi);
-            Array4<Real const> const& X_gk_n  = fluid.solve_species ? ld.X_gk->array(mfi) : dummy_arr;
+            Array4<Real const> const& X_gk_n  = fluid.solve_species()? ld.X_gk->array(mfi) : dummy_arr;
             Array4<Real const> const& lap_T_o = lap_T_old[lev]->const_array(mfi);
 
             auto const& flags_arr = flags.const_array(mfi);
@@ -909,7 +909,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // ***********************************************************************
       // Add the drag and enthalpy terms implicitly
       // ***********************************************************************
-      if (DEM::solve || PIC::solve)
+      if (m_dem.solve() || m_pic.solve())
         mfix_add_enthalpy_txfr_implicit(l_dt, get_h_g(), get_T_g(), get_X_gk_const(),
             get_txfr_const(), get_ro_g_const(), get_ep_g_const());
 
@@ -919,7 +919,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Update tracer(s)
     // *************************************************************************************
-    if (fluid.solve_tracer)
+    if (fluid.solve_tracer())
     {
         int l_ntrac = ntrac;
 
@@ -1031,12 +1031,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
          Array4<Real const> const& dudt_n    = conv_u[lev]->const_array(mfi);
          Array4<Real const> const& gp        = ld.gp->const_array(mfi);
          Array4<Real const> const& vel_f     = vel_forces[lev].const_array(mfi);
-         Array4<Real const> const& vel_rhs_o = reactions.solve ?
+         Array4<Real const> const& vel_rhs_o = reactions.solve() ?
                                                vel_RHS_old[lev]->const_array(mfi) : empty_array;
-         Array4<Real const> const& vel_rhs_n = reactions.solve ?
+         Array4<Real const> const& vel_rhs_n = reactions.solve() ?
                                                vel_RHS[lev]->const_array(mfi) : empty_array;
 
-         const int l_solve_reactions = reactions.solve;
+         const int l_solve_reactions = reactions.solve();
 
          amrex::ParallelFor(bx, [vel_n,vel_o,dudt_o,dudt_n,gp,vel_f,epg,rog_nph,
              divtau_o,l_dt,vel_rhs_o,vel_rhs_n,l_solve_reactions]
@@ -1082,7 +1082,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Add the drag terms implicitly
     // *************************************************************************************
-    if (DEM::solve || PIC::solve)
+    if (m_dem.solve() || m_pic.solve())
       mfix_add_vel_txfr_implicit(l_dt, get_vel_g(), get_txfr_const(),
           GetVecOfConstPtrs(density_nph), get_ep_g_const());
 
@@ -1154,15 +1154,15 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       S_cc[lev]->setVal(0.);
     }
 
-    if (fluid.constraint_type == ConstraintType::IncompressibleFluid) {
+    if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IncompressibleFluid) {
 
       mfix_incompressible_fluid_rhs(S_cc);
 
     } else {
 
-      const int closed_system = int(fluid.constraint_type == ConstraintType::IdealGasClosedSystem);
+      const int closed_system = int(fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem);
 
-      const int nspecies_g = fluid.nspecies;
+      const int nspecies_g = fluid.nspecies();
 
       for (int lev = 0; lev <= finest_level; lev++)
       {
@@ -1172,8 +1172,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 #endif
           for (MFIter mfi(*S_cc[lev],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-              const int solve_species  = fluid.solve_species;
-              const int solve_enthalpy = fluid.solve_enthalpy;
+              const int solve_species  = fluid.solve_species();
+              const int solve_enthalpy = fluid.solve_enthalpy();
 
               Box const& bx = mfi.tilebox();
 
@@ -1227,13 +1227,13 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           } // mfi
       } // lev
 
-      if (fluid.constraint_type == ConstraintType::IdealGasOpenSystem) {
+      if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
   
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
             get_T_g_const(), get_X_gk_const());
 
-      } else if (fluid.constraint_type == ConstraintType::IdealGasClosedSystem) {
+      } else if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
 
         mfix_idealgas_closedsystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ep_g_const(), get_ro_g_const(),
@@ -1275,7 +1275,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete conv_u[lev];
        delete conv_s[lev];
 
-       if (fluid.solve_species) {
+       if (fluid.solve_species()) {
          delete conv_X[lev];
        }
     }
@@ -1287,11 +1287,11 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
        delete enthalpy_RHS[lev];
        delete lap_T[lev];
 
-       if (fluid.solve_species) {
+       if (fluid.solve_species()) {
          delete species_RHS[lev];
        }
 
-       if (reactions.solve)
+       if (reactions.solve())
          delete vel_RHS[lev];
     }
 

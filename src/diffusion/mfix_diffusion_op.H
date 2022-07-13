@@ -7,7 +7,8 @@
 #include <AMReX_MLEBABecLap.H>
 #include <AMReX_MLEBTensorOp.H>
 
-#include <mfix_fluid_parms.H>
+#include <mfix_eb.H>
+#include <mfix_fluid.H>
 
 //
 // Solver for the implicit part of the diffusion equation:
@@ -30,7 +31,8 @@ class DiffusionOp
     // Constructor, with initialisation
     DiffusionOp (amrex::AmrCore* _amrcore,
                  amrex::Vector< const amrex::EBFArrayBoxFactory* >const& _ebfactory,
-                 FluidPhase& _fluid,
+                 MFIXEmbeddedBoundaries& embedded_boundaries,
+                 MFIXFluidPhase& _fluid,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_lo,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_velbc_hi,
                  std::array<amrex::LinOpBCType,AMREX_SPACEDIM> a_scalbc_lo,
@@ -210,7 +212,8 @@ class DiffusionOp
     std::string hypre_namespace = "hypre";
     std::string hypre_interface = "ij";
 
-    FluidPhase& fluid;
+    MFIXEmbeddedBoundaries& m_embedded_boundaries;
+    MFIXFluidPhase& fluid;
 };
 
 #endif

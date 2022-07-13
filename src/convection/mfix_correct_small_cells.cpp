@@ -1,5 +1,5 @@
 #include <mfix.H>
-#include <mfix_eb_parms.H>
+#include <mfix_eb.H>
 
 void
 mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
@@ -54,7 +54,7 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
         const auto& vfrac_fab = volfrac->array(mfi);
         const auto& ccvel_fab = vel_in[lev]->array(mfi);
 
-        if(!EB::has_flow) {
+        if(!m_embedded_boundaries.has_flow()) {
 
           // This FAB has cut cells -- we define the centroid value in terms
           // of the MAC velocities onfaces

@@ -10,9 +10,9 @@
 #include <type_traits>
 #include <AMReX_EB_utils.H>
 #include <mfix.H>
-#include <mfix_dem_parms.H>
-#include <mfix_pic_parms.H>
-#include <mfix_fluid_parms.H>
+#include <mfix_dem.H>
+#include <mfix_pic.H>
+#include <mfix_fluid.H>
 
 
 void mfix::make_eb_general () {
@@ -107,7 +107,7 @@ void mfix::make_eb_general () {
 
             // // For DEM: generate polynomial IF separately (to allow "water-tight"
             // // intersection with walls).
-            // if(DEM::solve){
+            // if(m_dem.solve()){
             //     auto gshop = EB2::makeShop(* impfunc_poly2);
             //
             //     build_eb_levels(gshop);
@@ -118,7 +118,7 @@ void mfix::make_eb_general () {
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve || PIC::solve) {
+                if (m_dem.solve() || m_pic.solve()) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part,
@@ -130,7 +130,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (fluid.solve) {
+                if (fluid.solve()) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -157,7 +157,7 @@ void mfix::make_eb_general () {
                 amrex::Abort("DPD++: make_eb_general poly2 not supported");
 #else
 
-                if (DEM::solve || PIC::solve) {
+                if (m_dem.solve() || m_pic.solve()) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_poly2, * impfunc_walls_part);
@@ -168,7 +168,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (fluid.solve) {
+                if (fluid.solve()) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -224,7 +224,7 @@ void mfix::make_eb_general () {
         } else {
             if (has_walls && use_divider) { // ........................... ! poly2 + walls + divider
 
-                if (DEM::solve || PIC::solve) {
+                if (m_dem.solve() || m_pic.solve()) {
                     amrex::Print() << "Making the particle eb levels ..." << std::endl;
 
                     auto eb_if = EB2::makeUnion(* impfunc_walls_part, * impfunc_divider);
@@ -235,7 +235,7 @@ void mfix::make_eb_general () {
                     amrex::Print() << "Done making the particle eb levels." << std::endl;
                 }
 
-                if (fluid.solve) {
+                if (fluid.solve()) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
@@ -256,14 +256,14 @@ void mfix::make_eb_general () {
 
             } else if (has_walls) { // ................................... ! poly2 + walls + ! divider
 
-                if (DEM::solve || PIC::solve) {
+                if (m_dem.solve() || m_pic.solve()) {
                     auto gshop = EB2::makeShop(* impfunc_walls_part);
 
                     build_eb_levels(gshop);
 
                 }
 
-                if (fluid.solve) {
+                if (fluid.solve()) {
                     amrex::Print() << "Making the fluid eb levels ..." << std::endl;
 
                     if (has_real_walls) { // since ! has_walls => ! has_real_walls
