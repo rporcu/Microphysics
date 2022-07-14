@@ -172,7 +172,7 @@ build:csg:
             -B build
             -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_MODULE_PATH=$PWD/build
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors -Wshadow"
             -DMFIX_CSG=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
@@ -216,7 +216,7 @@ lint:gcc:warnings:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors -Wshadow"
             -GNinja
     - cmake --build build --target mfix build_tests -- -k0
 
@@ -229,7 +229,7 @@ lint:clang:warnings:
     - cmake -S .
             -B build
             -DCMAKE_BUILD_TYPE=Debug
-            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror"
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wno-unused-lambda-capture -Wnull-dereference -Werror -Wshadow"
             -DMFIX_MPI=0
             -GNinja
     - cmake --build build --target mfix build_tests -- -k0

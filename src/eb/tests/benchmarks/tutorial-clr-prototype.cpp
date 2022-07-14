@@ -63,9 +63,8 @@ const Real lvalve_height = 0.2;
 
 template <class H> void check_clr(const H &clr) {
 
-  auto Cx = 0.0, Cy = offset, Cz = offset;
-
   {
+    auto Cx = 0.0, Cy = offset, Cz = offset;
     INFO("Air reactor");
     {
       INFO("Along the air reactor body (cylinder)");
