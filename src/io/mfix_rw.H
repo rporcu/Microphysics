@@ -198,7 +198,7 @@ public:
    amrex::Vector<amrex::Vector<amrex::MultiFab*>> chkSpeciesVars;
    amrex::Vector<std::string> chkSpeciesVarsName;
 
-   void Initialize (const MFIXRegions& regions);
+   void Initialize ();
 
     bool solids_plot_regions () const
     { return m_solids_plot_regions.size() > 0; };

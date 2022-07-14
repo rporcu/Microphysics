@@ -241,7 +241,7 @@ void MfixRW::readParameters ()
 
 
 void
-MfixRW::Initialize (const MFIXRegions& regions)
+MfixRW::Initialize ()
 {
   real_comp_names.clear();
   int_comp_names.clear();
@@ -460,7 +460,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
       monitor.reset_pc(pc);
 
-      int plot_test = 0;
+      plot_test = 0;
 
       if (monitor.plot_per_approx() > 0.0) {
         plot_test = test_per_approx(time, dt, monitor.plot_per_approx());

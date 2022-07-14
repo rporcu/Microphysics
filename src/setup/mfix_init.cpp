@@ -44,7 +44,7 @@ mfix::InitParams ()
   m_boundary_conditions.Initialize(geom[0], regions, fluid, solids, m_dem, m_pic);
   m_initial_conditions.Initialize(regions, fluid, solids, m_dem, m_pic);
 
-  mfixRW->Initialize(regions);
+  mfixRW->Initialize();
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)

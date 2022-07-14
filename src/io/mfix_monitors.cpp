@@ -3400,7 +3400,7 @@ FlowRate::flow_rate (const int lev,
       const Real statwt = particle.rdata(SoArealData::statwt);
 
       const Real pos = particle.pos(direction);
-      const Real vel = particle.rdata(SoArealData::velx+plane_coordinate);
+      const Real vel = particle.rdata(SoArealData::velx+direction);
 
       const Real sign = std::abs(vel) < 1.e-15 ? 0. : (vel > 0. ? 1. : -1.);
 
@@ -3458,7 +3458,7 @@ FlowRate::mass_weighted_flow_rate (const int lev,
       const Real mass = particle.rdata(SoArealData::mass);
 
       const Real pos = particle.pos(direction);
-      const Real vel = particle.rdata(SoArealData::velx+plane_coordinate);
+      const Real vel = particle.rdata(SoArealData::velx+direction);
 
       const Real sign = std::abs(vel) < 1.e-15 ? 0. : (vel > 0. ? 1. : -1.);
 
@@ -3516,7 +3516,7 @@ FlowRate::volume_weighted_flow_rate (const int lev,
       const Real volume = particle.rdata(SoArealData::volume);
 
       const Real pos = particle.pos(direction);
-      const Real vel = particle.rdata(SoArealData::velx+plane_coordinate);
+      const Real vel = particle.rdata(SoArealData::velx+direction);
 
       const Real sign = std::abs(vel) < 1.e-15 ? 0. : (vel > 0. ? 1. : -1.);
 

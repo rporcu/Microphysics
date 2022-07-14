@@ -374,8 +374,6 @@ MFIXFluidPhase::Initialize (const MFIXSpecies& species,
 
     // Constraint type
     {
-      ParmParse ppMFIX("mfix");
-
       std::string constraint_str = "IncompressibleFluid";
       ppMFIX.query("constraint_type", constraint_str);
       constraint_str = amrex::toLower(constraint_str);
