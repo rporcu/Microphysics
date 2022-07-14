@@ -339,7 +339,7 @@ mfix::mfix_add_vel_txfr_explicit (Real dt,
       {
         const Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
 
-        const Real beta = txfr_array(i,j,k,Transfer::beta);
+        const Real beta = txfr_array(i,j,k,Transfer::drag_coeff);
 
         const Real vel_x = vel_array(i,j,k,0);
         const Real vel_y = vel_array(i,j,k,1);
@@ -417,7 +417,7 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
           const Real Tg_old = Tg_array(i,j,k);
           const Real Ts     = txfr_array(i,j,k,Transfer::gammaTp);
-          const Real gamma  = txfr_array(i,j,k,Transfer::gamma);
+          const Real gamma  = txfr_array(i,j,k,Transfer::convection_coeff);
 
           const Real hg = hg_array(i,j,k) + (Ts - gamma * Tg_old) * orop;
           hg_array(i,j,k) = hg;
@@ -606,7 +606,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
           const Real hg = hg_array(i,j,k);
 
           const Real gammaTp = txfr_array(i,j,k,Transfer::gammaTp);
-          const Real gamma = txfr_array(i,j,k,Transfer::gamma);
+          const Real gamma = txfr_array(i,j,k,Transfer::convection_coeff);
 
           const Real epg_loc = ep_array(i,j,k);
 

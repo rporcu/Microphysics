@@ -377,11 +377,11 @@ InterphaseTxfrDeposition (F WeightFunc,
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely), weight_vol*pvy);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz), weight_vol*pvz);
 
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::beta), weight_vol*pbeta);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::drag_coeff), weight_vol*pbeta);
 
                 if (solve_enthalpy) {
                   HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
-                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gamma), weight_vol*pgamma);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::convection_coeff), weight_vol*pgamma);
                 }
 
                 if (solve_reactions) {

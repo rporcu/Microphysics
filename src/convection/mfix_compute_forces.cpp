@@ -114,7 +114,7 @@ void mfix::compute_vel_forces_on_level (int lev,
           const Real rhoinv = 1.0/rho(i,j,k);
           const Real epginv = 1.0/ep_g(i,j,k);
 
-          const Real beta = txfr(i,j,k,Transfer::beta);
+          const Real beta = txfr(i,j,k,Transfer::drag_coeff);
 
           const Real drag_x = (txfr(i,j,k,Transfer::velx) - beta*vel_g(i,j,k,0))*epginv;
           const Real drag_y = (txfr(i,j,k,Transfer::vely) - beta*vel_g(i,j,k,1))*epginv;

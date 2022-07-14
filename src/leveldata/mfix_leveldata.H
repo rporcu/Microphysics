@@ -16,9 +16,9 @@ struct Transfer {
     velx = 0,
     vely,
     velz,
-    beta,
+    drag_coeff,
     gammaTp,
-    gamma,
+    convection_coeff,
     count
   };
 };

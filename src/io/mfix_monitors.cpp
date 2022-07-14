@@ -668,7 +668,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_beta") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::beta);
+      m_components.push_back(Transfer::drag_coeff);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -684,7 +684,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_gamma") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::gamma);
+      m_components.push_back(Transfer::convection_coeff);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);

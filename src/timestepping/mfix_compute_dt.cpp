@@ -101,7 +101,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 {
                   Real delp = gp0_dev[n] + gradp(i,j,k,n);
                   Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
+                    txfr_fab(i,j,k,Transfer::drag_coeff) * vel(i,j,k,n);
 
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }
@@ -186,7 +186,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 {
                   Real delp = gp0_dev[n] + gradp(i,j,k,n);
                   Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,Transfer::beta) * vel(i,j,k,n);
+                    txfr_fab(i,j,k,Transfer::drag_coeff) * vel(i,j,k,n);
 
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }
