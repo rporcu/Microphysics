@@ -1,0 +1,23 @@
+If you use MFIX-Exa, we ask you to cite the IJHPCA paper:
+
+    @article{MFIXExa_IJHPCA,
+    author = {Jordan Musser and Ann S Almgren and William D Fullmer and Oscar Antepara and John B Bell and Johannes Blaschke and Kevin Gott and Andrew Myers and Roberto Porcu and Deepak Rangarajan and Michele Rosso and Weiqun Zhang and Madhava Syamlal},
+    title ={MFIX-Exa: A path toward exascale CFD-DEM simulations},
+    journal = {The International Journal of High Performance Computing Applications},
+    volume = {36},
+    number = {1},
+    pages = {40-58},
+    year = {2022},
+    doi = {10.1177/10943420211009293},
+
+    URL = {
+            https://doi.org/10.1177/10943420211009293
+
+    },
+    eprint = {
+            https://doi.org/10.1177/10943420211009293
+
+    }
+    ,
+        abstract = { MFIX-Exa is a computational fluid dynamics-discrete element model (CFD-DEM) code designed to run efficiently on current and next-generation supercomputing architectures. MFIX-Exa combines the CFD-DEM expertise embodied in the MFIX code-which was developed at NETL and is used widely in academia and industry with the modern software framework, AMReX, developed at LBNL. The fundamental physics models follow those of the original MFIX, but the combination of new algorithmic approaches and a new software infrastructure will enable MFIX-Exa to leverage future exascale machines to optimize the modeling and design of multiphase chemical reactors. }
+    }
