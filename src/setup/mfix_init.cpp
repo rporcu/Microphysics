@@ -908,6 +908,9 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
               particle_dm.define(particle_pmap);
 
             pc->Regrid(particle_dm, particle_ba);
+            if (sort_particle_int > 0) {
+              pc->SortParticlesByBin(IntVect(particle_sorting_bin));
+            }
 
             if (particle_cost[lev] != nullptr)
               delete particle_cost[lev];
