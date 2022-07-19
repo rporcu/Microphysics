@@ -8,8 +8,6 @@
 #include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 
-#include <cstdlib>
-#include <sys/stat.h>
 
 using namespace amrex;
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
@@ -150,14 +148,6 @@ Monitor::Monitor (const std::array<std::string,2> specs,
 
   ppMonitor.get("plot_file", m_filename);
   m_filename.append(".csv");
-  // Remove any file having the same name to avoid appending values to an older
-  // existing .csv file
-  std::string cmd = "rm -f " + m_filename;
-  int cmd_ok = std::system(cmd.c_str());
-  if (!cmd_ok) {
-    Print() << "Error: couldn't execute command: " << cmd << "\n";
-    amrex::Abort("Error");
-  }
 
   ppMonitor.getarr("variables", m_input_variables);
 
@@ -199,7 +189,22 @@ Monitor::initialize ()
     m_boxes.push_back(box);
   }
 
+  // Setup variables names
   this->setup_variables();
+
+  // Write csv output file headers
+  if (ParallelDescriptor::IOProcessor()) {
+
+    std::ofstream output_file;
+    output_file.open(m_filename.c_str(), std::ios::out | std::ios::trunc);
+
+    output_file << "time";
+    for (const std::string& variable: m_variables)
+      output_file << "," << variable;
+    output_file << std::endl;
+
+    output_file.close();
+  }
 }
 
 
@@ -220,46 +225,19 @@ Monitor::write_csv (const Real& time,
   // Write csv output file headers
   if (ParallelDescriptor::IOProcessor()) {
 
-    // Check if .csv output file does not exists
-    // If file does not exist, write headers
-    struct stat buf;
-    if (stat(m_filename.c_str(), &buf) == -1) {
+    std::ofstream output_file;
+    output_file.open(m_filename.c_str(), std::ios::out | std::ios::app);
 
-      std::ofstream output_file;
-      output_file.open(m_filename.c_str(), std::ios::out | std::ios::trunc);
-
-      output_file << "time";
-      for (const std::string& variable: m_variables)
-        output_file << "," << variable;
+    const int lev = 0;
+//    for (int lev(0); lev < m_nlev; ++lev) {
+      output_file << time;
+      for (int var(0); var < m_monitoring_results[lev].size(); ++var) {
+        output_file << "," << m_monitoring_results[lev][var];
+      }
       output_file << std::endl;
-
-      const int lev = 0;
-//    for (int lev(0); lev < m_nlev; ++lev) {
-        output_file << time;
-        for (int var(0); var < m_monitoring_results[lev].size(); ++var) {
-          output_file << "," << m_monitoring_results[lev][var];
-        }
-        output_file << std::endl;
 //    }
 
-      output_file.close();
-
-    } else { // file existed, append monitored values
-
-      std::ofstream output_file;
-      output_file.open(m_filename.c_str(), std::ios::out | std::ios::app);
-
-      const int lev = 0;
-//    for (int lev(0); lev < m_nlev; ++lev) {
-        output_file << time;
-        for (int var(0); var < m_monitoring_results[lev].size(); ++var) {
-          output_file << "," << m_monitoring_results[lev][var];
-        }
-        output_file << std::endl;
-//    }
-
-      output_file.close();
-    }
+    output_file.close();
   }
 }
 
@@ -2606,7 +2584,9 @@ BaseMonitor::setup_variables ()
   Vector<std::string> variables_names;
   variables_names.clear();
 
-  for (const std::string& var: m_variables) {
+  for (int i(0); i < m_input_variables.size(); ++i) {
+  
+    const std::string& var = m_input_variables[i];
 
     if (var.compare("position") == 0) {
 
