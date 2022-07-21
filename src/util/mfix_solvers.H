@@ -22,19 +22,19 @@ class Newton {
 
     // Constructor
     AMREX_GPU_HOST_DEVICE
-    Newton() = default;
+    Newton () = default;
 
     // Solve for scalars
     template<typename ResidueFunc, typename GradientFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     static
-    int solve(amrex::Real& solution,
-              ResidueFunc& R,
-              GradientFunc& partial_R,
-              const int is_IOProc,
-              const amrex::Real /*abs_tol*/,
-              const amrex::Real rel_tol,
-              const int max_iterations)
+    int solve (amrex::Real& solution,
+               ResidueFunc& R,
+               GradientFunc& partial_R,
+               const int is_IOProc,
+               const amrex::Real /*abs_tol*/,
+               const amrex::Real rel_tol,
+               const int max_iterations)
     {
       amrex::Real gradient = partial_R(solution);
       amrex::Real residue  = R(solution);

@@ -41,6 +41,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
   BL_PROFILE("mfix_dem::mfix_pc_inflow()");
 
   const int solve_species = solids.solve_species();
+  const int solve_reactions = reactions.solve();
 
   const int nspecies_s = solids.nspecies();
   const int solid_is_a_mixture = solids.isMixture();
@@ -167,7 +168,9 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               const SOLIDS_t& bc_solid = m_boundary_conditions.bc(bcv).solids[lcs];
               const int phase = bc_solid.phase;
 
-              Real Tp(0.0), cp_s(0.0);
+              Real Tp = bc_solid.temperature;
+              Real cp_s(0.0);
+
               if (adv_enthalpy) {
                 if(!solid_is_a_mixture) {
                   cp_s = solids_parms.calc_cp_s<RunOn::Host>(Tp);
@@ -254,6 +257,9 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
               total_np += new_np;
 
               const int idx_X_sn = m_runtimeRealData.X_sn;
+              const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
+              const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+              const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
               amrex::ParallelForRNG(pcount, [pstruct, ptile_data, NextID, MyProc, old_np, bbx,
                 p_real,p_int, phase, plo, dx, idx, rbbx,
@@ -261,7 +267,8 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                 rand_x, rand_y, rand_z, velmag,
                 mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
                 mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
-                adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn ]
+                adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn,
+                idx_mass_txfr, idx_vel_txfr, idx_h_txfr, solve_reactions]
                 AMREX_GPU_DEVICE (int pid, amrex::RandomEngine const& engine) noexcept
               {
                 const int ip = pid + old_np;
@@ -365,6 +372,18 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                     ptile_data.m_runtime_rdata[idx_X_sn+n][ip] = p_bc_inputs[2+n];
                   }
                 }
+
+                if (solve_reactions) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s)
+                    ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][ip] = 0;
+
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][ip] = 0;
+
+                  ptile_data.m_runtime_rdata[idx_h_txfr][ip] = 0;
+                }
+
               });
 
               // Update the particles NextID
