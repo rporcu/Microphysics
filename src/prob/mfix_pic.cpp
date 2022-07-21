@@ -32,7 +32,7 @@ MFIXPIC::Initialize ()
 
   // Names of the solids used to build input regions.
   amrex::Vector<std::string> names;
-  pp.queryarr("m_solve", names);
+  pp.queryarr("solve", names);
 
   m_solve = names.size();
 
