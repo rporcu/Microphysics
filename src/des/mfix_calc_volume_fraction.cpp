@@ -94,12 +94,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
       // Deposit particle volume to the grid
       pc->SolidsVolumeDeposition(lev, *mf_pointer[lev], volfrac, flags);
-    }
-
-    {
-      // The deposition occurred on level 0, thus the next few operations
-      // only need to be carried out on level 0.
-      int lev(0);
 
       // Move any volume deposited outside the domain back into the domain
       // when BC is either a pressure inlet or mass inflow.
@@ -108,40 +102,9 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       // Sum grid boundaries to capture any material that was deposited into
       // your grid from an adjacent grid.
       mf_pointer[lev]->SumBoundary(gm.periodicity());
-
-      // Fill the boundaries so we calculate the correct average
-      // solids volume fraction for periodic boundaries.
-      mf_pointer[lev]->FillBoundary(gm.periodicity());
-
-      // Create a copy of the solids volume fraction to use
-      // in the redistribution.
-      MultiFab* eps_tmp;
-      eps_tmp = (MFHelpers::createFrom(*mf_pointer[lev])).release();
-
-      // Clear the grid boundaries to prepare for redistribution which
-      // could put material in your ghost cells. Do this AFTER
-      // we created the copy so the copy has the correct boundary info.
-      mf_pointer[lev]->setBndry(0.0);
-
-
-      // Move excessive solids volume from small cells to neighboring cells. A copy
-      // of the deposition field is made so that when an average is calc
-      mfix_redistribute_deposition(lev, *eps_tmp, *mf_pointer[lev], volfrac, flags,
-                                   mfix::m_max_solids_volume_fraction);
-
-      // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent grid.
-      mf_pointer[lev]->SumBoundary(gm.periodicity());
-      mf_pointer[lev]->FillBoundary(gm.periodicity());
-
-      // we no longer need the copy.
-      delete eps_tmp;
-
     }
 
-    if (crse_factory != nullptr)
-      delete crse_factory;
-      
+    // Sum data from all levels into level 0.
     int  src_nghost = 1;
     int dest_nghost = 0;
     int ng_to_copy = amrex::min(src_nghost, dest_nghost);
@@ -150,8 +113,62 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       mf_pointer[0]->ParallelCopy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
           ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
 
-    if (nlev > 1)
+    // If ep_g is not defined on the particle_box_array, then we need
+    // to copy here from mf_pointer into ep_g. I believe that we don't
+    // need any information in ghost cells so we don't copy those.
+
+    if (mf_pointer[0] != m_leveldata[0]->ep_g) {
+      m_leveldata[0]->ep_g->ParallelCopy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
+    }
+
+    for (int lev = 0; lev < nlev; lev++) {
+      if (mf_pointer[lev] != m_leveldata[lev]->ep_g) { delete mf_pointer[lev]; }
+    }
+
     {
+      // The deposition occurred on level 0, thus the next few operations
+      // only need to be carried out on level 0.
+      int lev(0);
+
+      // Fill the boundaries so we calculate the correct average
+      // solids volume fraction for periodic boundaries.
+      m_leveldata[lev]->ep_g->FillBoundary(gm.periodicity());
+
+      // Create a copy of the solids volume fraction to use
+      // in the redistribution.
+      MultiFab* eps_tmp;
+      eps_tmp = (MFHelpers::createFrom(*m_leveldata[lev]->ep_g)).release();
+
+      // Clear the grid boundaries to prepare for redistribution which
+      // could put material in your ghost cells. Do this AFTER
+      // we created the copy so the copy has the correct boundary info.
+      m_leveldata[lev]->ep_g->setBndry(0.0);
+
+      const auto& factory = EBFactory(lev);
+      const FabArray<EBCellFlagFab>* fld_flags = &(factory.getMultiEBCellFlagFab());
+      const MultiFab* fld_volfrac = &(factory.getVolFrac());
+
+      // Move excessive solids volume from small cells to neighboring cells. A copy
+      // of the deposition field is made so that when an average is calc
+      mfix_redistribute_deposition(lev, *eps_tmp, *m_leveldata[lev]->ep_g,
+                                   fld_volfrac, fld_flags,
+                                   mfix::m_max_solids_volume_fraction);
+
+      // Sum grid boundaries to capture any material that was deposited into
+      // your grid from an adjacent grid.
+      m_leveldata[lev]->ep_g->SumBoundary(gm.periodicity());
+      m_leveldata[lev]->ep_g->FillBoundary(gm.periodicity());
+
+      // we no longer need the copy.
+      delete eps_tmp;
+
+    }
+
+    if (crse_factory != nullptr)
+      delete crse_factory;
+
+
+    if (nlev > 1) {
         // IntVect ref_ratio(this->m_gdb->refRatio(0));
 
         // Now interpolate from the coarse grid to define the fine grid ep-g
@@ -169,23 +186,13 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
             PhysBCFunct<BndryFuncArray> fphysbc(Geom(lev  ), bcs, bfunc);
             m_leveldata[lev]->ep_g->setVal(0.0);
             amrex::InterpFromCoarseLevel(*(m_leveldata[lev]->ep_g), time,
-                                         *mf_pointer[lev-1],
+                                         *m_leveldata[lev-1]->ep_g,
                                          0, 0, 1, Geom(lev-1), Geom(lev),
                                          cphysbc, 0, fphysbc, 0,
                                          ref_ratio[0], mapper, bcs, 0);
         }
     }
 
-    // If ep_g is not defined on the particle_box_array, then we need
-    // to copy here from mf_pointer into ep_g. I believe that we don't
-    // need any information in ghost cells so we don't copy those.
-
-    if (mf_pointer[0] != m_leveldata[0]->ep_g)
-      m_leveldata[0]->ep_g->ParallelCopy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
-
-    for (int lev = 0; lev < nlev; lev++)
-       if (mf_pointer[lev] != m_leveldata[lev]->ep_g)
-          delete mf_pointer[lev];
 
     if (m_verbose > 1) {
       Real stoptime = ParallelDescriptor::second() - strttime;
