@@ -260,7 +260,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         div_J[lev]->setVal(0.);
       }
 
-      diffusion_op->ComputeDivJ(div_J, get_X_gk_const(), J_gk);
+      diffusion_op->ComputeDivJ(div_J, J_gk);
     }
 
 
@@ -541,7 +541,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // *********************************************************************
         // Correction
         // *********************************************************************
-        diffusion_op->ComputeDivJ(div_J, get_X_gk_const(), J_gk);
+        diffusion_op->ComputeDivJ(div_J, J_gk);
 
         for (int lev = 0; lev <= finest_level; lev++) {
           auto& ld = *m_leveldata[lev];

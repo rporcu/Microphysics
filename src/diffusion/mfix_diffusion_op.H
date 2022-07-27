@@ -126,7 +126,6 @@ class DiffusionOp
 
     // TODO description
     void ComputeDivJ (const amrex::Vector< amrex::MultiFab*      >& divJ_out,
-                      const amrex::Vector< amrex::MultiFab const*>& X_gk_in,
                       const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk);
 
     // TODO description

@@ -228,7 +228,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // 
     // *************************************************************************************
     if (fluid.solve_species())
-      diffusion_op->ComputeDivJ(div_J_old, get_X_gk_old_const(), J_gk);
+      diffusion_op->ComputeDivJ(div_J_old, J_gk);
 
 
     // *************************************************************************************
@@ -523,7 +523,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // *********************************************************************
         // Correction
         // *********************************************************************
-        diffusion_op->ComputeDivJ(div_J_old, get_X_gk_const(), J_gk);
+        diffusion_op->ComputeDivJ(div_J_old, J_gk);
 
         for (int lev = 0; lev <= finest_level; lev++) {
           auto& ld = *m_leveldata[lev];

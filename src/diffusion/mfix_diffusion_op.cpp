@@ -598,7 +598,6 @@ void DiffusionOp::ComputeFlux (const Vector< Array< MultiFab*, AMREX_SPACEDIM> >
 
 
 void DiffusionOp::ComputeDivJ (const Vector< MultiFab*      >& divJ_out,
-                               const Vector< MultiFab const*>& X_gk_in,
                                const Vector< Array< MultiFab*, AMREX_SPACEDIM> >& J_gk)
 {
   BL_PROFILE("DiffusionOp::ComputeDivJ");
@@ -610,53 +609,9 @@ void DiffusionOp::ComputeDivJ (const Vector< MultiFab*      >& divJ_out,
     divJ_out[lev]->setVal(0.0);
   }
 
-  // Number of fluid species
-  const int nspecies_g = fluid.nspecies();
-
-  Vector<BCRec> bcs_dummy; // This is just to satisfy the call to EB_interp...
-  bcs_dummy.resize(3*nspecies_g);
-
-  Vector< Array<MultiFab, AMREX_SPACEDIM> > X_gk_fc(finest_level+1);
-
-  for (int lev = 0; lev <= finest_level; ++lev) {
-
-    for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-      X_gk_fc[lev][dir].define(amrex::convert(grids[lev], IntVect::TheDimensionVector(dir)),
-                               dmap[lev], nspecies_g, 1, MFInfo(), X_gk_in[lev]->Factory());
-      X_gk_fc[lev][dir].setVal(0.);
-    }
-
-    // Interpolate X_gk on the faces
-    EB_interp_CellCentroid_to_FaceCentroid(*X_gk_in[lev], GetArrOfPtrs(X_gk_fc[lev]),
-                                           0, 0, nspecies_g, geom[lev], bcs_dummy);
-
-    for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-      for (MFIter mfi(X_gk_fc[lev][dir],TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
-        Box const& bx = mfi.growntilebox(IntVect::TheDimensionVector(dir));
-
-        Array4<Real      > const& J_gk_arr = J_gk[lev][dir]->array(mfi);
-        Array4<Real const> const& X_gk_arr = X_gk_fc[lev][dir].const_array(mfi);
-
-        ParallelFor(bx, [nspecies_g,J_gk_arr,X_gk_arr]
-          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-          Real J_g_sum(0);
-
-          for (int n = 0; n < nspecies_g; ++n) {
-            J_g_sum += J_gk_arr(i,j,k,n);
-          }
-
-          for (int n = 0; n < nspecies_g; ++n) {
-            J_gk_arr(i,j,k,n) -= X_gk_arr(i,j,k,n)*J_g_sum;
-          }
-        });
-      }
-    }
-  }
+  // Species flux correction has been removed from this point.
+  // Last develop commit before species flux correction was
+  // b74b06253008954a5eb6b67640f477ce572ac113
 
   for (int lev = 0; lev <= finest_level; lev++) {
     const auto& ebfact =
