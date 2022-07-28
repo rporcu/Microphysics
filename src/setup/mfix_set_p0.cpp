@@ -143,10 +143,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 0;
 
     const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
-    const Real p_lo  = m_h_bc_p_g[bcv_lo];
+    const Real p_lo  = m_boundary_conditions.h_bc_p_g(bcv_lo);
 
     const int bcv_hi = bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],1);
-    const Real p_hi  = m_h_bc_p_g[bcv_hi];
+    const Real p_hi  = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
     delp_x = p_lo - p_hi;
     m_boundary_conditions.set_delp(0, delp_x);
@@ -162,10 +162,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 1;
 
     const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
-    const Real p_lo  = m_h_bc_p_g[bcv_lo];
+    const Real p_lo  = m_boundary_conditions.h_bc_p_g(bcv_lo);
 
     const int bcv_hi = bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],1);
-    const Real p_hi  = m_h_bc_p_g[bcv_hi];
+    const Real p_hi  = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
     delp_y = p_lo - p_hi;
     m_boundary_conditions.set_delp(1, delp_y);
@@ -181,10 +181,10 @@ mfix::set_p0 (const Box& bx,
     delp_dir_loc = 2;
 
     const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
-    const Real p_lo  = m_h_bc_p_g[bcv_lo];
+    const Real p_lo  = m_boundary_conditions.h_bc_p_g(bcv_lo);
 
     const int bcv_hi = bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,1);
-    const Real p_hi  = m_h_bc_p_g[bcv_hi];
+    const Real p_hi  = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
     delp_z = p_lo - p_hi;
     m_boundary_conditions.set_delp(2, delp_z);
@@ -225,7 +225,7 @@ mfix::set_p0 (const Box& bx,
       {
         const Real ro_g0 = m_initial_conditions.ic(icv).fluid.density;
 
-        compute_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, pj, gravity, dx, dy,
+        compute_p0_bcs(sbx, domain, array4_p0_g, m_boundary_conditions.bc_p_g(), pj, gravity, dx, dy,
                        dz, bct_ilo, bct_ihi, bct_jlo, bct_jhi, bct_klo, bct_khi,
                        nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state(), ro_g0,
                        m_boundary_conditions);
@@ -297,7 +297,7 @@ mfix::set_p0 (const Box& bx,
   }
 
   // pressure in all initial condition region cells was defined
-  set_p0_bcs(sbx, domain, array4_p0_g, m_bc_p_g, bct_ilo, bct_ihi, bct_jlo,
+  set_p0_bcs(sbx, domain, array4_p0_g, m_boundary_conditions.bc_p_g(), bct_ilo, bct_ihi, bct_jlo,
              bct_jhi, bct_klo, bct_khi, nlft, nrgt, nbot, ntop, ndwn, nup, nghost_state());
 
   return;

@@ -61,10 +61,10 @@ mfix::set_MAC_velocity_bcs (int lev,
 
     mfix_usr1(time);
 
-    amrex::Real* p_bc_u_g = m_bc_u_g.data();
-    amrex::Real* p_bc_v_g = m_bc_v_g.data();
-    amrex::Real* p_bc_w_g = m_bc_w_g.data();
-    amrex::Real* p_bc_e_g = m_bc_ep_g.data();
+    amrex::Real* p_bc_u_g = m_boundary_conditions.bc_u_g().data();
+    amrex::Real* p_bc_v_g = m_boundary_conditions.bc_v_g().data();
+    amrex::Real* p_bc_w_g = m_boundary_conditions.bc_w_g().data();
+    amrex::Real* p_bc_e_g = m_boundary_conditions.bc_ep_g().data();
 
     // NOTE - we only call this for MAC velocities which are only defined on normal faces
 

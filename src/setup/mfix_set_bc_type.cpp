@@ -447,27 +447,29 @@ mfix::mfix_set_bc_type (int lev, int nghost_bc)
     }
 
 
-    m_h_bc_ep_g.resize(m_boundary_conditions.bc().size());
-    m_h_bc_p_g.resize(m_boundary_conditions.bc().size());
+    m_boundary_conditions.h_bc_ep_g().resize(m_boundary_conditions.bc().size());
+    m_boundary_conditions.h_bc_p_g().resize(m_boundary_conditions.bc().size());
 
 
     for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv)
     {
 
-      if ( fluid.solve() ) {
-        m_h_bc_ep_g[bcv] = m_boundary_conditions.bc(bcv).fluid.volfrac;
-        m_h_bc_p_g[bcv]  = m_boundary_conditions.bc(bcv).fluid.pressure;
+      if (fluid.solve()) {
+        m_boundary_conditions.h_bc_ep_g(bcv) = m_boundary_conditions.bc(bcv).fluid.volfrac;
+        m_boundary_conditions.h_bc_p_g(bcv)  = m_boundary_conditions.bc(bcv).fluid.pressure;
 
       } else {
-        m_h_bc_ep_g[bcv] = 1e50;
-        m_h_bc_p_g[bcv]  = 1e50;
+        m_boundary_conditions.h_bc_ep_g(bcv) = 1e50;
+        m_boundary_conditions.h_bc_p_g(bcv)  = 1e50;
       }
 
     }
 
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_p_g.begin(), m_h_bc_p_g.end(), m_bc_p_g.begin());
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_ep_g.begin(), m_h_bc_ep_g.end(), m_bc_ep_g.begin());
+    Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_p_g().begin(),
+        m_boundary_conditions.h_bc_p_g().end(), m_boundary_conditions.bc_p_g().begin());
 
+    Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_ep_g().begin(),
+        m_boundary_conditions.h_bc_ep_g().end(), m_boundary_conditions.bc_ep_g().begin());
 
     Gpu::synchronize();
 }
@@ -636,11 +638,11 @@ void mfix::set_bcrec_hi(const int lev, const int dir, const int l_type)
 }
 
 void
-mfix::set_velocity_bc_values (Real time_in) const
+mfix::set_velocity_bc_values (Real time_in)
 {
-  m_h_bc_u_g.resize(m_boundary_conditions.bc().size());
-  m_h_bc_v_g.resize(m_boundary_conditions.bc().size());
-  m_h_bc_w_g.resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_u_g().resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_v_g().resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_w_g().resize(m_boundary_conditions.bc().size());
 
   for (unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
@@ -649,32 +651,37 @@ mfix::set_velocity_bc_values (Real time_in) const
     if (bc.type == BCList::minf) {
 
       RealVect bc_vels = bc.fluid.get_velocity(time_in);
-      m_h_bc_u_g[bcv] = bc_vels[0];
-      m_h_bc_v_g[bcv] = bc_vels[1];
-      m_h_bc_w_g[bcv] = bc_vels[2];
+      m_boundary_conditions.h_bc_u_g(bcv) = bc_vels[0];
+      m_boundary_conditions.h_bc_v_g(bcv) = bc_vels[1];
+      m_boundary_conditions.h_bc_w_g(bcv) = bc_vels[2];
 
     } else {
 
-      m_h_bc_u_g[bcv] = 1e50;
-      m_h_bc_v_g[bcv] = 1e50;
-      m_h_bc_w_g[bcv] = 1e50;
+      m_boundary_conditions.h_bc_u_g(bcv) = 1e50;
+      m_boundary_conditions.h_bc_v_g(bcv) = 1e50;
+      m_boundary_conditions.h_bc_w_g(bcv) = 1e50;
 
     }
 
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_u_g.begin(), m_h_bc_u_g.end(), m_bc_u_g.begin());
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_v_g.begin(), m_h_bc_v_g.end(), m_bc_v_g.begin());
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_w_g.begin(), m_h_bc_w_g.end(), m_bc_w_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_u_g().begin(),
+      m_boundary_conditions.h_bc_u_g().end(), m_boundary_conditions.bc_u_g().begin());
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_v_g().begin(),
+      m_boundary_conditions.h_bc_v_g().end(), m_boundary_conditions.bc_v_g().begin());
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_w_g().begin(),
+      m_boundary_conditions.h_bc_w_g().end(), m_boundary_conditions.bc_w_g().begin());
 
   Gpu::synchronize();
 }
 
 void
-mfix::set_temperature_bc_values (Real time_in) const
+mfix::set_temperature_bc_values (Real time_in)
 {
-  m_h_bc_t_g.resize(m_boundary_conditions.bc().size());
-  m_h_bc_h_g.resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_t_g().resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_h_g().resize(m_boundary_conditions.bc().size());
 
   const auto& fluid_parms = fluid.parameters();
 
@@ -686,40 +693,44 @@ mfix::set_temperature_bc_values (Real time_in) const
         (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
 
       const Real Tg = bc.fluid.get_temperature(time_in);
-      m_h_bc_t_g[bcv] = Tg;
+      m_boundary_conditions.h_bc_t_g(bcv) = Tg;
 
       if (!fluid.isMixture()) {
 
-        m_h_bc_h_g[bcv] = fluid_parms.calc_h_g<RunOn::Host>(m_h_bc_t_g[bcv]);
+        m_boundary_conditions.h_bc_h_g(bcv) =
+          fluid_parms.calc_h_g<RunOn::Host>(m_boundary_conditions.h_bc_t_g(bcv));
 
       } else {
 
-        m_h_bc_h_g[bcv] = 0.0;
+        m_boundary_conditions.h_bc_h_g(bcv) = 0.0;
 
         for (int n(0); n < fluid.nspecies(); n++) {
 
           const Real X_gk = bc.fluid.species[n].mass_fraction;
-          m_h_bc_h_g[bcv] += X_gk*fluid_parms.calc_h_gk<RunOn::Host>(Tg,n);
+          m_boundary_conditions.h_bc_h_g(bcv) += X_gk*fluid_parms.calc_h_gk<RunOn::Host>(Tg,n);
         }
       }
 
     } else {
 
-      m_h_bc_t_g[bcv] = 1e50;
-      m_h_bc_h_g[bcv] = 1e50;
+      m_boundary_conditions.h_bc_t_g(bcv) = 1e50;
+      m_boundary_conditions.h_bc_h_g(bcv) = 1e50;
     }
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_t_g.begin(), m_h_bc_t_g.end(), m_bc_t_g.begin());
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_h_g.begin(), m_h_bc_h_g.end(), m_bc_h_g.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_t_g().begin(),
+      m_boundary_conditions.h_bc_t_g().end(), m_boundary_conditions.bc_t_g().begin());
+
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_h_g().begin(),
+      m_boundary_conditions.h_bc_h_g().end(), m_boundary_conditions.bc_h_g().begin());
 
   Gpu::synchronize();
 }
 
 void
-mfix::set_density_bc_values (Real time_in) const
+mfix::set_density_bc_values (Real time_in)
 {
-  m_h_bc_ro_g.resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_ro_g().resize(m_boundary_conditions.bc().size());
 
   for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
@@ -729,21 +740,22 @@ mfix::set_density_bc_values (Real time_in) const
         (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
 
       const Real ro_g = bc.fluid.get_density(time_in);
-      m_h_bc_ro_g[bcv] = ro_g;
+      m_boundary_conditions.h_bc_ro_g(bcv) = ro_g;
 
     } else {
-      m_h_bc_ro_g[bcv] = 1e50;
+      m_boundary_conditions.h_bc_ro_g(bcv) = 1e50;
     }
   }
 
-  Gpu::copy(Gpu::hostToDevice, m_h_bc_ro_g.begin(), m_h_bc_ro_g.end(), m_bc_ro_g.begin());
+  Gpu::copy(Gpu::hostToDevice, m_boundary_conditions.h_bc_ro_g().begin(),
+      m_boundary_conditions.h_bc_ro_g().end(), m_boundary_conditions.bc_ro_g().begin());
 }
 
 
 void
-mfix::set_tracer_bc_values (Real /*time_in*/) const
+mfix::set_tracer_bc_values (Real /*time_in*/)
 {
-  m_h_bc_tracer.resize(m_boundary_conditions.bc().size());
+  m_boundary_conditions.h_bc_tracer().resize(m_boundary_conditions.bc().size());
 
   // HACK -- BC tracer is constant given current implementation.
   // This was copied over from the mfix_set_tracer_bcs routine.
@@ -756,28 +768,33 @@ mfix::set_tracer_bc_values (Real /*time_in*/) const
     if (bc.type == BCList::minf || bc.type == BCList::pinf ||
         (bc.type == BCList::eb && bc.fluid.flow_thru_eb) ) {
 
-      m_h_bc_tracer[bcv] = trac0;
+      m_boundary_conditions.h_bc_tracer(bcv) = trac0;
     } else {
-      m_h_bc_tracer[bcv] = 1e50;
+      m_boundary_conditions.h_bc_tracer(bcv) = 1e50;
     }
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_tracer.begin(), m_h_bc_tracer.end(), m_bc_tracer.begin());
+  Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_tracer().begin(),
+      m_boundary_conditions.h_bc_tracer().end(), m_boundary_conditions.bc_tracer().begin());
 
   Gpu::synchronize();
 }
 
 void
-mfix::set_species_bc_values (Real time_in) const
+mfix::set_species_bc_values (Real time_in)
 {
-  m_h_bc_X_gk.resize(fluid.nspecies(), Gpu::HostVector<Real>(m_boundary_conditions.bc().size()));
-  m_bc_X_gk.resize(fluid.nspecies(), Gpu::DeviceVector<Real>(m_boundary_conditions.bc().size()));
+  const int nspecies_g = fluid.nspecies();
+  const int bc_size = m_boundary_conditions.bc().size();
 
-  // Important! Resize the bc vector for the fluid species mass fractions
-  // We have to do it here because the size has to match the number of fluid
+  m_boundary_conditions.h_bc_X_gk().resize(nspecies_g, Gpu::HostVector<Real>(bc_size));
+
+  m_boundary_conditions.bc_X_gk().resize(nspecies_g, Gpu::DeviceVector<Real>(bc_size));
+
+  // Important! Resize the bc vector for the m_fluid species mass fractions
+  // We have to do it here because the size has to match the number of m_fluid
   // species
-  m_bc_X_gk_ptr.resize(fluid.nspecies(), nullptr);
-  m_h_bc_X_gk_ptr.resize(fluid.nspecies(), nullptr);
+  m_boundary_conditions.bc_X_gk_ptr().resize(nspecies_g, nullptr);
+  m_boundary_conditions.h_bc_X_gk_ptr().resize(nspecies_g, nullptr);
 
   for(unsigned bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
 
@@ -787,25 +804,29 @@ mfix::set_species_bc_values (Real time_in) const
         (bc.type == BCList::eb && bc.fluid.flow_thru_eb)) {
 
       for (int n(0); n < fluid.nspecies(); n++) {
-        m_h_bc_X_gk[n][bcv] = bc.fluid.get_species(n, time_in);
+        m_boundary_conditions.h_bc_X_gk(n, bcv) = bc.fluid.get_species(n, time_in);
       }
 
     } else {
 
       for (int n(0); n < fluid.nspecies(); n++) {
-        m_h_bc_X_gk[n][bcv] = 1e50;
+        m_boundary_conditions.h_bc_X_gk(n, bcv) = 1e50;
       }
     }
   }
 
   for (int n = 0; n < fluid.nspecies(); ++n) {
 
-    Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk[n].begin(), m_h_bc_X_gk[n].end(), m_bc_X_gk[n].begin());
-    m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
+    Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_X_gk(n).begin(),
+        m_boundary_conditions.h_bc_X_gk(n).end(), m_boundary_conditions.bc_X_gk(n).begin());
+
+    m_boundary_conditions.set_h_bc_X_gk_ptr(n);
 
   }
 
-  Gpu::copyAsync(Gpu::hostToDevice, m_h_bc_X_gk_ptr.begin(), m_h_bc_X_gk_ptr.end(), m_bc_X_gk_ptr.begin());
+  if (m_boundary_conditions.h_bc_X_gk_ptr().size() > 0)
+    Gpu::copyAsync(Gpu::hostToDevice, m_boundary_conditions.h_bc_X_gk_ptr().begin(),
+        m_boundary_conditions.h_bc_X_gk_ptr().end(), m_boundary_conditions.bc_X_gk_ptr().begin());
 
   Gpu::synchronize();
 }

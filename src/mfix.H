@@ -287,9 +287,10 @@ class mfix : public AmrCore
 
     void mfix_set_velocity_bcs (Real time,
                                 Vector< MultiFab* > const& vel,
-                                int extrap_dir_bcs) const;
+                                int extrap_dir_bcs);
 
-    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g, const int dir_bc) const;
+    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g,
+                           const int dir_bc);
 
     void mfix_set_enthalpy_bcs (Real time,
                                 Vector< MultiFab* > const& h_g);
@@ -320,12 +321,12 @@ class mfix : public AmrCore
                            const int lev,
                            FArrayBox& vel_fab,
                            const Box& domain,
-                           const int* extrap_dir_bcs) const;
+                           const int* extrap_dir_bcs);
 
     void set_epg_bcs (const int lev,
                       FArrayBox& eps_fab,
                       const Box& domain,
-                      const int* extrap_dir_bcs) const;
+                      const int* extrap_dir_bcs);
 
     void set_enthalpy_bcs (Real time,
                            const int lev,
@@ -369,7 +370,7 @@ class mfix : public AmrCore
 
     void set_vec_bcs (const int lev,
                       FArrayBox& vec_fab,
-                      const Box& domain) const;
+                      const Box& domain);
 
     void set_gradp_bcs (const Box& bx,
                         const int lev,
@@ -452,11 +453,11 @@ class mfix : public AmrCore
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
     void set_bcrec_hi (const int lev, const int dir, const int l_type);
 
-    void set_velocity_bc_values (amrex::Real time_in) const;
-    void set_temperature_bc_values (amrex::Real time_in) const;
-    void set_density_bc_values (amrex::Real time_in) const;
-    void set_tracer_bc_values (amrex::Real time_in) const;
-    void set_species_bc_values (amrex::Real time_in) const;
+    void set_velocity_bc_values (amrex::Real time_in);
+    void set_temperature_bc_values (amrex::Real time_in);
+    void set_density_bc_values (amrex::Real time_in);
+    void set_tracer_bc_values (amrex::Real time_in);
+    void set_species_bc_values (amrex::Real time_in);
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -582,40 +583,6 @@ class mfix : public AmrCore
     Vector<Real> mu_s;
 
     BCList bc_list;
-
-    mutable Gpu::DeviceVector<Real> m_bc_u_g;
-    mutable Gpu::DeviceVector<Real> m_bc_v_g;
-    mutable Gpu::DeviceVector<Real> m_bc_w_g;
-    mutable Gpu::DeviceVector<Real> m_bc_t_g;
-    mutable Gpu::DeviceVector<Real> m_bc_h_g;
-    mutable Gpu::DeviceVector<Real> m_bc_ro_g;
-    mutable Gpu::DeviceVector<Real> m_bc_tracer;
-
-    mutable Gpu::HostVector<Real>   m_h_bc_u_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_v_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_w_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_t_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_h_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_ro_g;
-    mutable Gpu::HostVector<Real>   m_h_bc_tracer;
-
-    Gpu::DeviceVector<Real> m_bc_ep_g;
-    Gpu::DeviceVector<Real> m_bc_p_g;
-
-    Gpu::HostVector<Real>   m_h_bc_ep_g;
-    Gpu::HostVector<Real>   m_h_bc_p_g;
-
-    mutable amrex::Vector< Gpu::DeviceVector<Real> > m_bc_X_gk;
-    mutable Gpu::DeviceVector<Real*> m_bc_X_gk_ptr;
-
-    mutable amrex::Vector< Gpu::HostVector<Real> >   m_h_bc_X_gk;
-    mutable Gpu::HostVector<Real*> m_h_bc_X_gk_ptr;
-
-    std::map< std::string, Gpu::DeviceVector<int> > m_vel_g_bc_types;
-    std::map< std::string, Gpu::DeviceVector<int> > m_ro_g_bc_types;
-    std::map< std::string, Gpu::DeviceVector<int> > m_T_g_bc_types;
-    std::map< std::string, Gpu::DeviceVector<int> > m_trac_g_bc_types;
-    std::map< std::string, Gpu::DeviceVector<int> > m_X_gk_bc_types;
 
     //! The particles see an inflow face as a solid wall; thus instead of
     //! creating a separate EBfactory for particles, we simply modify the

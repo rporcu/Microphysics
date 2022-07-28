@@ -7,7 +7,7 @@
 using namespace amrex;
 
 void
-mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in, const int dir_bc) const
+mfix::mfix_set_epg_bcs (const Vector< MultiFab* >& epg_in, const int dir_bc)
 {
   BL_PROFILE("mfix::mfix_set_epg_bcs()");
 
@@ -35,7 +35,7 @@ void
 mfix::set_epg_bcs (const int lev,
                    FArrayBox& epg_fab,
                    const Box& domain,
-                   const int* dir_bc) const
+                   const int* dir_bc)
 {
   BL_PROFILE("mfix::set_epg_bcs()");
 
@@ -120,7 +120,7 @@ mfix::set_epg_bcs (const int lev,
   const Box bx_xy_lo_3D(epg_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, epg_hi);
 
-  const Real* p_bc_ep_g = m_bc_ep_g.data();
+  Real* p_bc_ep_g = m_boundary_conditions.bc_ep_g().data();
 
   if (nlft > 0)
   {

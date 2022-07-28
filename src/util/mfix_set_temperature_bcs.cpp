@@ -86,7 +86,7 @@ mfix::set_temperature_bcs (Real time,
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, T_g_hi);
 
   set_temperature_bc_values (time);
-  Real* p_bc_t_g = m_bc_t_g.data();
+  Real* p_bc_t_g = m_boundary_conditions.bc_t_g().data();
 
   if (nlft > 0)
   {

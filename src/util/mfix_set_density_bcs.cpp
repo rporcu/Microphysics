@@ -91,7 +91,7 @@ mfix::set_density_bcs (Real time,
   // set_temperature_bc_values (time);
   // Real* p_bc_t_g  = m_bc_t_g.data();
   set_density_bc_values(time);
-  Real* p_bc_ro_g  = m_bc_ro_g.data();
+  Real* p_bc_ro_g  = m_boundary_conditions.bc_ro_g().data();
 
   auto set_density_bcs_in_box = [scal_arr,p_bc_ro_g]
   AMREX_GPU_DEVICE (int bct, int bcv, IntVect dom_ijk, int i, int j, int k) noexcept

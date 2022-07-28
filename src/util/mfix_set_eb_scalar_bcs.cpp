@@ -67,10 +67,10 @@ mfix::mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
                  const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
 
                  // (Rho), (Rho*Enthalpy), (Rho*Tracer)
-                 Real* p_bc_ro_g  = m_bc_ro_g.data();
-                 Real* p_bc_h_g   = m_bc_h_g.data();
-                 Real* p_bc_trac  = m_bc_tracer.data();
-                 Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
+                 Real* p_bc_ro_g  = m_boundary_conditions.bc_ro_g().data();
+                 Real* p_bc_h_g   = m_boundary_conditions.bc_h_g().data();
+                 Real* p_bc_trac  = m_boundary_conditions.bc_tracer().data();
+                 Real** p_bc_X_gk = m_boundary_conditions.bc_X_gk_ptr().data();
 
                  const int num_trac = ntrac;
                  const int nspecies_g = fluid.nspecies();

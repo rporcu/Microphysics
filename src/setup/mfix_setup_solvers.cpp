@@ -9,12 +9,13 @@ mfix::mfix_init_solvers ()
 {
     BL_PROFILE("mfix::mfix_init_solvers");
 
-    diffusion_op = std::make_unique<DiffusionOp>(this, amrex::GetVecOfConstPtrs(ebfactory), m_embedded_boundaries, fluid,
-                                       m_boundary_conditions.diff_vel_lobc(),         m_boundary_conditions.diff_vel_hibc(),
-                                       m_boundary_conditions.diff_scal_lobc(),        m_boundary_conditions.diff_scal_hibc(),
-                                       m_boundary_conditions.diff_temperature_lobc(), m_boundary_conditions.diff_temperature_hibc(),
-                                       m_boundary_conditions.diff_species_lobc(),     m_boundary_conditions.diff_species_hibc(),
-                                       nghost_state());
+    diffusion_op = std::make_unique<DiffusionOp>(this,
+        amrex::GetVecOfConstPtrs(ebfactory), m_embedded_boundaries, fluid,
+        m_boundary_conditions.diff_vel_lobc(),         m_boundary_conditions.diff_vel_hibc(),
+        m_boundary_conditions.diff_scal_lobc(),        m_boundary_conditions.diff_scal_hibc(),
+        m_boundary_conditions.diff_temperature_lobc(), m_boundary_conditions.diff_temperature_hibc(),
+        m_boundary_conditions.diff_species_lobc(),     m_boundary_conditions.diff_species_hibc(),
+        nghost_state());
 
     macproj = std::make_unique<Hydro::MacProjector>(Geom(0,finest_level),
                                    MLMG::Location::FaceCentroid,  // Location of mac_vec

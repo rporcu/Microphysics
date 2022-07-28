@@ -31,7 +31,9 @@ mfix::FillPatchVel (int lev,
 
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > physbc
         (geom[lev], bcrec, MFIXVelFill{minf,
-            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            m_boundary_conditions.bc_u_g().data(),
+            m_boundary_conditions.bc_v_g().data(),
+            m_boundary_conditions.bc_w_g().data(),
             bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
             bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
             bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
@@ -49,7 +51,9 @@ mfix::FillPatchVel (int lev,
 
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > cphysbc
         (geom[lev-1], bcrec, MFIXVelFill{minf,
-            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            m_boundary_conditions.bc_u_g().data(),
+            m_boundary_conditions.bc_v_g().data(),
+            m_boundary_conditions.bc_w_g().data(),
             bc_list.bc_ilo[lev-1]->array(), bc_list.bc_ihi[lev-1]->array(),
             bc_list.bc_jlo[lev-1]->array(), bc_list.bc_jhi[lev-1]->array(),
             bc_list.bc_klo[lev-1]->array(), bc_list.bc_khi[lev-1]->array()
@@ -57,7 +61,9 @@ mfix::FillPatchVel (int lev,
 
       PhysBCFunct<GpuBndryFuncFab<MFIXVelFill> > fphysbc
         (geom[lev], bcrec, MFIXVelFill{minf,
-            m_bc_u_g.data(), m_bc_v_g.data(), m_bc_w_g.data(),
+            m_boundary_conditions.bc_u_g().data(),
+            m_boundary_conditions.bc_v_g().data(),
+            m_boundary_conditions.bc_w_g().data(),
             bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
             bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
             bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
@@ -161,7 +167,8 @@ mfix::FillPatchSpecies (int lev,
         GetDataSpecies(0, time, smf, icomp, stime);
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > physbc
-          (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+          (geom[lev], bcrec, MFIXSpeciesFill{minf,
+              m_boundary_conditions.bc_X_gk_ptr().data(),
               bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
               bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
               bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
@@ -178,14 +185,16 @@ mfix::FillPatchSpecies (int lev,
         GetDataSpecies(lev  , time, fmf, icomp, ftime);
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > cphysbc
-          (geom[lev-1], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+          (geom[lev-1], bcrec, MFIXSpeciesFill{minf,
+              m_boundary_conditions.bc_X_gk_ptr().data(),
               bc_list.bc_ilo[lev-1]->array(), bc_list.bc_ihi[lev-1]->array(),
               bc_list.bc_jlo[lev-1]->array(), bc_list.bc_jhi[lev-1]->array(),
               bc_list.bc_klo[lev-1]->array(), bc_list.bc_khi[lev-1]->array()
               });
 
         PhysBCFunct<GpuBndryFuncFab<MFIXSpeciesFill> > fphysbc
-          (geom[lev], bcrec, MFIXSpeciesFill{minf, m_bc_X_gk_ptr.data(),
+          (geom[lev], bcrec, MFIXSpeciesFill{minf,
+              m_boundary_conditions.bc_X_gk_ptr().data(),
               bc_list.bc_ilo[lev]->array(), bc_list.bc_ihi[lev]->array(),
               bc_list.bc_jlo[lev]->array(), bc_list.bc_jhi[lev]->array(),
               bc_list.bc_klo[lev]->array(), bc_list.bc_khi[lev]->array()
@@ -433,19 +442,19 @@ mfix::fillpatch_all (Vector< MultiFab* > const& vel_in,
 
     // We FillPatch density even if not advecting it because we need it in the projections
     FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Density,
-                    m_bc_ro_g.data(), get_density_bcrec());
+                    m_boundary_conditions.bc_ro_g().data(), get_density_bcrec());
     MultiFab::Copy(*ro_g_in[lev], Sborder_s, 0, 0, 1, ro_g_in[lev]->nGrow());
 
 
     if (fluid.solve_tracer()) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Tracer,
-                      m_bc_tracer.data(), get_tracer_bcrec());
+                      m_boundary_conditions.bc_tracer().data(), get_tracer_bcrec());
       MultiFab::Copy(*trac_in[lev], Sborder_s, 0, 0, 1, trac_in[lev]->nGrow());
     }
 
     if (fluid.solve_enthalpy()) {
       FillPatchScalar(lev, time, Sborder_s, ScalarToFill::Enthalpy,
-                      m_bc_h_g.data(), get_enthalpy_bcrec());
+                      m_boundary_conditions.bc_h_g().data(), get_enthalpy_bcrec());
       MultiFab::Copy(*h_g_in[lev], Sborder_s, 0, 0, 1, h_g_in[lev]->nGrow());
     }
 

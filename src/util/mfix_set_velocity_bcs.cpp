@@ -7,7 +7,7 @@
 void
 mfix::mfix_set_velocity_bcs (Real time,
                              Vector< MultiFab* > const& vel_in,
-                             int extrap_dir_bcs) const
+                             int extrap_dir_bcs)
 {
   BL_PROFILE("mfix::mfix_set_velocity_bcs()");
 
@@ -36,7 +36,7 @@ mfix::set_velocity_bcs (Real time,
                         const int lev,
                         FArrayBox& vel_fab,
                         const Box& domain,
-                        const int* extrap_dir_bcs) const
+                        const int* extrap_dir_bcs)
 {
   BL_PROFILE("mfix::set_velocity_bcs()");
 
@@ -125,9 +125,9 @@ mfix::set_velocity_bcs (Real time,
 
   mfix_usr1(time);
 
-  const Real* p_bc_u_g = m_bc_u_g.data();
-  const Real* p_bc_v_g = m_bc_v_g.data();
-  const Real* p_bc_w_g = m_bc_w_g.data();
+  const Real* p_bc_u_g = m_boundary_conditions.bc_u_g().data();
+  const Real* p_bc_v_g = m_boundary_conditions.bc_v_g().data();
+  const Real* p_bc_w_g = m_boundary_conditions.bc_w_g().data();
 
   if (nlft > 0)
   {
@@ -371,7 +371,7 @@ mfix::set_velocity_bcs (Real time,
 void
 mfix::set_vec_bcs (const int lev,
                    FArrayBox& vec_fab,
-                   const Box& domain) const
+                   const Box& domain)
 {
   IntVect dom_lo(domain.loVect());
   IntVect dom_hi(domain.hiVect());
@@ -420,11 +420,11 @@ mfix::set_vec_bcs (const int lev,
   const Box bx_xy_lo_3D(vec_lo, bx_xy_lo_hi_3D);
   const Box bx_xy_hi_3D(bx_xy_hi_lo_3D, vec_hi);
 
-  const Real* p_bc_u_g = m_bc_u_g.data();
-  const Real* p_bc_v_g = m_bc_v_g.data();
-  const Real* p_bc_w_g = m_bc_w_g.data();
+  const Real* p_bc_u_g = m_boundary_conditions.bc_u_g().data();
+  const Real* p_bc_v_g = m_boundary_conditions.bc_v_g().data();
+  const Real* p_bc_w_g = m_boundary_conditions.bc_w_g().data();
 
-  const Real* p_bc_ep_g = m_bc_ep_g.data();
+  const Real* p_bc_ep_g = m_boundary_conditions.bc_ep_g().data();
 
   if (nlft > 0)
   {

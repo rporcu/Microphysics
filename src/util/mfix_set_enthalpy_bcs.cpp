@@ -95,13 +95,13 @@ mfix::set_enthalpy_bcs (Real time,
 
   // Update temperature before using to update enthalpy
   set_temperature_bc_values (time);
-  Real* p_bc_t_g = m_bc_t_g.data();
+  Real* p_bc_t_g = m_boundary_conditions.bc_t_g().data();
 
   // Update species boundary values
   if(fluid_is_a_mixture)
     set_species_bc_values(time);
 
-  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_boundary_conditions.bc_X_gk_ptr().data() : nullptr;
 
   const auto& fluid_parms = fluid.parameters();
 

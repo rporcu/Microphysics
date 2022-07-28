@@ -65,8 +65,8 @@ mfix::set_gp0 (const int lev,
       const int bcv_lo = bct_ilo(dom_lo[0]-1,dom_lo[1],dom_lo[2],1);
       const int bcv_hi = bct_ihi(dom_hi[0]+1,dom_lo[1],dom_lo[2],1);
 
-      const Real  p_lo = m_h_bc_p_g[bcv_lo];
-      const Real  p_hi = m_h_bc_p_g[bcv_hi];
+      const Real  p_lo = m_boundary_conditions.h_bc_p_g(bcv_lo);
+      const Real  p_hi = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
       delp_dir_loc = 0;
       delp_x = p_lo - p_hi;
@@ -83,8 +83,8 @@ mfix::set_gp0 (const int lev,
       const int bcv_lo = bct_jlo(dom_lo[0],dom_lo[1]-1,dom_lo[2],1);
       const int bcv_hi = bct_jhi(dom_lo[0],dom_hi[1]+1,dom_lo[2],1);
 
-      const Real  p_lo = m_h_bc_p_g[bcv_lo];
-      const Real  p_hi = m_h_bc_p_g[bcv_hi];
+      const Real  p_lo = m_boundary_conditions.h_bc_p_g(bcv_lo);
+      const Real  p_hi = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
       delp_dir_loc = 1;
       delp_y = p_lo - p_hi;
@@ -98,10 +98,10 @@ mfix::set_gp0 (const int lev,
     {
 
       const int bcv_lo = bct_klo(dom_lo[0],dom_lo[1],dom_lo[2]-1,1);
-      const Real p_lo  = m_h_bc_p_g[bcv_lo];
+      const Real p_lo  = m_boundary_conditions.h_bc_p_g(bcv_lo);
 
       const int bcv_hi = bct_khi(dom_lo[0],dom_lo[1],dom_hi[2]+1,1);
-      const Real p_hi  = m_h_bc_p_g[bcv_hi];
+      const Real p_hi  = m_boundary_conditions.h_bc_p_g(bcv_hi);
 
       delp_dir_loc = 2;
       delp_z = p_lo - p_hi;

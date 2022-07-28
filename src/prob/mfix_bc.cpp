@@ -96,10 +96,34 @@ BCList::MakeBCArrays (int nghost,
 
 
 MFIXBoundaryConditions::MFIXBoundaryConditions (MFIXEmbeddedBoundaries& embedded_boundaries)
-  : m_delp_dir(-1)
+  : m_bc_u_g(50, 0)
+  , m_bc_v_g(50, 0)
+  , m_bc_w_g(50, 0)
+  , m_bc_t_g(50, 0)
+  , m_bc_h_g(50, 0)
+  , m_bc_ro_g(50, 0)
+  , m_bc_tracer(50, 0)
+  , m_bc_ep_g(50, 0)
+  , m_bc_p_g(50, 0)
+  , m_delp_dir(-1)
   , m_flow_plane(std::string("000000"))
   , m_embedded_boundaries(embedded_boundaries)
-{}
+{
+  m_vel_g_bc_types["Dirichlet"] = {BCList::minf};
+  m_vel_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
+
+  m_ro_g_bc_types["Dirichlet"] = {BCList::minf};
+  m_ro_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
+
+  m_T_g_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+  m_T_g_bc_types["Neumann"] = {BCList::pout};
+
+  m_trac_g_bc_types["Dirichlet"] = {BCList::minf};
+  m_trac_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
+
+  m_X_gk_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
+  m_X_gk_bc_types["Neumann"] = {BCList::pout};
+}
 
 
 void

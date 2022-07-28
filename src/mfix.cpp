@@ -65,15 +65,6 @@ mfix::~mfix ()
 mfix::mfix ()
   : m_boundary_conditions(m_embedded_boundaries)
   , bc_list(maxLevel() + 1)
-  , m_bc_u_g(50, 0)
-  , m_bc_v_g(50, 0)
-  , m_bc_w_g(50, 0)
-  , m_bc_t_g(50, 0)
-  , m_bc_h_g(50, 0)
-  , m_bc_ro_g(50, 0)
-  , m_bc_tracer(50, 0)
-  , m_bc_ep_g(50, 0)
-  , m_bc_p_g(50, 0)
 {
     // NOTE: Geometry on all levels has just been defined in the AmrCore
     // constructor. No valid BoxArray and DistributionMapping have been defined.
@@ -138,23 +129,6 @@ mfix::mfix ()
             amrex::Abort("Invalid level-set bc_hi");
         }
     }
-
-    m_vel_g_bc_types["Dirichlet"] = {BCList::minf};
-    m_vel_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
-
-    m_ro_g_bc_types["Dirichlet"] = {BCList::minf};
-    m_ro_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
-
-    m_T_g_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
-    m_T_g_bc_types["Neumann"] = {BCList::pout};
-
-    m_trac_g_bc_types["Dirichlet"] = {BCList::minf};
-    m_trac_g_bc_types["Neumann"] = {BCList::pinf, BCList::pout};
-
-    m_X_gk_bc_types["Dirichlet"] = {BCList::minf, BCList::pinf};
-    m_X_gk_bc_types["Neumann"] = {BCList::pout};
-
-    Gpu::synchronize();
 
     mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
                                 ebfactory, dmap, ooo_debug, level_sets, boxArray(),

@@ -89,7 +89,7 @@ mfix::set_mass_fractions_g_bcs (Real time,
   const int nspecies_g = fluid.nspecies();
 
   set_species_bc_values(time);
-  Real** p_bc_X_gk = m_bc_X_gk_ptr.data();
+  Real** p_bc_X_gk = m_boundary_conditions.bc_X_gk_ptr().data();
 
   if (nlft > 0)
   {
