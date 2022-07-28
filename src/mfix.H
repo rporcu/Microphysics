@@ -841,8 +841,6 @@ public:
                                Real& coupling_timing);
 
   public:
-    void mfix_normalize_fluid_species (const Vector< MultiFab* >& X_gk);
-
     void mfix_incompressible_fluid_rhs (Vector< MultiFab* > const& rhs);
 
     void mfix_idealgas_opensystem_rhs (Vector< MultiFab*       > const& rhs,

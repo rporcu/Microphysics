@@ -480,6 +480,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             const Real num =         (rho_o(i,j,k) * epg_loc);
             const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
 
+            Real X_gk_sum(0.);
+
             for (int n = 0; n < nspecies_g; ++n)
             {
               Real X_gk = num * X_gk_o(i,j,k,n);
@@ -490,7 +492,17 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 X_gk -= l_dt * div_J_o(i,j,k,n);
               }
 
-              X_gk_n(i,j,k,n) = X_gk * denom;
+              X_gk *= denom;
+              X_gk = amrex::max(amrex::min(X_gk, 1.), 0.);
+
+              X_gk_sum += X_gk;
+
+              X_gk_n(i,j,k,n) = X_gk;
+            }
+
+            for (int n = 0; n < nspecies_g; ++n)
+            {
+              X_gk_n(i,j,k,n) /= X_gk_sum;
             }
           });
         } // mfi
@@ -552,14 +564,27 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               const Real num =         (rho_o(i,j,k) * epg_loc);
               const Real denom = 1.0 / (rho_n(i,j,k) * epg_loc);
 
-              for (int n = 0; n < nspecies_g; ++n) {
+              Real X_gk_sum(0.);
+
+              for (int n = 0; n < nspecies_g; ++n)
+              {
                 Real X_gk = num * X_gk_o(i,j,k,n);
                 X_gk += l_dt * dXdt_o(i,j,k,n);
                 X_gk += l_dt * X_RHS_o(i,j,k,n);
 
                 X_gk -= l_dt * div_J_n(i,j,k,n);
 
-                X_gk_n(i,j,k,n) = X_gk * denom;
+                X_gk *= denom;
+                X_gk = amrex::max(amrex::min(X_gk, 1.), 0.);
+
+                X_gk_sum += X_gk;
+
+                X_gk_n(i,j,k,n) = X_gk;
+              }
+
+              for (int n = 0; n < nspecies_g; ++n)
+              {
+                X_gk_n(i,j,k,n) /= X_gk_sum;
               }
             });
           }
@@ -570,14 +595,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // cell centers)
         mfix_set_species_bcs(time, get_X_gk());
       }
-
-      // ***********************************************************************
-      // Rescale species in order to respect sum = 1
-      // ***********************************************************************
-      if (fluid.isMixture()) {
-        mfix_normalize_fluid_species(get_X_gk());
-      }
-
     } // solve_species
 
 

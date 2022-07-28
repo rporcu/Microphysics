@@ -25,7 +25,6 @@ target_sources( mfixcore
    mfix_set_density_bcs.cpp
    mfix_set_species_bcs.cpp
    mfix_set_tracer_bcs.cpp
-   mfix_normalize_species_g.cpp
    mfix_mf_helpers.H
    mfix_mf_helpers.cpp
    mfix_mlmg_options.H
