@@ -383,7 +383,11 @@ class MFIXParticleContainer final
 
     int sort_int = -1; // # steps to sort particles
 
+#ifdef AMREX_USE_GPU
+    bool reduceGhostParticles = true;
+#else
     bool reduceGhostParticles = false;
+#endif
 
     amrex::Real newton_abstol = 1.e-6;
     amrex::Real newton_reltol = 1.e-6;
