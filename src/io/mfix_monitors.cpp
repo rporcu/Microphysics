@@ -278,7 +278,7 @@ Monitor::calc_box (const Geometry& geometry,
 
       box_lo[dir] = static_cast<int>(Math::ceil((realbox_lo[dir]-prob_lo[dir])*dxi[dir]));
       box_hi[dir] = static_cast<int>(Math::floor((realbox_hi[dir]-prob_lo[dir])*dxi[dir]));
-    
+
     } else if (box_type[dir] == 1) {
 
       box_lo[dir] = static_cast<int>(std::round((realbox_lo[dir]-prob_lo[dir])*dxi[dir]));
@@ -368,8 +368,11 @@ BaseMonitor::setup_variables ()
   Vector<std::string> variables_names;
   variables_names.clear();
 
+  Transfer txfr_idxs(m_leveldata[0]->fluid->nspecies(),
+                     m_leveldata[0]->reactions->nreactions());
+
   for (int i(0); i < m_input_variables.size(); ++i) {
-  
+
     const std::string& var = m_input_variables[i];
 
     if (var.compare("ep_g") == 0) {
@@ -409,7 +412,7 @@ BaseMonitor::setup_variables ()
           m_mf[lev].push_back(m_leveldata[lev]->trac);
 
       } else {
-        
+
         for (int n(0); n < ntrac; ++n) {
 
           variables_names.push_back("trac_"+std::to_string(n+1));
@@ -531,7 +534,7 @@ BaseMonitor::setup_variables ()
 
         variables_names.push_back("X_gk_"+m_fluid.species_names(n_g));
         m_components.push_back(n_g);
- 
+
         for (int lev(0); lev < m_nlev; lev++)
           m_mf[lev].push_back(m_leveldata[lev]->X_gk);
 
@@ -547,7 +550,7 @@ BaseMonitor::setup_variables ()
 
           variables_names.push_back("X_gk_"+m_fluid.species_names(n_g));
           m_components.push_back(n_g);
- 
+
           for (int lev(0); lev < m_nlev; lev++)
             m_mf[lev].push_back(m_leveldata[lev]->X_gk);
 
@@ -602,19 +605,19 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_velocity") == 0) {
 
       variables_names.push_back("txfr_vel_x");
-      m_components.push_back(Transfer::velx);
+      m_components.push_back(txfr_idxs.velx);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("txfr_vel_y");
-      m_components.push_back(Transfer::vely);
+      m_components.push_back(txfr_idxs.vely);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("txfr_vel_z");
-      m_components.push_back(Transfer::velz);
+      m_components.push_back(txfr_idxs.velz);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -622,7 +625,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_x") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::velx);
+      m_components.push_back(txfr_idxs.velx);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -630,7 +633,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_y") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::vely);
+      m_components.push_back(txfr_idxs.vely);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -638,7 +641,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_z") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::velz);
+      m_components.push_back(txfr_idxs.velz);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -646,7 +649,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_beta") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::drag_coeff);
+      m_components.push_back(txfr_idxs.drag_coeff);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -654,7 +657,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_gammaTp") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::gammaTp);
+      m_components.push_back(txfr_idxs.gammaTp);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -662,7 +665,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_gamma") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(Transfer::convection_coeff);
+      m_components.push_back(txfr_idxs.convection_coeff);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -1110,7 +1113,7 @@ PointRegion::convert_mf_if_needed (Vector<const MultiFab*>& mf,
         mf[var] = mf_cc;
         components[var] = 0;
         conversion_flags[var] = 1;
-      
+
       } else if (!mf[var]->boxArray().ixType().cellCentered()) {
 
         amrex::Abort("Face centered to cell centered conversion not yet implemented here");
@@ -1466,7 +1469,7 @@ AreaRegion::average (const int lev,
 
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceLongSum(&denominator, 1);
-  
+
     result[var] = numerator / Real(denominator);
   }
 
@@ -1580,7 +1583,7 @@ VolumeMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
         mf[var] = mf_cc;
         components[var] = 0;
         conversion_flags[var] = 1;
-      
+
       } else if (!mf[var]->boxArray().ixType().cellCentered()) {
 
         amrex::Abort("Face centered to cell centered conversion not yet implemented here");
@@ -2585,7 +2588,7 @@ BaseMonitor::setup_variables ()
   variables_names.clear();
 
   for (int i(0); i < m_input_variables.size(); ++i) {
-  
+
     const std::string& var = m_input_variables[i];
 
     if (var.compare("position") == 0) {
@@ -3398,7 +3401,7 @@ FlowRate::flow_rate (const int lev,
 
     result[var] = l_flow_rate;
   }
-  
+
   return result;
 }
 
@@ -3456,7 +3459,7 @@ FlowRate::mass_weighted_flow_rate (const int lev,
 
     result[var] = l_flow_rate;
   }
-  
+
   return result;
 }
 
@@ -3514,7 +3517,7 @@ FlowRate::volume_weighted_flow_rate (const int lev,
 
     result[var] =  l_flow_rate;
   }
-  
+
   return result;
 }
 

@@ -11,19 +11,6 @@
 #include <mfix_reactions.H>
 
 
-struct Transfer {
-  enum {
-    velx = 0,
-    vely,
-    velz,
-    drag_coeff,
-    gammaTp,
-    convection_coeff,
-    count
-  };
-};
-
-
 struct ChemTransfer {
 
   ChemTransfer (const int nspecies_g, const int nreactions)
@@ -38,6 +25,39 @@ struct ChemTransfer {
   const int h_g_txfr;
   const int count;
 };
+
+
+struct Transfer {
+
+  Transfer (const int nspecies_g, const int nreactions)
+    : velx(0)
+    , vely(1)
+    , velz(2)
+    , drag_coeff(3)
+    , gammaTp(4)
+    , convection_coeff(5)
+    , countNoChem(convection_coeff+1) // Num txfr terms (no rxns)
+    , ro_gk_txfr(countNoChem)
+    , vel_g_txfr(ro_gk_txfr + nspecies_g*(nreactions>0))
+    , h_g_txfr(vel_g_txfr + 3*(nreactions>0))
+    , countChem ((nspecies_g + 3 + 1)*(nreactions>0)) // Num of chem rxns txfr terms
+    , count (countNoChem + countChem)
+  {}
+
+  const int velx;
+  const int vely;
+  const int velz;
+  const int drag_coeff;
+  const int gammaTp;
+  const int convection_coeff;
+  const int countNoChem;
+  const int ro_gk_txfr;
+  const int vel_g_txfr;
+  const int h_g_txfr;
+  const int countChem;
+  const int count;
+};
+
 
 
 class LevelData {

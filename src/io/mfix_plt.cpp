@@ -124,8 +124,10 @@ MfixRW::InitIOPltData ()
         }
       }
 
+      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
       if (m_dem.solve() || m_pic.solve()) {
-        if (plt_txfr == 1) pltVarCount += Transfer::count;
+        if (plt_txfr == 1) pltVarCount += txfr_idxs.countNoChem;
       }
 
       if (fluid.solve_species() && reactions.solve()) {
@@ -552,7 +554,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             Array4<Real      > const& cp_g_array = cp_g.array(mfi);
             Array4<Real const> const& T_g_array  = T_g.const_array(mfi);
 
-            Array4<Real const> const& X_gk_array = fluid.isMixture() ? 
+            Array4<Real const> const& X_gk_array = fluid.isMixture() ?
               m_leveldata[lev]->X_gk->const_array(mfi) : dummy_arr;
 
             ParallelFor(bx, [cp_g_array,T_g_array,X_gk_array,fluid_parms,
@@ -829,9 +831,11 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
           lc += nspecies_g;
         }
 
+        Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
         if (plt_txfr == 1) {
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr, 0, lc, Transfer::count, 0);
-          lc += Transfer::count;
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr, 0, lc, txfr_idxs.countNoChem, 0);
+          lc += txfr_idxs.countNoChem;
         }
 
         if (fluid.solve_species() && reactions.solve() && plt_chem_txfr == 1) {

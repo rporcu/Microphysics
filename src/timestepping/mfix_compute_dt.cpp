@@ -32,6 +32,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     */
 
+    Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+    const int idx_drag_txfr = txfr_idxs.drag_coeff;
+
     // Max CFL factor for all levels
     Real cfl_max(0.0);
 
@@ -84,7 +87,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
             reduce_op.eval(bx, reduce_data,
               [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,mu_g0,
-               flags_fab,T_g,adv_enthalpy,fluid_parms]
+               flags_fab,T_g,adv_enthalpy,fluid_parms,idx_drag_txfr]
               AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
             {
               Real l_cfl_max = 0._rt;
@@ -101,7 +104,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 {
                   Real delp = gp0_dev[n] + gradp(i,j,k,n);
                   Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,Transfer::drag_coeff) * vel(i,j,k,n);
+                    txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
 
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }
@@ -186,7 +189,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
                 {
                   Real delp = gp0_dev[n] + gradp(i,j,k,n);
                   Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,Transfer::drag_coeff) * vel(i,j,k,n);
+                    txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
 
                   acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
                 }

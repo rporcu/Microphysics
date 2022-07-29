@@ -214,6 +214,14 @@ InterphaseTxfrDeposition (F WeightFunc,
   const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
   const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
+  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+  const int idx_velx_txfr = txfr_idxs.velx;
+  const int idx_vely_txfr = txfr_idxs.vely;
+  const int idx_velz_txfr = txfr_idxs.velz;
+  const int idx_drag_txfr = txfr_idxs.drag_coeff;
+  const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
+  const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
+
   ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
   const int idx_Xg_txfr = chem_txfr_idxs.ro_gk_txfr;
   const int idx_velg_txfr = chem_txfr_idxs.vel_g_txfr;
@@ -297,7 +305,9 @@ InterphaseTxfrDeposition (F WeightFunc,
             [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
              reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
-             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,local_cg_dem=m_dem.cg_dem()]
+             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr, idx_velx_txfr, idx_vely_txfr,
+             idx_velz_txfr, idx_drag_txfr, idx_gammaTp_txfr, idx_convection_coeff_txfr,
+             local_cg_dem=m_dem.cg_dem()]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -373,15 +383,15 @@ InterphaseTxfrDeposition (F WeightFunc,
 
                 HostDevice::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velx), weight_vol*pvx);
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::vely), weight_vol*pvy);
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::velz), weight_vol*pvz);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velx_txfr), weight_vol*pvx);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vely_txfr), weight_vol*pvy);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velz_txfr), weight_vol*pvz);
 
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::drag_coeff), weight_vol*pbeta);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_drag_txfr), weight_vol*pbeta);
 
                 if (solve_enthalpy) {
-                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::gammaTp), weight_vol*pTp);
-                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,Transfer::convection_coeff), weight_vol*pgamma);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_gammaTp_txfr         ), weight_vol*pTp);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_convection_coeff_txfr), weight_vol*pgamma);
                 }
 
                 if (solve_reactions) {

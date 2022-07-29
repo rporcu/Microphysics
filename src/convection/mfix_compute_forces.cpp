@@ -108,17 +108,26 @@ void mfix::compute_vel_forces_on_level (int lev,
         Array4<Real const> const& txfr  = txfr_in.const_array(mfi);
         Array4<Real const> const& ep_g  = m_leveldata[lev]->ep_g->const_array(mfi);
 
-        amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0, vel_g, ep_g, txfr]
+        Transfer txfr_idxs(m_leveldata[0]->fluid->nspecies(),
+                           m_leveldata[0]->reactions->nreactions());
+
+        const int drag_comp(txfr_idxs.drag_coeff);
+        const int velx_comp(txfr_idxs.velx);
+        const int vely_comp(txfr_idxs.vely);
+        const int velz_comp(txfr_idxs.velz);
+
+        amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0, vel_g, ep_g, txfr,
+         drag_comp, velx_comp, vely_comp, velz_comp]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
           const Real rhoinv = 1.0/rho(i,j,k);
           const Real epginv = 1.0/ep_g(i,j,k);
 
-          const Real beta = txfr(i,j,k,Transfer::drag_coeff);
+          const Real beta = txfr(i,j,k,drag_comp);
 
-          const Real drag_x = (txfr(i,j,k,Transfer::velx) - beta*vel_g(i,j,k,0))*epginv;
-          const Real drag_y = (txfr(i,j,k,Transfer::vely) - beta*vel_g(i,j,k,1))*epginv;
-          const Real drag_z = (txfr(i,j,k,Transfer::velz) - beta*vel_g(i,j,k,2))*epginv;
+          const Real drag_x = (txfr(i,j,k,velx_comp) - beta*vel_g(i,j,k,0))*epginv;
+          const Real drag_y = (txfr(i,j,k,vely_comp) - beta*vel_g(i,j,k,1))*epginv;
+          const Real drag_z = (txfr(i,j,k,velz_comp) - beta*vel_g(i,j,k,2))*epginv;
 
           vel_f(i,j,k,0) = l_gravity[0]-(gradp(i,j,k,0)+l_gp0[0]+drag_x)*rhoinv;
           vel_f(i,j,k,1) = l_gravity[1]-(gradp(i,j,k,1)+l_gp0[1]+drag_y)*rhoinv;

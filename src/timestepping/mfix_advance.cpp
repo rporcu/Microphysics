@@ -334,20 +334,27 @@ mfix::mfix_add_vel_txfr_explicit (Real dt,
       Array4<Real const> const&   ro_array = rho_in[lev]->array(mfi);
       Array4<Real const> const&   ep_array = ep_g_in[lev]->array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
+      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+      const int idx_velx_txfr = txfr_idxs.velx;
+      const int idx_vely_txfr = txfr_idxs.vely;
+      const int idx_velz_txfr = txfr_idxs.velz;
+      const int idx_drag_txfr = txfr_idxs.drag_coeff;
+
+      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array,
+         idx_velx_txfr, idx_vely_txfr, idx_velz_txfr, idx_drag_txfr ]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
 
-        const Real beta = txfr_array(i,j,k,Transfer::drag_coeff);
+        const Real beta = txfr_array(i,j,k,idx_drag_txfr);
 
         const Real vel_x = vel_array(i,j,k,0);
         const Real vel_y = vel_array(i,j,k,1);
         const Real vel_z = vel_array(i,j,k,2);
 
-        const Real drag_0 = (txfr_array(i,j,k,Transfer::velx) - beta*vel_x) * orop;
-        const Real drag_1 = (txfr_array(i,j,k,Transfer::vely) - beta*vel_y) * orop;
-        const Real drag_2 = (txfr_array(i,j,k,Transfer::velz) - beta*vel_z) * orop;
+        const Real drag_0 = (txfr_array(i,j,k,idx_velx_txfr) - beta*vel_x) * orop;
+        const Real drag_1 = (txfr_array(i,j,k,idx_vely_txfr) - beta*vel_y) * orop;
+        const Real drag_2 = (txfr_array(i,j,k,idx_velz_txfr) - beta*vel_z) * orop;
 
         vel_array(i,j,k,0) = vel_x + drag_0;
         vel_array(i,j,k,1) = vel_y + drag_1;
@@ -403,8 +410,13 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
       const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
+      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+      const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
+      const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
+
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,
           is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
@@ -416,8 +428,8 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
           const Real orop  = dt / (ro_array(i,j,k) * epg_loc);
 
           const Real Tg_old = Tg_array(i,j,k);
-          const Real Ts     = txfr_array(i,j,k,Transfer::gammaTp);
-          const Real gamma  = txfr_array(i,j,k,Transfer::convection_coeff);
+          const Real Ts     = txfr_array(i,j,k,idx_gammaTp_txfr);
+          const Real gamma  = txfr_array(i,j,k,idx_convection_coeff_txfr);
 
           const Real hg = hg_array(i,j,k) + (Ts - gamma * Tg_old) * orop;
           hg_array(i,j,k) = hg;
@@ -516,6 +528,11 @@ mfix::mfix_add_vel_txfr_implicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_vel_txfr_implicit");
 
+  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+  const int idx_velx_txfr = txfr_idxs.velx;
+  const int idx_vely_txfr = txfr_idxs.vely;
+  const int idx_velz_txfr = txfr_idxs.velz;
+
   for (int lev = 0; lev <= finest_level; lev++) {
 
 #ifdef _OPENMP
@@ -531,15 +548,17 @@ mfix::mfix_add_vel_txfr_implicit (Real dt,
       Array4<Real const> const& ro_array   = rho_in[lev]->const_array(mfi);
       Array4<Real const> const& ep_array   = ep_g_in[lev]->const_array(mfi);
 
-      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array]
+
+      amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array,
+       idx_velx_txfr, idx_vely_txfr, idx_velz_txfr ]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         Real orop  = dt / (ro_array(i,j,k) * ep_array(i,j,k));
         Real denom = 1.0 / (1.0 + txfr_array(i,j,k,3) * orop);
 
-        vel_array(i,j,k,0) = (vel_array(i,j,k,0) + txfr_array(i,j,k,Transfer::velx) * orop) * denom;
-        vel_array(i,j,k,1) = (vel_array(i,j,k,1) + txfr_array(i,j,k,Transfer::vely) * orop) * denom;
-        vel_array(i,j,k,2) = (vel_array(i,j,k,2) + txfr_array(i,j,k,Transfer::velz) * orop) * denom;
+        vel_array(i,j,k,0) = (vel_array(i,j,k,0) + txfr_array(i,j,k,idx_velx_txfr) * orop) * denom;
+        vel_array(i,j,k,1) = (vel_array(i,j,k,1) + txfr_array(i,j,k,idx_vely_txfr) * orop) * denom;
+        vel_array(i,j,k,2) = (vel_array(i,j,k,2) + txfr_array(i,j,k,idx_velz_txfr) * orop) * denom;
       });
     }
   }
@@ -563,6 +582,10 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
   BL_PROFILE("mfix::mfix_add_energy_txfr_implicit");
 
   const auto& fluid_parms = fluid.parameters();
+
+  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+  const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
+  const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 
   for (int lev = 0; lev <= finest_level; lev++) {
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g_in[lev]->Factory());
@@ -596,6 +619,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,
           is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
@@ -605,8 +629,8 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
           const Real hg = hg_array(i,j,k);
 
-          const Real gammaTp = txfr_array(i,j,k,Transfer::gammaTp);
-          const Real gamma = txfr_array(i,j,k,Transfer::convection_coeff);
+          const Real gammaTp = txfr_array(i,j,k,idx_gammaTp_txfr);
+          const Real gamma = txfr_array(i,j,k,idx_convection_coeff_txfr);
 
           const Real epg_loc = ep_array(i,j,k);
 
