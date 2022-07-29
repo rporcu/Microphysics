@@ -455,6 +455,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       for (int lev = 0; lev <= finest_level; lev++)
       {
         auto& ld = *m_leveldata[lev];
+
+        const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.X_gk->Factory());
+        const auto& flags = factory.getMultiEBCellFlagFab();
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -471,8 +475,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           Array4<Real const> const& div_J_o = div_J_old[lev]->const_array(mfi);
           Array4<Real const> const& X_rhs_o = species_RHS_old[lev]->const_array(mfi);
 
+          auto const& flags_arr = flags.const_array(mfi);
+
           ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,l_dt,X_gk_n,
-              X_rhs_o,l_explicit_diff,div_J_o]
+              X_rhs_o,l_explicit_diff,div_J_o,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const Real epg_loc = epg(i,j,k);
@@ -500,9 +506,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               X_gk_n(i,j,k,n) = X_gk;
             }
 
-            for (int n = 0; n < nspecies_g; ++n)
-            {
-              X_gk_n(i,j,k,n) /= X_gk_sum;
+            if (!flags_arr(i,j,k).isCovered()) {
+              for (int n = 0; n < nspecies_g; ++n)
+              {
+                X_gk_n(i,j,k,n) /= X_gk_sum;
+              }
             }
           });
         } // mfi
@@ -538,7 +546,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         diffusion_op->ComputeDivJ(div_J_old, J_gk);
 
         for (int lev = 0; lev <= finest_level; lev++) {
+
           auto& ld = *m_leveldata[lev];
+
+          const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.X_gk->Factory());
+          const auto& flags = factory.getMultiEBCellFlagFab();
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -555,8 +568,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             Array4<Real const> const& div_J_n = div_J_old[lev]->const_array(mfi);
             Array4<Real const> const& X_RHS_o = species_RHS_old[lev]->const_array(mfi);
 
+            auto const& flags_arr = flags.const_array(mfi);
+
             ParallelFor(bx, [nspecies_g,epg,rho_o,rho_n,X_gk_o,dXdt_o,l_dt,X_gk_n,
-                X_RHS_o,l_explicit_diff,div_J_n]
+                X_RHS_o,l_explicit_diff,div_J_n,flags_arr]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const Real epg_loc = epg(i,j,k);
@@ -582,9 +597,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
                 X_gk_n(i,j,k,n) = X_gk;
               }
 
-              for (int n = 0; n < nspecies_g; ++n)
-              {
-                X_gk_n(i,j,k,n) /= X_gk_sum;
+              if (!flags_arr(i,j,k).isCovered()) {
+                for (int n = 0; n < nspecies_g; ++n)
+                {
+                  X_gk_n(i,j,k,n) /= X_gk_sum;
+                }
               }
             });
           }
@@ -595,6 +612,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // cell centers)
         mfix_set_species_bcs(time, get_X_gk());
       }
+
+      // Update ghost cells
+      for (int lev = 0; lev <= finest_level; lev++)
+        m_leveldata[lev]->X_gk->FillBoundary(geom[lev].periodicity());
+
     } // solve_species
 
 
