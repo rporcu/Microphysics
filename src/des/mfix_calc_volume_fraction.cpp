@@ -105,20 +105,29 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
     }
 
     // Sum data from all levels into level 0.
-    int  src_nghost = 1;
-    int dest_nghost = 0;
-    int ng_to_copy = amrex::min(src_nghost, dest_nghost);
+    {
+      int  src_nghost = 1;
+      int dest_nghost = 0;
+      int ng_to_copy = amrex::min(src_nghost, dest_nghost);
 
-    for (int lev = 1; lev < nlev; lev++)
-      mf_pointer[0]->ParallelCopy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
-          ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
+      for (int lev = 1; lev < nlev; lev++) {
+        mf_pointer[0]->ParallelCopy(*mf_pointer[lev],0,0, m_leveldata[lev]->ep_g->nComp(),
+            ng_to_copy, ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
+      }
+    }
 
     // If ep_g is not defined on the particle_box_array, then we need
-    // to copy here from mf_pointer into ep_g. I believe that we don't
-    // need any information in ghost cells so we don't copy those.
-
+    // to copy here from mf_pointer into ep_g. We do not need a call to
+    // FillBoundary after calling ParallelCopy using dst_ngrow.
     if (mf_pointer[0] != m_leveldata[0]->ep_g) {
-      m_leveldata[0]->ep_g->ParallelCopy(*mf_pointer[0], 0, 0, m_leveldata[0]->ep_g->nComp());
+      auto& ld = *m_leveldata[0];
+      const int src_ngrow = 0;
+      const int dst_ngrow = ld.ep_g->nGrow();
+      ld.ep_g->ParallelCopy(*mf_pointer[0], 0, 0, ld.ep_g->nComp(),
+          src_ngrow, dst_ngrow, gm.periodicity());
+
+    } else {
+      m_leveldata[0]->ep_g->FillBoundary(gm.periodicity());
     }
 
     for (int lev = 0; lev < nlev; lev++) {
@@ -130,19 +139,10 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       // only need to be carried out on level 0.
       int lev(0);
 
-      // Fill the boundaries so we calculate the correct average
-      // solids volume fraction for periodic boundaries.
-      m_leveldata[lev]->ep_g->FillBoundary(gm.periodicity());
-
       // Create a copy of the solids volume fraction to use
       // in the redistribution.
       MultiFab* eps_tmp;
       eps_tmp = (MFHelpers::createFrom(*m_leveldata[lev]->ep_g)).release();
-
-      // Clear the grid boundaries to prepare for redistribution which
-      // could put material in your ghost cells. Do this AFTER
-      // we created the copy so the copy has the correct boundary info.
-      m_leveldata[lev]->ep_g->setBndry(0.0);
 
       const auto& factory = EBFactory(lev);
       const FabArray<EBCellFlagFab>* fld_flags = &(factory.getMultiEBCellFlagFab());
@@ -154,9 +154,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
                                    fld_volfrac, fld_flags,
                                    mfix::m_max_solids_volume_fraction);
 
-      // Sum grid boundaries to capture any material that was deposited into
-      // your grid from an adjacent grid.
-      m_leveldata[lev]->ep_g->SumBoundary(gm.periodicity());
       m_leveldata[lev]->ep_g->FillBoundary(gm.periodicity());
 
       // we no longer need the copy.

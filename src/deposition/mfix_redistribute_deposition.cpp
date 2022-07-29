@@ -21,17 +21,20 @@ mfix::mfix_redistribute_deposition (int lev,
 {
    BL_PROFILE("mfix::mfix_redistribute_solids_volume");
 
+
    MultiFab mf_to_redist_copy(mf_to_redistribute.boxArray(),
                               mf_to_redistribute.DistributionMap(),
                               mf_to_redistribute.nComp(),
                               mf_to_redistribute.nGrow(),
                               MFInfo(),
                               mf_to_redistribute.Factory());
+
    MultiFab::Copy(mf_to_redist_copy, mf_to_redistribute, 0, 0,
                   mf_to_redistribute.nComp(), mf_to_redistribute.nGrow());
 
    MultiFab scale_fab(mf_eps.boxArray(), mf_eps.DistributionMap(), mf_eps.nComp(),
                       mf_eps.nGrow(), MFInfo(), mf_eps.Factory());
+
    scale_fab.setVal(0.);
 
    for (MFIter mfi(mf_eps,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
@@ -44,12 +47,11 @@ mfix::mfix_redistribute_deposition (int lev,
      // We are only interested in redistributing excessive particle volume
      // from small cells.
 
-     if ( (*flags_fab)[mfi].getType(amrex::grow(bx,0)) != FabType::covered &&
-          (*flags_fab)[mfi].getType(amrex::grow(bx,0)) != FabType::regular ) {
+     if ( (*flags_fab)[mfi].getType(amrex::grow(bx,1)) != FabType::covered &&
+          (*flags_fab)[mfi].getType(amrex::grow(bx,1)) != FabType::regular ) {
 
        // We don't want to loop over ghost cells. Only redistribute
        // solids volume that is locally owned.
-       const Box& grow_bx1 = amrex::grow(bx,1);
 
        Box domain(geom[lev].Domain());
        const amrex::Dim3 dom_low  = amrex::lbound(domain);
@@ -64,38 +66,43 @@ mfix::mfix_redistribute_deposition (int lev,
        const int cyclic_y = geom[0].isPeriodic(1);
        const int cyclic_z = geom[0].isPeriodic(2);
 
-       IntVect mask_box_lo(grow_bx1.smallEnd());
-       IntVect mask_box_hi(grow_bx1.bigEnd());
+       const Box& grow_bx2 = amrex::grow(bx,2);
+       IntVect mask_bxg2_lo(grow_bx2.smallEnd());
+       IntVect mask_bxg2_hi(grow_bx2.bigEnd());
 
        if(!cyclic_x) {
-         mask_box_lo[0] = amrex::max(mask_box_lo[0], dom_low.x);
-         mask_box_hi[0] = amrex::min(mask_box_hi[0], dom_high.x);
+         mask_bxg2_lo[0] = amrex::max(mask_bxg2_lo[0], dom_low.x);
+         mask_bxg2_hi[0] = amrex::min(mask_bxg2_hi[0], dom_high.x);
        }
 
        if(!cyclic_y) {
-         mask_box_lo[1] = amrex::max(mask_box_lo[1], dom_low.y);
-         mask_box_hi[1] = amrex::min(mask_box_hi[1], dom_high.y);
+         mask_bxg2_lo[1] = amrex::max(mask_bxg2_lo[1], dom_low.y);
+         mask_bxg2_hi[1] = amrex::min(mask_bxg2_hi[1], dom_high.y);
        }
 
        if(!cyclic_z) {
-         mask_box_lo[2] = amrex::max(mask_box_lo[2], dom_low.z);
-         mask_box_hi[2] = amrex::min(mask_box_hi[2], dom_high.z);
+         mask_bxg2_lo[2] = amrex::max(mask_bxg2_lo[2], dom_low.z);
+         mask_bxg2_hi[2] = amrex::min(mask_bxg2_hi[2], dom_high.z);
        }
 
-       // Box "mask_box" is used to restrict were we redistribute the overflow.
+       // Box "mask_bxg2" is used to restrict were we redistribute the overflow.
        // The following is what we want to do:
        // -- Mask ghost cells when the BCs are not periodic
        // -- Mask cells we are going to redistribute (ep_s > max_eps)
-       Box mask_box(mask_box_lo, mask_box_hi);
+       Box mask_bxg2(mask_bxg2_lo, mask_bxg2_hi);
 
        Array4<Real> const& mf_redist = mf_to_redistribute.array(mfi);
 
        Array4<Real> const& duplicate = mf_to_redist_copy.array(mfi);
        Array4<Real> const& scale_array = scale_fab.array(mfi);
 
-       amrex::ParallelFor(bx,
-         [flags,ep_s,mf_redist,vfrac,duplicate,scale_array,max_eps,ncomp,
-          mask_box] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+       const Box& grow_bx1 = amrex::grow(bx,1);
+
+       const Box mask_bxg1 = grow_bx1&mask_bxg2;
+
+       amrex::ParallelFor(mask_bxg1,
+         [bx, flags,ep_s,mf_redist,vfrac,duplicate,scale_array,max_eps,ncomp,
+          mask_bxg2, mask_bxg1] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
        {
          if(flags(i,j,k).isSingleValued() && ep_s(i,j,k) > max_eps)
          {
@@ -107,7 +114,7 @@ mfix::mfix_redistribute_deposition (int lev,
            for(int kk(-1); kk <= 1; kk++) {
              if((ii != 0 || jj != 0 || kk != 0 ) &&
                 flags(i,j,k).isConnected({ii,jj,kk}) &&
-                mask_box.contains(IntVect(i+ii,j+jj,k+kk)) &&
+                mask_bxg2.contains(IntVect(i+ii,j+jj,k+kk)) &&
                 ((!flags(i+ii,j+jj,k+kk).isSingleValued()) ||
                  (ep_s(i+ii,j+jj,k+kk) <= max_eps)))
              {
@@ -136,7 +143,7 @@ mfix::mfix_redistribute_deposition (int lev,
              for(int ii(-1); ii <= 1; ii++) {
                if((ii != 0 || jj != 0 || kk != 0) &&
                   flags(i,j,k).isConnected({ii,jj,kk}) &&
-                  mask_box.contains(IntVect(i+ii,j+jj,k+kk)) &&
+                  mask_bxg1.contains(IntVect(i+ii,j+jj,k+kk)) &&
                   ((!flags(i+ii,j+jj,k+kk).isSingleValued()) ||
                    (ep_s(i+ii,j+jj,k+kk) <= max_eps)))
                {
