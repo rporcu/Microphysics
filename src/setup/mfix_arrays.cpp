@@ -399,19 +399,6 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->txfr, txfr_new);
     delete txfr_new;
 
-    if (fluid.solve_species() && reactions.solve()) {
-      // Species mass transfer rates
-      MultiFab* chem_txfr_new = new MultiFab(grids[lev], dmap[lev],
-                                        m_leveldata[lev]->chem_txfr->nComp(),
-                                        m_leveldata[lev]->chem_txfr->nGrow(),
-                                        MFInfo(), *ebfactory[lev]);
-      chem_txfr_new->setVal(0.);
-      chem_txfr_new->ParallelCopy(*m_leveldata[lev]->chem_txfr, 0, 0, m_leveldata[lev]->chem_txfr->nComp(),
-                     src_ngrow, m_leveldata[lev]->chem_txfr->nGrow(), geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->chem_txfr, chem_txfr_new);
-      delete chem_txfr_new;
-    }
-
     // Arrays to store the solution for the MAC projection
     MultiFab* mac_phi_new = new MultiFab(grids[lev], dmap[lev],
                                          m_leveldata[lev]->mac_phi->nComp(),

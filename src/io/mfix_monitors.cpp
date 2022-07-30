@@ -672,23 +672,17 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("chem_txfr_X_gk") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
 
         variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
-        m_components.push_back(chem_transfer.ro_gk_txfr+n_g);
+        m_components.push_back(txfr_idxs.ro_gk_txfr+n_g);
 
         for (int lev(0); lev < m_nlev; lev++)
-          m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+          m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       }
 
     } else if (var.substr(0,15).compare("chem_txfr_X_gk_") == 0) {
-
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
 
       const int var_name_size = var.size();
       const std::string var_species = var.substr(15,var_name_size-15);
@@ -697,10 +691,10 @@ BaseMonitor::setup_variables ()
         if (var_species.compare(m_fluid.species_names(n_g)) == 0) {
 
           variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
-          m_components.push_back(chem_transfer.ro_gk_txfr+n_g);
+          m_components.push_back(txfr_idxs.ro_gk_txfr+n_g);
 
           for (int lev(0); lev < m_nlev; lev++)
-            m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+            m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
           break;
         }
@@ -708,70 +702,55 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("chem_txfr_velocity") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       variables_names.push_back("chem_txfr_vel_x");
-      m_components.push_back(chem_transfer.vel_g_txfr+0);
+      m_components.push_back(txfr_idxs.vel_g_txfr+0);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("chem_txfr_vel_y");
-      m_components.push_back(chem_transfer.vel_g_txfr+1);
+      m_components.push_back(txfr_idxs.vel_g_txfr+1);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("chem_txfr_vel_z");
-      m_components.push_back(chem_transfer.vel_g_txfr+2);
+      m_components.push_back(txfr_idxs.vel_g_txfr+2);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
     } else if (var.compare("chem_txfr_vel_x") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       variables_names.push_back(var);
-      m_components.push_back(chem_transfer.vel_g_txfr+0);
+      m_components.push_back(txfr_idxs.vel_g_txfr+0);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
     } else if (var.compare("chem_txfr_vel_y") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       variables_names.push_back(var);
-      m_components.push_back(chem_transfer.vel_g_txfr+1);
+      m_components.push_back(txfr_idxs.vel_g_txfr+1);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
     } else if (var.compare("chem_txfr_vel_z") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       variables_names.push_back(var);
-      m_components.push_back(chem_transfer.vel_g_txfr+2);
+      m_components.push_back(txfr_idxs.vel_g_txfr+2);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
     } else if (var.compare("chem_txfr_h") == 0) {
 
-      const LevelData& ld = *(m_leveldata[0]);
-      ChemTransfer chem_transfer(ld.fluid->nspecies(), ld.reactions->nreactions());
-
       variables_names.push_back(var);
-      m_components.push_back(chem_transfer.h_g_txfr);
+      m_components.push_back(txfr_idxs.h_g_txfr);
 
       for (int lev(0); lev < m_nlev; lev++)
-        m_mf[lev].push_back(m_leveldata[lev]->chem_txfr);
+        m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
     } else if (var.compare("diveu") == 0) {
 

@@ -669,7 +669,6 @@ public:
                                     Vector< MultiFab* > const& pressure_g_in);
 
     void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
-                               Vector< MultiFab* > const& chem_txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
                                Vector< MultiFab* > const& ro_g_in,
                                Vector< MultiFab* > const& vel_g_in,
@@ -679,6 +678,7 @@ public:
                                Real time);
 
   public:
+#if 0
     void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
                               const Vector< MultiFab* >& ep_g_in,
                               const Vector< MultiFab* >& ro_g_in,
@@ -711,7 +711,7 @@ public:
                               F1 WeightFunc,
                               F2 HeterogeneousRatesFunc,
                               F3 HomogeneousRatesFunc);
-
+#endif
   protected:
     void AllocateArrays (int lev);
 
@@ -802,21 +802,21 @@ public:
                                Real& coupling_timing);
 
     void mfix_density_rhs (Vector< MultiFab*       > const& rhs,
-                           Vector< MultiFab const* > const& chem_txfr);
+                           Vector< MultiFab const* > const& txfr);
 
     void mfix_enthalpy_rhs(Vector< MultiFab*      > const& rhs,
                            Vector< MultiFab const*> const& ep_g,
                            Vector< MultiFab const*> const& ro_g,
                            Vector< MultiFab*      > const& X_gk,
                            Vector< MultiFab const*> const& T_g,
-                           Vector< MultiFab const* > const& chem_txfr);
+                           Vector< MultiFab const* > const& txfr);
 
     void mfix_species_X_rhs (Vector< MultiFab*       > const& rhs,
-                             Vector< MultiFab const* > const& chem_txfr);
+                             Vector< MultiFab const* > const& txfr);
 
     void mfix_momentum_rhs (Vector< MultiFab*       > const& rhs,
                             Vector< MultiFab const* > const& ep_g,
-                            Vector< MultiFab const* > const& chem_txfr);
+                            Vector< MultiFab const* > const& txfr);
 
     void mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                                Vector< MultiFab* >& conv_s_old,
@@ -930,7 +930,6 @@ public:
     Vector< MultiFab* > get_X_gk () noexcept;
     Vector< MultiFab* > get_X_gk_old () noexcept;
     Vector< MultiFab* > get_txfr () noexcept;
-    Vector< MultiFab* > get_chem_txfr () noexcept;
     Vector< MultiFab* > get_diveu () noexcept;
     Vector< MultiFab* > get_mac_phi () noexcept;
     Vector< MultiFab* > get_divtau () noexcept;
@@ -960,7 +959,6 @@ public:
 
     amrex::Vector< amrex::MultiFab const* > get_T_g_on_eb_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_txfr_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_chem_txfr_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_diveu_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_mac_phi_const () const noexcept;
 

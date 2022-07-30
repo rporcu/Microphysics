@@ -15,7 +15,6 @@
 
 void
 mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
-                            Vector< MultiFab* > const& chem_txfr_out,
                             Vector< MultiFab* > const& ep_g_in,
                             Vector< MultiFab* > const& ro_g_in,
                             Vector< MultiFab* > const& vel_g_in,
@@ -36,9 +35,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
   // ******************************************************************************
   for (int lev = 0; lev < nlev; lev++) {
     txfr_out[lev]->setVal(0);
-
-    if (reactions.solve())
-      chem_txfr_out[lev]->setVal(0);
   }
 
   if (nlev > 2)
@@ -47,7 +43,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
         " handle up to 2 levels");
 
   Vector< MultiFab* > txfr_ptr(nlev, nullptr);
-  Vector< MultiFab* > chem_txfr_ptr(nlev, nullptr);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -59,7 +54,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
       // If we are already working with the internal mf defined on the
       // particle_box_array, then we just work with this.
       txfr_ptr[lev] = txfr_out[lev];
-      chem_txfr_ptr[lev] = chem_txfr_out[lev];
 
     } else if (lev == 0 && (!OnSameGrids)) {
 
@@ -70,20 +64,11 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    txfr_out[lev]->nComp(),
                                    txfr_out[lev]->nGrow());
 
-      if (reactions.solve()) {
-        chem_txfr_ptr[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                          pc->ParticleDistributionMap(lev),
-                                          chem_txfr_out[lev]->nComp(),
-                                          chem_txfr_out[lev]->nGrow());
-      }
-
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
       BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev), this->m_gdb->refRatio(0)));
       txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
                                    txfr_out[lev]->nComp(), 1);
-      chem_txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
-                                        chem_txfr_out[lev]->nComp(), 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -93,15 +78,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     if (txfr_ptr[lev]->nGrow() < 1)
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
-    if (reactions.solve()) {
-      if (chem_txfr_ptr[lev]->nGrow() < 1)
-        amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
-    }
-
     txfr_ptr[lev]->setVal(0.0, 0, txfr_out[lev]->nComp(), txfr_ptr[lev]->nGrow());
-
-    if (reactions.solve())
-      chem_txfr_ptr[lev]->setVal(0.0, 0, chem_txfr_out[lev]->nComp(), chem_txfr_ptr[lev]->nGrow());
   }
 
   const Geometry& gm = Geom(0);
@@ -138,7 +115,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
     pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
-                                 *chem_txfr_ptr[lev], volfrac[lev], flags[lev]);
+                                 volfrac[lev], flags[lev]);
   }
 
   {
@@ -151,18 +128,10 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // when BC is either a pressure inlet or mass inflow.
     mfix_deposition_bcs(lev, *txfr_ptr[lev]);
 
-    if (reactions.solve())
-      mfix_deposition_bcs(lev, *chem_txfr_ptr[lev]);
-
     // Sum grid boundaries to capture any material that was deposited into
     // your grid from an adjacent grid.
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->setBndry(0.0);
-
-    if (reactions.solve()) {
-      chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
-      chem_txfr_ptr[lev]->setBndry(0.0);
-    }
 
     // Sum grid boundaries then fill with correct ghost values.
     tmp_eps[lev]->SumBoundary(gm.periodicity());
@@ -174,20 +143,11 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     mfix_redistribute_deposition(lev, *tmp_eps[lev], *txfr_ptr[lev], volfrac[lev], flags[lev],
                                  mfix::m_max_solids_volume_fraction);
 
-    if (reactions.solve()) {
-      mfix_redistribute_deposition(lev, *tmp_eps[lev], *chem_txfr_ptr[lev], volfrac[lev], flags[lev],
-                                   mfix::m_max_solids_volume_fraction);
-    }
-
     // Sum the boundaries again to recapture any solids moved across
     // grid boundaries during the redistribute
     txfr_ptr[lev]->SumBoundary(gm.periodicity());
     txfr_ptr[lev]->FillBoundary(gm.periodicity());
 
-    if (reactions.solve()) {
-      chem_txfr_ptr[lev]->SumBoundary(gm.periodicity());
-      chem_txfr_ptr[lev]->FillBoundary(gm.periodicity());
-    }
   }
 
   for (int lev(0); lev < nlev; ++lev) {
@@ -206,11 +166,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
   for (int lev = 1; lev < nlev; lev++) {
     txfr_ptr[0]->ParallelCopy(*txfr_ptr[lev], 0, 0, txfr_ptr[0]->nComp(), ng_to_copy,
         ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
-
-    if (reactions.solve()) {
-      chem_txfr_ptr[0]->ParallelCopy(*chem_txfr_ptr[lev], 0, 0, chem_txfr_ptr[0]->nComp(), ng_to_copy,
-          ng_to_copy, gm.periodicity(), FabArrayBase::ADD);
-    }
   }
 
   if (nlev > 1) {
@@ -236,15 +191,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    cphysbc, 0, fphysbc, 0,
                                    ref_ratio[0], mapper,
                                    bcs, 0);
-
-      if (reactions.solve()) {
-        chem_txfr_out[lev]->setVal(0);
-        amrex::InterpFromCoarseLevel(*chem_txfr_out[lev], time, *chem_txfr_ptr[lev-1],
-                                     0, 0, 1, Geom(lev-1), Geom(lev),
-                                     cphysbc, 0, fphysbc, 0,
-                                     ref_ratio[0], mapper,
-                                     bcs, 0);
-      }
     }
   }
 
@@ -256,16 +202,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     txfr_out[0]->ParallelCopy(*txfr_ptr[0], 0, 0, txfr_out[0]->nComp());
   }
 
-  if (reactions.solve()) {
-    if (chem_txfr_ptr[0] != chem_txfr_out[0]) {
-      chem_txfr_out[0]->ParallelCopy(*chem_txfr_ptr[0], 0, 0, chem_txfr_out[0]->nComp());
-    }
-  }
-
   for (int lev = 0; lev < nlev; lev++) {
     if (txfr_ptr[lev] != txfr_out[lev]) {
       delete txfr_ptr[lev];
-      delete chem_txfr_ptr[lev];
     }
   }
 

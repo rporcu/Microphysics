@@ -155,29 +155,28 @@ void MFIXParticleContainer::
 InterphaseTxfrDeposition (int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
-                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags)
 {
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags);
+                             volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
-                             txfr_mf, chem_txfr_mf, volfrac, flags);
+                             txfr_mf, volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags);
+                             volfrac, flags);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             chem_txfr_mf, volfrac, flags);
+                             volfrac, flags);
 
   } else {
 
@@ -193,7 +192,6 @@ InterphaseTxfrDeposition (F WeightFunc,
                           int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
-                          MultiFab & chem_txfr_mf,
                           const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags)
 {
@@ -222,17 +220,15 @@ InterphaseTxfrDeposition (F WeightFunc,
   const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
   const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 
-  ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
-  const int idx_Xg_txfr = chem_txfr_idxs.ro_gk_txfr;
-  const int idx_velg_txfr = chem_txfr_idxs.vel_g_txfr;
-  const int idx_hg_txfr = chem_txfr_idxs.h_g_txfr;
+  const int idx_Xg_txfr   = txfr_idxs.ro_gk_txfr;
+  const int idx_velg_txfr = txfr_idxs.vel_g_txfr;
+  const int idx_hg_txfr   = txfr_idxs.h_g_txfr;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
     FArrayBox local_txfr;
-    FArrayBox local_chem_txfr;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
@@ -254,16 +250,12 @@ InterphaseTxfrDeposition (F WeightFunc,
 
       FArrayBox& eps_fab  = mf_tmp_eps[pti];
       FArrayBox& txfr_fab = txfr_mf[pti];
-      FArrayBox& chem_txfr_fab = solve_reactions ? chem_txfr_mf[pti] : dummy_fab;
 
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
       if ((*flags)[pti].getType(box) != FabType::covered) {
 
-        Array4<Real> dummy_arr;
-
         auto        txfr_arr = txfr_fab.array();
-        auto   chem_txfr_arr = solve_reactions ? chem_txfr_fab.array() : dummy_arr;
         const auto&   volarr = eps_fab.array();
         const auto& flagsarr = (*flags)[pti].array();
         const auto&    vfrac = (*volfrac)[pti].array();
@@ -276,25 +268,11 @@ InterphaseTxfrDeposition (F WeightFunc,
         {
           const int ncomp = txfr_mf.nComp();
 
-          if (Gpu::notInLaunchRegion())
-          {
+          if (Gpu::notInLaunchRegion()) {
             txfr_tile_box.grow(txfr_mf.nGrow());
             local_txfr.resize(txfr_tile_box, ncomp);
             local_txfr.setVal<RunOn::Host>(0.0);
             txfr_arr = local_txfr.array();
-          }
-        }
-
-        Box rxn_tile_box = box;
-        if (solve_reactions) {
-          const int ncomp = chem_txfr_mf.nComp();
-
-          if (Gpu::notInLaunchRegion())
-          {
-            rxn_tile_box.grow(chem_txfr_mf.nGrow());
-            local_chem_txfr.resize(rxn_tile_box, ncomp);
-            local_chem_txfr.setVal<RunOn::Host>(0.0);
-            chem_txfr_arr = local_chem_txfr.array();
           }
         }
 #endif
@@ -303,7 +281,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
         amrex::ParallelFor(nrp,
             [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
-             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,chem_txfr_arr,solve_enthalpy,
+             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
              idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr, idx_velx_txfr, idx_vely_txfr,
              idx_velz_txfr, idx_drag_txfr, idx_gammaTp_txfr, idx_convection_coeff_txfr,
@@ -396,14 +374,14 @@ InterphaseTxfrDeposition (F WeightFunc,
 
                 if (solve_reactions) {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*ro_chem_txfr[n_g]);
+                    HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*ro_chem_txfr[n_g]);
                   }
 
-                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+0), weight_vol*velx_chem_txfr);
-                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+1), weight_vol*vely_chem_txfr);
-                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+2), weight_vol*velz_chem_txfr);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+0), weight_vol*velx_chem_txfr);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+1), weight_vol*vely_chem_txfr);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+2), weight_vol*velz_chem_txfr);
 
-                  HostDevice::Atomic::Add(&chem_txfr_arr(i+ii,j+jj,k+kk,idx_hg_txfr), weight_vol*h_chem_txfr);
+                  HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_hg_txfr), weight_vol*h_chem_txfr);
                 }
               }
             }
@@ -411,20 +389,11 @@ InterphaseTxfrDeposition (F WeightFunc,
         });
 
 #ifdef _OPENMP
-        if (Gpu::notInLaunchRegion())
-        {
-          {
+        if (Gpu::notInLaunchRegion()) {
             const int ncomp = txfr_mf.nComp();
             txfr_fab.atomicAdd<RunOn::Host>(local_txfr, txfr_tile_box, txfr_tile_box, 0, 0, ncomp);
-          }
-
-          if (solve_reactions) {
-            const int ncomp = chem_txfr_mf.nComp();
-            chem_txfr_fab.atomicAdd<RunOn::Host>(local_chem_txfr, rxn_tile_box, rxn_tile_box, 0, 0, ncomp);
-          }
         }
 #endif
-
       }
     }
   }

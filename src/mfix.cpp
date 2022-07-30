@@ -350,16 +350,6 @@ Vector< MultiFab* > mfix::get_txfr () noexcept
   return r;
 }
 
-Vector< MultiFab* > mfix::get_chem_txfr () noexcept
-{
-  Vector<MultiFab*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->chem_txfr);
-  }
-  return r;
-}
-
 Vector< MultiFab* > mfix::get_diveu () noexcept
 {
   Vector<MultiFab*> r;
@@ -597,16 +587,6 @@ Vector< MultiFab const*> mfix::get_txfr_const () const noexcept
   r.reserve(m_leveldata.size());
   for (int lev = 0; lev < m_leveldata.size(); ++lev) {
     r.push_back(m_leveldata[lev]->txfr);
-  }
-  return r;
-}
-
-Vector< MultiFab const*> mfix::get_chem_txfr_const () const noexcept
-{
-  Vector<MultiFab const*> r;
-  r.reserve(m_leveldata.size());
-  for (int lev = 0; lev < m_leveldata.size(); ++lev) {
-    r.push_back(m_leveldata[lev]->chem_txfr);
   }
   return r;
 }

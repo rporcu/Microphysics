@@ -245,7 +245,6 @@ class MFIXParticleContainer final
     void InterphaseTxfrDeposition (int lev,
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
-                                   amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 
@@ -254,7 +253,6 @@ class MFIXParticleContainer final
                                    int lev,
                                    amrex::MultiFab& mf_tmp_eps,
                                    amrex::MultiFab& txfr_mf,
-                                   amrex::MultiFab& chem_txfr_mf,
                                    const amrex::MultiFab* volfrac,
                                    const amrex::FabArray<amrex::EBCellFlagFab>* flags);
 

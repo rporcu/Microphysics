@@ -143,16 +143,16 @@ MfixRW::ComputeMassAccum (const int offset)
 
 void
 MfixRW::ComputeMassProduction (const Real /*dt*/,
-                               Vector< MultiFab const*> const& chem_txfr)
+                               Vector< MultiFab const*> const& txfr)
 {
   BL_PROFILE("mfix::ComputeMassProduction()");
 
   const int nspecies_g = fluid.nspecies();
   std::vector<Real> prod(nspecies_g, 0.);
 
-  ChemTransfer chem_txfr_idxs(nspecies_g, reactions.nreactions());
+  Transfer txfr_idxs(nspecies_g, reactions.nreactions());
 
-  const int scomp = chem_txfr_idxs.ro_gk_txfr;
+  const int scomp = txfr_idxs.ro_gk_txfr;
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -161,7 +161,7 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
 
     const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
 
-     MultiFab const& ro_gk_txfr_fab = *(chem_txfr[lev]);
+     MultiFab const& ro_gk_txfr_fab = *(txfr[lev]);
 
     for (int n=0; n < nspecies_g; ++n){
 

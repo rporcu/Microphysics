@@ -141,7 +141,7 @@ public:
    void ComputeMassAccum (const int offset = 1);
 
    void ComputeMassProduction (const amrex::Real dt,
-                               amrex::Vector<amrex::MultiFab const*> const& chem_txfr);
+                               amrex::Vector<amrex::MultiFab const*> const& txfr);
 
    void ComputeMassFlux (amrex::Vector<amrex::MultiFab const*> const& flux_x,
                          amrex::Vector<amrex::MultiFab const*> const& flux_y,

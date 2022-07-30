@@ -225,14 +225,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
 
     // *************************************************************************************
-    // 
+    //
     // *************************************************************************************
     if (fluid.solve_species())
       diffusion_op->ComputeDivJ(div_J_old, J_gk);
 
 
     // *************************************************************************************
-    // 
+    //
     // *************************************************************************************
     Vector< Array<MultiFab, AMREX_SPACEDIM> > h_gk_fc(finest_level+1);
 
@@ -254,7 +254,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Compute right hand side terms on the old status
     // *************************************************************************************
     if (fluid.solve_density()) {
-      mfix_density_rhs(ro_RHS_old, get_chem_txfr_const());
+      mfix_density_rhs(ro_RHS_old, get_txfr_const());
     }
 
     if (fluid.solve_enthalpy()) {
@@ -265,7 +265,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       mfix_set_temperature_bcs(time, get_T_g_old());
 
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
-          get_X_gk_old(), get_T_g_old_const(), get_chem_txfr_const());
+          get_X_gk_old(), get_T_g_old_const(), get_txfr_const());
 
       if (fluid.solve_species())
         mfix_set_species_bcs(time, get_X_gk_old());
@@ -277,14 +277,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     if (fluid.solve_species()) {
       mfix_set_species_bcs(time, get_X_gk_old());
 
-      mfix_species_X_rhs(species_RHS_old, get_chem_txfr_const());
+      mfix_species_X_rhs(species_RHS_old, get_txfr_const());
 
       mfix_set_species_bcs(time, get_X_gk_old());
     }
 
     // Linear momentum
     if (reactions.solve()) {
-      mfix_momentum_rhs(vel_RHS_old, get_ep_g_const(), get_chem_txfr_const());
+      mfix_momentum_rhs(vel_RHS_old, get_ep_g_const(), get_txfr_const());
     }
 
 
@@ -363,7 +363,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Note that "conv_u_old" returns update to (ep_g u)
     // Note that "conv_s_old" returns update to (ep_g rho), (ep_g rho h_g) and (ep_g rho tracer)
     // *************************************************************************************
-    compute_MAC_projected_velocities(time, l_dt, get_vel_g_old_const(), 
+    compute_MAC_projected_velocities(time, l_dt, get_vel_g_old_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
@@ -556,7 +556,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
           for (MFIter mfi(*ld.vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-            
+
             Box const& bx = mfi.tilebox();
 
             Array4<Real      > const& X_gk_n  = ld.X_gk->array(mfi);
@@ -674,7 +674,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
         const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ld.T_g->Factory());
         const auto& flags = factory.getMultiEBCellFlagFab();
-          
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -723,7 +723,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               Real h_g = num * h_g_o(i,j,k);
 
               h_g += l_dt * dhdt_o(i,j,k,conv_comp);
-              
+
               if (solve_species)
                 h_g -= l_dt * div_hJ_o(i,j,k);
 
@@ -1074,7 +1074,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
                 if (solve_species) {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    species_RHS_arr(i,j,k,n_g) = 
+                    species_RHS_arr(i,j,k,n_g) =
                       epg_loc*(ro_g_n*X_gk_n(i,j,k,n_g) - ro_g_o*X_gk_o(i,j,k,n_g)) / l_dt - dXdt_o(i,j,k,n_g);
                   }
                 }
@@ -1083,7 +1083,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       } // lev
 
       if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
-  
+
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
             get_T_g_const(), get_X_gk_const());

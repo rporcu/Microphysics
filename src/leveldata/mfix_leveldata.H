@@ -11,22 +11,6 @@
 #include <mfix_reactions.H>
 
 
-struct ChemTransfer {
-
-  ChemTransfer (const int nspecies_g, const int nreactions)
-    : ro_gk_txfr(0)
-    , vel_g_txfr(ro_gk_txfr + nspecies_g*(nreactions>0))
-    , h_g_txfr(vel_g_txfr + 3*(nreactions>0))
-    , count (h_g_txfr + 1*(nreactions>0))
-  {}
-
-  const int ro_gk_txfr;
-  const int vel_g_txfr;
-  const int h_g_txfr;
-  const int count;
-};
-
-
 struct Transfer {
 
   Transfer (const int nspecies_g, const int nreactions)
@@ -132,9 +116,6 @@ class LevelData {
 
     // interphase transfer (drag, heat, etc)
     amrex::MultiFab* txfr;
-
-    // Interphase transfer due to heterogeneous reactions
-    amrex::MultiFab* chem_txfr;
 
     // div (ep_g * u)
     amrex::MultiFab* diveu;

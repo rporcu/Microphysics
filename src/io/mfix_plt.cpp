@@ -131,8 +131,7 @@ MfixRW::InitIOPltData ()
       }
 
       if (fluid.solve_species() && reactions.solve()) {
-        ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
-        if (plt_chem_txfr == 1) pltVarCount += chem_txfr_idxs.count;
+        if (plt_chem_txfr == 1) pltVarCount += txfr_idxs.countChem;
       }
     }
 
@@ -839,9 +838,9 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         if (fluid.solve_species() && reactions.solve() && plt_chem_txfr == 1) {
-          ChemTransfer chem_txfr_idxs(fluid.nspecies(), reactions.nreactions());
-          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->chem_txfr, 0, lc, chem_txfr_idxs.count, 0);
-          lc += chem_txfr_idxs.count;
+          MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr,
+            txfr_idxs.countNoChem, lc, txfr_idxs.countChem, 0);
+          lc += txfr_idxs.countChem;
         }
 
       }

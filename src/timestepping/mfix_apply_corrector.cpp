@@ -291,21 +291,21 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // Compute right hand side terms on the intermediate status
     // ************************************************************************
     if (fluid.solve_density()) {
-      mfix_density_rhs(ro_RHS, get_chem_txfr_const());
+      mfix_density_rhs(ro_RHS, get_txfr_const());
     }
 
     if (fluid.solve_enthalpy()) {
       mfix_enthalpy_rhs(enthalpy_RHS, get_ep_g_const(), get_ro_g_const(),
-           get_X_gk(), get_T_g_const(), get_chem_txfr_const());
+           get_X_gk(), get_T_g_const(), get_txfr_const());
     }
 
     if (fluid.solve_species()) {
-      mfix_species_X_rhs(species_RHS, get_chem_txfr_const());
+      mfix_species_X_rhs(species_RHS, get_txfr_const());
     }
 
     // Linear momentum RHS
     if (reactions.solve()) {
-      mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_chem_txfr_const());
+      mfix_momentum_rhs(vel_RHS, get_ep_g_const(), get_txfr_const());
     }
 
 
@@ -367,7 +367,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     // Compute the explicit advective term R_u^*
     // *************************************************************************************
-    compute_MAC_projected_velocities(time, l_dt, get_vel_g_const(), 
+    compute_MAC_projected_velocities(time, l_dt, get_vel_g_const(),
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         get_ep_g_const(), get_ro_g_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
@@ -1261,7 +1261,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 if (solve_species) {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    species_RHS_arr(i,j,k,n_g) = 
+                    species_RHS_arr(i,j,k,n_g) =
                       epg_loc*(ro_g_n*X_gk_n(i,j,k,n_g) - ro_g_o*X_gk_o(i,j,k,n_g)) / l_dt - dXdt_n(i,j,k,n_g);
                   }
                 }
@@ -1270,7 +1270,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       } // lev
 
       if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
-  
+
         mfix_idealgas_opensystem_rhs(S_cc, GetVecOfConstPtrs(enthalpy_RHS),
             GetVecOfConstPtrs(species_RHS), get_ro_g_const(),
             get_T_g_const(), get_X_gk_const());

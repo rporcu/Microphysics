@@ -42,7 +42,7 @@ LevelData::LevelData (BoxArray const& ba,
     vort = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
 
     Transfer txfr_idxs(fluid->nspecies(), reactions->nreactions());
-    txfr = new MultiFab(ba, dmap, txfr_idxs.countNoChem, nghost, MFInfo(), factory);
+    txfr = new MultiFab(ba, dmap, txfr_idxs.count, nghost, MFInfo(), factory);
 
     diveu = new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory);
 
@@ -78,10 +78,6 @@ LevelData::LevelData (BoxArray const& ba,
       X_gko = new MultiFab(ba, dmap, fluid->nspecies(), nghost, MFInfo(), factory);
     }
 
-    if (reactions->solve() && fluid->solve_species()) {
-      ChemTransfer chem_txfr_idxs(fluid->nspecies(), reactions->nreactions());
-      chem_txfr = new MultiFab(ba, dmap, chem_txfr_idxs.count, nghost, MFInfo(), factory);
-    }
   }
 }
 
@@ -133,10 +129,6 @@ void LevelData::resetValues (const amrex::Real init_value)
      if (fluid->solve_species()) {
        X_gk->setVal(init_value);
        X_gko->setVal(init_value);
-     }
-
-     if (reactions->solve() && fluid->solve_species()) {
-       chem_txfr->setVal(init_value);
      }
   }
 
@@ -190,10 +182,6 @@ LevelData::~LevelData ()
        if (fluid->solve_species()) {
          delete X_gk;
          delete X_gko;
-       }
-
-       if (reactions->solve() && fluid->solve_species()) {
-         delete chem_txfr;
        }
     }
   }

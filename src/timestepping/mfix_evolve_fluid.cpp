@@ -210,7 +210,7 @@ mfix::EvolveFluid (int nstep,
         // Calculate drag coefficient
         if (m_dem.solve() || m_pic.solve()) {
           Real start_drag = ParallelDescriptor::second();
-          mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(),
+          mfix_calc_txfr_fluid(get_txfr(), get_ep_g(),
                                get_ro_g_old(), get_vel_g_old(), get_T_g_old(),
                                get_X_gk_old(), get_thermodynamic_p_g_old(), time);
 
@@ -233,7 +233,7 @@ mfix::EvolveFluid (int nstep,
 
             Real start_drag = ParallelDescriptor::second();
             amrex::Print() << "\nRecalculating drag ..." << std::endl;
-            mfix_calc_txfr_fluid(get_txfr(), get_chem_txfr(), get_ep_g(),
+            mfix_calc_txfr_fluid(get_txfr(), get_ep_g(),
                                  get_ro_g(), get_vel_g(), get_T_g(), get_X_gk(),
                                  get_thermodynamic_p_g(), new_time);
 
