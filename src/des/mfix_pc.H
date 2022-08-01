@@ -382,7 +382,7 @@ class MFIXParticleContainer final
     int sort_int = -1; // # steps to sort particles
 
 #ifdef AMREX_USE_GPU
-    bool reduceGhostParticles = true;
+    bool reduceGhostParticles = false; // temporarily disable
 #else
     bool reduceGhostParticles = false;
 #endif
