@@ -370,6 +370,15 @@ private:
    int plt_proc      = 0;
    int plt_proc_p    = 0;
    int plt_cost_p    = 0;
+   // Geometry data
+   int plt_impf      = 0;
+   int plt_centroid  = 0;
+   int plt_bndryarea = 0;
+   int plt_bndrycent = 0;
+   int plt_bndrynorm = 0;
+   int plt_areafrac  = 0;
+   int plt_facecent  = 0;
+   int plt_edgecent  = 0;
 
    // Total number of variables to write in plot file
    int pltVarCount = 0;
