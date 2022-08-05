@@ -119,10 +119,6 @@ mfix::Restart (std::string& restart_file,
 
       for (int lev = 0; lev < nlevs; ++lev) {
 
-          RealBox rb(prob_lo,prob_hi);
-          Geom(lev).ProbDomain(rb);
-          Geom(lev).ResetDefaultProbDomain(rb);
-
           BoxArray orig_ba,ba;
           orig_ba.readFrom(is);
           mfixRW->GotoNextLine(is);
@@ -154,16 +150,17 @@ mfix::Restart (std::string& restart_file,
 
           if (Nrep != IntVect::TheUnitVector())
           {
+             RealBox rb(prob_lo,prob_hi);
+             Geom(lev).ProbDomain(rb);
+             Geom(lev).ResetDefaultProbDomain(rb);
+
              Box new_domain(ba.minimalBox());
              geom[lev].Domain(new_domain);
 
              DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
              ReMakeNewLevelFromScratch(lev,ba,dm);
+             make_eb_geometry();
           }
-
-          // This is needed before initializing level MultiFabs: ebfactories
-          // should not change after the eb-dependent MultiFabs are allocated.
-          make_eb_geometry();
 
           // Particle data is loaded into the MFIXParticleContainer's base
           // class using amrex::NeighborParticleContainer::Restart
