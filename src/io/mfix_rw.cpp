@@ -799,7 +799,9 @@ IntVect
 MfixRW::mfix_print_min_epg ()
 {
 
-#ifndef AMREX_USE_GPU
+  ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
+  ReduceData<Real, int, int, int> reduce_data(reduce_op);
+  using ReduceTuple = typename decltype(reduce_data)::Type;
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
@@ -811,22 +813,31 @@ MfixRW::mfix_print_min_epg ()
       Box const& bx = mfi.tilebox();
       Array4<Real const> const& epg = ld.ep_g->const_array(mfi);
 
-      IntVect epg_cell = {-100,-100,-100};
-      int found(0);
-
-      amrex::ParallelFor(bx, [epg, min_epg, &found, &epg_cell, tolerance]
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+      reduce_op.eval(bx, reduce_data, [epg, min_epg, tolerance]
+      AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
       {
-
+        int found(0);
+        int iloc(0);
+        int jloc(0);
+        int kloc(0);
         if( amrex::Math::abs(epg(i,j,k) - min_epg) < tolerance ){
-          epg_cell[0] = i;
-          epg_cell[1] = j;
-          epg_cell[2] = k;
-          found +=1;
+          iloc = i;
+          jloc = j;
+          kloc = k;
+          found = 1;
         }
+        return {found, iloc, jloc, kloc};
       });
 
+      ReduceTuple htuple = reduce_data.value();
+
+      const int found(amrex::get<0>(htuple));
       if(found > 0){
+
+        IntVect epg_cell = {amrex::get<1>(htuple),
+                            amrex::get<2>(htuple),
+                            amrex::get<3>(htuple)};
+
         amrex::Print(Print::AllProcs)
           << std::endl << std::endl << "min epg "  << min_epg
           << "  at " << epg_cell[0] << "  " << epg_cell[1] << "  " << epg_cell[2]
@@ -840,7 +851,7 @@ MfixRW::mfix_print_min_epg ()
 
     } // mfi
   } // lev
-#endif
+
   IntVect fake = {0,0,0};
   return fake;
 }
