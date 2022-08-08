@@ -288,20 +288,20 @@ mfix::mfix_calc_txfr_particle (Real time,
   // Extrapolate velocity Dirichlet bc's to ghost cells
   int extrap_dir_bcs = 1;
 
-  mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
+  m_boundary_conditions.set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 
   if (fluid.solve_enthalpy()) {
-    mfix_set_temperature_bcs(time, T_g_in);
+    m_boundary_conditions.set_temperature_bcs(time, fluid, T_g_in);
   }
 
   if (reactions.solve()) {
 
     const int dir_bc_in = 2;
-    mfix_set_epg_bcs(ep_g_in, dir_bc_in);
+    m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_in);
 
-    mfix_set_density_bcs(time, ro_g_in);
+    m_boundary_conditions.set_density_bcs(time, ro_g_in);
 
-    mfix_set_species_bcs(time, X_gk_in);
+    m_boundary_conditions.set_species_bcs(time, fluid,X_gk_in);
   }
 
   for (int lev = 0; lev < nlev; lev++) {
@@ -327,7 +327,7 @@ mfix::mfix_calc_txfr_particle (Real time,
     {
       const Box& bx = mfi.tilebox();
 
-      set_gradp_bcs(bx, lev, gp_tmp[mfi], domain);
+      m_boundary_conditions.set_gradp_bcs(bx, lev, gp_tmp[mfi], domain);
     }
 
     bool OnSameGrids = ( (dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
@@ -807,5 +807,5 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   // Reset velocity Dirichlet bc's to face values
   extrap_dir_bcs = 0;
-  mfix_set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
+  m_boundary_conditions.set_velocity_bcs(time, vel_g_in, extrap_dir_bcs);
 }

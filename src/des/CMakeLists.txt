@@ -9,7 +9,6 @@ target_sources( mfixcore
    mfix_des_drag_K.H
    mfix_des_rrates_K.H
    mfix_des_parts_gen_K.H
-   mfix_set_gradp_bcs.cpp
    mfix_des_K.H
    mfix_pc.cpp
    mfix_pc.H

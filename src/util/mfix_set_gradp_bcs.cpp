@@ -3,10 +3,10 @@
 using namespace amrex;
 
 void
-mfix::set_gradp_bcs (const Box& /*bx*/,
-                     const int lev,
-                     FArrayBox& gp_fab,
-                     Box& domain)
+MFIXBoundaryConditions::set_gradp_bcs (const Box& /*bx*/,
+                                       const int lev,
+                                       FArrayBox& gp_fab,
+                                       Box& domain)
 {
   // Extract the lower and upper boundaries of Domain
   const IntVect dom_lo(domain.loVect()), dom_hi(domain.hiVect());
@@ -14,12 +14,12 @@ mfix::set_gradp_bcs (const Box& /*bx*/,
   Array4<Real> const& gp_arr = gp_fab.array();
   const IntVect gp_lo(gp_fab.loVect()), gp_hi(gp_fab.hiVect());
 
-  Array4<int> const& bct_ilo = bc_list.bc_ilo[lev]->array();
-  Array4<int> const& bct_ihi = bc_list.bc_ihi[lev]->array();
-  Array4<int> const& bct_jlo = bc_list.bc_jlo[lev]->array();
-  Array4<int> const& bct_jhi = bc_list.bc_jhi[lev]->array();
-  Array4<int> const& bct_klo = bc_list.bc_klo[lev]->array();
-  Array4<int> const& bct_khi = bc_list.bc_khi[lev]->array();
+  Array4<int> const& bct_ilo = m_bc_list.bc_ilo[lev]->array();
+  Array4<int> const& bct_ihi = m_bc_list.bc_ihi[lev]->array();
+  Array4<int> const& bct_jlo = m_bc_list.bc_jlo[lev]->array();
+  Array4<int> const& bct_jhi = m_bc_list.bc_jhi[lev]->array();
+  Array4<int> const& bct_klo = m_bc_list.bc_klo[lev]->array();
+  Array4<int> const& bct_khi = m_bc_list.bc_khi[lev]->array();
 
   if(gp_lo[0] <= dom_lo[0])
   {

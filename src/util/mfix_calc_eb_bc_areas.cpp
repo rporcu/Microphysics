@@ -9,44 +9,48 @@
 using namespace amrex;
 
 void
-mfix::mfix_calc_eb_bc_areas ()
+MFIXBoundaryConditions::calc_eb_bc_areas (MFIXEmbeddedBoundaries& embedded_boundaries,
+                                          Vector< MultiFab* > const& eb_mf)
 {
-  BL_PROFILE("mfix::mfix_calc_eb_bc_areas()");
+  BL_PROFILE("MFIXBoundaryConditions::calc_eb_bc_areas()");
 
-  m_embedded_boundaries.set_compute_area(0);
+  const int nlev = eb_mf.size();
+
+  embedded_boundaries.set_compute_area(0);
 
   // Number of boundary conditions
-  const int nbc = m_boundary_conditions.bc().size();
+  const int nbc = m_bc.size();
 
   amrex::Vector<Real> eb_areas(nbc, Real(0.));
 
   for (int lev = 0; lev < nlev; lev++) {
 
-    const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
+    const GpuArray<Real,3> dx = m_geom[lev].CellSizeArray();
     const Real dx2 = dx[0]*dx[0];
 
-    const auto& factory = EBFactory(lev);
+    const auto& factory =
+      dynamic_cast<EBFArrayBoxFactory const&>(eb_mf[lev]->Factory());
 
     const auto& flags = factory.getMultiEBCellFlagFab();
 
     for(int bcv(0); bcv < nbc; ++bcv) {
 
-      if (m_boundary_conditions.bc(bcv).type != BCList::eb) {
+      if (m_bc[bcv].type != BCList::eb) {
 
         eb_areas[bcv] = Real(0.0);
 
       } else {
 
-        const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
+        const int  has_normal = m_bc[bcv].eb.has_normal;
         amrex::GpuArray<amrex::Real,3> normal{0.};
         if (has_normal) {
-           normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
-           normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
-           normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
+           normal[0] = m_bc[bcv].eb.normal[0];
+           normal[1] = m_bc[bcv].eb.normal[1];
+           normal[2] = m_bc[bcv].eb.normal[2];
         }
 
         const Real pad = std::numeric_limits<float>::epsilon();
-        const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
+        const Real normal_tol = m_bc[bcv].eb.normal_tol;
 
         const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
         const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
@@ -55,9 +59,9 @@ mfix::mfix_calc_eb_bc_areas ()
         ReduceData<Real> reduce_data(reduce_op);
         using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        const Box ic_bx = calc_ic_box(geom[lev], m_boundary_conditions.bc(bcv).region);
+        const Box ic_bx = calc_ic_box(m_geom[lev], m_bc[bcv].region);
 
-        for (MFIter mfi(*(m_leveldata[lev]->ep_g), false); mfi.isValid(); ++mfi) {
+        for (MFIter mfi(*eb_mf[lev], false); mfi.isValid(); ++mfi) {
 
           const Box& bx = mfi.tilebox();
           FabType t = flags[mfi].getType(bx);
@@ -127,7 +131,7 @@ mfix::mfix_calc_eb_bc_areas ()
 
     for(int bcv(0); bcv < nbc; ++bcv) {
 
-      BC_t& bc = m_boundary_conditions.bc(bcv);
+      BC_t& bc = m_bc[bcv];
 
       if (bc.type == BCList::eb) {
         bc.eb.area = eb_areas[bcv];

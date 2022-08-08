@@ -124,12 +124,12 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     }
 
     // Set velocities BC before projection
-    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
+    m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
     // Define "vel" to be U^* - U^n rather than U^*
     if (proj_for_small_dt)
     {
-       mfix_set_velocity_bcs(a_time, vel_g_old_in, 0);
+       m_boundary_conditions.set_velocity_bcs(a_time, vel_g_old_in, 0);
 
        for(int lev = 0; lev <= finest_level; lev++)
           MultiFab::Saxpy(*vel_g_in[lev], -1.0, *vel_g_old_in[lev], 0, 0, 3, vel_g_in[lev]->nGrow());
@@ -163,7 +163,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         {
             // Why are we using this instead of simply multiplying vel and ep with their BCs in place
             // already?
-            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
+            m_boundary_conditions.set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
         }
 
         // We set these to zero because if the values in the covered cells are undefined,
@@ -271,7 +271,7 @@ mfix::PostProjectionDiagnostics(Real a_time,
     //
     // This part is just to plot diveu
     //
-    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
+    m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
     for (int lev(0); lev < nlev; ++lev)
     {
@@ -293,7 +293,7 @@ mfix::PostProjectionDiagnostics(Real a_time,
         {
             // Why are we using this instead of simply multiplying vel and ep with their BCs in place
             // already?
-            set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain() );
+            m_boundary_conditions.set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
         }
 
         // We set these to zero because if the values in the covered cells are undefined,
@@ -310,7 +310,7 @@ mfix::PostProjectionDiagnostics(Real a_time,
     }
 
     // Swap ghost cells and apply BCs to velocity
-    mfix_set_velocity_bcs(a_time, vel_g_in, 0);
+    m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
     // Print level info after projection
     for (int lev(0); lev < nlev; lev++)

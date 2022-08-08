@@ -95,8 +95,12 @@ BCList::MakeBCArrays (int nghost,
 }
 
 
-MFIXBoundaryConditions::MFIXBoundaryConditions (MFIXEmbeddedBoundaries& embedded_boundaries)
-  : m_bc_u_g(50, 0)
+MFIXBoundaryConditions::MFIXBoundaryConditions (amrex::Vector<amrex::Geometry>& geom,
+                                                BCList& bc_list,
+                                                MFIXEmbeddedBoundaries& embedded_boundaries)
+  : m_geom(geom)
+  , m_bc_list(bc_list)
+  , m_bc_u_g(50, 0)
   , m_bc_v_g(50, 0)
   , m_bc_w_g(50, 0)
   , m_bc_t_g(50, 0)

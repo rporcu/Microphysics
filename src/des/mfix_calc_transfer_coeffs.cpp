@@ -144,7 +144,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // We copy the value inside the domain to the outside to avoid
   // unphysical volume fractions.
   const int dir_bc_in = 2;
-  mfix_set_epg_bcs(ep_g_in, dir_bc_in);
+  m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_in);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -610,5 +610,5 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // Reset the volume fractions back to the correct values at
   // inflow faces.
   const int dir_bc_out = 1;
-  mfix_set_epg_bcs(ep_g_in, dir_bc_out);
+  m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_out);
 }

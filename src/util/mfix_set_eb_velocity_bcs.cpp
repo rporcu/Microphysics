@@ -9,13 +9,17 @@
 using namespace amrex;
 
 void
-mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_g)
+MFIXBoundaryConditions::set_eb_velocity_bcs (Real time_in,
+                                             MFIXEmbeddedBoundaries& embedded_boundaries,
+                                             Vector< MultiFab* > const& eb_vel_g)
 {
-  BL_PROFILE("mfix::mfix_set_eb_velocity_bcs()");
+  BL_PROFILE("MFIXBoundaryConditions::set_eb_velocity_bcs()");
 
-  if(m_embedded_boundaries.compute_area()) {
-    mfix_calc_eb_bc_areas();
+  if(embedded_boundaries.compute_area()) {
+    calc_eb_bc_areas(embedded_boundaries, eb_vel_g);
   }
+
+  const int nlev = eb_vel_g.size();
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -42,27 +46,27 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 
            const auto &eb_norm_arr  = factory.getBndryNormal()[mfi].const_array();
 
-           for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+           for (int bcv(0); bcv < m_bc.size(); ++bcv) {
 
-             if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
+             if (m_bc[bcv].type == BCList::eb) {
 
-               const Box ic_bx = calc_ic_box(geom[lev], m_boundary_conditions.bc(bcv).region);
+               const Box ic_bx = calc_ic_box(m_geom[lev], m_bc[bcv].region);
 
                if (ic_bx.intersects(bx)) {
 
                  // Intersection of ic box and mfi box
                  const Box bx_int = bx&(ic_bx);
 
-                 const int  has_normal = m_boundary_conditions.bc(bcv).eb.has_normal;
+                 const int  has_normal = m_bc[bcv].eb.has_normal;
                  amrex::GpuArray<amrex::Real,3> normal{0.};
                  if (has_normal) {
-                    normal[0] = m_boundary_conditions.bc(bcv).eb.normal[0];
-                    normal[1] = m_boundary_conditions.bc(bcv).eb.normal[1];
-                    normal[2] = m_boundary_conditions.bc(bcv).eb.normal[2];
+                    normal[0] = m_bc[bcv].eb.normal[0];
+                    normal[1] = m_bc[bcv].eb.normal[1];
+                    normal[2] = m_bc[bcv].eb.normal[2];
                  }
 
                  const Real pad = std::numeric_limits<float>::epsilon();
-                 const Real normal_tol = m_boundary_conditions.bc(bcv).eb.normal_tol;
+                 const Real normal_tol = m_bc[bcv].eb.normal_tol;
 
                  const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
                  const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
@@ -73,23 +77,23 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
                  GpuArray<amrex::Real,3> vel_comps{0.};
 
                  // Flow is specified as a velocity magnitude
-                 if ( m_boundary_conditions.bc(bcv).fluid.eb_vel_is_mag ) {
+                 if ( m_bc[bcv].fluid.eb_vel_is_mag ) {
 
-                   vel_mag = m_boundary_conditions.bc(bcv).fluid.get_velocity_mag();
+                   vel_mag = m_bc[bcv].fluid.get_velocity_mag();
 
                  // Volumetric flowrate is specified
-                 } else if ( m_boundary_conditions.bc(bcv).fluid.eb_has_volflow ) {
+                 } else if ( m_bc[bcv].fluid.eb_has_volflow ) {
 
-                   Real eb_area = m_boundary_conditions.bc(bcv).eb.area;
+                   Real eb_area = m_bc[bcv].eb.area;
                    if ( eb_area > Real(0.0) ) {
-                     Real volflow = m_boundary_conditions.bc(bcv).fluid.get_volflow();
+                     Real volflow = m_bc[bcv].fluid.get_volflow();
                      vel_mag = volflow / eb_area;
                    }
 
                  // Flow is defined by velocity components
                  } else {
                     has_comps = 1;
-                    const auto& bc_vels = m_boundary_conditions.bc(bcv).fluid.get_velocity(time_in);
+                    const auto& bc_vels = m_bc[bcv].fluid.get_velocity(time_in);
                     vel_comps[0] = bc_vels[0];
                     vel_comps[1] = bc_vels[1];
                     vel_comps[2] = bc_vels[2];
@@ -139,6 +143,6 @@ mfix::mfix_set_eb_velocity_bcs (Real time_in, Vector< MultiFab* > const& eb_vel_
 
      // Do this after as well as before to pick up terms that got updated in the
      // call above
-     eb_vel_g[lev]->FillBoundary(geom[lev].periodicity());
+     eb_vel_g[lev]->FillBoundary(m_geom[lev].periodicity());
   }
 }

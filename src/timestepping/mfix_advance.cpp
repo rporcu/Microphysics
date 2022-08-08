@@ -44,7 +44,9 @@ mfix::mfix_project_velocity ()
     }
 
     if (m_embedded_boundaries.has_flow()) {
-       mfix_set_eb_velocity_bcs(time, eb_flow_vel);
+
+       m_boundary_conditions.set_eb_velocity_bcs(time, m_embedded_boundaries,
+           eb_flow_vel);
     }
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
@@ -80,20 +82,20 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << "\n";
 
   // Fill ghost nodes and reimpose boundary conditions
-  mfix_set_velocity_bcs(time, get_vel_g(), 0);
-  mfix_set_density_bcs(time, get_ro_g());
-  mfix_set_tracer_bcs(time, get_trac());
+  m_boundary_conditions.set_velocity_bcs(time, get_vel_g(), 0);
+  m_boundary_conditions.set_density_bcs(time, get_ro_g());
+  m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
   if (fluid.solve_enthalpy()) {
-    mfix_set_temperature_bcs(time, get_T_g());
-    mfix_set_enthalpy_bcs(time, get_h_g());
+    m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+    m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
   }
 
   if (fluid.solve_enthalpy() && m_embedded_boundaries.fix_temperature())
-    mfix_set_eb_temperature_bcs(get_T_g_on_eb());
+    m_boundary_conditions.set_eb_temperature_bcs(get_T_g_on_eb());
 
   if (fluid.solve_species())
-    mfix_set_species_bcs(time, get_X_gk());
+    m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
   // Copy vel_g and p_g into vel_go and p_go
   for (int lev = 0; lev <= finest_level; lev++) {
@@ -194,8 +196,12 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
 
   if (m_embedded_boundaries.has_flow()) {
-     mfix_set_eb_velocity_bcs(time, eb_flow_vel);
-     mfix_set_eb_scalar_bcs(eb_flow_scalars, eb_flow_species);
+
+     m_boundary_conditions.set_eb_velocity_bcs(time, m_embedded_boundaries,
+         eb_flow_vel);
+
+     m_boundary_conditions.set_eb_scalar_bcs(fluid, m_embedded_boundaries,
+         eb_flow_scalars, eb_flow_species);
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)
@@ -247,18 +253,18 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
     }
 
     // Reset the boundary values (necessary if they are time-dependent)
-    mfix_set_velocity_bcs(time, get_vel_g(), 0);
-    mfix_set_density_bcs(time, get_ro_g());
-    mfix_set_tracer_bcs(time, get_trac());
+    m_boundary_conditions.set_velocity_bcs(time, get_vel_g(), 0);
+    m_boundary_conditions.set_density_bcs(time, get_ro_g());
+    m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
     if (fluid.solve_enthalpy())
-      mfix_set_temperature_bcs(time, get_T_g());
+      m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
 
     if (fluid.solve_enthalpy())
-      mfix_set_enthalpy_bcs(time, get_h_g());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
 
     if (fluid.solve_species())
-      mfix_set_species_bcs(time, get_X_gk());
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
   }
 
   for (int lev = 0; lev <= finest_level; lev++)
@@ -733,7 +739,7 @@ mfix::steady_state_reached (Real dt, int iter)
 
     Real time = 0.;
 
-    mfix_set_velocity_bcs(time, get_vel_g(), 0);
+    m_boundary_conditions.set_velocity_bcs(time, get_vel_g(), 0);
 
     //
     // Make sure velocity is up to date

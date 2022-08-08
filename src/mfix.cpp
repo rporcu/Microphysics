@@ -63,7 +63,7 @@ mfix::~mfix ()
 
 // Constructor
 mfix::mfix ()
-  : m_boundary_conditions(m_embedded_boundaries)
+  : m_boundary_conditions(geom, bc_list, m_embedded_boundaries)
   , bc_list(maxLevel() + 1)
 {
     // NOTE: Geometry on all levels has just been defined in the AmrCore

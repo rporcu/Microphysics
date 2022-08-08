@@ -19,7 +19,7 @@ mfix::FillPatchVel (int lev,
     // Hack so that ghost cells are not undefined
     mf.setVal(covered_val);
 
-    set_velocity_bc_values(time);
+    m_boundary_conditions.set_velocity_bc_values(time);
 
     const int minf = BCList::minf;
 

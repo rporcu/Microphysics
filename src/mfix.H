@@ -61,6 +61,8 @@ enum struct ScalarToFill { Density, Tracer, Enthalpy, VolFrac, Temperature};
 class mfix : public AmrCore
 {
   public:
+    static constexpr Real covered_val = 1.e40;
+
     // Constructor
     mfix ();
 
@@ -150,7 +152,7 @@ class mfix : public AmrCore
     void Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
 
     void mfix_usr0 () const;
-    void mfix_usr1 (Real time) const;
+    static void mfix_usr1 (Real time);
     void mfix_usr2 () const;
     void mfix_usr3 () const;
 
@@ -285,98 +287,6 @@ class mfix : public AmrCore
                                    Vector<MultiFab const*> const& ep_w_mac,
                                    Vector<MultiFab const*> const& eb_vel);
 
-    void mfix_set_velocity_bcs (Real time,
-                                Vector< MultiFab* > const& vel,
-                                int extrap_dir_bcs);
-
-    void mfix_set_epg_bcs (const Vector< MultiFab* >& ep_g,
-                           const int dir_bc);
-
-    void mfix_set_enthalpy_bcs (Real time,
-                                Vector< MultiFab* > const& h_g);
-
-    void mfix_set_temperature_bcs (Real time,
-                                   Vector< MultiFab* > const& T_g);
-
-    void mfix_calc_eb_bc_areas();
-
-    void mfix_set_eb_temperature_bcs (Vector< MultiFab* > const& eb_T_g_in);
-
-    void mfix_set_eb_velocity_bcs (Real time,
-                                   Vector< MultiFab* > const& eb_vel_g_in);
-
-    void mfix_set_eb_scalar_bcs (Vector< MultiFab* > const& eb_scalars,
-                                 Vector< MultiFab* > const& eb_species);
-
-    void mfix_set_density_bcs (Real time,
-                               Vector< MultiFab* > const& ro_g);
-
-    void mfix_set_tracer_bcs (Real time,
-                              Vector< MultiFab* > const& trac);
-
-    void mfix_set_species_bcs (Real time,
-                               Vector< MultiFab* > const& X_gk);
-
-    void set_velocity_bcs (Real time,
-                           const int lev,
-                           FArrayBox& vel_fab,
-                           const Box& domain,
-                           const int* extrap_dir_bcs);
-
-    void set_epg_bcs (const int lev,
-                      FArrayBox& eps_fab,
-                      const Box& domain,
-                      const int* extrap_dir_bcs);
-
-    void set_enthalpy_bcs (Real time,
-                           const int lev,
-                           FArrayBox& h_g_fab,
-                           const Box& domain);
-
-    void set_temperature_bcs (Real time,
-                              const int lev,
-                              FArrayBox& T_g_fab,
-                              const Box& domain);
-
-    void set_eb_temperature_bcs (const Box& sbx,
-                                 const Box& bx,
-                                 const Box& domain,
-                                 const Real dx,
-                                 const Real dy,
-                                 const Real dz,
-                                 const GpuArray<Real, AMREX_SPACEDIM>& plo,
-                                 FArrayBox& eb_T_g_fab,
-                                 const EBCellFlagFab& flags_fab);
-
-    void set_density_bcs (Real time,
-                          const int lev,
-                          FArrayBox& scal_fab,
-                          const Box& domain);
-
-    void set_tracer_bcs (Real time,
-                         const int lev,
-                         FArrayBox& trac_fab,
-                         const Box& domain);
-
-    void set_molecular_weight_bcs (Real time,
-                                   const int lev,
-                                   FArrayBox& scal_fab,
-                                   const Box& domain);
-
-    void set_mass_fractions_g_bcs (Real time,
-                                   const int lev,
-                                   FArrayBox& X_gk_fab,
-                                   const Box& domain);
-
-    void set_vec_bcs (const int lev,
-                      FArrayBox& vec_fab,
-                      const Box& domain);
-
-    void set_gradp_bcs (const Box& bx,
-                        const int lev,
-                        FArrayBox& gp_fab,
-                        Box& domain);
-
     void set_ls_inflow (const int lev,
                         FArrayBox& ls_phi_fab,
                         const Box& domain,
@@ -452,12 +362,6 @@ class mfix : public AmrCore
 
     void set_bcrec_lo (const int lev, const int dir, const int l_type);
     void set_bcrec_hi (const int lev, const int dir, const int l_type);
-
-    void set_velocity_bc_values (amrex::Real time_in);
-    void set_temperature_bc_values (amrex::Real time_in);
-    void set_density_bc_values (amrex::Real time_in);
-    void set_tracer_bc_values (amrex::Real time_in);
-    void set_species_bc_values (amrex::Real time_in);
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -1163,7 +1067,6 @@ public:
 
     Real sum_vol_orig;
 
-    Real covered_val = 1.e40;
     Real init_value = 9.87654321e32;
 
 

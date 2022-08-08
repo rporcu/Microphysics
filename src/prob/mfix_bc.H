@@ -64,7 +64,9 @@ class MFIXBoundaryConditions
 {
   public:
     // Constructor
-    MFIXBoundaryConditions (MFIXEmbeddedBoundaries& embedded_boundaries);
+    MFIXBoundaryConditions (amrex::Vector<amrex::Geometry>& geom,
+                            BCList& bc_list,
+                            MFIXEmbeddedBoundaries& embedded_boundaries);
 
     void Initialize (amrex::Geometry& geom,
                      const MFIXRegions& regions,
@@ -88,6 +90,68 @@ class MFIXBoundaryConditions
     void read_bc_species (amrex::ParmParse pp,
                           const amrex::Vector<std::string> species,
                           FLUID_t* fluid);
+
+    void set_epg_bcs (const amrex::Vector< amrex::MultiFab* >& ep_g,
+                      const int dir_bc);
+
+    void set_density_bc_values (amrex::Real time_in);
+
+    void set_density_bcs (amrex::Real time,
+                          amrex::Vector< amrex::MultiFab* > const& ro_g);
+
+    void set_velocity_bc_values (amrex::Real time_in);
+
+    void set_velocity_bcs (amrex::Real time,
+                           amrex::Vector< amrex::MultiFab* > const& vel_g,
+                           int extrap_dir_bcs);
+
+    void set_eb_velocity_bcs (amrex::Real time,
+                              MFIXEmbeddedBoundaries& embedded_boundaries,
+                              amrex::Vector< amrex::MultiFab* > const& vel_g_on_EB);
+
+    void set_tracer_bc_values (amrex::Real time_in,
+                               MFIXFluidPhase& fluid);
+
+    void set_tracer_bcs (amrex::Real time,
+                         MFIXFluidPhase& fluid,
+                         amrex::Vector< amrex::MultiFab* > const& trac);
+
+    void set_temperature_bc_values (amrex::Real time_in,
+                                    MFIXFluidPhase& fluid);
+
+    void set_temperature_bcs (amrex::Real time,
+                              MFIXFluidPhase& fluid,
+                              amrex::Vector< amrex::MultiFab* > const& T_g);
+
+    void set_eb_temperature_bcs (amrex::Vector< amrex::MultiFab* > const& T_g_on_EB);
+
+    void set_enthalpy_bcs (amrex::Real time,
+                           MFIXFluidPhase& fluid,
+                           amrex::Vector< amrex::MultiFab* > const& h_g);
+
+    void set_species_bc_values (amrex::Real time_in,
+                                MFIXFluidPhase& fluid);
+
+    void set_species_bcs (amrex::Real time,
+                          MFIXFluidPhase& fluid,
+                          amrex::Vector< amrex::MultiFab* > const& X_gk);
+
+    void set_eb_scalar_bcs (MFIXFluidPhase& fluid,
+                            MFIXEmbeddedBoundaries& embedded_boundaries,
+                            amrex::Vector< amrex::MultiFab* > const& scalars_on_EB,
+                            amrex::Vector< amrex::MultiFab* > const& species_on_EB);
+
+    void set_gradp_bcs (const amrex::Box& bx,
+                        const int lev,
+                        amrex::FArrayBox& gp_fab,
+                        amrex::Box& domain);
+
+    void set_vec_bcs (const int lev,
+                      amrex::FArrayBox& vec_fab,
+                      const amrex::Box& domain);
+
+    void calc_eb_bc_areas (MFIXEmbeddedBoundaries& embedded_boundaries,
+                           amrex::Vector< amrex::MultiFab* > const& eb_mf);
 
     const amrex::Vector<int>& bc_xlo () const { return m_bc_lo[0]; }
     const amrex::Vector<int>& bc_xhi () const { return m_bc_hi[0]; }
@@ -195,6 +259,9 @@ class MFIXBoundaryConditions
     amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; };
 
   private:
+    amrex::Vector<amrex::Geometry>& m_geom;
+    BCList& m_bc_list;
+
     // BC types for each different variable
     std::map< std::string, amrex::Gpu::DeviceVector<int> > m_vel_g_bc_types;
     std::map< std::string, amrex::Gpu::DeviceVector<int> > m_ro_g_bc_types;

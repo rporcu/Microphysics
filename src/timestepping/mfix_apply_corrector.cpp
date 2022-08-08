@@ -214,7 +214,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 //    const bool explicit_diffusive_species  = false;
     const bool explicit_diffusive_species  = true;
 
-    mfix_set_density_bcs(time, get_ro_g());
+    m_boundary_conditions.set_density_bcs(time, get_ro_g());
 
     {
       const bool constraint = !(fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IncompressibleFluid);
@@ -225,12 +225,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       if (fluid.solve_enthalpy())
       {
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
       }
 
       if (fluid.solve_species())
-        mfix_set_species_bcs(time, get_X_gk());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
       compute_laps(update_lapT, update_lapS, update_flux, lap_T, lap_trac, J_gk,
                    get_T_g(), get_trac(), get_X_gk(), get_ep_g_const(),
@@ -240,12 +240,12 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       // on the faces (the diffusion operator can move those to ghost cell centers)
       if (fluid.solve_enthalpy())
       {
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
       }
 
       if (fluid.solve_species())
-        mfix_set_species_bcs(time, get_X_gk());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
     }
 
 
@@ -373,7 +373,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
 
     if (fluid.solve_species())
-      mfix_set_species_bcs(time, get_X_gk());
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
     mfix_compute_convective_term(conv_u, conv_s, conv_X, GetVecOfPtrs(vel_forces),
         GetVecOfPtrs(tra_forces), get_vel_g_const(), get_ep_g(), get_ro_g_const(),
@@ -450,7 +450,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         } // lev
 
         Real half_time = time + 0.5*l_dt;
-        mfix_set_density_bcs(half_time, GetVecOfPtrs(density_nph));
+        m_boundary_conditions.set_density_bcs(half_time, GetVecOfPtrs(density_nph));
 
     } // not constant density
 
@@ -540,9 +540,9 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // When using implicit diffusion for species, we "Add" (subtract) the
         // correction term computed at time t^{star,star} to the RHS before
         // doing the implicit diffusion
-        mfix_set_epg_bcs(get_ep_g(), 0);
-        mfix_set_density_bcs(time, get_ro_g());
-        mfix_set_species_bcs(time, get_X_gk());
+        m_boundary_conditions.set_epg_bcs(get_ep_g(), 0);
+        m_boundary_conditions.set_density_bcs(time, get_ro_g());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
         // Convert "ep_g" into (rho * ep_g)
         for (int lev = 0; lev <= finest_level; lev++)
@@ -558,7 +558,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                              0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
-        mfix_set_species_bcs(time, get_X_gk());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
         // *********************************************************************
         // Correction
@@ -634,7 +634,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // Note we need to call the bc routines again to enforce the ext_dir
         // condition on the faces (the diffusion operator moved those to ghost
         // cell centers)
-        mfix_set_species_bcs(time, get_X_gk());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
       }
 
       // Update ghost cells
@@ -925,8 +925,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
           } // mfi
         } // lev
 
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
 
         // NOTE: we do this call before multiplying ep_g by ro_g
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
@@ -935,8 +935,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_enthalpy_bcs(time, get_h_g());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
       }
 
       // ***********************************************************************
@@ -1013,14 +1013,14 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
                 MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                                    0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
-            mfix_set_tracer_bcs(time, get_trac());
+            m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
-            // mfix_set_tracer_bcs (new_time, get_trac(), 0);
+            // mfix_set_tracer_bcs (new_time, fluid, get_trac(), 0);
             diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), 0.5*l_dt);
 
             // We call the bc routines again to enforce the ext_dir condition
             // on the faces (the diffusion operator can move those to ghost cell centers)
-            mfix_set_tracer_bcs(time, get_trac());
+            m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
             // Convert (rho * ep_g) back into ep_g
             for (int lev = 0; lev <= finest_level; lev++)

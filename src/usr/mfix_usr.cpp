@@ -13,7 +13,7 @@ mfix::mfix_usr0 () const
 }
 
 void
-mfix::mfix_usr1 (Real /*time*/) const
+mfix::mfix_usr1 (Real /*time*/)
 {
   // const int dim_bc = get_dim_bc();
 

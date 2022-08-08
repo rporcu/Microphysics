@@ -1065,25 +1065,25 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       // This sets bcs for ep_g
       Real time = 0.0;
 
-      mfix_set_density_bcs(time, get_ro_g());
-      mfix_set_density_bcs(time, get_ro_g_old());
+      m_boundary_conditions.set_density_bcs(time, get_ro_g());
+      m_boundary_conditions.set_density_bcs(time, get_ro_g_old());
 
-      mfix_set_tracer_bcs(time, get_trac());
-      mfix_set_tracer_bcs(time, get_trac_old());
+      m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
+      m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac_old());
 
       if (fluid.solve_enthalpy()) {
-        mfix_set_temperature_bcs(time, get_T_g());
-        mfix_set_temperature_bcs(time, get_T_g_old());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
       }
 
       if (fluid.solve_enthalpy()) {
-        mfix_set_enthalpy_bcs(time, get_h_g());
-        mfix_set_enthalpy_bcs(time, get_h_g_old());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g_old());
       }
 
       if (fluid.solve_species()) {
-        mfix_set_species_bcs(time, get_X_gk());
-        mfix_set_species_bcs(time, get_X_gk_old());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
       }
 
       InitialRedistribution(time);
@@ -1099,7 +1099,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     else
     {
       const int dir_bc = 1;
-      mfix_set_epg_bcs(get_ep_g(), dir_bc);
+      m_boundary_conditions.set_epg_bcs(get_ep_g(), dir_bc);
 
       const Real* dx = geom[0].CellSize();
       const Real cell_volume = dx[0] * dx[1] * dx[2];
@@ -1119,17 +1119,17 @@ mfix::mfix_set_bc0 ()
     Real time = 0.0;
 
     if (fluid.solve_enthalpy()) {
-      mfix_set_temperature_bcs(time, get_T_g());
-      mfix_set_enthalpy_bcs(time, get_h_g());
+      m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
     }
 
     if (fluid.solve_species())
-      mfix_set_species_bcs(time, get_X_gk());
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
 
    // Put velocity Dirichlet bc's on faces
    int extrap_dir_bcs = 0;
 
-   mfix_set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
+   m_boundary_conditions.set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
 }
 
 void
