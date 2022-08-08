@@ -29,11 +29,6 @@ void set_ic_ro_g (const Box& sbx, const Box& domain, const Real dx,
                   const Real dy, const Real dz, const GpuArray<Real,3>& plo,
                   MFIXInitialConditions& initial_conditions, FArrayBox& ro_g_fab);
 
-void set_ic_thermo_p_g (const Box& sbx, const Box& domain, const Real dx,
-                        const Real dy, const Real dz, const GpuArray<Real,3>& plo,
-                        MFIXInitialConditions& initial_conditions,
-                        FArrayBox& p_g_fab, const MFIXFluidPhase& fluid);
-
 void init_helix (const Box& bx, const Box& domain, FArrayBox& vel_g_fab,
                  const Real dx, const Real dy, const Real dz);
 
@@ -130,8 +125,7 @@ void init_fluid (const Box& sbx,
       (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
        fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
 
-    set_ic_thermo_p_g(sbx, domain, dx, dy, dz, plo, initial_conditions,
-        (*ld.thermodynamic_p_g)[mfi], fluid);
+    *(ld.thermodynamic_p_g) = fluid.thermodynamic_pressure();
   }
 }
 
@@ -847,131 +841,6 @@ void set_ic_species_g (const Box& sbx,
     Gpu::synchronize();
 
   }
-}
-
-//!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
-//!                                                                      !
-//!  Purpose: Set fluid thermodynamic pressure initial conditions.       !
-//!                                                                      !
-//!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^!
-void set_ic_thermo_p_g (const Box& sbx,
-                        const Box& domain,
-                        const Real dx,
-                        const Real dy,
-                        const Real dz,
-                        const GpuArray<Real, 3>& plo,
-                        MFIXInitialConditions& initial_conditions,
-                        FArrayBox& thermodynamic_pressure_fab,
-                        const MFIXFluidPhase& fluid)
-{
-  const IntVect slo(sbx.loVect());
-  const IntVect shi(sbx.hiVect());
-
-  const IntVect domlo(domain.loVect());
-  const IntVect domhi(domain.hiVect());
-
-  Array4<Real> const& thermo_p_g = thermodynamic_pressure_fab.array();
-
-  // Set the initial conditions.
-  for(int icv(0); icv < initial_conditions.ic().size(); ++icv)
-  {
-    int i_w(0), j_s(0), k_b(0);
-    int i_e(0), j_n(0), k_t(0);
-
-    calc_cell_ic(dx, dy, dz,
-                 initial_conditions.ic(icv).region->lo(), initial_conditions.ic(icv).region->hi(),
-                 plo.data(),
-                 i_w, i_e, j_s, j_n, k_b, k_t);
-
-    const int istart = std::max(slo[0], i_w);
-    const int jstart = std::max(slo[1], j_s);
-    const int kstart = std::max(slo[2], k_b);
-    const int iend   = std::min(shi[0], i_e);
-    const int jend   = std::min(shi[1], j_n);
-    const int kend   = std::min(shi[2], k_t);
-
-    const Real pressure = fluid.thermodynamic_pressure();
-
-    // Define the function
-    auto set_pressure = [thermo_p_g,pressure]
-      AMREX_GPU_DEVICE (int i, int j, int k) -> void
-    { thermo_p_g(i,j,k) = pressure; };
-
-    {
-      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-      const Box box1(low1, hi1);
-
-      ParallelFor(box1, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      { set_pressure(i,j,k); });
-
-      if(slo[0] < domlo[0] && domlo[0] == istart) {
-
-        const IntVect low2(slo[0], jstart, kstart), hi2(istart-1, jend, kend);
-        const Box box2(low2, hi2);
-
-        ParallelFor(box2, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-
-      if(shi[0] > domhi[0] && domhi[0] == iend) {
-
-        const IntVect low3(iend+1, jstart, kstart), hi3(shi[0], jend, kend);
-        const Box box3(low3, hi3);
-
-        ParallelFor(box3, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-    }
-
-    {
-      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-      const Box box1(low1, hi1);
-
-      ParallelFor(box1, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      { set_pressure(i,j,k); });
-
-      if (slo[1] < domlo[1] && domlo[1] == jstart) {
-        const IntVect low2(istart, slo[1], kstart), hi2(iend, jstart-1, kend);
-        const Box box2(low2, hi2);
-
-        ParallelFor(box2, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-
-      if (shi[1] > domhi[1] && domhi[1] == jend) {
-        const IntVect low3(istart, jend+1, kstart), hi3(iend, shi[1], kend);
-        const Box box3(low3, hi3);
-
-        ParallelFor(box3, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-    }
-
-    {
-      const IntVect low1(istart, jstart, kstart), hi1(iend, jend, kend);
-      const Box box1(low1, hi1);
-
-      ParallelFor(box1, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-      { set_pressure(i,j,k); });
-
-      if (slo[2] < domlo[2] && domlo[2] == kstart) {
-        const IntVect low2(istart, jstart, slo[2]), hi2(iend, jend, kstart-1);
-        const Box box2(low2, hi2);
-
-        ParallelFor(box2, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-
-      if (shi[2] > domhi[2] && domhi[2] == kend) {
-        const IntVect low3(istart, jstart, kend+1), hi3(iend, jend, shi[2]);
-        const Box box3(low3, hi3);
-
-        ParallelFor(box3, [set_pressure] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        { set_pressure(i,j,k); });
-      }
-    }
-  }
-
 }
 
 //!vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!

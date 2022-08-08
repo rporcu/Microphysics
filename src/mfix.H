@@ -237,7 +237,7 @@ class mfix : public AmrCore
                                   Vector< MultiFab* > const& vel_g_in,
                                   Vector< MultiFab* > const& T_g_in,
                                   Vector< MultiFab* > const& X_gk_in,
-                                  Vector< MultiFab* > const& pressure_g_in,
+                                  Vector< Real* > const& pressure_g_in,
                                   Vector< MultiFab* > const& gp_in);
 
     template <typename F1>
@@ -247,7 +247,7 @@ class mfix : public AmrCore
                                   Vector< MultiFab* > const& vel_g_in,
                                   Vector< MultiFab* > const& T_g_in,
                                   Vector< MultiFab* > const& X_gk_in,
-                                  Vector< MultiFab* > const& pressure_g_in,
+                                  Vector< Real* > const& pressure_g_in,
                                   Vector< MultiFab* > const& gp_in,
                                   F1 HeterogeneousRatesFunc);
 
@@ -413,7 +413,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< MultiFab* > const& pressure_g_in,
+                                    Vector< Real* > const& pressure_g_in,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
@@ -422,7 +422,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< MultiFab* > const& pressure_g_in,
+                                    Vector< Real* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
 
@@ -432,7 +432,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< MultiFab* > const& pressure_g_in,
+                                    Vector< Real* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff,
                                     F3 HeterogeneousRRates);
@@ -666,7 +666,7 @@ public:
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< MultiFab* > const& pressure_g_in);
+                                    Vector< Real* > const& pressure_g_in);
 
     void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
@@ -674,7 +674,7 @@ public:
                                Vector< MultiFab* > const& vel_g_in,
                                Vector< MultiFab* > const& T_g_in,
                                Vector< MultiFab* > const& X_gk_in,
-                               Vector< MultiFab* > const& pressure_g_in,
+                               Vector< Real* > const& pressure_g_in,
                                Real time);
 
   public:
@@ -857,7 +857,7 @@ public:
                                          Vector< MultiFab const* > const& ro_g,
                                          Vector< MultiFab const* > const& T_g,
                                          Vector< MultiFab const* > const& X_gk,
-                                         Vector< MultiFab const* > const& pressure_g,
+                                         Vector< Real const* > const& pressure_g,
                                          Vector< Real >& avgSigma,
                                          Vector< Real >& avgTheta);
 
@@ -920,8 +920,8 @@ public:
     Vector< MultiFab* > get_gp () noexcept;
     Vector< MultiFab* > get_p_g () noexcept;
     Vector< MultiFab* > get_p_g_old () noexcept;
-    Vector< MultiFab* > get_thermodynamic_p_g () noexcept;
-    Vector< MultiFab* > get_thermodynamic_p_g_old () noexcept;
+    Vector< Real* > get_thermodynamic_p_g () noexcept;
+    Vector< Real* > get_thermodynamic_p_g_old () noexcept;
     Vector< MultiFab* > get_T_g () noexcept;
     Vector< MultiFab* > get_T_g_old () noexcept;
     Vector< MultiFab* > get_h_g () noexcept;
@@ -952,8 +952,8 @@ public:
     amrex::Vector< amrex::MultiFab const* > get_X_gk_const () const noexcept;
     amrex::Vector< amrex::MultiFab const* > get_X_gk_old_const () const noexcept;
 
-    amrex::Vector< amrex::MultiFab const* > get_thermodynamic_p_g_const () const noexcept;
-    amrex::Vector< amrex::MultiFab const* > get_thermodynamic_p_g_old_const () const noexcept;
+    amrex::Vector< Real const* > get_thermodynamic_p_g_const () const noexcept;
+    amrex::Vector< Real const* > get_thermodynamic_p_g_old_const () const noexcept;
 
     amrex::Vector< MultiFab const* > get_divtau_const () const noexcept;
 

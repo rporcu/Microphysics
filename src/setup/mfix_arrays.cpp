@@ -223,35 +223,6 @@ mfix::RegridArrays (int lev)
     std::swap(m_leveldata[lev]->diveu, diveu_new);
     delete diveu_new;
 
-    if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
-        fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
-      // Gas thermodynamic pressure
-      MultiFab* thermodynamic_p_g_new = new MultiFab(grids[lev], dmap[lev],
-                                                     m_leveldata[lev]->thermodynamic_p_g->nComp(),
-                                                     m_leveldata[lev]->thermodynamic_p_g->nGrow(),
-                                                     MFInfo(), *ebfactory[lev]);
-      thermodynamic_p_g_new->setVal(0);
-      thermodynamic_p_g_new->ParallelCopy(*m_leveldata[lev]->thermodynamic_p_g, 0, 0,
-                                          m_leveldata[lev]->thermodynamic_p_g->nComp(),
-                                          src_ngrow, m_leveldata[lev]->thermodynamic_p_g->nGrow(),
-                                          geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->thermodynamic_p_g, thermodynamic_p_g_new);
-      delete thermodynamic_p_g_new;
-
-      // Old gas thermodynamic pressure
-      MultiFab* thermodynamic_p_go_new = new MultiFab(grids[lev], dmap[lev],
-                                                      m_leveldata[lev]->thermodynamic_p_go->nComp(),
-                                                      m_leveldata[lev]->thermodynamic_p_go->nGrow(),
-                                                      MFInfo(), *ebfactory[lev]);
-      thermodynamic_p_go_new->setVal(0);
-      thermodynamic_p_go_new->ParallelCopy(*m_leveldata[lev]->thermodynamic_p_go, 0, 0,
-                                           m_leveldata[lev]->thermodynamic_p_go->nComp(),
-                                    src_ngrow, m_leveldata[lev]->thermodynamic_p_go->nGrow(),
-                                    geom[lev].periodicity());
-      std::swap(m_leveldata[lev]->thermodynamic_p_go, thermodynamic_p_go_new);
-      delete thermodynamic_p_go_new;
-    }
-
     if (fluid.solve_enthalpy() ||
         (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
          fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {

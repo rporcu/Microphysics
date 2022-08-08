@@ -20,7 +20,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                             Vector< MultiFab* > const& vel_g_in,
                             Vector< MultiFab* > const& T_g_in,
                             Vector< MultiFab* > const& X_gk_in,
-                            Vector< MultiFab* > const& pressure_g_in,
+                            Vector< Real* > const& pressure_g_in,
                             const Real time)
 {
   BL_PROFILE("mfix::mfix_calc_txfr_fluid()");
@@ -230,7 +230,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                                Vector< MultiFab* > const& vel_g_in,
                                Vector< MultiFab* > const& T_g_in,
                                Vector< MultiFab* > const& X_gk_in,
-                               Vector< MultiFab* > const& pressure_g_in,
+                               Vector< Real* > const& pressure_g_in,
                                Vector< MultiFab* > const& gp_in)
 {
   if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
@@ -250,7 +250,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                                Vector< MultiFab* > const& vel_g_in,
                                Vector< MultiFab* > const& T_g_in,
                                Vector< MultiFab* > const& X_gk_in,
-                               Vector< MultiFab* > const& pressure_g_in,
+                               Vector< Real* > const& pressure_g_in,
                                Vector< MultiFab* > const& gp_in,
                                F1 HeterogeneousRRates)
 {
@@ -348,7 +348,6 @@ mfix::mfix_calc_txfr_particle (Real time,
       EB_set_covered(*ep_g_in[lev], 0, 1, 1, covered_val);
       EB_set_covered(*ro_g_in[lev], 0, 1, 1, covered_val);
       EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies(), 1, covered_val);
-      EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
     }
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
@@ -360,12 +359,12 @@ mfix::mfix_calc_txfr_particle (Real time,
     pressure_cc.setVal(0.);
 
     if (reactions.solve()) {
-      MultiFab pressure_nd(pressure_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+      MultiFab pressure_nd(m_leveldata[lev]->p0_g->boxArray(), dmap[lev], 1, interp_ng);
       pressure_nd.setVal(0.);
       EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
 
-      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->thermodynamic_p_g, 0, 0, 1, interp_ng);
-      MultiFab::Add (pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+      pressure_nd.plus(*pressure_g_in[lev], interp_ng);
 
       pressure_cc.setVal(0.);
       EB_set_covered(pressure_cc, 0, 1, 1, covered_val);

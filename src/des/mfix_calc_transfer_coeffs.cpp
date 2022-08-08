@@ -13,7 +13,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
-                                      Vector< MultiFab* > const& pressure_g_in)
+                                      Vector< Real* > const& pressure_g_in)
 {
   const amrex::Real small_num = m_dem.small_number();
   const amrex::Real large_num = m_dem.large_number();
@@ -54,7 +54,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
-                                      Vector< MultiFab* > const& pressure_g_in,
+                                      Vector< Real* > const& pressure_g_in,
                                       F1 DragFunc)
 {
   if (fluid.solve_enthalpy())
@@ -87,7 +87,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
-                                      Vector< MultiFab* > const& pressure_g_in,
+                                      Vector< Real* > const& pressure_g_in,
                                       F1 DragFunc,
                                       F2 ConvectionCoeff)
 {
@@ -105,7 +105,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
-                                      Vector< MultiFab* > const& pressure_g_in,
+                                      Vector< Real* > const& pressure_g_in,
                                       F1 DragFunc,
                                       F2 ConvectionCoeff,
                                       F3 HeterogeneousRRates)
@@ -162,12 +162,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       EB_set_covered(*X_gk_in[lev], 0, fluid.nspecies(), 1, covered_val);
     }
 
-    if (reactions.solve() ||
-        (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
-         fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
-      EB_set_covered(*pressure_g_in[lev], 0, 1, 1, covered_val);
-    }
-
     bool OnSameGrids = ((dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))));
 
@@ -183,12 +177,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     pressure_cc.setVal(0.);
 
     if (reactions.solve()) {
-      MultiFab pressure_nd(pressure_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
+      MultiFab pressure_nd(m_leveldata[lev]->p0_g->boxArray(), dmap[lev], 1, interp_ng);
       pressure_nd.setVal(0.);
       EB_set_covered(pressure_nd, 0, 1, 1, covered_val);
 
-      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->thermodynamic_p_g, 0, 0, 1, interp_ng);
-      MultiFab::Add (pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+      MultiFab::Copy(pressure_nd, *m_leveldata[lev]->p0_g, 0, 0, 1, interp_ng);
+      pressure_nd.plus(*pressure_g_in[lev], interp_ng);
 
       pressure_cc.setVal(0.);
       EB_set_covered(pressure_cc, 0, 1, 1, covered_val);
@@ -613,10 +607,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     delete interp_ptr;
   } // lev
 
-
   // Reset the volume fractions back to the correct values at
   // inflow faces.
   const int dir_bc_out = 1;
   mfix_set_epg_bcs(ep_g_in, dir_bc_out);
-
 }

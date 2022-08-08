@@ -647,29 +647,20 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
     // **************************************************************************
     // Update thermodynamic pressure
     // **************************************************************************
-    if (fluid.solve_enthalpy() && (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem))
+    if (fluid.solve_enthalpy() &&
+        (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem))
     {
       for (int lev = 0; lev <= finest_level; ++lev) {
+
         auto& ld = *m_leveldata[lev];
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIter mfi(*(ld.thermodynamic_p_g),TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          Box const& bx = mfi.tilebox();
+        Real* p_g     = ld.thermodynamic_p_g;
+        Real* p_g_old = ld.thermodynamic_p_go;
 
-          Array4<Real      > const& p_g     = ld.thermodynamic_p_g->array(mfi);
-          Array4<Real const> const& p_g_old = ld.thermodynamic_p_go->const_array(mfi);
-          const Real Dpressure_Dt           = rhs_pressure_g[lev];
-          const Real Dpressure_Dt_old       = rhs_pressure_g_old[lev];
+        const Real Dpressure_Dt           = rhs_pressure_g[lev];
+        const Real Dpressure_Dt_old       = rhs_pressure_g_old[lev];
 
-          amrex::ParallelFor(bx, [p_g,p_g_old,Dpressure_Dt,Dpressure_Dt_old,l_dt]
-            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-          {
-            p_g(i,j,k) = p_g_old(i,j,k) + .5*l_dt*(Dpressure_Dt_old+Dpressure_Dt);
-          });
-        } // mfi
+        *p_g = *p_g_old + .5*l_dt*(Dpressure_Dt_old+Dpressure_Dt);
       }
     }
 

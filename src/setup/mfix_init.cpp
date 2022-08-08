@@ -1036,8 +1036,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
 
        if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem &&
            fluid.solve_enthalpy()) {
-         MultiFab::Copy(*ld.thermodynamic_p_go, *ld.thermodynamic_p_g, 0, 0, 1,
-             ld.thermodynamic_p_g->nGrow());
+         *(ld.thermodynamic_p_go) = *(ld.thermodynamic_p_g);
        }
     }
 

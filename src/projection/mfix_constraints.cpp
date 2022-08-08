@@ -152,7 +152,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
                                       Vector< MultiFab const* > const& ro_g,
                                       Vector< MultiFab const* > const& T_g,
                                       Vector< MultiFab const* > const& X_gk,
-                                      Vector< MultiFab const* > const& pressure_g,
+                                      Vector< Real const* > const& pressure_g,
                                       Vector< Real >& avgSigma,
                                       Vector< Real >& avgTheta)
 {
@@ -184,6 +184,8 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
     const auto& factory = dynamic_cast<EBFArrayBoxFactory const&>(ep_g[lev]->Factory());
     const auto& flags = factory.getMultiEBCellFlagFab();
 
+    Real const& pres_g = *pressure_g[lev];
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -198,11 +200,10 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
       Array4< Real const > const& ro_g_arr   = ro_g[lev]->const_array(mfi);
       Array4< Real const > const& X_gk_arr   = fluid_is_a_mixture ? X_gk[lev]->const_array(mfi) : dummy_arr;
       Array4< Real const > const& T_g_arr    = T_g[lev]->const_array(mfi);
-      Array4< Real const > const& pres_g_arr = pressure_g[lev]->const_array(mfi);
 
       auto const& flags_arr = flags.const_array(mfi);
 
-      ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g_arr,ro_g_arr,
+      ParallelFor(bx, [theta_arr,ep_g_arr,T_g_arr,X_gk_arr,pres_g,ro_g_arr,
           flags_arr,fluid_is_a_mixture,nspecies_g,fluid_parms,solve_enthalpy]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
@@ -226,7 +227,7 @@ mfix::mfix_idealgas_closedsystem_rhs (Vector< MultiFab*       > const& rhs,
             cp_g_loc = fluid_parms.calc_cp_g<run_on>(Tg_loc);
           }
 
-          theta_arr(i,j,k) = (ep_g_arr(i,j,k)/pres_g_arr(i,j,k)) - (ep_g_arr(i,j,k)/(cp_g_loc*ro_g_arr(i,j,k)*Tg_loc));
+          theta_arr(i,j,k) = (ep_g_arr(i,j,k)/pres_g) - (ep_g_arr(i,j,k)/(cp_g_loc*ro_g_arr(i,j,k)*Tg_loc));
         }
       });
     }

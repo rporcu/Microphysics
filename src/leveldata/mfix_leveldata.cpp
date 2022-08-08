@@ -53,8 +53,8 @@ LevelData::LevelData (BoxArray const& ba,
     if (reactions->solve() ||
         (fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
          fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
-      thermodynamic_p_g  = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
-      thermodynamic_p_go = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
+      thermodynamic_p_g  = new Real(0);
+      thermodynamic_p_go = new Real(0);
     }
 
     if (fluid->solve_enthalpy() ||
@@ -106,8 +106,8 @@ void LevelData::resetValues (const amrex::Real init_value)
      if (reactions->solve() ||
          (fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
           fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)) {
-       thermodynamic_p_g->setVal(init_value);
-       thermodynamic_p_go->setVal(init_value);
+       *thermodynamic_p_g  = init_value;
+       *thermodynamic_p_go = init_value;
      }
 
      if (fluid->solve_enthalpy() ||

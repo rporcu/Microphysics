@@ -240,9 +240,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
                        m_leveldata[lev]->X_gk->nComp(), m_leveldata[lev]->X_gk->nGrow());
       }
 
-      if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem && fluid.solve_enthalpy()) {
-        MultiFab::Copy(*m_leveldata[lev]->thermodynamic_p_g, *m_leveldata[lev]->thermodynamic_p_go, 0, 0,
-                        m_leveldata[lev]->thermodynamic_p_g->nComp(), m_leveldata[lev]->thermodynamic_p_g->nGrow());
+      if (fluid.constraint_type()== MFIXFluidPhase::ConstraintType::IdealGasClosedSystem &&
+          fluid.solve_enthalpy()) {
+        *m_leveldata[lev]->thermodynamic_p_g = *m_leveldata[lev]->thermodynamic_p_go;
       }
     }
 
