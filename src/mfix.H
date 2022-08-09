@@ -1053,7 +1053,7 @@ public:
     int sort_particle_int = -1; // # steps to sort particles
 
 #ifdef AMREX_USE_GPU
-    bool reduceGhostParticles = false; // temporarily disable
+    bool reduceGhostParticles = true;
 #else
     bool reduceGhostParticles = false;
 #endif
