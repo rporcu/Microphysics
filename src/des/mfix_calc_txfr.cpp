@@ -542,15 +542,17 @@ mfix::mfix_calc_txfr_particle (Real time,
 
               // Zero out all reactions terms where we might have stored
               // fluid-deposition quantities
-              for (int n_s(0); n_s < nspecies_s; ++n_s)
-                ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = 0;
 
-              ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0;
-              ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0;
-              ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0;
+              if (solve_reactions) {
+                for (int n_s(0); n_s < nspecies_s; ++n_s)
+                  ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = 0;
 
-              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0;
+                ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0;
+                ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0;
+                ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0;
 
+                ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0;
+              }
               return;
             }
 
