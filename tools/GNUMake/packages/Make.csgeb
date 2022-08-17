@@ -9,5 +9,5 @@ CPPFLAGS += -DUSE_CSG
 ifdef CSGEB_HOME
   INCLUDE_LOCATIONS += $(CSGEB_HOME)/include
   CPPFLAGS += -DCSG_EB
-  LIBRARIES += -lcsgeb -L$(CSGEB_HOME)/lib
+  LIBRARIES += -lcsg-eb -L$(CSGEB_HOME)/lib
 endif
