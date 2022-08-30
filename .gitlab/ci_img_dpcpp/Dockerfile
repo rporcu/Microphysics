@@ -49,7 +49,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
     cmake==3.* \
-    conan==1.* \
+    conan>=1.51.3 \
     ninja==1.*
 
 RUN printf '#!/bin/bash\nenv $@' > /usr/local/bin/srun \
