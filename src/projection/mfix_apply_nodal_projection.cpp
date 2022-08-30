@@ -246,7 +246,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     // Perform the redistribution operation on the updated (projected) velocity field -- and
     //     update gp to maintain consistency
     // This has been currently disabled since it seems to cause magnification of differences on
-    // different grids. Needs to be revisted.
+    // different grids. Needs to be revisited.
     if ( m_redistribute_nodal_proj ) {
       PostProjectionRedistribution(a_time, a_dt, GetVecOfPtrs(sigma_mf));
     }

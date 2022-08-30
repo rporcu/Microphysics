@@ -167,7 +167,7 @@ MFIXDEM::Initialize ()
 
           }
           // There is no need for an 'else' here. This is covered
-          // by initializating the variable to an invalid value.
+          // by initializing the variable to an invalid value.
 
           AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
                "Invalid restitution coefficient.");
@@ -201,7 +201,7 @@ MFIXDEM::Initialize ()
 
         }
         // There is no need for an 'else' here. This is covered
-        // by initializating the variable to an invalid value.
+        // by initializing the variable to an invalid value.
 
         AMREX_ALWAYS_ASSERT_WITH_MESSAGE(rest_coeff >= 0.0 && rest_coeff <= 1.0,
              "Invalid restitution coefficient.");

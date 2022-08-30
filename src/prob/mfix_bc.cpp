@@ -747,7 +747,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
           amrex::Print() << "                  max: " << bc[bcv].solids[lcs].diameter.max  << std::endl;
         }
 
-        amrex::Print() << " desnity distribution: " << bc[bcv].solids[lcs].density.distribution << std::endl;
+        amrex::Print() << " density distribution: " << bc[bcv].solids[lcs].density.distribution << std::endl;
         if( bc[bcv].solids[lcs].density.distribution == "constant" ){
           amrex::Print() << "                value: " << bc[bcv].solids[lcs].density.mean << std::endl;
         } else {

@@ -107,7 +107,7 @@ mfix::InitParams ()
 
     pp.query("ooo_debug", ooo_debug);
 
-    // Flag to envoke UDFs
+    // Flag to invoke UDFs
     bool call_usr_bool = false;
     pp.query("call_usr", call_usr_bool);
     call_udf = call_usr_bool ? 1 : 0; // Set global flag

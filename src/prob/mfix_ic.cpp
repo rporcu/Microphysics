@@ -303,7 +303,7 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
           amrex::Print() << "                  max: " << ic[icv].solids[lcs].diameter.max  << std::endl;
         }
 
-        amrex::Print() << " desnity distribution: " << ic[icv].solids[lcs].density.distribution << std::endl;
+        amrex::Print() << " density distribution: " << ic[icv].solids[lcs].density.distribution << std::endl;
         if( ic[icv].solids[lcs].density.distribution == "constant" ){
           amrex::Print() << "                value: " << ic[icv].solids[lcs].density.mean << std::endl;
         } else {
