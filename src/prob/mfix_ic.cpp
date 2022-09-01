@@ -21,6 +21,25 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
                                    MFIXDEM& dem,
                                    MFIXPIC& pic)
 {
+
+  // The default type is "AsciiFile" but we can over-write that in the inputs
+  // file with "Random"
+
+  amrex::ParmParse ppMFIX("mfix");
+
+  std::string init_type = "AsciiFile";
+  ppMFIX.query("particle_init_type", init_type);
+
+  if (init_type == "AsciiFile") {
+    m_particle_init_type = ParticleInitType::AsciiFile;
+
+  } else if (init_type == "Auto") {
+    m_particle_init_type = ParticleInitType::Auto;
+
+  } else {
+     amrex::Abort("Bad particle_init_type");
+  }
+
   amrex::ParmParse pp("ic");
 
   std::vector<std::string> input_regions;
@@ -121,7 +140,7 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
     if (dem.solve() || pic.solve()) {
 
       // If we initialize particles with particle generator
-      if (fluid.solve() && new_ic.fluid.volfrac < 1.0) {
+      if (new_ic.fluid.volfrac < 1.0) {
 
         // Get the list of solids used in defining the IC region
         std::vector<std::string> solids_names;
@@ -129,7 +148,9 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
           std::string field = "ic."+input_regions[icv];
           amrex::ParmParse ppSolid(field.c_str());
           ppSolid.getarr("solids", solids_names);
-          ppSolid.get("packing", new_ic.packing);
+          if(AutoParticleInit()) {
+            ppSolid.get("packing", new_ic.packing);
+          }
         }
 
         for (size_t lcs(0); lcs < solids_names.size(); ++lcs) {
@@ -142,10 +163,50 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
           new_solid.name = solids_names[lcs];
           new_solid.phase = solids.name_to_phase(solids_names[lcs]);
 
-          ppSolid.get("volfrac", new_solid.volfrac);
-          volfrac_total += new_ic.fluid.volfrac;
+          //
+          if(AutoParticleInit()) {
 
-          ppSolid.getarr("velocity", new_solid.velocity, 0, 3);
+            { // Get solids volume fraction.
+              int found = ppSolid.query("volfrac", new_solid.volfrac);
+              if(!found) {
+                std::string message = " Error: IC region " + input_regions[icv]
+                  + " is missing volfrac for solids " + solids_names[lcs] + "\n";
+                amrex::Print() << message;
+                amrex::Abort(message);
+              }
+              volfrac_total += new_ic.fluid.volfrac;
+            }
+
+            { // Get solids velocity.
+              int found = ppSolid.queryarr("velocity", new_solid.velocity, 0, 3);
+              if(!found) {
+                std::string message = " Error: IC region " + input_regions[icv]
+                  + " is missing velocity for solids " + solids_names[lcs] + "\n";
+                amrex::Print() << message;
+                amrex::Abort(message);
+              }
+            }
+
+            { // Get information about diameter distribution.
+              int err = new_solid.diameter.set(field, "diameter");
+              if(err) {
+                std::string message = " Error: IC region " + input_regions[icv]
+                  + " has invalid diameter parameters for solids " + solids_names[lcs] + "\n";
+                amrex::Print() << message;
+                amrex::Abort(message);
+              }
+            }
+
+            { // Get information about density distribution
+              int err = new_solid.density.set(field, "density");
+              if(err) {
+                std::string message = " Error: BC region " + input_regions[icv]
+                  + " has invalid density parameters for solids " + solids_names[lcs] + "\n";
+                amrex::Print() << message;
+                amrex::Abort(message);
+              }
+            }
+          }
 
           if (fluid.solve_enthalpy() || solids.solve_enthalpy()) {
             ppSolid.query("temperature", new_solid.temperature);
@@ -153,26 +214,6 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
 
           new_solid.statwt = 1.0;
           ppSolid.query("statwt", new_solid.statwt);
-
-          { // Get information about diameter distribution.
-            int err = new_solid.diameter.set(field, "diameter");
-            if(err) {
-              std::string message = " Error: IC region " + input_regions[icv]
-                + " has invalid diameter parameters for solids " + solids_names[lcs] + "\n";
-              amrex::Print() << message;
-              amrex::Abort(message);
-            }
-          }
-
-          { // Get information about density distribution
-            int err = new_solid.density.set(field, "density");
-            if(err) {
-              std::string message = " Error: BC region " + input_regions[icv]
-                + " has invalid density parameters for solids " + solids_names[lcs] + "\n";
-              amrex::Print() << message;
-              amrex::Abort(message);
-            }
-          }
 
           if (solids.solve_species())
           {

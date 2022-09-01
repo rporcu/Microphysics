@@ -6,7 +6,6 @@
 #include <mfix_fluid.H>
 #include <mfix_species.H>
 
-std::string      mfix::particle_init_type   = "AsciiFile";
 std::string      mfix::load_balance_type    = "KnapSack";
 std::string      mfix::knapsack_weight_type = "RunTimeCosts";
 int              mfix::load_balance_fluid   = -1;

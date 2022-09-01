@@ -1029,7 +1029,6 @@ public:
     bool ooo_debug = false;
 
     // Parameters to control load balancing
-    static std::string particle_init_type;
     static std::string load_balance_type;
     static std::string knapsack_weight_type;
     static int load_balance_fluid;

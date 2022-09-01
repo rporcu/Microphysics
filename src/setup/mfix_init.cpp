@@ -117,10 +117,6 @@ mfix::InitParams ()
     for (int dir = 0; dir < 3; dir++)
       gravity[dir] = gravity_in[dir];
 
-    // The default type is "AsciiFile" but we can over-write that in the inputs
-    // file with "Random"
-    pp.query("particle_init_type", particle_init_type);
-
     // frequency and bin size for sorting particles
     pp.query("particle_sorting_bin", particle_sorting_bin);
     sort_particle_int = -1;
@@ -752,6 +748,7 @@ void mfix::InitLevelData (Real /*time*/)
        return;
     }
 
+
     // Allocate the particle data
     if (m_dem.solve() || m_pic.solve())
     {
@@ -759,20 +756,13 @@ void mfix::InitLevelData (Real /*time*/)
 
       pc->AllocData();
 
-      if (particle_init_type == "AsciiFile")
-      {
-        amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
-        pc->InitParticlesAscii("particle_input.dat");
-
-      } else if (particle_init_type == "Auto") {
-
+      if (m_initial_conditions.AutoParticleInit()) {
          amrex::Print() << "Auto generating particles ..." << std::endl;
-
          pc->InitParticlesAuto();
 
       } else {
-
-         amrex::Abort("Bad particle_init_type");
+        amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
+        pc->InitParticlesAscii("particle_input.dat");
       }
 
       pc->Redistribute();

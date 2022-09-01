@@ -29,8 +29,18 @@ class MFIXInitialConditions
     const amrex::Vector<IC_t>& ic () const { return m_ic; };
     const IC_t& ic (const int icv) const { return m_ic[icv]; };
 
+    enum struct ParticleInitType {Invalid, Auto, AsciiFile};
+
+    int AutoParticleInit () const {
+      return (m_particle_init_type == ParticleInitType::Auto) ? 1 : 0;
+    };
+
   private:
+
     amrex::Vector<IC_t> m_ic;
+
+    ParticleInitType m_particle_init_type = ParticleInitType::Invalid;
+
 };
 
 
