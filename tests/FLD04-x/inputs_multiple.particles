@@ -163,19 +163,16 @@ dem.damping_tang_fac.pw   =     0.5
 # Regions for defining ICs and BCs
 #
 
-mfix.regions = full-domain  bed
+mfix.regions = full-domain
 
 regions.full-domain.lo = 0.000  0.000  0.000
 regions.full-domain.hi = 1.000  4.000  4.000
-
-regions.bed.lo = 0.000  0.000  0.000
-regions.bed.hi = 0.500  4.000  4.000
 
 #_______________________________________________________________________
 # Initial Conditions
 #
 
-ic.regions = full-domain  bed
+ic.regions = full-domain
 
 
 # Background IC covering the full domain with gas.
@@ -184,26 +181,6 @@ ic.full-domain.fluid.volfrac   = 1.0
 ic.full-domain.fluid.density   = 1.0
 ic.full-domain.fluid.pressure  = 0.0
 ic.full-domain.fluid.velocity  = 0.0  0.0  0.0
-
-
-# Define the initial bed of solids
-#---------------------------------------------------------------------//
-ic.bed.fluid.volfrac   =  0.75
-ic.bed.fluid.density   =  1.00
-ic.bed.fluid.pressure  =  0.00
-ic.bed.fluid.velocity  =  0.00  0.00  0.00
-
-ic.bed.solids  = solid0
-ic.bed.packing = pseudo_random
-
-ic.bed.solid0.volfrac  =  0.25
-ic.bed.solid0.velocity =  0.00  0.00  0.00
-
-ic.bed.solid0.diameter = constant
-ic.bed.solid0.density  = constant
-
-ic.bed.solid0.diameter.constant =  100.0e-3
-ic.bed.solid0.density.constant  = 1000.0
 
 
 # Boundary conditions
