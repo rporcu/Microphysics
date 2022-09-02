@@ -185,17 +185,15 @@ class mfix : public AmrCore
 
       if (nlev == 1)
       {
-          // We could skip the rebuilding for ref ratio of 1, but that makes
-          // BENCH05-Size0008_wide to fail on 4 processes.
-//          if (levelset_refinement == 1) {
-//              eb_levels[1] = eb_levels[0];
-//              particle_eb_levels[1] = eb_levels[1];
-//          } else {
+          if (levelset_refinement == 1) {
+              eb_levels[1] = eb_levels[0];
+              particle_eb_levels[1] = eb_levels[1];
+          } else {
               Geometry geom_ls = amrex::refine(geom[0],levelset_refinement);
               EB2::Build(gshop, geom_ls, 0, 100);
               eb_levels[1] = &(EB2::IndexSpace::top().getLevel(geom_ls));
               particle_eb_levels[1] = eb_levels[1];
-//          }
+          }
       }
     }
 
