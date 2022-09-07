@@ -176,6 +176,12 @@ public:
    bool only_print_grid_report = false;
    std::string restart_file {""};
 
+   // Geometry checkpoint file handling inputs
+   std::string geom_chkptfile {"geom_chk"};
+   std::string geom_refined_chkptfile {"geom_refined_chk"};
+   bool write_geom_chk = false;
+   bool use_geom_chk_if_present = true;
+
    int report_mass_balance = 0;
    int mass_balance_report_int = -1;
    amrex::Real mass_balance_report_per_approx = -1;

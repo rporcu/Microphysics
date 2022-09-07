@@ -619,3 +619,29 @@ Vector< MultiFab const*> mfix::get_divtau_const () const noexcept
   }
   return r;
 }
+
+void mfix::build_eb_levels_from_chkpt_file () {
+
+   EB2::BuildFromChkptFile(mfixRW->geom_chkptfile, geom[nlev-1], nlev-1, 100);
+
+   const EB2::IndexSpace& ebis = EB2::IndexSpace::top();
+   for (int lev = 0; lev < nlev; lev ++)
+   {
+      eb_levels[lev] = &(ebis.getLevel(geom[lev]));
+      particle_eb_levels[lev] = eb_levels[lev];
+   }
+
+   if (nlev == 1)
+   {
+      if (levelset_refinement == 1) {
+           eb_levels[1] = eb_levels[0];
+           particle_eb_levels[1] = eb_levels[1];
+      }
+      else {
+         Geometry geom_ls = amrex::refine(geom[0],levelset_refinement);
+         EB2::BuildFromChkptFile(mfixRW->geom_refined_chkptfile, geom_ls, 0, 100);
+         eb_levels[1] = &(EB2::IndexSpace::top().getLevel(geom_ls));
+         particle_eb_levels[1] = eb_levels[1];
+      }
+   }
+}

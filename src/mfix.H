@@ -197,6 +197,8 @@ class mfix : public AmrCore
       }
     }
 
+    void build_eb_levels_from_chkpt_file ();
+
     const Geometry get_geom_ref (int lev)
     { return geom[lev]; }
 

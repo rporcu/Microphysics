@@ -81,6 +81,13 @@ void mfix::make_eb_geometry ()
     if (hourglass)  geom_type = "hourglass";
     if (eb_general) geom_type = "general";
 
+    if (mfixRW->use_geom_chk_if_present) {
+      std::ifstream file(mfixRW->geom_chkptfile);
+      if (!file.fail()) {
+         amrex::Print() << "\n Geometry checkpoint file will be used." << std::endl;
+         geom_type = "chkptfile";
+      }
+    }
 
     /****************************************************************************
      *                                                                          *
@@ -119,6 +126,10 @@ void mfix::make_eb_geometry ()
       // TODO: deal with inflow volfrac
       make_eb_general();
       contains_ebs = true;
+    } else if(geom_type == "chkptfile") {
+      amrex::Print() << "\n Building geometry from chkptfile: " << mfixRW->geom_chkptfile << std::endl;
+      build_eb_levels_from_chkpt_file();
+      contains_ebs = true;
 
 #ifdef CSG_EB
     } else if(!csg_file.empty()) {
@@ -135,6 +146,18 @@ void mfix::make_eb_geometry ()
 
         // NOTE: `mfix::contains_ebs` this is set internally depending if EBs
         // where detected in the mfix.dat file.
+    }
+
+    if (mfixRW->write_geom_chk) {
+       eb_levels[0]->write_to_chkpt_file(mfixRW->geom_chkptfile, 
+             amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
+
+       if (nlev == 1) {
+          if (levelset_refinement != 1) {
+             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_refined_chkptfile, 
+                   amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
+          }
+       }
     }
 }
 
