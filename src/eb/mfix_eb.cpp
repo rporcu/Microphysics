@@ -81,14 +81,6 @@ void mfix::make_eb_geometry ()
     if (hourglass)  geom_type = "hourglass";
     if (eb_general) geom_type = "general";
 
-    if (mfixRW->use_geom_chk_if_present) {
-      std::ifstream file(mfixRW->geom_chkptfile);
-      if (!file.fail()) {
-         amrex::Print() << "\n Geometry checkpoint file will be used." << std::endl;
-         geom_type = "chkptfile";
-      }
-    }
-
     /****************************************************************************
      *                                                                          *
      *  CONSTRUCT EB                                                            *
