@@ -140,7 +140,7 @@ void mfix::make_eb_geometry ()
         // where detected in the mfix.dat file.
     }
 
-    if (mfixRW->write_geom_chk) {
+    if (mfixRW->write_geom_chk && geom_type != "chkptfile") {
        eb_levels[0]->write_to_chkpt_file(mfixRW->geom_chkptfile, 
              amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
 
