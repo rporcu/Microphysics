@@ -160,6 +160,16 @@ mfix::EvolveFluid (int nstep,
 
     do
     {
+        // Calculate drag coefficient
+        if (m_dem.solve() || m_pic.solve()) {
+          Real start_drag = ParallelDescriptor::second();
+          mfix_calc_txfr_fluid(get_txfr(), get_ep_g(),
+                               get_ro_g(), get_vel_g(), get_T_g(),
+                               get_X_gk(), get_thermodynamic_p_g(), time);
+
+          coupling_timing += ParallelDescriptor::second() - start_drag;
+        }
+
         mfix_compute_dt(nstep, time, stop_time, dt, prev_dt);
 
         // Set new and old time to correctly use in fillpatching
@@ -209,16 +219,6 @@ mfix::EvolveFluid (int nstep,
           // User hooks
           for (MFIter mfi(*m_leveldata[lev]->ep_g, false); mfi.isValid(); ++mfi)
              mfix_usr2();
-        }
-
-        // Calculate drag coefficient
-        if (m_dem.solve() || m_pic.solve()) {
-          Real start_drag = ParallelDescriptor::second();
-          mfix_calc_txfr_fluid(get_txfr(), get_ep_g(),
-                               get_ro_g_old(), get_vel_g_old(), get_T_g_old(),
-                               get_X_gk_old(), get_thermodynamic_p_g_old(), time);
-
-          coupling_timing += ParallelDescriptor::second() - start_drag;
         }
 
         // Predictor step
