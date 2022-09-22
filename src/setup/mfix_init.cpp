@@ -556,9 +556,9 @@ void mfix::Init (Real time)
             pbl.join(tmpba.boxList());
             pboxmap.insert(pboxmap.end(), tmpba.size(), i);
           }
-          pba.define(pbl);
         }
 
+        pba.define(pbl);
         pdm.define(pba, ParallelDescriptor::NProcs());
       }
 
@@ -872,80 +872,20 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 
         }
 
-        // We need to do this *after* restart (hence putting this here not
-        // in Init) because we may want to change the particle_max_grid_size on restart.
-        if (dual_grid && particle_max_grid_size_x > 0
-                      && particle_max_grid_size_y > 0
-                      && particle_max_grid_size_z > 0
-                      && (load_balance_type == "KnapSack" || load_balance_type == "SFC"))
-        {
-          IntVect particle_max_grid_size(particle_max_grid_size_x,
-                                         particle_max_grid_size_y,
-                                         particle_max_grid_size_z);
+      if (m_dem.solve()) {
+          pc->MFIX_PC_InitCollisionParams();
+          pc->setSortInt(sort_particle_int);
+          pc->setReduceGhostParticles(reduceGhostParticles);
+      }
 
-          for (int lev = 0; lev < nlev; lev++)
-          {
-            // Re-grid particle grids if user specifies the size of particle grids.
-            // Here we exclude the greedy load balance, since it adjusts the
-            // particle grid size according to particle counts.
-            BoxArray particle_ba(pc->ParticleBoxArray(lev));
-            particle_ba.maxSize(particle_max_grid_size);
+      if (dual_grid)
+        Regrid();
 
-            DistributionMapping particle_dm;
-            if (particle_pmap.empty())
-              particle_dm.define(particle_ba, ParallelDescriptor::NProcs());
-            else
-              particle_dm.define(particle_pmap);
+      if (!is_restarting)
+        pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy());
 
-            pc->Regrid(particle_dm, particle_ba);
-            if (sort_particle_int > 0) {
-              pc->SortParticlesByBin(IntVect(particle_sorting_bin));
-            }
-
-            if (particle_cost[lev] != nullptr)
-              delete particle_cost[lev];
-
-            particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                              pc->ParticleDistributionMap(lev), 1, 0);
-            if (knapsack_weight_type == "NumParticles") {
-              int local_count = 0;
-              for (MFIXParIter pti(*(this->pc), 0); pti.isValid(); ++pti)
-                  local_count += pti.numParticles();
-              particle_cost[lev]->setVal(static_cast<Real>(local_count));
-            }
-            else if (knapsack_weight_type == "RunTimeCosts") {
-              particle_cost[lev]->setVal(0.0);
-            }
-
-            // initialize the ranks of particle grids
-            if (particle_proc[lev] != nullptr)
-              delete particle_proc[lev];
-            //
-            const Real proc = Real(ParallelDescriptor::MyProc());
-            particle_proc[lev] = new MultiFab(pc->ParticleBoxArray(lev),
-                                              pc->ParticleDistributionMap(lev), 1, 0);
-            particle_proc[lev]->setVal(proc);
-
-            // This calls re-creates a proper particle_ebfactories
-            //  and regrids all the multifabs that depend on it
-            if (m_dem.solve() || m_pic.solve())
-                RegridLevelSetArray(lev);
-
-          }
-        }
-
-        if (m_dem.solve()) {
-            pc->MFIX_PC_InitCollisionParams();
-            pc->setSortInt(sort_particle_int);
-            pc->setReduceGhostParticles(reduceGhostParticles);
-        }
-
-        if (!is_restarting)
-          pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy());
-
-        if (!fluid.solve()){
-            dt = fixed_dt;
-        }
+      if (!fluid.solve())
+          dt = fixed_dt;
     }
 
     if (fluid.solve())

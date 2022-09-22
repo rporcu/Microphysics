@@ -164,6 +164,8 @@ mfix::Restart (std::string& restart_file,
 
           // Particle data is loaded into the MFIXParticleContainer's base
           // class using amrex::NeighborParticleContainer::Restart
+          // at this step, pc is constructed from mfix.init and it may have
+          // different ba and dm from the fluid grids.
 
           if (m_dem.solve() && lev == 0) {
 
@@ -392,82 +394,59 @@ mfix::Restart (std::string& restart_file,
           pc->SetParticleBoxArray       (lev, grids[lev]);
           pc->SetParticleDistributionMap(lev,  dmap[lev]);
           pc->SetParticleGeometry       (lev,  geom[lev]);
+          pc->setParticleFluidGridMap   (Vector<int>());
         }
         pc->Redistribute();
 
-       int lev = 0;
-       if (Nrep == IntVect::TheUnitVector())
-       {
-           // We need to do this on restart regardless of whether we replicate
-           pc->Redistribute();
-       } else {
-          // This call to Replicate adds the new particles, then calls Redistribute()
+        int lev = 0;
+        if (Nrep != IntVect::TheUnitVector())
           pc->Replicate(Nrep, geom[lev], dmap[lev], grids[lev]);
-       }
+
+        // load level set parameters from checkpoint
+        if (levelset_restart) {
+            int levelset_params[4] = { levelset_refinement,
+                                       levelset_pad,
+                                       levelset_eb_refinement,
+                                       levelset_eb_pad         };
+
+            std::ifstream param_file;
+            std::stringstream param_file_name;
+            param_file_name << restart_file << "/LSFactory_params";
+            param_file.open(param_file_name.str());
+            amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
+
+            int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
+                eb_ref = levelset_params[2], eb_pad = levelset_params[3];
+
+            amrex::Print() << "     + Loaded level-set parameters:" << std::endl
+                           << "       ref = " << ls_ref << "    pad = " << ls_pad
+                           << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
+                           << std::endl;
+
+            // Inform the user if the checkpoint parameters do not match those in the
+            // inputs file. The checkpoint inputs overwrite the inputs file.
+            if (ls_ref != levelset_refinement)
+                amrex::Print() << "     * Overwrote levelset_refinement = " << levelset_refinement
+                               << " -> " << ls_ref << std::endl;
+            if (ls_pad != levelset_pad)
+                amrex::Print() << "     * Overwrote levelset_pad = " << levelset_pad
+                               << " -> " << ls_pad << std::endl;
+            if (eb_ref != levelset_eb_refinement)
+                amrex::Print() << "     * Overwrote levelset_eb_refinement = " << levelset_eb_refinement
+                               << " -> " << eb_ref << std::endl;
+            if (eb_pad != levelset_eb_pad)
+                amrex::Print() << "     * Overwrote levelset_eb_pad = " << levelset_eb_pad
+                               << " -> " << eb_pad << std::endl;
+        }
     }
 
     // make fluid and particle factories
     // This uses particles' ba and dm so it needs to be after setting up pc.
     make_eb_factories();
 
-   /****************************************************************************
-    * Load level set data from checkpoint file                                 *
-    *                                                                          *
-    * Since the level-set data could be defined on a different BoxArray        *
-    * (compared to the rest of the checkpoint data) => the level-set data is   *
-    * stored in separate ls_raw MultiFab.                                      *
-    ****************************************************************************/
     if (m_dem.solve() || m_pic.solve())
-    {
-        if (levelset_restart) {
-           // Load level-set Multifab
-           std::stringstream ls_data_path;
-           ls_data_path << restart_file << "/ls_raw";
+      fill_eb_levelsets();
 
-           MultiFab ls_mf;
-           VisMF::Read(ls_mf, ls_data_path.str());
-
-           // Load LSFactory parameters: => in case the user has changed the inputs
-           int levelset_params[4] = { levelset_refinement,
-                                      levelset_pad,
-                                      levelset_eb_refinement,
-                                      levelset_eb_pad         };
-
-           std::ifstream param_file;
-           std::stringstream param_file_name;
-           param_file_name << restart_file << "/LSFactory_params";
-           param_file.open(param_file_name.str());
-
-           amrex::readIntData(levelset_params, 4, param_file, FPC::NativeIntDescriptor());
-           int ls_ref = levelset_params[0], ls_pad = levelset_params[1],
-               eb_ref = levelset_params[2], eb_pad = levelset_params[3];
-
-           amrex::Print() << "     + Loaded level-set parameters:" << std::endl
-                          << "       ref = " << ls_ref << "    pad = " << ls_pad
-                          << "    eb_ref = " << eb_ref << " eb_pad = " << eb_pad
-                          << std::endl;
-
-           // Inform the user if the checkpoint parameters do not match those in the
-           // inputs file. The checkpoint inputs overwrite the inputs file.
-           if(ls_ref != levelset_refinement)
-               amrex::Print() << "     * Overwrote levelset_refinement = " << levelset_refinement
-                              << " -> " << ls_ref << std::endl;
-           if   (ls_pad != levelset_pad)
-               amrex::Print() << "     * Overwrote levelset_pad = " << levelset_pad
-                              << " -> " << ls_pad << std::endl;
-           if(eb_ref != levelset_eb_refinement)
-               amrex::Print() << "     * Overwrote levelset_eb_refinement = " << levelset_eb_refinement
-                              << " -> " << eb_ref << std::endl;
-           if(eb_pad != levelset_eb_pad)
-               amrex::Print() << "     * Overwrote levelset_eb_pad = " << levelset_eb_pad
-                              << " -> " << eb_pad << std::endl;
-
-           // TODO: load level-set data from checkpoint file
-           // level_set->set_data(ls_mf);
-        } else {
-           fill_eb_levelsets();
-        }
-    }
 
     if (fluid.solve())
     {
@@ -496,6 +475,7 @@ mfix::Restart (std::string& restart_file,
         }
     }
 
+    // setup the multifabs to track cost and display the rank
     if (load_balance_type == "KnapSack" || load_balance_type == "SFC" ||
         load_balance_type == "Greedy")
     {

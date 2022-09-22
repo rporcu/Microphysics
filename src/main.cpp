@@ -176,13 +176,6 @@ int main (int argc, char* argv[])
          mfix.mfix_init_solvers();
        }
 
-       // This checks if we want to regrid
-       if (!mfix.IsSteadyState() && mfixRW.regrid_int > -1 && nstep%mfixRW.regrid_int == 0)
-       {
-           amrex::Print() << "Regridding at step " << nstep << std::endl;
-           mfix.Regrid();
-       }
-
        mfixRW.writeStaticPlotFile();
 
        mfix.PostInit(dt, time, restart_flag, mfixRW.stop_time);

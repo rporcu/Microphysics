@@ -1838,7 +1838,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   for (int rank: underload_ranks)
     u_q.push(std::make_pair(rank, pcount_rank[rank]));
 
-  int min_nbin = 4;
+  int min_nbin = 2;
   Vector<int> new_ppmap(fpmap);
 
   Vector<int> left_nbin;              // bins left for an overload box
