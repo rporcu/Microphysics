@@ -289,16 +289,9 @@ MfixRW::Initialize ()
         real_comp_names.push_back("X_"+species);
 
     if (solids.solve_species() && reactions.solve()) {
-      for (int n(0); n < amrex::max(fluid.nspecies(), solids.nspecies()); ++n) {
-        if (n < solids.nspecies()) {
-
-          auto species = solids.species_names(n);
-          real_comp_names.push_back("chem_mass_txfr_"+species);
-
-        } else {
-
-          real_comp_names.push_back("placeholder_"+std::to_string(n));
-        }
+      for (int n(0); n < solids.nspecies(); ++n) {
+        auto species = solids.species_names(n);
+        real_comp_names.push_back("chem_mass_txfr_"+species);
       }
     }
 

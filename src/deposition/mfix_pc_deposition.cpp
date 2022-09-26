@@ -156,27 +156,28 @@ InterphaseTxfrDeposition (int lev,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+                          const amrex::FabArray<EBCellFlagFab>* flags,
+                          std::map<PairIndex, Gpu::DeviceVector<Real>>& aux)
 {
   if (mfix::m_deposition_scheme == DepositionScheme::trilinear) {
 
     InterphaseTxfrDeposition(TrilinearDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             volfrac, flags);
+                             volfrac, flags, aux);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::square_dpvm) {
 
     InterphaseTxfrDeposition(TrilinearDPVMSquareDeposition(), lev, mf_tmp_eps,
-                             txfr_mf, volfrac, flags);
+                             txfr_mf, volfrac, flags, aux);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::true_dpvm) {
 
     InterphaseTxfrDeposition(TrueDPVMDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             volfrac, flags);
+                             volfrac, flags, aux);
 
   } else if (mfix::m_deposition_scheme == DepositionScheme::centroid) {
 
     InterphaseTxfrDeposition(CentroidDeposition(), lev, mf_tmp_eps, txfr_mf,
-                             volfrac, flags);
+                             volfrac, flags, aux);
 
   } else {
 
@@ -193,7 +194,8 @@ InterphaseTxfrDeposition (F WeightFunc,
                           MultiFab & mf_tmp_eps,
                           MultiFab & txfr_mf,
                           const MultiFab * volfrac,
-                          const amrex::FabArray<EBCellFlagFab>* flags)
+                          const amrex::FabArray<EBCellFlagFab>* flags,
+                          std::map<PairIndex, Gpu::DeviceVector<Real>>& aux)
 {
   BL_PROFILE("MFIXParticleContainer::InterphaseTxfrDeposition()");
 
@@ -251,6 +253,8 @@ InterphaseTxfrDeposition (F WeightFunc,
       FArrayBox& eps_fab  = mf_tmp_eps[pti];
       FArrayBox& txfr_fab = txfr_mf[pti];
 
+      Real* aux_ptr = aux[index].dataPtr();
+
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
       if ((*flags)[pti].getType(box) != FabType::covered) {
@@ -280,12 +284,12 @@ InterphaseTxfrDeposition (F WeightFunc,
         const int solve_enthalpy = fluid.solve_enthalpy();
 
         amrex::ParallelFor(nrp,
-            [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,
+            [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,nrp,
              reg_cell_vol,WeightFunc,flagsarr,txfr_arr,solve_enthalpy,
-             ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,
-             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr, idx_velx_txfr, idx_vely_txfr,
-             idx_velz_txfr, idx_drag_txfr, idx_gammaTp_txfr, idx_convection_coeff_txfr,
-             local_cg_dem=m_dem.cg_dem()]
+             ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,aux_ptr,
+             idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr, idx_velx_txfr,
+             idx_vely_txfr, idx_velz_txfr, idx_drag_txfr, idx_gammaTp_txfr,
+             idx_convection_coeff_txfr, local_cg_dem=m_dem.cg_dem()]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -330,7 +334,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
           if (solve_reactions) {
             for (int n_g(0); n_g < nspecies_g; ++n_g) {
-              ro_chem_txfr[n_g] = statwt * ptile_data.m_runtime_rdata[idx_mass_txfr+n_g][ip] / reg_cell_vol;
+              ro_chem_txfr[n_g] = statwt * aux_ptr[n_g*nrp + ip] / reg_cell_vol;
             }
           }
 

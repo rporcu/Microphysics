@@ -324,6 +324,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
+                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
@@ -333,6 +334,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
+                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
 
@@ -343,6 +345,7 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
+                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff,
                                     F3 HeterogeneousRRates);
@@ -570,7 +573,8 @@ public:
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in);
+                                    Vector< Real* > const& pressure_g_in,
+                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&);
 
     void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                Vector< MultiFab* > const& ep_g_in,

@@ -175,7 +175,6 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
   pp.query("plt_regtest", plt_ccse_regtest);
 
   const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
-                               fluid.nspecies()*fluid.solve_species(),
                                reactions.nreactions()*reactions.solve());
 
   // Runtime-added variables
@@ -278,14 +277,8 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       pp.query("plt_mass_sn_txfr", input_value);
 
       const int start = gap + rtData.mass_txfr;
-      for(int n(0); n < amrex::max(solids.nspecies(), fluid.nspecies()); ++n)
-        // Since we allocated a number of components for mass transfer that
-        // is equal to th max nb of species between solids and fluid, here
-        // we check that n is smaller than solids species nb
-        if (n < solids.nspecies())
-          write_real_comp_out[start+n] = input_value;
-        else // if n is larger, then we always set it to false
-          write_real_comp_out[start+n] = 0;
+      for(int n(0); n < solids.nspecies(); ++n)
+        write_real_comp_out[start+n] = input_value;
     }
 
     // Int data

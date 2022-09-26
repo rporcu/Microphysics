@@ -25,7 +25,6 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
-                        fluid_in.nspecies()*fluid_in.solve_species(),
                         reactions_in.nreactions()*reactions_in.solve())
     , nlev (amr_core->maxLevel() + 1)
     , m_initial_conditions(initial_conditions)
@@ -53,7 +52,6 @@ MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
-                        fluid_in.nspecies()*fluid_in.solve_species(),
                         reactions_in.nreactions()*reactions_in.solve())
     , nlev(nlevel)
     , m_initial_conditions(initial_conditions)

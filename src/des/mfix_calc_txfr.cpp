@@ -27,7 +27,11 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
 
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in);
+  using PairIndex = MFIXParticleContainer::PairIndex;
+  std::map<PairIndex, Gpu::DeviceVector<Real>> chem_X_gk_txfr_deposit;
+
+  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in,
+      pressure_g_in, chem_X_gk_txfr_deposit);
 
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
@@ -115,7 +119,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
     pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
-                                 volfrac[lev], flags[lev]);
+                                 volfrac[lev], flags[lev], chem_X_gk_txfr_deposit);
   }
 
   {
