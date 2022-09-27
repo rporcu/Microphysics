@@ -1016,6 +1016,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
       }
 
+      fillpatch_all(get_vel_g(), get_ro_g(), get_h_g(), get_trac(), get_X_gk(), time);
       InitialRedistribution(time);
 
       // Project the initial velocity field
