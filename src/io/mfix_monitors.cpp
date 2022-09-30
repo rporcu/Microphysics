@@ -8,6 +8,9 @@
 #include <AMReX_Array.H>
 #include <AMReX_ParmParse.H>
 
+#include <iomanip>
+#include <fstream>
+
 
 using namespace amrex;
 using MFIXParIter = MFIXParticleContainer::MFIXParIter;
@@ -135,6 +138,10 @@ Monitor::Monitor (const std::array<std::string,2> specs,
   , m_filename(std::string())
   , m_plot_int(-1)
   , m_plot_per_approx(0.)
+  , m_setw(0)
+  , m_setfill("")
+  , m_setprecision(0)
+  , m_formatflag("")
   , m_region_name(std::string())
   , m_region(nullptr)
   , m_variables(0)
@@ -156,6 +163,22 @@ Monitor::Monitor (const std::array<std::string,2> specs,
 
   // XOR operation
   AMREX_ASSERT(plot_int ^ per_approx);
+
+  ppMonitor.query("output.setw", m_setw);
+  ppMonitor.query("output.setfill", m_setfill);
+  ppMonitor.query("output.setprecision", m_setprecision);
+  ppMonitor.query("output.format", m_formatflag);
+
+  if (!(m_setfill.empty() || m_setfill.length() == 1)) {
+    amrex::Abort("setfill must be either empty or a single character");
+  }
+
+  if (!(m_formatflag.empty() ||
+        toLower(m_formatflag).compare("defaultfloat") == 0 ||
+        toLower(m_formatflag).compare("fixed") == 0 ||
+        toLower(m_formatflag).compare("scientific") == 0)) {
+    amrex::Abort("format must be either empty or fixed/scientific");
+  }
 
   ppMonitor.get("region", m_region_name);
 
@@ -208,6 +231,30 @@ Monitor::initialize ()
 }
 
 
+std::ostream&
+Monitor::setformat(std::ostream& output) const
+{
+  std::ostream& result(output);
+
+  if (m_setw > 0)
+    result << std::setw(m_setw);
+
+  if (!m_setfill.empty())
+    result << std::setfill(m_setfill.c_str()[0]);
+
+  if (m_setprecision > 0)
+    result << std::setprecision(m_setprecision);
+
+  if (toLower(m_formatflag).compare("fixed") == 0)
+    result << std::fixed;
+
+  if (toLower(m_formatflag).compare("scientific") == 0)
+    result << std::scientific;
+
+  return result;
+}
+
+
 void
 Monitor::write_csv (const Real& time,
                     const Real& dt)
@@ -230,9 +277,10 @@ Monitor::write_csv (const Real& time,
 
     const int lev = 0;
 //    for (int lev(0); lev < m_nlev; ++lev) {
-      output_file << time;
+      setformat(output_file) << time;
       for (int var(0); var < m_monitoring_results[lev].size(); ++var) {
-        output_file << "," << m_monitoring_results[lev][var];
+        output_file << ",";
+        setformat(output_file) << m_monitoring_results[lev][var];
       }
       output_file << std::endl;
 //    }
@@ -812,7 +860,7 @@ BaseMonitor::setup_variables ()
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->divtau_o);
 
-    } else if (var.compare("none") == 0) {
+    } else if (toLower(var).compare("none") == 0) {
 
       if (m_specs[1].compare("area") == 0) {
 
@@ -964,9 +1012,9 @@ PointRegion::value (const int lev,
 
   for (int var(0); var < var_nb; ++var) {
 
-    AMREX_ASSERT(mf[var] != nullptr);
+    AMREX_ASSERT(MFs[var] != nullptr);
 
-    MultiFab::Copy(*interp_mf, *mf[var], Comps[var], var, 1, 1);
+    MultiFab::Copy(*interp_mf, *MFs[var], Comps[var], var, 1, 1);
   }
 
   interp_mf->FillBoundary(geom.periodicity());
@@ -1907,6 +1955,10 @@ SurfaceIntegral::monitor (const Real& /*dt*/)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
 
+      m_epsilon[lev] = MFs[0];
+      m_density[lev] = MFs[1];
+      m_velocity[lev] = MFs[2];
+
       m_monitoring_results[lev] = flow_rate(lev, m_mf[lev], m_components);
 
       for (int i(0); i < MFs.size(); ++i) {
@@ -1933,6 +1985,10 @@ SurfaceIntegral::monitor (const Real& /*dt*/)
         if (MFs[i] != nullptr)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
+
+      m_epsilon[lev] = MFs[0];
+      m_density[lev] = MFs[1];
+      m_velocity[lev] = MFs[2];
 
       m_monitoring_results[lev] = mass_flow_rate(lev);
 
@@ -1961,6 +2017,10 @@ SurfaceIntegral::monitor (const Real& /*dt*/)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
 
+      m_epsilon[lev] = MFs[0];
+      m_density[lev] = MFs[1];
+      m_velocity[lev] = MFs[2];
+
       m_monitoring_results[lev] = mass_weighted_average(lev, m_mf[lev], m_components);
 
       for (int i(0); i < MFs.size(); ++i) {
@@ -1986,6 +2046,9 @@ SurfaceIntegral::monitor (const Real& /*dt*/)
         if (MFs[i] != nullptr)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
+
+      m_epsilon[lev] = MFs[0];
+      m_velocity[lev] = MFs[1];
 
       m_monitoring_results[lev] = volume_flow_rate(lev);
 
@@ -2303,6 +2366,9 @@ VolumeIntegral::monitor (const Real& /*dt*/)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
 
+      m_epsilon[lev] = MFs[0];
+      m_density[lev] = MFs[1];
+
       m_monitoring_results[lev] = mass_weighted_integral(lev, m_mf[lev], m_components);
 
       for (int i(0); i < MFs.size(); ++i) {
@@ -2328,6 +2394,9 @@ VolumeIntegral::monitor (const Real& /*dt*/)
         if (MFs[i] != nullptr)
           AMREX_ASSERT(check_mf_is_ok(*MFs[i]));
       }
+
+      m_epsilon[lev] = MFs[0];
+      m_density[lev] = MFs[1];
 
       m_monitoring_results[lev] = mass_weighted_average(lev, m_mf[lev], m_components);
 

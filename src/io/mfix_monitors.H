@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <fstream>
 
 
 // forward declaration
@@ -118,6 +119,15 @@ class Monitor {
 
     // Simulation time for outputting
     amrex::Real m_plot_per_approx;
+
+    // Output formatting options
+    int m_setw;
+    std::string m_setfill;
+    int m_setprecision;
+    std::string m_formatflag;
+
+    // Apply formatting options
+    std::ostream& setformat(std::ostream& output) const;
 
     // The name of the region for the monitor
     std::string m_region_name;
