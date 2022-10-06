@@ -80,6 +80,11 @@ void mfix::make_eb_geometry ()
 
     if (hourglass)  geom_type = "hourglass";
     if (eb_general) geom_type = "general";
+    
+    if (mfixRW->read_geom_chk_when_restarting && !mfixRW->restart_file.empty()) {
+       amrex::Print() << "Overriding any EB geometry. Reading from EB checkpoint file." << std::endl;
+       geom_type = "chkptfile";
+    } 
 
     /****************************************************************************
      *                                                                          *
