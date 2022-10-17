@@ -289,6 +289,13 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
 
+      for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
+
+        PairIndex index(pti.index(), pti.LocalTileIndex());
+        aux[index] = Gpu::DeviceVector<Real>();
+
+      }
+
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -308,7 +315,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
         const int np = particles.size();
 
-        aux[index] = Gpu::DeviceVector<Real>();
         aux[index].clear();
         aux[index].resize(fluid.nspecies()*np, 0.);
         Real* aux_ptr = aux[index].dataPtr();
