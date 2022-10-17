@@ -1,24 +1,17 @@
 #ifndef _MFIX_DES_PARTS_GEN_K_H_
 #define _MFIX_DES_PARTS_GEN_K_H_
 
-//#include <mfix_particle_generator.H>
 #include <mfix_calc_cell.H>
 
 #include <limits>
-//#include <string>
-//#include <iostream>
-//#include <iomanip>
-//#include <fstream>
-//#include <sstream>
 
 #include <mfix_ic.H>
-//#include <mfix_solids.H>
-//#include <mfix_dem.H>
-//#include <mfix_pic.H>
 
 #include <AMReX_IntVect.H>
 #include <AMReX_RealVect.H>
 #include <AMReX_PODVector.H>
+
+#define DEBUG_HCP 0
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
 //                                                                      !
@@ -57,14 +50,17 @@ class Hex_ClosePack
       const long seed =
         static_cast<long>(ic_vol * ic_solid.volfrac / ((M_PI/6.0)*mean*mean*mean));
 
-      const amrex::Real xlen = initial_conditions.ic(icv).region->hi(0) - initial_conditions.ic(icv).region->lo(0);
-      const amrex::Real ylen = initial_conditions.ic(icv).region->hi(1) - initial_conditions.ic(icv).region->lo(1);
-      const amrex::Real zlen = initial_conditions.ic(icv).region->hi(2) - initial_conditions.ic(icv).region->lo(2);
+      m_ic_dlo = amrex::RealVect(initial_conditions.ic(icv).region->lo(0),
+                                 initial_conditions.ic(icv).region->lo(1),
+                                 initial_conditions.ic(icv).region->lo(2));
 
-      // This is the radius we need for spacing particles to get the
-      // desired volume fraction and particle count.
-      amrex::Real eff_rad = hcp_rad(0.5*mean, xlen, ylen, zlen, seed);
-      //printf ("\nPacking radius: %9.6f\n", eff_rad);
+      amrex::RealVect ic_dhi(initial_conditions.ic(icv).region->hi(0),
+                             initial_conditions.ic(icv).region->hi(1),
+                             initial_conditions.ic(icv).region->hi(2));
+
+      const amrex::Real xlen = ic_dhi[0] - m_ic_dlo[0];
+      const amrex::Real ylen = ic_dhi[1] - m_ic_dlo[1];
+      const amrex::Real zlen = ic_dhi[2] - m_ic_dlo[2];
 
       amrex::RealVect rbx_lo(m_plo[0] + m_dx[0]*static_cast<amrex::Real>(lo[0]),
                              m_plo[1] + m_dx[1]*static_cast<amrex::Real>(lo[1]),
@@ -74,85 +70,134 @@ class Hex_ClosePack
                              m_plo[1] + m_dx[1]*static_cast<amrex::Real>(hi[1]+1),
                              m_plo[2] + m_dx[2]*static_cast<amrex::Real>(hi[2]+1));
 
-      m_ic_dlo = amrex::RealVect(initial_conditions.ic(icv).region->lo(0),
-                                 initial_conditions.ic(icv).region->lo(1),
-                                 initial_conditions.ic(icv).region->lo(2));
+#if 0
+      amrex::PrintToFile("setup", amrex::Print::AllProcs) << "\n"
+                     << " m_ic_dlo " << m_ic_dlo[0] << "  " << m_ic_dlo[1] << "  " << m_ic_dlo[2] << "\n"
+                     << " m_ic_dhi " <<   ic_dhi[0] << "  " <<   ic_dhi[1] << "  " <<   ic_dhi[2] << "\n";
 
-      amrex::RealVect ic_dhi(initial_conditions.ic(icv).region->hi(0),
-                             initial_conditions.ic(icv).region->hi(1),
-                             initial_conditions.ic(icv).region->hi(2));
+      amrex::PrintToFile("setup", amrex::Print::AllProcs) << "\n"
+                     << " rbx_lo   " << rbx_lo[0] << "  " << rbx_lo[1] << "  " << rbx_lo[2] << "\n"
+                     << " rbx_hi   " << rbx_hi[0] << "  " << rbx_hi[1] << "  " << rbx_hi[2] << "\n";
+#endif
+
+      const amrex::Real mean_rad = 0.5*mean;
 
       // Verify that the IC region overlaps with the IC region.
-      if (ic_dhi[0] < rbx_lo[0] || rbx_hi[0] < m_ic_dlo[0] ||
-          ic_dhi[1] < rbx_lo[1] || rbx_hi[1] < m_ic_dlo[1] ||
-          ic_dhi[2] < rbx_lo[2] || rbx_hi[2] < m_ic_dlo[2]) {
+      if (ic_dhi[0] <= rbx_lo[0] + mean_rad || rbx_hi[0] <= m_ic_dlo[0] + mean_rad ||
+          ic_dhi[1] <= rbx_lo[1] + mean_rad || rbx_hi[1] <= m_ic_dlo[1] + mean_rad ||
+          ic_dhi[2] <= rbx_lo[2] + mean_rad || rbx_hi[2] <= m_ic_dlo[2] + mean_rad) {
 
-        //amrex::Print() << "Nothing to do in this MFIter -- bail out\n";
         return;
       }
 
+      // This is the radius we need for spacing particles to get the
+      // desired volume fraction and particle count.
+      m_eff_rad = hcp_rad(mean_rad, xlen, ylen, zlen, seed);
+      //printf ("\nPacking radius: %21.18f\n", m_eff_rad);
 
-      const int kmax = hcp_k(eff_rad, zlen);
+#if 0
+      amrex::PrintToFile("setup", amrex::Print::AllProcs)
+                     << "\neff_rad " << m_eff_rad << "\n";
+#endif
 
-      int klo(0);
+      // Pull back just less than one particle radius to keep particles
+      // fully inside the IC region.
+      ic_dhi -= (m_eff_rad - small_number);
 
-      for(;klo<kmax;klo++) {
-        if(m_ic_dlo[2] + (1+klo*sqrt6x2o3)*eff_rad > rbx_lo[2])
-          break;
-      }
+      rbx_hi[0] = amrex::min(rbx_hi[0], ic_dhi[0]);
+      rbx_hi[1] = amrex::min(rbx_hi[1], ic_dhi[1]);
+      rbx_hi[2] = amrex::min(rbx_hi[2], ic_dhi[2]);
 
-      int khi(klo);
-      for(;khi<kmax;khi++) {
-        if(m_ic_dlo[2] + (1+khi*sqrt6x2o3)*eff_rad >= rbx_hi[2])
-          break;
-      }
-      khi--;
+      m_rbx_hi = rbx_hi;
+      m_rbx_lo = rbx_lo;
 
-      const int jmax = std::max(hcp_j(eff_rad, ylen, 0),
-                                hcp_j(eff_rad, ylen, 1));
+      // Transition into relative coordinates with origin at (0,0,0)
+      rbx_lo -= m_ic_dlo;
+      rbx_hi -= m_ic_dlo;
 
-      int jlo(0);
-      for(; jlo<jmax; jlo++) {
-        if(m_ic_dlo[1] + (1+jlo*sqrt3)*eff_rad > rbx_lo[1])
-          break;
-      }
+#if 0
+      amrex::PrintToFile("setup", amrex::Print::AllProcs) << "\n"
+                     << "shifted rbx: \n"
+                     << " rbx_lo   " << rbx_lo[0] << "  " << rbx_lo[1] << "  " << rbx_lo[2] << "\n"
+                     << " rbx_hi   " << rbx_hi[0] << "  " << rbx_hi[1] << "  " << rbx_hi[2] << "\n";
+#endif
 
-      int jhi(jlo);
-      const amrex::Real third(1.0/3.0);
-      for(; jhi<jmax; jhi++) {
-        if(m_ic_dlo[1] + (1+(jhi + third)*sqrt3)*eff_rad >= rbx_hi[1])
-          break;
-      }
-      jhi--;
+      // Compute the first plane.
+
+      m_klo = hcp_k(m_eff_rad, rbx_lo[2]);        // k index of first plane
+      const int p_cnt = hcp_k(m_eff_rad, rbx_hi[2], m_klo) - m_klo; // Total number of planes
 
 
-      const int imax = std::max(hcp_i(eff_rad, xlen, 0),
-                                hcp_i(eff_rad, xlen, 1));
+      const int p2_cnt = (p_cnt - (p_cnt%2))/2;
 
-      int ilo(0);
-      for(; ilo<imax; ilo++) {
-        if(m_ic_dlo[0] + (2*ilo+1)*eff_rad > rbx_lo[0])
-          break;
-      }
+      const int p1_cnt = p_cnt - p2_cnt;
 
-      int ihi(ilo);
-      for(; ihi<imax; ihi++) {
-        if(m_ic_dlo[0] + (2*ihi+1)*eff_rad >= rbx_hi[0])
-          break;
-      }
-      ihi--;
+      m_p1_jlo = hcp_j(m_eff_rad, rbx_lo[1], (m_klo%2));
+      const int p1_rows  = hcp_j(m_eff_rad, rbx_hi[1], (m_klo%2), m_p1_jlo) - m_p1_jlo;
 
-      m_seed_lo = amrex::IntVect(ilo, jlo, klo);
-      amrex::IntVect seed_hi(ihi, jhi, khi);
 
-      m_delta_bx = amrex::IntVect(amrex::max(0, seed_hi[0] - m_seed_lo[0] + 1),
-                                  amrex::max(0, seed_hi[1] - m_seed_lo[1] + 1),
-                                  amrex::max(0, seed_hi[2] - m_seed_lo[2] + 1));
+      const int p1r2_cnt = (p1_rows - (p1_rows%2))/2;
+      const int p1r1_cnt = p1_rows - p1r2_cnt;
 
-      const amrex::Box bx(m_seed_lo, seed_hi);
-      m_max_rp = eff_rad;
+      m_p1r1_ilo = hcp_i(m_eff_rad, rbx_lo[0], ((m_klo+m_p1_jlo  )%2));
+      m_p1r2_ilo = hcp_i(m_eff_rad, rbx_lo[0], ((m_klo+m_p1_jlo+1)%2));
 
-      m_np = m_delta_bx[0] * m_delta_bx[1] * m_delta_bx[2];
+      m_p1r1_np  = hcp_i(m_eff_rad, rbx_hi[0], ((m_klo+m_p1_jlo  )%2), m_p1r1_ilo) - m_p1r1_ilo;
+      const int p1r2_np  = hcp_i(m_eff_rad, rbx_hi[0], ((m_klo+m_p1_jlo+1)%2), m_p1r2_ilo) - m_p1r2_ilo;
+
+      m_p1_np = m_p1r1_np*p1r1_cnt + p1r2_np*p1r2_cnt;
+
+      // Build out plane 2
+      m_p2_jlo = hcp_j(m_eff_rad, rbx_lo[1], ((m_klo+1)%2));
+      const int p2_rows  = hcp_j(m_eff_rad, rbx_hi[1], ((m_klo+1)%2), m_p2_jlo) - m_p2_jlo;
+
+
+      const int p2r2_cnt = (p2_rows - (p2_rows%2))/2;
+      const int p2r1_cnt = p2_rows - p2r2_cnt;
+
+      m_p2r1_ilo = hcp_i(m_eff_rad, rbx_lo[0], ((m_klo+1+m_p2_jlo  )%2));
+      m_p2r2_ilo = hcp_i(m_eff_rad, rbx_lo[0], ((m_klo+1+m_p2_jlo+1)%2));
+
+      m_p2r1_np  = hcp_i(m_eff_rad, rbx_hi[0], ((m_klo+1+m_p2_jlo  )%2), m_p2r1_ilo) - m_p2r1_ilo;
+      const int p2r2_np  = hcp_i(m_eff_rad, rbx_hi[0], ((m_klo+1+m_p2_jlo+1)%2), m_p2r2_ilo) - m_p2r2_ilo;
+
+      const int p2_np = m_p2r1_np*p2r1_cnt + p2r2_np*p2r2_cnt;
+
+      m_np = m_p1_np*p1_cnt + p2_np*p2_cnt;
+
+      m_p1p2_np = m_p1_np + p2_np;
+
+      m_r1r2_np = m_p1r1_np + p1r2_np;
+
+#if 0
+      amrex::PrintToFile("setup", amrex::Print::AllProcs) << "\n"
+                     << "m_klo           " << m_klo << "\n"
+                     << "p_cnt           " << p_cnt << "\n"
+                     << "p1_cnt          " << p1_cnt << "\n"
+                     << "p2_cnt          " << p2_cnt << "\n"
+                     << "m_p1_jlo        " << m_p1_jlo << "\n"
+                     << "p1_rows         " << p1_rows << "\n"
+                     << "p1r1_cnt        " << p1r1_cnt << "\n"
+                     << "p1r2_cnt        " << p1r2_cnt << "\n"
+                     << "m_p1r1_ilo      " << m_p1r1_ilo << "\n"
+                     << "m_p1r2_ilo      " << m_p1r2_ilo << "\n"
+                     << "m_p1_np         " << m_p1_np << "\n"
+                     << "\n"
+                     << "m_p2_jlo        " << m_p2_jlo << "\n"
+                     << "p2_rows         " << p2_rows << "\n"
+                     << "p2r1_cnt        " << p2r1_cnt << "\n"
+                     << "p2r2_cnt        " << p2r2_cnt << "\n"
+                     << "m_p2r1_ilo      " << m_p2r1_ilo << "\n"
+                     << "m_p2r2_ilo      " << m_p2r2_ilo << "\n"
+                     << "m_p2r1_np       " << m_p2r1_np << "\n"
+                     << "  p2r2_np       " <<   p2r2_np << "\n"
+                     << "p2_np           " << p2_np << "\n"
+                     << "\n"
+                     << "m_np            " << m_np      << "\n"
+                     << "m_p1p2_np       " << m_p1p2_np << "\n"
+                     << "m_r1r2_np       " << m_r1r2_np << "\n";
+#endif
+
     }
 
     int get_particles_number () const
@@ -163,17 +208,71 @@ class Hex_ClosePack
     amrex::RealVect operator() (const int p_id,
                                 amrex::RandomEngine const&) const
     {
-      const int local_i = int(amrex::Math::floor(amrex::Real(p_id) / amrex::Real(m_delta_bx[1]*m_delta_bx[2])));
-      const int local_k = int(amrex::Math::floor(amrex::Real(p_id - local_i*m_delta_bx[1]*m_delta_bx[2]) / amrex::Real(m_delta_bx[1])));
-      const int local_j = p_id - local_i*m_delta_bx[1]*m_delta_bx[2] - local_k*m_delta_bx[1];
 
-      const int i = local_i + m_seed_lo[0];
-      const int j = local_j + m_seed_lo[1];
-      const int k = local_k + m_seed_lo[2];
+      // Compute the grouped (type-1 + type-2) plane containing the particle.
+      const int lk0 = p_id/m_p1p2_np; // (int/int) no need for floor()
+      // Compute the particle index in the grouped plane.
+      const int lk1 = p_id - lk0*m_p1p2_np;
+      // 0: particle is in type-1 plane
+      // 1: particle is in type-2 plane
+      const int lk2 = (lk1 < m_p1_np ? 0 : 1);
 
-      const amrex::Real x = m_ic_dlo[0] + m_max_rp * (1.0 + static_cast<amrex::Real>(2*i + (j+k)%2));
-      const amrex::Real y = m_ic_dlo[1] + m_max_rp * (1.0 + sqrt3o3*(static_cast<amrex::Real>(3*j + k%2)));
-      const amrex::Real z = m_ic_dlo[2] + m_max_rp * (1.0 + sqrt6x2o3*(static_cast<amrex::Real>(k)));
+      // Particle index in the hcp on this grid.
+      const int local_k = lk2 + 2*lk0;
+      // Particle index in the full hcp.
+      const int k = m_klo + local_k;
+
+      // Particle index in the k-th plane.
+      const int local_ko2 = local_k/2; // (int/int) no need for floor()
+      const int lj0 = p_id - ((local_k%2)*m_p1_np + local_ko2*m_p1p2_np);
+      // Index of grouped (type-1 + type-2) row in the k-th plane.
+      const int lj1 = lj0/m_r1r2_np; // (int/int) not need for floor()
+      // Particle index within the grouped row
+      const int lj2 = lj0 - lj1*m_r1r2_np;
+      // Number of particles in first row or this plane
+      const int lj3 = (1-(local_k%2))*m_p1r1_np + (local_k%2)*m_p2r1_np;
+
+      // Particle index in the hcp on this grid.
+      // 0: particle is in the first row of the group
+      // 1: particle is in the second row of the group
+      const int local_j = (lj2 < lj3 ? 0 : 1) + 2*lj1;
+      // Particle index in the full hcp.
+      const int j = local_j + (1-local_k%2)*m_p1_jlo
+                            + (  local_k%2)*m_p2_jlo;
+
+
+      // Particle index in the hcp on this grid.
+      const int li0 = (lj2 < lj3 ? 0 : 1)*lj3;
+      const int local_i = lj2 - li0;
+      // Particle index in the full hcp.
+      const int i = local_i + (1-(local_k%2))*((1-(local_j%2))*m_p1r1_ilo  +
+                                               (  (local_j%2))*m_p1r2_ilo) +
+                              (  (local_k%2))*((1-(local_j%2))*m_p2r1_ilo  +
+                                               (  (local_j%2))*m_p2r2_ilo);
+
+      const amrex::Real x = m_ic_dlo[0] + m_eff_rad * (1.0 + static_cast<amrex::Real>(2*i + (j+k)%2));
+      const amrex::Real y = m_ic_dlo[1] + m_eff_rad * (1.0 + sqrt3o3*(static_cast<amrex::Real>(3*j + k%2)));
+      const amrex::Real z = m_ic_dlo[2] + m_eff_rad * (1.0 + sqrt6x2o3*(static_cast<amrex::Real>(k)));
+
+#if 0
+      {
+         amrex::PrintToFile("generate", amrex::Print::AllProcs) << "p_id: " << p_id
+                        << "  local: " << amrex::IntVect(local_i, local_j, local_k)
+                        << "  global: " << amrex::IntVect(i,j,k)
+                        << "  pos: " << x << "  " << y << "  " << z
+                        << "  rbx: " << m_rbx_lo[0] << "  " << m_rbx_lo[1] << "  " << m_rbx_lo[2]
+                        << "   hi: " << m_rbx_hi[0] << "  " << m_rbx_hi[1] << "  " << m_rbx_hi[2]
+                        //<< "  ??  " << (1-((local_j+local_k)%2)) << "  " << m_lo0[0]
+                        //<< "  OR  " << (  ((local_j+local_k)%2)) << "  " << m_lo1[0]
+                        << "\n";
+      }
+
+#endif
+
+      AMREX_ALWAYS_ASSERT(m_rbx_lo[0] <= x && x < m_rbx_hi[0]);
+      AMREX_ALWAYS_ASSERT(m_rbx_lo[1] <= y && y < m_rbx_hi[1]);
+      AMREX_ALWAYS_ASSERT(m_rbx_lo[2] <= z && z < m_rbx_hi[2]);
+
 
       return amrex::RealVect(x, y, z);
     }
@@ -183,51 +282,86 @@ class Hex_ClosePack
     const amrex::Real sqrt3o3 = std::sqrt(3.0)/3.0;
     const amrex::Real sqrt3 = std::sqrt(3.0);
 
+    // This is a very small number we add to the length to catch
+    // any particles that are "on the edge"
+    const amrex::Real small_number = 10.*std::numeric_limits<amrex::Real>::epsilon();
+
+    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+
     const amrex::RealVect m_plo;
 
     const amrex::RealVect m_dx;
 
     int m_np;
 
-    amrex::IntVect m_delta_bx;
+    // Number of particles in plane type 1; row type 1
+    int m_p1r1_np;
 
-    amrex::IntVect m_seed_lo;
+    // Number of particles in plane type 2; row type 1
+    int m_p2r1_np;
+
+    // Number of particles in plane type 1
+    int m_p1_np;
+
+    // Number of particles in combined type 1 + type 2 plane
+    int m_p1p2_np;
+
+    // Number of particles in combined type 1 + type 2 plane
+    int m_r1r2_np;
+
+    int m_klo;
+
+    int m_p1_jlo;
+
+    int m_p1r1_ilo;
+    int m_p1r2_ilo;
+
+    int m_p2_jlo;
+    int m_p2r1_ilo;
+    int m_p2r2_ilo;
 
     amrex::RealVect m_ic_dlo;
 
-    amrex::Real m_max_rp;
+    amrex::Real m_eff_rad;
+
+    amrex::RealVect m_rbx_lo;
+    amrex::RealVect m_rbx_hi;
+
 
     // Auxiliary functions
     int hcp_i (amrex::Real rad,
-               amrex::Real xlen,
-               int offset_int) const
+               amrex::Real xend,
+               int offset_int,
+               int start_i = 0) const
     {
-      int i(0);
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
-      while ((1.0 + 2.0*static_cast<amrex::Real>(i) + offset)*rad <= xlen-rad) {
+      int i(start_i);
+      while ( tolerance < xend - (1.0 + 2.0*static_cast<amrex::Real>(i) + offset)*rad ) {
         i++;
       }
       return i;
     }
 
     int hcp_j (amrex::Real rad,
-               amrex::Real ylen,
-               int offset_int) const
+               amrex::Real yend,
+               int offset_int,
+               int start_j = 0) const
     {
-      int j(0);
-      const amrex::Real third = amrex::Real(1.0/3.0);
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
-      while ((1.0 + sqrt3*static_cast<amrex::Real>(j) + offset*third)*rad <=ylen-rad) {
+      int j(start_j);
+      while ( tolerance < yend - (1.0 + sqrt3o3 * (3.0 * static_cast<amrex::Real>(j) + offset))*rad ) {
         j++;
       }
       return j;
     }
 
+
     int hcp_k (amrex::Real rad,
-               amrex::Real zlen) const
+               amrex::Real zend,
+               int start_k = 0) const
     {
-      int k(0);
-      while ((1.0 + sqrt6x2o3*static_cast<amrex::Real>(k))*rad <= zlen-rad) {
+      int k(start_k);
+      while ( tolerance < zend - (1.0 + sqrt6x2o3*static_cast<amrex::Real>(k))*rad ) {
         k++;
       }
       return k;
@@ -238,6 +372,7 @@ class Hex_ClosePack
                     amrex::Real ylen,
                     amrex::Real zlen) const
     {
+
       const int a1 = hcp_i(rad, xlen, 0);
       const int a2 = hcp_i(rad, xlen, 1);
 
