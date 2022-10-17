@@ -191,7 +191,7 @@ template <typename F>
 void MFIXParticleContainer::
 InterphaseTxfrDeposition (F WeightFunc,
                           int lev,
-                          MultiFab & mf_tmp_eps,
+                          MultiFab & eps_mf,
                           MultiFab & txfr_mf,
                           const MultiFab * volfrac,
                           const amrex::FabArray<EBCellFlagFab>* flags,
@@ -231,6 +231,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
   {
+    FArrayBox local_eps;
     FArrayBox local_txfr;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
@@ -251,7 +252,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
       FArrayBox dummy_fab;
 
-      FArrayBox& eps_fab  = mf_tmp_eps[pti];
+      FArrayBox& eps_fab  = eps_mf[pti];
       FArrayBox& txfr_fab = txfr_mf[pti];
 
       Real* aux_ptr = aux[index].dataPtr();
@@ -261,15 +262,26 @@ InterphaseTxfrDeposition (F WeightFunc,
       if ((*flags)[pti].getType(box) != FabType::covered) {
 
         auto        txfr_arr = txfr_fab.array();
-        const auto&   volarr = eps_fab.array();
-        const auto& flagsarr = (*flags)[pti].array();
-        const auto&    vfrac = (*volfrac)[pti].array();
+        auto         eps_arr = eps_fab.array();
+        const auto& flagsarr = (*flags)[pti].const_array();
+        const auto&    vfrac = (*volfrac)[pti].const_array();
 
         const Real deposition_scale_factor = mfix::m_deposition_scale_factor;
 
 #ifdef _OPENMP
-        Box txfr_tile_box = box;
+        Box eps_tile_box = box;
+        {
+          const int ncomp = eps_mf.nComp();
 
+          if (Gpu::notInLaunchRegion()) {
+            eps_tile_box.grow(eps_mf.nGrow());
+            local_eps.resize(eps_tile_box, ncomp);
+            local_eps.setVal<RunOn::Host>(0.0);
+            eps_arr = local_eps.array();
+          }
+        }
+
+        Box txfr_tile_box = box;
         {
           const int ncomp = txfr_mf.nComp();
 
@@ -285,8 +297,8 @@ InterphaseTxfrDeposition (F WeightFunc,
         const int solve_enthalpy = fluid.solve_enthalpy();
 
         amrex::ParallelFor(nrp,
-            [pstruct,p_realarray,plo,dx,dxi,vfrac,volarr,deposition_scale_factor,nrp,
-             reg_cell_vol,WeightFunc,flagsarr,txfr_arr,solve_enthalpy,
+            [pstruct,p_realarray,plo,dx,dxi,vfrac,eps_arr,deposition_scale_factor,
+             nrp,reg_cell_vol,WeightFunc,flagsarr,txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,aux_ptr,
              idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr, idx_velx_txfr,
              idx_vely_txfr, idx_velz_txfr, idx_drag_txfr, idx_gammaTp_txfr,
@@ -364,7 +376,7 @@ InterphaseTxfrDeposition (F WeightFunc,
 
                 Real weight_vol = weights[ii+1][jj+1][kk+1] / vfrac(i+ii,j+jj,k+kk);
 
-                HostDevice::Atomic::Add(&volarr(i+ii,j+jj,k+kk), weight_vol*pvol);
+                HostDevice::Atomic::Add(&eps_arr(i+ii,j+jj,k+kk), weight_vol*pvol);
 
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velx_txfr), weight_vol*pvx);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vely_txfr), weight_vol*pvy);
@@ -394,6 +406,11 @@ InterphaseTxfrDeposition (F WeightFunc,
         });
 
 #ifdef _OPENMP
+        if (Gpu::notInLaunchRegion()) {
+            const int ncomp = eps_mf.nComp();
+            eps_fab.atomicAdd<RunOn::Host>(local_eps, eps_tile_box, eps_tile_box, 0, 0, ncomp);
+        }
+
         if (Gpu::notInLaunchRegion()) {
             const int ncomp = txfr_mf.nComp();
             txfr_fab.atomicAdd<RunOn::Host>(local_txfr, txfr_tile_box, txfr_tile_box, 0, 0, ncomp);
