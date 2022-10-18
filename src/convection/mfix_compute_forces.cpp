@@ -108,13 +108,13 @@ void mfix::compute_vel_forces_on_level (int lev,
         Array4<Real const> const& txfr  = txfr_in.const_array(mfi);
         Array4<Real const> const& ep_g  = m_leveldata[lev]->ep_g->const_array(mfi);
 
-        Transfer txfr_idxs(m_leveldata[0]->fluid->nspecies(),
-                           m_leveldata[0]->reactions->nreactions());
+        InterphaseTxfrIndexes txfr_idxs(m_leveldata[0]->fluid->nspecies(),
+                                        m_leveldata[0]->reactions->nreactions());
 
         const int drag_comp(txfr_idxs.drag_coeff);
-        const int velx_comp(txfr_idxs.velx);
-        const int vely_comp(txfr_idxs.vely);
-        const int velz_comp(txfr_idxs.velz);
+        const int velx_comp(txfr_idxs.vel+0);
+        const int vely_comp(txfr_idxs.vel+1);
+        const int velz_comp(txfr_idxs.vel+2);
 
         amrex::ParallelFor(bx, [vel_f, rho, l_gravity, gradp, l_gp0, vel_g, ep_g, txfr,
          drag_comp, velx_comp, vely_comp, velz_comp]

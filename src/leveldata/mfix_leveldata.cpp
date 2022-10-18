@@ -41,7 +41,7 @@ LevelData::LevelData (BoxArray const& ba,
 
     vort = new MultiFab(ba, dmap, 1, nghost, MFInfo(), factory);
 
-    Transfer txfr_idxs(fluid->nspecies(), reactions->nreactions());
+    InterphaseTxfrIndexes txfr_idxs(fluid->nspecies(), reactions->nreactions());
     txfr = new MultiFab(ba, dmap, txfr_idxs.count, nghost, MFInfo(), factory);
 
     diveu = new MultiFab(amrex::convert(ba, IntVect{1,1,1}), dmap, 1, nghost, MFInfo(), factory);

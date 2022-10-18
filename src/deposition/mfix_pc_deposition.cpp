@@ -214,17 +214,18 @@ InterphaseTxfrDeposition (F WeightFunc,
   const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
   const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
-  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
-  const int idx_velx_txfr = txfr_idxs.velx;
-  const int idx_vely_txfr = txfr_idxs.vely;
-  const int idx_velz_txfr = txfr_idxs.velz;
+  InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
+  const int idx_velx_txfr = txfr_idxs.vel+0;
+  const int idx_vely_txfr = txfr_idxs.vel+1;
+  const int idx_velz_txfr = txfr_idxs.vel+2;
   const int idx_drag_txfr = txfr_idxs.drag_coeff;
   const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
   const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 
-  const int idx_Xg_txfr   = txfr_idxs.ro_gk_txfr;
-  const int idx_velg_txfr = txfr_idxs.vel_g_txfr;
-  const int idx_hg_txfr   = txfr_idxs.h_g_txfr;
+  const int idx_Xg_txfr   = txfr_idxs.chem_ro_gk;
+  const int idx_velg_txfr = txfr_idxs.chem_vel;
+  const int idx_hg_txfr   = txfr_idxs.chem_h;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())

@@ -150,9 +150,9 @@ MfixRW::ComputeMassProduction (const Real /*dt*/,
   const int nspecies_g = fluid.nspecies();
   std::vector<Real> prod(nspecies_g, 0.);
 
-  Transfer txfr_idxs(nspecies_g, reactions.nreactions());
+  InterphaseTxfrIndexes txfr_idxs(nspecies_g, reactions.nreactions());
 
-  const int scomp = txfr_idxs.ro_gk_txfr;
+  const int scomp = txfr_idxs.chem_ro_gk;
 
   for (int lev = 0; lev < nlev; lev++) {
 

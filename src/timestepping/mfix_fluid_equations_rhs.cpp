@@ -16,7 +16,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (reactions.solve()) {
-    Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+    InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -27,7 +27,7 @@ mfix::mfix_density_rhs (Vector< MultiFab*      > const& rhs,
         Box bx = mfi.tilebox();
 
         const int nspecies_g = fluid.nspecies();
-        const int start_idx  = txfr_idxs.ro_gk_txfr;
+        const int start_idx  = txfr_idxs.chem_ro_gk;
 
         Array4<Real      > const& rhs_arr        = rhs[lev]->array(mfi);
         Array4<Real const> const& ro_gk_txfr_arr = txfr[lev]->const_array(mfi,start_idx);
@@ -63,9 +63,9 @@ mfix::mfix_enthalpy_rhs (Vector< MultiFab*      > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (reactions.solve()) {
-    Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+    InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
-    const int start_idx = txfr_idxs.h_g_txfr;
+    const int start_idx = txfr_idxs.chem_h;
 
     for (int lev(0); lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -102,9 +102,9 @@ mfix::mfix_species_X_rhs (Vector< MultiFab*      > const& rhs,
   if (reactions.solve()) {
     const int nspecies_g = fluid.nspecies();
 
-    Transfer txfr_idxs(nspecies_g, reactions.nreactions());
+    InterphaseTxfrIndexes txfr_idxs(nspecies_g, reactions.nreactions());
 
-    const int ro_gk_txfr_idx = txfr_idxs.ro_gk_txfr;
+    const int ro_gk_txfr_idx = txfr_idxs.chem_ro_gk;
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP
@@ -142,9 +142,9 @@ mfix::mfix_momentum_rhs (Vector< MultiFab* > const& rhs,
     rhs[lev]->setVal(0.);
 
   if (reactions.solve()) {
-    Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+    InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
-    const int start_idx = txfr_idxs.vel_g_txfr;
+    const int start_idx = txfr_idxs.chem_vel;
 
     for (int lev = 0; lev <= finest_level; lev++) {
 #ifdef _OPENMP

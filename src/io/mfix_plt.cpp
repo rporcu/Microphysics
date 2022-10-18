@@ -147,14 +147,14 @@ MfixRW::InitIOPltData ()
         }
       }
 
-      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+      InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
       if (m_dem.solve() || m_pic.solve()) {
         if (plt_txfr == 1) pltVarCount += txfr_idxs.countNoChem;
       }
 
       if (fluid.solve_species() && reactions.solve()) {
-        if (plt_chem_txfr == 1) pltVarCount += txfr_idxs.countChem;
+        if (plt_chem_txfr == 1) pltVarCount += (txfr_idxs.count - txfr_idxs.countNoChem);
       }
     }
 
@@ -1007,7 +1007,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
           lc += nspecies_g;
         }
 
-        Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+        InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
         if (plt_txfr == 1) {
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr, 0, lc, txfr_idxs.countNoChem, 0);
@@ -1015,9 +1015,12 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         }
 
         if (fluid.solve_species() && reactions.solve() && plt_chem_txfr == 1) {
+          const int countChem = txfr_idxs.count - txfr_idxs.countNoChem;
+
           MultiFab::Copy(*mf[lev], *m_leveldata[lev]->txfr,
-            txfr_idxs.countNoChem, lc, txfr_idxs.countChem, 0);
-          lc += txfr_idxs.countChem;
+            txfr_idxs.countNoChem, lc, countChem, 0);
+
+          lc += countChem;
         }
 
       }

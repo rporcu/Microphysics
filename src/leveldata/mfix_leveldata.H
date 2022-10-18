@@ -11,34 +11,28 @@
 #include <mfix_reactions.H>
 
 
-struct Transfer {
+struct InterphaseTxfrIndexes {
 
-  Transfer (const int nspecies_g, const int nreactions)
-    : velx(0)
-    , vely(1)
-    , velz(2)
+  InterphaseTxfrIndexes (const int nspecies_g, const int nreactions)
+    : vel(0)
     , drag_coeff(3)
     , gammaTp(4)
     , convection_coeff(5)
     , countNoChem(convection_coeff+1) // Num txfr terms (no rxns)
-    , ro_gk_txfr(countNoChem)
-    , vel_g_txfr(ro_gk_txfr + nspecies_g*(nreactions>0))
-    , h_g_txfr(vel_g_txfr + 3*(nreactions>0))
-    , countChem ((nspecies_g + 3 + 1)*(nreactions>0)) // Num of chem rxns txfr terms
-    , count (countNoChem + countChem)
+    , chem_ro_gk(countNoChem)
+    , chem_vel(chem_ro_gk + nspecies_g*(nreactions>0))
+    , chem_h(chem_vel + 3*(nreactions>0))
+    , count (chem_h + 1*(nreactions>0)) // Num of chem rxns txfr terms
   {}
 
-  const int velx;
-  const int vely;
-  const int velz;
+  const int vel;
   const int drag_coeff;
   const int gammaTp;
   const int convection_coeff;
   const int countNoChem;
-  const int ro_gk_txfr;
-  const int vel_g_txfr;
-  const int h_g_txfr;
-  const int countChem;
+  const int chem_ro_gk;
+  const int chem_vel;
+  const int chem_h;
   const int count;
 };
 

@@ -340,10 +340,11 @@ mfix::mfix_add_vel_txfr_explicit (Real dt,
       Array4<Real const> const&   ro_array = rho_in[lev]->array(mfi);
       Array4<Real const> const&   ep_array = ep_g_in[lev]->array(mfi);
 
-      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
-      const int idx_velx_txfr = txfr_idxs.velx;
-      const int idx_vely_txfr = txfr_idxs.vely;
-      const int idx_velz_txfr = txfr_idxs.velz;
+      InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
+      const int idx_velx_txfr = txfr_idxs.vel+0;
+      const int idx_vely_txfr = txfr_idxs.vel+1;
+      const int idx_velz_txfr = txfr_idxs.vel+2;
       const int idx_drag_txfr = txfr_idxs.drag_coeff;
 
       amrex::ParallelFor(bx,[dt,vel_array,txfr_array,ro_array,ep_array,
@@ -416,7 +417,8 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
       const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
-      Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+      InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
       const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
       const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 
@@ -534,10 +536,11 @@ mfix::mfix_add_vel_txfr_implicit (Real dt,
 
   BL_PROFILE("mfix::mfix_add_vel_txfr_implicit");
 
-  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
-  const int idx_velx_txfr = txfr_idxs.velx;
-  const int idx_vely_txfr = txfr_idxs.vely;
-  const int idx_velz_txfr = txfr_idxs.velz;
+  InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
+  const int idx_velx_txfr = txfr_idxs.vel+0;
+  const int idx_vely_txfr = txfr_idxs.vel+1;
+  const int idx_velz_txfr = txfr_idxs.vel+2;
 
   for (int lev = 0; lev <= finest_level; lev++) {
 
@@ -589,7 +592,8 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
   const auto& fluid_parms = fluid.parameters();
 
-  Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+  InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
   const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
   const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 

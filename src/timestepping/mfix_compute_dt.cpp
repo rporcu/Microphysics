@@ -32,7 +32,8 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     */
 
-    Transfer txfr_idxs(fluid.nspecies(), reactions.nreactions());
+    InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
     const int idx_drag_txfr = txfr_idxs.drag_coeff;
 
     // Max CFL factor for all levels

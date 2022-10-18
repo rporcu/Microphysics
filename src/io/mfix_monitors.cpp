@@ -416,8 +416,8 @@ BaseMonitor::setup_variables ()
   Vector<std::string> variables_names;
   variables_names.clear();
 
-  Transfer txfr_idxs(m_leveldata[0]->fluid->nspecies(),
-                     m_leveldata[0]->reactions->nreactions());
+  InterphaseTxfrIndexes txfr_idxs(m_leveldata[0]->fluid->nspecies(),
+                                  m_leveldata[0]->reactions->nreactions());
 
   for (int i(0); i < m_input_variables.size(); ++i) {
 
@@ -653,19 +653,19 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_velocity") == 0) {
 
       variables_names.push_back("txfr_vel_x");
-      m_components.push_back(txfr_idxs.velx);
+      m_components.push_back(txfr_idxs.vel+0);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("txfr_vel_y");
-      m_components.push_back(txfr_idxs.vely);
+      m_components.push_back(txfr_idxs.vel+1);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("txfr_vel_z");
-      m_components.push_back(txfr_idxs.velz);
+      m_components.push_back(txfr_idxs.vel+2);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -673,7 +673,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_x") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.velx);
+      m_components.push_back(txfr_idxs.vel+0);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -681,7 +681,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_y") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.vely);
+      m_components.push_back(txfr_idxs.vel+1);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -689,7 +689,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("txfr_vel_z") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.velz);
+      m_components.push_back(txfr_idxs.vel+2);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -723,7 +723,7 @@ BaseMonitor::setup_variables ()
       for (int n_g(0); n_g < m_fluid.nspecies(); ++n_g) {
 
         variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
-        m_components.push_back(txfr_idxs.ro_gk_txfr+n_g);
+        m_components.push_back(txfr_idxs.chem_ro_gk+n_g);
 
         for (int lev(0); lev < m_nlev; lev++)
           m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -739,7 +739,7 @@ BaseMonitor::setup_variables ()
         if (var_species.compare(m_fluid.species_names(n_g)) == 0) {
 
           variables_names.push_back("chem_txfr_X_gk_"+m_fluid.species_names(n_g));
-          m_components.push_back(txfr_idxs.ro_gk_txfr+n_g);
+          m_components.push_back(txfr_idxs.chem_ro_gk+n_g);
 
           for (int lev(0); lev < m_nlev; lev++)
             m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -751,19 +751,19 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_velocity") == 0) {
 
       variables_names.push_back("chem_txfr_vel_x");
-      m_components.push_back(txfr_idxs.vel_g_txfr+0);
+      m_components.push_back(txfr_idxs.chem_vel+0);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("chem_txfr_vel_y");
-      m_components.push_back(txfr_idxs.vel_g_txfr+1);
+      m_components.push_back(txfr_idxs.chem_vel+1);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
 
       variables_names.push_back("chem_txfr_vel_z");
-      m_components.push_back(txfr_idxs.vel_g_txfr+2);
+      m_components.push_back(txfr_idxs.chem_vel+2);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -771,7 +771,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_x") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.vel_g_txfr+0);
+      m_components.push_back(txfr_idxs.chem_vel+0);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -779,7 +779,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_y") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.vel_g_txfr+1);
+      m_components.push_back(txfr_idxs.chem_vel+1);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -787,7 +787,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_vel_z") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.vel_g_txfr+2);
+      m_components.push_back(txfr_idxs.chem_vel+2);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
@@ -795,7 +795,7 @@ BaseMonitor::setup_variables ()
     } else if (var.compare("chem_txfr_h") == 0) {
 
       variables_names.push_back(var);
-      m_components.push_back(txfr_idxs.h_g_txfr);
+      m_components.push_back(txfr_idxs.chem_h);
 
       for (int lev(0); lev < m_nlev; lev++)
         m_mf[lev].push_back(m_leveldata[lev]->txfr);
