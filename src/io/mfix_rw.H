@@ -57,6 +57,18 @@ public:
    // and add a filter to plot only a selected group of particles
    struct SolidsPlotRegion {
      public:
+       SolidsPlotRegion ()
+         : m_region_name("")
+         , m_region_extents(amrex::RealBox())
+         , m_pp_string("")
+         , m_plot_names(0)
+         , m_h_plot_types(0)
+         , m_d_plot_types(0)
+         , m_plot_int(-1)
+         , m_plot_per_approx(-1.)
+         , m_plot_fluid_vars(0)
+       {}
+
        std::string m_region_name;
        amrex::RealBox m_region_extents;
 
@@ -68,6 +80,7 @@ public:
 
        int m_plot_int;
        amrex::Real m_plot_per_approx;
+       amrex::Vector<std::string> m_plot_fluid_vars;
 
        int m_last_solids_plt = -1;
 

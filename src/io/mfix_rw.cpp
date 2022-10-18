@@ -163,6 +163,8 @@ void MfixRW::readParameters ()
             int ppapprox = ppSolidsRegion.query("plot_per_approx", plot_region.m_plot_per_approx);
 
             AMREX_ALWAYS_ASSERT(ppint || ppapprox);
+
+            ppSolidsRegion.queryarr("plt_fluid_vars", plot_region.m_plot_fluid_vars);
           }
         }
       }

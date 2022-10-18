@@ -1117,15 +1117,71 @@ MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
       return particle_in_region && type_found;
     };
 
+    amrex::Vector<std::string>& fluid_vars = plot_region.m_plot_fluid_vars;
+    const int ncomp = fluid_vars.size();
+    const int ngrow = 0;
+
+    Vector<std::unique_ptr<MultiFab>> mf(finest_level+1);
+
+    if (ncomp > 0) {
+
+      for (int lev = 0; lev <= finest_level; ++lev) {
+
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow,  MFInfo(), *ebfactory[lev]);
+
+        int lc(0);
+
+        for (std::string& var: fluid_vars) {
+
+          if (var.compare("ep_g") == 0) {
+
+            MultiFab::Copy(*mf[lev], *m_leveldata[lev]->ep_g, 0, lc, 1, 0);
+            lc += 1;
+
+          } else if (var.compare("ro_g") == 0) {
+
+            MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->ro_g), 0, lc, 1, 0);
+            lc += 1;
+
+          } else if (var.compare("T_g") == 0) {
+
+            MultiFab::Copy(*mf[lev], (*m_leveldata[lev]->T_g), 0, lc, 1, 0);
+            lc += 1;
+
+          } else if (var.compare("volfrac") == 0) {
+
+            if (ebfactory[lev]) {
+              MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, lc, 1, 0);
+            } else {
+              mf[lev]->setVal(1.0, lc, 1, 0);
+            }
+            lc += 1;
+          } else {
+            amrex::Abort("Error: invalid fluid variable in solids region plot");
+          }
+        }
+      }
+
+      // Cleanup places where we have no data.
+      Vector<const MultiFab*> mf2(nlev);
+      for (int lev = 0; lev < nlev; ++lev) {
+        EB_set_covered(*mf[lev], 0.0);
+        mf2[lev] = mf[lev].get();
+      }
+
+      Vector<int> istep;
+      istep.resize(nlev,nstep);
+      amrex::WriteMultiLevelPlotfile(solidsfilename, nlev, mf2, fluid_vars,
+                                     geom, time, istep, ref_ratio);
+
     // no fluid
-    {
+    } else {
       // Some post-processing tools (such as yt) might still need some basic
       // MultiFab header information to function. We provide this here by
       // creating an "empty" plotfile header (which essentially only contains
       // the BoxArray information). Particle data is saved elsewhere.
 
-      Vector< std::unique_ptr<MultiFab> > mf(finest_level+1);
-      Vector<std::string>  names;
+      Vector<std::string> names;
       // NOTE: leave names vector empty => header should reflect nComp = 0
       //names.insert(names.end(), "placeholder");
 
