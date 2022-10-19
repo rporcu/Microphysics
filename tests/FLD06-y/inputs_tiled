@@ -9,6 +9,7 @@
 
 #mfix.cfl      = 0.4
 mfix.fixed_dt = 3.e-6
+mfix.overstep_end_time = 1
 
 mfix.initial_iterations = 2
 mfix.max_step = 100
