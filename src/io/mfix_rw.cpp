@@ -221,6 +221,7 @@ void MfixRW::readParameters ()
      ParmParse pp("mfix");
 
      pp.query("stop_time", stop_time);
+     pp.query("overstep_end_time", overstep_end_time);
      pp.query("max_step", max_step);
 
      pp.query("write_eb_surface", write_eb_surface);

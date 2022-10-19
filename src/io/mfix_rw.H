@@ -185,6 +185,7 @@ public:
    int max_step   = -1;
    int regrid_int = -1;
    amrex::Real stop_time  = -1.0;
+   int overstep_end_time  = 0;
    bool stop_for_unused_inputs = false;
    bool only_print_grid_report = false;
    std::string restart_file {""};

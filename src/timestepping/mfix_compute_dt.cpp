@@ -240,7 +240,7 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     // Don't overshoot the final time if not running to steady state
     if (m_steady_state == 0 && stop_time > 0.)
-       if (time+dt_new > stop_time)
+       if ((time+dt_new > stop_time) && (fixed_dt <= 0.) && (!mfixRW->overstep_end_time))
            dt_new = stop_time - time;
 
     // dt_new is the step calculated with a cfl constraint; dt is the value set by fixed_dt
@@ -248,9 +248,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     //   but (dt > dt_new) was being set to true due to precision issues.
     Real ope(1.0 + 1.e-8);
 
-    if ( fixed_dt > 0.)
+    if (fixed_dt > 0.)
     {
-        if ( fixed_dt > dt_new*ope && m_cfl > 0)
+        if (fixed_dt > dt_new*ope && m_cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
                            << " fixed dt = "  << fixed_dt
@@ -259,7 +259,11 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
             amrex::Abort ("Fixed dt is too large for fluid solve");
         } else {
 
-            dt = fixed_dt;
+            const Real new_time = time+fixed_dt;
+            if (((new_time - stop_time) > 1.e-15) && (!mfixRW->overstep_end_time))
+                dt = stop_time - time;
+            else
+                dt = fixed_dt;
 
         }
     }
