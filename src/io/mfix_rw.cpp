@@ -599,16 +599,27 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
  *------------------------------------------------------------------------------------------------*/
     int mass_balance_report_test = 0;
 
-    if (mass_balance_report_per_approx > 0.0) {
+    if ( mass_balance_report_int > 0 ) {
+
+      if ( first ) { // Never write the first.
+        mass_balance_report_test = 0;
+
+      } else if (last) { // Always write the last.
+        mass_balance_report_test = (nstep != last_mb_report) ? 1 :0;
+
+      } else {
+        mass_balance_report_test = (nstep % mass_balance_report_int == 0) ? 1 : 0;
+      }
+    }
+
+    else if (mass_balance_report_per_approx > 0.0) {
       mass_balance_report_test = test_per_approx(time, dt, mass_balance_report_per_approx);
     }
 
-    if ( (mass_balance_report_test == 1) ||
-         (( mass_balance_report_int > 0) &&
-          ( nstep %  mass_balance_report_int == 0 ) ) ) {
+    if ( mass_balance_report_test == 1) {
       WriteMassBalanceReport(time);
+      last_mb_report = nstep;
     }
-
 
 }
 

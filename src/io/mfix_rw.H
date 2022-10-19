@@ -162,6 +162,9 @@ public:
                          const int scomp,
                          const int ncomp,
                          const bool fluxes_are_area_weighted,
+                         const int eb_has_flow,
+                         amrex::Vector<amrex::MultiFab const*> const& eb_vel,
+                         amrex::Vector<amrex::MultiFab const*> const& eb_species,
                          const amrex::Real dt);
 
    void ReportGridStats () const;
@@ -198,6 +201,7 @@ public:
 
    int report_mass_balance = 0;
    int mass_balance_report_int = -1;
+   int last_mb_report  = -1;
    amrex::Real mass_balance_report_per_approx = -1;
    amrex::Real mass_balance_report_time = 0;
 
@@ -301,10 +305,10 @@ private:
 
    MFIXRegions& regions;
 
-   amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> mass_accum = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_inflow = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_outflow = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> mass_prod = {0.};
+   amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> m_mass_accum   = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_inflow  = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_outflow = {0.};
+   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_prod    = {0.};
 
 
    void readParameters ();

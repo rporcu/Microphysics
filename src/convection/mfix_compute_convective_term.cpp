@@ -790,7 +790,9 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
     mfixRW->ComputeMassFlux(GetVecOfConstPtrs(flux_x),
                             GetVecOfConstPtrs(flux_y),
                             GetVecOfConstPtrs(flux_z),
-                            flux_comp, num_comp, fluxes_are_area_weighted, l_dt);
+                            flux_comp, num_comp, fluxes_are_area_weighted,
+                            m_embedded_boundaries.has_flow(), eb_vel, eb_species,
+                            l_dt);
   }
 
 }
