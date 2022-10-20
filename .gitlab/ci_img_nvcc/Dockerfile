@@ -46,7 +46,7 @@ RUN apt-get -qq update\
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
     cmake==3.* \
-    codespell==2.* \
+    codespell==2.2.1 \
     conan>=1.51.3 \
     ninja==1.* \
     && curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz -- \
