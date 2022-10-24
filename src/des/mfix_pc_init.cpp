@@ -155,7 +155,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 }
 
 
-void MFIXParticleContainer::InitParticlesAuto ()
+void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfactory)
 {
   int lev = 0;
 
@@ -166,63 +166,68 @@ void MFIXParticleContainer::InitParticlesAuto ()
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
+  const auto& flags = particle_ebfactory->getMultiEBCellFlagFab();
+
   // This uses the particle tile size. Note that the default is to tile so if we
   //      remove the true and don't explicitly add false it will still tile
   for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
     const Box& tilebx = mfi.tilebox();
 
-    // Now that we know pcount, go ahead and create a particle container for this
-    // grid and add the particles to it
-    auto& particles = DefineAndReturnParticleTile(lev,mfi);
+    if(flags[mfi].getType(tilebx) != FabType::covered) {
 
-    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+      // Now that we know pcount, go ahead and create a particle container for this
+      // grid and add the particles to it
+      auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
-      if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
+      for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
 
-        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
-          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
+        if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
 
-            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+          for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
+            if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
 
-            const RealBox* ic_region = m_initial_conditions.ic(icv).region;
-            const Box ic_box = calc_ic_box(Geom(lev), ic_region);
+              const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
 
-            if (tilebx.intersects(ic_box)) {
+              const RealBox* ic_region = m_initial_conditions.ic(icv).region;
+              const Box ic_box = calc_ic_box(Geom(lev), ic_region);
 
-              const Box bx = tilebx & ic_box;
+              if (tilebx.intersects(ic_box)) {
 
-              const IntVect bx_lo(bx.loVect());
-              const IntVect bx_hi(bx.hiVect());
+                const Box bx = tilebx & ic_box;
 
-              const int id = ParticleType::NextID();
-              const int cpu = ParallelDescriptor::MyProc();
+                const IntVect bx_lo(bx.loVect());
+                const IntVect bx_hi(bx.hiVect());
 
-              ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id,
-                  cpu, icv, phase, m_initial_conditions, m_dem, m_pic);
+                const int id = ParticleType::NextID();
+                const int cpu = ParallelDescriptor::MyProc();
 
-              // This is particles per grid so we reset to 0
-              int pcount = 0;
+                ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id,
+                    cpu, icv, phase, m_initial_conditions, m_dem, m_pic);
 
-              particles_generator.generate(pcount, particles);
+                // This is particles per grid so we reset to 0
+                int pcount = 0;
 
-              // Update the particles NextID
-              ParticleType::NextID(id+pcount);
+                particles_generator.generate(pcount, particles);
 
-              // Add components for each of the runtime variables
-              const int start = SoArealData::count;
-              for (int comp(0); comp < m_runtimeRealData.count; ++comp)
-                particles.push_back_real(start+comp, pcount, 0.);
+                // Update the particles NextID
+                ParticleType::NextID(id+pcount);
 
-              total_np += static_cast<long>(pcount);
-            }
+                // Add components for each of the runtime variables
+                const int start = SoArealData::count;
+                for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+                  particles.push_back_real(start+comp, pcount, 0.);
 
-            break; // only one solid phase per icv is allowed
-          }
-        }
-      }
-    }
-  }
+                total_np += static_cast<long>(pcount);
+              }
+
+              break; // only one solid phase per icv is allowed
+            } // ep_s > 0
+          } // loop over solids
+        } // ep_g < 1
+      } // loop over ICs
+    } // FabType not covered
+  } // MFIter loop
 
   ParallelDescriptor::ReduceLongSum(total_np);
   amrex::Print() << "Total number of generated particles: " << total_np << std::endl;

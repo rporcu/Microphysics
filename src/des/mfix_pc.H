@@ -174,7 +174,7 @@ class MFIXParticleContainer final
 
     void InitParticlesAscii (const std::string& file);
 
-    void InitParticlesAuto ();
+    void InitParticlesAuto (amrex::EBFArrayBoxFactory* particle_ebfactory);
 
     void InitParticlesRuntimeVariables (const int adv_enthalpy);
 

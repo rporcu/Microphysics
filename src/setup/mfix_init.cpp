@@ -758,7 +758,8 @@ void mfix::InitLevelData (Real /*time*/)
 
       if (m_initial_conditions.AutoParticleInit()) {
          amrex::Print() << "Auto generating particles ..." << std::endl;
-         pc->InitParticlesAuto();
+         // Particles are generated on level 0
+         pc->InitParticlesAuto(particle_ebfactory[0].get());
 
       } else {
         amrex::Print() << "Reading particles from particle_input.dat ..." << std::endl;
