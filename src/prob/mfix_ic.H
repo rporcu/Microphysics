@@ -35,11 +35,25 @@ class MFIXInitialConditions
       return (m_particle_init_type == ParticleInitType::Auto) ? 1 : 0;
     };
 
+    // Store the number of particles generated in the IC region.
+    void set_particle_count ( const int icv, const long np_in ) {
+      AMREX_ASSERT( icv < m_np.size() );
+      m_np[icv] = np_in;
+    }
+
+    // Return the number of particles generated in the IC region.
+    long get_particle_count ( const int icv ) const {
+      AMREX_ASSERT( icv < m_np.size() );
+      return m_np[icv];
+    }
+
   private:
 
     amrex::Vector<IC_t> m_ic;
 
     ParticleInitType m_particle_init_type = ParticleInitType::Invalid;
+
+    amrex::Vector<long> m_np;
 
 };
 
@@ -47,8 +61,8 @@ class MFIXInitialConditions
 struct IC_t {
 
   // Constructor
-  IC_t (MFIXFluidPhase& fluid_in) :
-    fluid(fluid_in)
+  IC_t (MFIXFluidPhase& fluid_in)
+    : fluid(fluid_in)
   {}
 
   const amrex::RealBox* region;

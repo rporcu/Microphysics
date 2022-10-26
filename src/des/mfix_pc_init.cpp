@@ -4,6 +4,7 @@
 #include <mfix_species.H>
 #include <mfix_ic.H>
 #include <mfix_calc_cell.H>
+#include <mfix_utils.H>
 
 #include <mfix_particle_generator.H>
 
@@ -162,7 +163,8 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
   const GpuArray<Real,3>& dx = Geom(lev).CellSizeArray();
   const GpuArray<Real,3>& plo = Geom(lev).ProbLoArray();
 
-  long total_np = 0;
+  // Store particle count totals by IC region
+  std::vector<long> total_np(m_initial_conditions.ic().size(), 0);
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -176,8 +178,6 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
     if(flags[mfi].getType(tilebx) != FabType::covered) {
 
-      // Now that we know pcount, go ahead and create a particle container for this
-      // grid and add the particles to it
       auto& particles = DefineAndReturnParticleTile(lev,mfi);
 
       for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
@@ -205,7 +205,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                 ParticlesGenerator particles_generator(bx_lo, bx_hi, plo, dx, id,
                     cpu, icv, phase, m_initial_conditions, m_dem, m_pic);
 
-                // This is particles per grid so we reset to 0
+                // This is particles in this grid for this IC region
                 int pcount = 0;
 
                 particles_generator.generate(pcount, particles);
@@ -218,7 +218,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                 for (int comp(0); comp < m_runtimeRealData.count; ++comp)
                   particles.push_back_real(start+comp, pcount, 0.);
 
-                total_np += static_cast<long>(pcount);
+                total_np[icv] += static_cast<long>(pcount);
               }
 
               break; // only one solid phase per icv is allowed
@@ -229,9 +229,16 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
     } // FabType not covered
   } // MFIter loop
 
-  ParallelDescriptor::ReduceLongSum(total_np);
-  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
-  m_total_numparticle = total_np;
+  ParallelDescriptor::ReduceLongSum(total_np.data(), m_initial_conditions.ic().size());
+
+  m_total_numparticle = 0;
+  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    m_initial_conditions.set_particle_count(icv, total_np[icv]);
+    m_total_numparticle += total_np[icv];
+  }
+
+  amrex::Print() << "Total number of generated particles: "
+    << MfixIO::FormatWithCommas(m_total_numparticle) << std::endl;
 
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.

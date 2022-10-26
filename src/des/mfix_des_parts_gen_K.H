@@ -32,6 +32,7 @@ class Hex_ClosePack
       : m_plo(plo.data())
       , m_dx(dx.data())
       , m_np(0)
+      , m_verbose(0)
     {}
 
     void setup (MFIXInitialConditions& initial_conditions,
@@ -40,6 +41,16 @@ class Hex_ClosePack
                 const int icv,
                 const int phase)
     {
+#if 0
+      amrex::ParmParse pp("ic");
+
+      std::vector<std::string> input_regions;
+      pp.queryarr("regions", input_regions);
+
+      m_verbose = (input_regions[icv] == "init-bed-FR") ? 100 : 0;
+#endif
+
+
       // physical volume of IC region
       const amrex::Real ic_vol = initial_conditions.ic(icv).region->volume();
 
@@ -168,6 +179,11 @@ class Hex_ClosePack
       m_p1p2_np = m_p1_np + p2_np;
 
       m_r1r2_np = m_p1r1_np + p1r2_np;
+
+      if(m_verbose > 0) {
+        amrex::AllPrint() << "rad: " << m_eff_rad << "   seed " << seed << "   m_np " << m_np << "\n";
+      }
+
 
 #if 0
       amrex::PrintToFile("setup", amrex::Print::AllProcs) << "\n"
@@ -327,6 +343,7 @@ class Hex_ClosePack
     amrex::RealVect m_rbx_lo;
     amrex::RealVect m_rbx_hi;
 
+    int m_verbose;
 
     // Auxiliary functions
     int hcp_i (amrex::Real rad,
@@ -373,20 +390,49 @@ class Hex_ClosePack
                     amrex::Real zlen) const
     {
 
-      const int a1 = hcp_i(rad, xlen, 0);
-      const int a2 = hcp_i(rad, xlen, 1);
 
-      const int b1 = hcp_j(rad, ylen, 0);
-      const int b2 = hcp_j(rad, ylen, 1);
+      // Compute the first plane.
 
-      const int b1r = b1%2;
-      const int b2r = b2%2;
+      const long p_cnt = static_cast<long>(hcp_k(rad, zlen)); // Total number of planes
 
-      const int c1 = hcp_k(rad, zlen);
-      const int c1r = c1%2;
+      const long p2_cnt = (p_cnt - (p_cnt%2))/2;
+      const long p1_cnt = p_cnt - p2_cnt;
 
-      return ((a1*((b1 - b1r)/2 + b1r)) + (a2*((b1 - b1r)/2)))*( (c1 - c1r)/2 + c1r) +
-             ((a2*((b2 - b2r)/2 + b1r)) + (a1*((b2 - b2r)/2)))*( (c1 - c1r)/2      );
+      const long p1_rows = static_cast<long>(hcp_j(rad, ylen, 0));
+
+      const long p1r2_cnt = (p1_rows - (p1_rows%2))/2;
+      const long p1r1_cnt = p1_rows - p1r2_cnt;
+
+      const long p1r1_np = static_cast<long>(hcp_i(rad, xlen, 0));
+      const long p1r2_np = static_cast<long>(hcp_i(rad, xlen, 1));
+
+      const long p1_np = p1r1_np*p1r1_cnt + p1r2_np*p1r2_cnt;
+
+      // Build out plane 2
+      const long p2_rows = static_cast<long>(hcp_j(rad, ylen, 1));
+
+      const long p2r2_cnt = (p2_rows - (p2_rows%2))/2;
+      const long p2r1_cnt = p2_rows - p2r2_cnt;
+
+      const long p2r1_np  = static_cast<long>(hcp_i(rad, xlen, 1));
+      const long p2r2_np  = static_cast<long>(hcp_i(rad, xlen, 0));
+
+      const int p2_np = p2r1_np*p2r1_cnt + p2r2_np*p2r2_cnt;
+
+      // Total number of particles
+      const long np = p1_np*p1_cnt + p2_np*p2_cnt;
+
+      if(m_verbose >= 100) {
+        amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
+          << p1_np << "  "
+          << p1_cnt << "  "
+          << p2_np << "  "
+          << p2_cnt << "  "
+          << "\n";
+      }
+
+      return np;
+
     }
 
     amrex::Real hcp_rad (amrex::Real rad_in,
@@ -403,7 +449,10 @@ class Hex_ClosePack
       const int max_iter = 15;
       int iter(0);
 
-      //amrex::Print() << "\nTarget particle count: " << target << "\n";
+      if(m_verbose >= 100) {
+        amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
+          << "\nTarget particle count: " << target << "\n";
+      }
 
       long pc0 = hcp_count(rad_in, xlen, ylen, zlen);
       while ((pc0 > target) && (iter < max_iter)) {
@@ -412,8 +461,11 @@ class Hex_ClosePack
         radius = high*rad_in;
         pc0 = hcp_count(radius, xlen, ylen, zlen);
 
-        //amrex::Print() << "iter " << iter << "   low: " << low
-        //    << "   high: " << high << "   counts: " << pc0 << "\n";
+        if(m_verbose >= 100) {
+          amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
+            << "iter " << iter << "   low: " << low
+            << "   high: " << high << "   counts: " << pc0 << "\n";
+        }
         iter++;
       }
 
@@ -426,32 +478,46 @@ class Hex_ClosePack
         radius = scale*rad_in;
         long pc = hcp_count(radius, xlen, ylen, zlen);
 
-        //amrex::Print() << "iter " << iter << "   current: " << pc
-        //    << "   previous: " << pc0 << "  scale: " << scale << "\n";
+        if(m_verbose >= 100) {
+          amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
+            << "Iter " << iter << "   Current count: " << pc
+            << "   previous count: " << pc0 << "  scale: " << scale << "\n";
+        }
 
         if(pc == target || (pc == pc0 && iter > 0)) {
-          //amrex::Print() << "We got exactly want we wanted! " << pc << "\n";
           scale = 1.0;
+          if(m_verbose >= 100) {
+            amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "          "
+              << "We got exactly want we wanted!" << pc << "\n\n";
+          }
 
         } else if (pc < target) {
-          //amrex::Print() << "We need more particles!  scale: " << scale << "\n";
-
           high  = scale;
           scale = 0.5*(low + scale);
-          //scale = amrex::max(0.5*(low + scale),1.0);
+          if(m_verbose >= 100) {
+            amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "          "
+              << "We need more particles!  scale: " << scale << "\n\n";
+          }
 
         } else {
-          //amrex::Print() << "We need fewer particles!  scale: " << scale << "\n";
-          if( scale >= high)
-            high *= 2.;
-
+          high *= ( (scale >= high) ? 2. : 1.);
           low   = amrex::max(scale, 1.0);
           scale = 0.5*(high + scale);
+
+          if(m_verbose >= 100) {
+            amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "         "
+              << "We need fewer particles!  scale: " << scale << "\n\n";
+          }
         }
 
         pc0 = pc;
         iter++;
         keep_searching = ((scale != 1.0) && (iter < max_iter)) ? 1 : 0;
+      }
+
+      if(m_verbose >= 100) {
+        amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
+          << "Done: Iterations: " << iter << "  radius: " << radius << "\n\n";
       }
 
       return radius;

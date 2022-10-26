@@ -289,6 +289,7 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
     }
 
     m_ic.push_back(new_ic);
+    m_np.push_back(0);
   }
 
 

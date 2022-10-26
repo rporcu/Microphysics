@@ -128,7 +128,7 @@ static amrex::Real volWgtSumBox (int lev,
   ReduceTuple host_tuple = reduce_data.value(reduce_op);
 
   amrex::Real sum(0.);
-  
+
   if (reduction_computed)
     sum = amrex::get<0>(host_tuple);
 
@@ -255,7 +255,7 @@ static amrex::Real volWgtAvgBox (const amrex::MultiFab & mf,
 
   amrex::Real sum(0.);
   amrex::Real vol(0.);
-  
+
   if (reduction_computed) {
     sum = amrex::get<0>(host_tuple);
     vol = amrex::get<1>(host_tuple);
@@ -269,5 +269,21 @@ static amrex::Real volWgtAvgBox (const amrex::MultiFab & mf,
 
 };
 
+namespace MfixIO {
+
+struct threes : std::numpunct<char>
+{
+    std::string do_grouping() const { return "\3"; }
+};
+
+template<class T>
+static std::string FormatWithCommas(T value)
+{
+    std::stringstream ss;
+    ss.imbue(std::locale(std::cout.getloc(), new threes));
+    ss << std::fixed << value;
+    return ss.str();
+}
+} // end namespace mfixIO
 
 #endif

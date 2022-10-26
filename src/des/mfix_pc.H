@@ -183,6 +183,8 @@ class MFIXParticleContainer final
                            const amrex::MultiFab * ls_phi,
                            int ls_refinement);
 
+    void ReportParticleGenerationStats (int lev);
+
     void Replicate (amrex::IntVect& Nrep,
                     amrex::Geometry& geom,
                     amrex::DistributionMapping& dmap,
