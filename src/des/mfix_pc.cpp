@@ -1749,15 +1749,17 @@ namespace {
 void MFIXParticleContainer::partitionParticleGrids(int lev,
                                                    const BoxArray& fba,
                                                    const DistributionMapping& fdmap,
-                                                   const int chop_dir,
                                                    Real overload_toler,
                                                    Real underload_toler)
 {
   // fluid grid info
-  const Vector<int>& fpmap = fdmap.ProcessorMap();
-  BoxList            fbl   = fba.boxList();
-  Vector<Box>&     fbl_vec = fbl.data();
+  const Vector<int>& fpmap    = fdmap.ProcessorMap();
+  BoxList            fbl      = fba.boxList();
+  Vector<Box>&       fbl_vec  = fbl.data();
+  Vector<Box>        fbl_vec0 = fbl_vec;
 
+  // If the mapping between particle and fluid grids hasn't been set,
+  // set an 1to1 mapping.
   if (m_pboxid_to_fboxid.size() == 0) {
     m_pboxid_to_fboxid.resize(fbl.size());
     std::iota(m_pboxid_to_fboxid.begin(), m_pboxid_to_fboxid.end(), 0);
@@ -1766,9 +1768,8 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   // count particles in fluid grid
   Vector<int> pcount_fbox(fba.size(), 0);
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
-    // index of corresponding fluid box
-    int ifbox = m_pboxid_to_fboxid[pti.index()];
-    pcount_fbox[ifbox] += pti.numParticles();
+    int fboxid = m_pboxid_to_fboxid[pti.index()];
+    pcount_fbox[fboxid] += pti.numParticles();
   }
   ParallelDescriptor::ReduceIntSum(pcount_fbox.dataPtr(), pcount_fbox.size());
 
@@ -1787,13 +1788,10 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
 
   // find the indices of the overload and underload fluid boxes
-  // Here we assume one fluid box per rank. If there are multiple,
-  // then a rank can be overloaded with particles while each of its
-  // fluid box doesn't have lots of particles.
-  Real avg_np = static_cast<Real>(m_total_numparticle)
-              / ParallelDescriptor::NProcs();
-  int o_toler_np = static_cast<int>(avg_np * overload_toler);
-  int u_toler_np = static_cast<int>(avg_np * underload_toler);
+  Real avg_np     = static_cast<Real>(m_total_numparticle) 
+                  / ParallelDescriptor::NProcs();
+  int  o_toler_np = static_cast<int>(avg_np * overload_toler);
+  int  u_toler_np = static_cast<int>(avg_np * underload_toler);
   Vector<int> overload_fboxid, underload_ranks;
   BoxList     overload_fbl;
   // find overload fluid boxes
@@ -1804,98 +1802,313 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     }
   }
   // find underload ranks
-  for (auto i=0; i<pcount_rank.size(); ++i) {
+  for (auto i=0; i<pcount_rank.size(); ++i)
     if (pcount_rank[i] < u_toler_np)  underload_ranks.push_back(i);
-  }
   // debug
-  Print() << "avg np: " << avg_np << " overload tolerance " << overload_toler
+  Print() << "avg np: "              << avg_np 
+          << " overload tolerance "  << overload_toler
           << " underload tolerance " << underload_toler << "\n";
 
-  // initialize the map from particle box to fluid box using
-  // current fluid box ids
+  // re-initialize the map from particle box to fluid box
   m_pboxid_to_fboxid.resize(fbl.size());
   std::iota(m_pboxid_to_fboxid.begin(), m_pboxid_to_fboxid.end(), 0);
-
-  // count the particles in bins of the overload boxes
-  // currently, each bin is a thin layer of the box
-  Vector<int> pcount_bin;             // particle count of bins of overload fbox
-  Vector<int> poffset_bin;            // offset of bins of overload fbox
-  IntVect     binsize(1024);
-  binsize.setVal(chop_dir, 1);        // thickness of the layer
-                                      // layer covers the other 2 direction
-  //
-  countParticle(lev, overload_fbl, binsize, pcount_bin, poffset_bin);
-  ParallelDescriptor::ReduceIntSum(pcount_bin.dataPtr(), pcount_bin.size());
 
   // construct queues for the greedy algorithm
   BidNpHeap o_q;
   for (int i=0; i<overload_fboxid.size(); ++i)
     o_q.push(std::make_pair(i, pcount_fbox[overload_fboxid[i]]));
-  //
   BidNpHeap u_q(PairCompare(true));
   for (int rank: underload_ranks)
     u_q.push(std::make_pair(rank, pcount_rank[rank]));
 
-  int min_nbin = 2;
   Vector<int> new_ppmap(fpmap);
 
-  Vector<int> left_nbin;              // bins left for an overload box
-  for (int i=0; i<poffset_bin.size()-1; ++i)
-    left_nbin.push_back(poffset_bin[i+1] - poffset_bin[i]);
+  // 1D greedy algorithm
+  if (!greedy_3d) {
+    // count the particles in bins of the overload boxes
+    //currently, each bin is a thin layer of the box
+    Vector<int> pcount_bin;           // particle count of bins of overload fbox
+    Vector<int> poffset_bin;          // offset of bins of overload fbox
+    IntVect     binsize(1024);
+    binsize.setVal(greedy_dir, 1);    // thickness of the layer
+                                      // layer covers the other 2 direction
+    countParticle(lev, overload_fbl, binsize, pcount_bin, poffset_bin);
+    ParallelDescriptor::ReduceIntSum(pcount_bin.dataPtr(), pcount_bin.size());
 
-  // greedy algorithm
-  while (o_q.size() > 0 && u_q.size() > 0) {
-    const BidNp& o_pair = o_q.top();
-    const BidNp& u_pair = u_q.top();
-    if (o_pair.second < o_toler_np || u_pair.second > avg_np)  break;
+    Vector<int> left_nbin;            // bins left for an overload box
+    for (int i=0; i<poffset_bin.size()-1; ++i)
+      left_nbin.push_back(poffset_bin[i+1] - poffset_bin[i]);
 
-    int   room    = amrex::max(static_cast<int>(o_toler_np - u_pair.second), 0);
-    int   o_boxid = overload_fboxid[o_pair.first];
-    // int   u_boxid = underload_fboxid[u_pair.first];
+    // use greedy algorithm to setup the mapping between overload boxes
+    // and their cutoff chunks
+    while (o_q.size() > 0 && u_q.size() > 0) {
+      const BidNp& o_pair = o_q.top();
+      const BidNp& u_pair = u_q.top();
+      if (o_pair.second < o_toler_np || u_pair.second > avg_np)  break;
 
-    // find # bins to chop off
-    int   chop_np = 0, chop_nbin = 0;
-    for (int ibin = poffset_bin[o_pair.first] + left_nbin[o_pair.first] - 1;
-         ibin >= poffset_bin[o_pair.first]; --ibin) {
-      int chop_np_tmp = chop_np + pcount_bin[ibin];
-      if (  (chop_np_tmp < room && o_pair.second - chop_np_tmp > u_toler_np)
-         || chop_nbin < min_nbin) {
-        chop_np = chop_np_tmp;
-        ++chop_nbin;
-      }
-      else {
-        break;
-      }
-    }// end for ibin
-    //Print() << "overload box " << o_boxid << " " << o_pair.second
-    //<< " chop " << chop_nbin << " " << chop_np
-    //<< " underload box " << u_boxid << " room " << room << "\n";
+      int   room    = amrex::max(static_cast<int>(o_toler_np - u_pair.second), 0);
+      int   o_boxid = overload_fboxid[o_pair.first];
+      //int   u_boxid = underload_fboxid[u_pair.first];
 
-    if (chop_np > room || (o_pair.second - chop_np) < u_toler_np)
-    // if (chop_np > room)
-      break;
+      // find # bins to chop off
+      int   chop_np = 0, chop_nbin = 0;
+      for (int ibin = poffset_bin[o_pair.first] + left_nbin[o_pair.first] - 1;
+          ibin >= poffset_bin[o_pair.first]; --ibin) {
+        int chop_np_tmp = chop_np + pcount_bin[ibin];
+        if (  (chop_np_tmp < room && o_pair.second - chop_np_tmp > u_toler_np)
+            || chop_nbin < greedy_min_grid_size) {
+          chop_np = chop_np_tmp;
+          ++chop_nbin;
+        }
+        else {
+          break;
+        }
+      }// end for ibin
 
-    // chop the most overload box
-    int chop_pos = fbl_vec[o_boxid].length(chop_dir) - chop_nbin * binsize[chop_dir]
-                 + fbl_vec[o_boxid].smallEnd(chop_dir);
-    fbl_vec.push_back(fbl_vec[o_boxid].chop(chop_dir, chop_pos));
+      if (chop_np > room || (o_pair.second - chop_np) < u_toler_np)
+        if (chop_np > room)
+          break;
 
-    // update mapping for the new particle grid
-    m_pboxid_to_fboxid.push_back(o_boxid);
-    new_ppmap.push_back(u_pair.first);
-    left_nbin[o_pair.first] -= chop_nbin;
-    //Print() << "assign " << chop_np << " from " << o_boxid << " to "
-    //<< u_boxid << " at proc " << fpmap[u_boxid] << "\n";
+      // chop the most overload box
+      int chop_pos = fbl_vec[o_boxid].length(greedy_dir) 
+                   - chop_nbin * binsize[greedy_dir]
+                   + fbl_vec[o_boxid].smallEnd(greedy_dir);
+      fbl_vec.push_back(fbl_vec[o_boxid].chop(greedy_dir, chop_pos));
 
-    // update np and heap
-    BidNp new_o_pair(o_pair.first, o_pair.second - chop_np);
-    o_q.pop();
-    if (new_o_pair.second > o_toler_np)  o_q.push(new_o_pair);
-    //
-    BidNp new_u_pair(u_pair.first, u_pair.second + chop_np);
-    u_q.pop();
-    if (new_u_pair.second < u_toler_np)  u_q.push(new_u_pair);
+      // update mapping for the new particle grid
+      m_pboxid_to_fboxid.push_back(o_boxid);
+      new_ppmap.push_back(u_pair.first);
+      left_nbin[o_pair.first] -= chop_nbin;
+
+      // update np and heap
+      BidNp new_o_pair(o_pair.first, o_pair.second - chop_np);
+      o_q.pop();
+      if (new_o_pair.second > o_toler_np)  o_q.push(new_o_pair);
+
+      BidNp new_u_pair(u_pair.first, u_pair.second + chop_np);
+      u_q.pop();
+      if (new_u_pair.second < u_toler_np)  u_q.push(new_u_pair);
+    }// end while
   }
+  // 3D greedy algorithms
+  else {
+    // particle counts based on particle grids
+    iMultiFab np_mf_p(ParticleBoxArray(lev), ParticleDistributionMap(lev), 1, 0);
+    np_mf_p.setVal(0);
+    // particle counts based on fluid grids
+    iMultiFab np_mf_f(The_Pinned_Arena());
+    np_mf_f.define(fba, fdmap, 1, 0);
+    // count the particles and copy acroos grids
+    countParticle(lev, np_mf_p);
+    np_mf_f.ParallelCopy(np_mf_p);
+
+    std::unordered_map<int, Vector<int>> np_cutoff;
+    std::unordered_map<int, Vector<int>> id_cutoff;
+
+    // greedy pass to see which box send how many particles to which rank
+    while (o_q.size() > 0 && u_q.size() > 0) {
+      const BidNp& o_pair = o_q.top();
+      const BidNp& u_pair = u_q.top();
+      if (o_pair.second < o_toler_np || u_pair.second > avg_np)  break;
+
+      int o_boxid = overload_fboxid[o_pair.first];
+      int chop_np = min(o_pair.second - avg_np, avg_np - u_pair.second);
+
+      // Append a placeholder for the cutoff, shape will be set later
+      fbl_vec.push_back(Box(IntVect{std::numeric_limits<int>::min()}, 
+                            IntVect{std::numeric_limits<int>::max()}));
+      new_ppmap.push_back(u_pair.first);
+      m_pboxid_to_fboxid.push_back(o_boxid);
+
+
+      // the rank that owns the overload box stores the info
+      if (fpmap[o_boxid] == ParallelDescriptor::MyProc()) {
+        id_cutoff[o_boxid].push_back(fbl_vec.size()-1);
+        np_cutoff[o_boxid].push_back(chop_np);
+      }
+
+      BidNp new_o_pair(o_pair.first, o_pair.second - chop_np);
+      o_q.pop();
+      if (new_o_pair.second > o_toler_np)  o_q.push(new_o_pair);
+
+      BidNp new_u_pair(u_pair.first, u_pair.second + chop_np);
+      u_q.pop();
+      if (new_u_pair.second < u_toler_np)  u_q.push(new_u_pair);
+    }// end while
+
+    // setup the shape of cutoffs
+    for (auto& kv: id_cutoff) {
+      // get # particles in current overload fluid box
+      const IArrayBox&         np_fab = np_mf_f[kv.first];
+      Array4<int const> const& np_arr = np_fab.const_array(); 
+      const int*               np_ptr = np_arr.dataPtr();
+
+      Box&    fbox0  = fbl_vec0[kv.first];
+      Box     remain = fbox0;
+      IntVect lo     = fbox0.smallEnd();
+      IntVect stride   {1, fbox0.length(0), fbox0.length(0) * fbox0.length(1)};
+
+      // chop the cutoff chunk to fit in the corrsponding underload ranks
+      // the chop-off workload has be computed by the greedy pass before
+      for (size_t icutoff=0; icutoff<kv.second.size(); ++icutoff) {
+        //AllPrintToFile("debug") << "current remain " << remain << "\n";
+        int np_target    = np_cutoff[kv.first][icutoff];
+        int np_target_lo = static_cast<int>(np_target * underload_toler);
+        int np_target_hi = static_cast<int>(np_target *  overload_toler);
+        int min_chop_dir = -1;
+
+        Vector<int> np_cutoff_bydir (AMREX_SPACEDIM);
+        Vector<int> np_surface_bydir(AMREX_SPACEDIM);
+        Vector<int> chop_pos_bydir  (AMREX_SPACEDIM);
+
+        for (int chop_dir=0; chop_dir<AMREX_SPACEDIM; ++chop_dir) {
+          if (remain.length(chop_dir) < 2*greedy_min_grid_size) {
+            np_surface_bydir[chop_dir] = std::numeric_limits<int>::max();
+            np_cutoff_bydir [chop_dir] = std::numeric_limits<int>::max();
+            chop_pos_bydir  [chop_dir] = -1;
+            continue;
+          }
+
+          int dir0 = (chop_dir + 1) % AMREX_SPACEDIM;
+          int dir1 = (chop_dir + 2) % AMREX_SPACEDIM;
+
+          int chop_lo  = remain.smallEnd(chop_dir) + greedy_min_grid_size; 
+          int chop_hi  = remain.bigEnd  (chop_dir);
+          int chop_pos = chop_hi;
+
+          int np_tmp       = 0;
+          int np_diff_prev = np_target + 1;
+
+          // find the chop position with the closest np to np_target
+          while (chop_pos >= chop_lo) {
+            int np_slice = 0;
+            for (int idir0=remain.smallEnd(dir0); idir0<=remain.bigEnd(dir0); ++idir0) {
+              for (int idir1=remain.smallEnd(dir1); idir1<=remain.bigEnd(dir1); ++idir1) {
+              // the index is based on the offset to the lower bound of the original box
+                int iCell = stride[dir0]     * (idir0    - lo[dir0])
+                          + stride[dir1]     * (idir1    - lo[dir1])
+                          + stride[chop_dir] * (chop_pos - lo[chop_dir]);
+                np_slice += *(np_ptr + iCell);
+              }
+            }
+
+            int np_diff = std::abs(np_target - np_tmp - np_slice);
+            if (np_diff > np_diff_prev && chop_hi - chop_pos + 1 >= greedy_min_grid_size) { 
+              ++chop_pos;
+              break;
+            }
+            else {
+              np_diff_prev = np_diff;
+              np_tmp      += np_slice;
+              --chop_pos;
+            }
+          }// end while
+          chop_pos = chop_pos == chop_lo-1 ? chop_lo : chop_pos;
+
+          np_cutoff_bydir[chop_dir] = np_tmp;
+          chop_pos_bydir [chop_dir] = chop_pos;
+
+          // count surface particles
+          Box remain_copy(remain);
+          Box cutoff     (remain_copy.chop(chop_dir, chop_pos));
+          int np_surface = 0;
+          // z faces
+          for (int j=cutoff.smallEnd(1); j<=cutoff.bigEnd(1); ++j) {
+            for (int i=cutoff.smallEnd(0); i<=cutoff.bigEnd(0); ++i) {
+              np_surface += np_arr(i, j, cutoff.smallEnd(2), 0);
+              np_surface += np_arr(i, j, cutoff.bigEnd  (2), 0);
+            }
+          }
+          // y faces
+          for (int k=cutoff.smallEnd(2); k<=cutoff.bigEnd(2); ++k) {
+            for (int i=cutoff.smallEnd(0); i<=cutoff.bigEnd(0); ++i) {
+              np_surface += np_arr(i, cutoff.smallEnd(1), k, 0);
+              np_surface += np_arr(i, cutoff.bigEnd  (1), k, 0);
+            }
+          }
+          // x faces
+          for (int k=cutoff.smallEnd(2); k<=cutoff.bigEnd(2); ++k) {
+            for (int j=cutoff.smallEnd(1); j<=cutoff.bigEnd(1); ++j) {
+              np_surface += np_arr(cutoff.smallEnd(0), j, k, 0);
+              np_surface += np_arr(cutoff.bigEnd  (0), j, k, 0);
+            }
+          }
+          np_surface_bydir[chop_dir] = np_surface;
+        }// end for chop_dir
+
+        Vector<int> within_toler_dirs;
+        for (int chop_dir=0; chop_dir<AMREX_SPACEDIM; ++chop_dir) {
+          if (  np_cutoff_bydir[chop_dir] >= np_target_lo
+             && np_cutoff_bydir[chop_dir] <= np_target_hi) {
+            within_toler_dirs.push_back(chop_dir);
+          }
+        }
+
+        // if none of the dir fits, choose the one closest to fit
+        if (within_toler_dirs.empty()) {
+          int min_diff = std::numeric_limits<int>::max();
+          for (int chop_dir=0; chop_dir<AMREX_SPACEDIM; ++chop_dir) {
+            int diff = std::abs(np_cutoff_bydir[chop_dir] - np_target);
+            if (diff < min_diff) {
+              min_diff     = diff;
+              min_chop_dir = chop_dir;
+            }
+          }
+        }
+        // choose the one with least surface particles
+        else {
+          int min_np_surface = std::numeric_limits<int>::max();
+          for (int dir: within_toler_dirs) {
+            if (np_surface_bydir[dir] < min_np_surface) {
+              min_np_surface = np_surface_bydir[dir];
+              min_chop_dir   = dir;
+            }
+          }
+        }
+
+        // chop the cutoff chunk
+        fbl_vec[id_cutoff[kv.first][icutoff]] = \
+          remain.chop(min_chop_dir, chop_pos_bydir[min_chop_dir]);
+      }// end for icutoff
+
+      // the last underload rank gets whatever left
+      fbl_vec[kv.first] = remain;
+    }// end for kv
+
+    // Only the overloaded ranks have set up some of the cutoff boxes
+    // use an allreduce to inform all the ranks
+    size_t nbox = fbl_vec.size();
+    Vector<int> ubound_buf(3*nbox);
+    Vector<int> lbound_buf(3*nbox);
+    // pack the buffer
+    for (size_t i=0; i<nbox; ++i) {
+      ubound_buf[3*i]   = fbl_vec[i].bigEnd(0);
+      ubound_buf[3*i+1] = fbl_vec[i].bigEnd(1);
+      ubound_buf[3*i+2] = fbl_vec[i].bigEnd(2);
+      lbound_buf[3*i]   = fbl_vec[i].smallEnd(0);
+      lbound_buf[3*i+1] = fbl_vec[i].smallEnd(1);
+      lbound_buf[3*i+2] = fbl_vec[i].smallEnd(2);
+    }
+
+    ParallelDescriptor::ReduceIntMin(ubound_buf.dataPtr(), 3*nbox);
+    ParallelDescriptor::ReduceIntMax(lbound_buf.dataPtr(), 3*nbox);
+
+    for (int i=0; i<3*nbox; ++i) {
+      if (  ubound_buf[i] == std::numeric_limits<int>::max() 
+         || lbound_buf[i] == std::numeric_limits<int>::min()) {
+        Print() << "Greedy 3D cannot balance the current workload, keep "
+                << "current particle box array and distribution map.\n";
+        return;
+      }
+    }
+
+    // unpack the buffer
+    for (size_t i=0; i<nbox; ++i) {
+      fbl_vec[i] = 
+        Box(IntVect{lbound_buf[3*i], lbound_buf[3*i+1], lbound_buf[3*i+2]},
+            IntVect{ubound_buf[3*i], ubound_buf[3*i+1], ubound_buf[3*i+2]});
+    }
+  }// end else
 
   // ba and dmap to particle container
   SetParticleBoxArray(lev, BoxArray(fbl));
@@ -1931,11 +2144,11 @@ Real MFIXParticleContainer::particleImbalance()
 }
 
 
-void MFIXParticleContainer:: countParticle(int lev,
-                                           const BoxList& bl,
-                                           const IntVect& binsize,
-                                           Vector<int>&   pcounts,
-                                           Vector<int>&   poffsets)
+void MFIXParticleContainer::countParticle(int lev,
+                                          const BoxList& bl,
+                                          const IntVect& binsize,
+                                          Vector<int>&   pcounts,
+                                          Vector<int>&   poffsets)
 {
   const auto* boxes = bl.data().data();
   const int   nbox  = bl.size();
@@ -2004,6 +2217,33 @@ void MFIXParticleContainer:: countParticle(int lev,
 
   Gpu::synchronize();
   Gpu::copy(Gpu::deviceToHost, d_pcounts.begin(), d_pcounts.end(), pcounts.begin());
+}
+
+
+void MFIXParticleContainer::countParticle(int lev, iMultiFab& np_mf)
+{
+  // particle tiles and geometry of this level
+  const auto& geom    = Geom(lev);
+  const auto  domain  = geom.Domain();
+  const auto  dx_inv  = geom.InvCellSizeArray();
+  const auto  prob_lo = geom.ProbLoArray();
+
+  for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+    const auto& aos     = pti.GetArrayOfStructs();
+    const auto* pstruct = aos().dataPtr();
+    int         np      = pti.numParticles();
+
+    Array4<int> const& np_a4 = np_mf.array(pti);
+
+    ParallelFor(np, [pstruct, np_a4, prob_lo, dx_inv, domain]
+      AMREX_GPU_DEVICE (int i) noexcept
+      {
+        IntVect     ijk = getParticleCell(pstruct[i], prob_lo, dx_inv, domain);
+        Gpu::Atomic::AddNoRet(&np_a4(ijk[0], ijk[1], ijk[2], 0), 1);
+      });// end parallel for
+  }// end for pariter
+
+  Gpu::synchronize();
 }
 
 

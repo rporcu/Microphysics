@@ -91,7 +91,7 @@ mfix::Regrid ()
         }
         else if (load_balance_type == "Greedy") {
           pc->partitionParticleGrids(lev, this->boxArray(lev), this->DistributionMap(lev),
-                                     greedy_dir, overload_toler, underload_toler);
+                                     overload_toler, underload_toler);
           new_particle_dm = pc->ParticleDistributionMap(lev);
         }
 

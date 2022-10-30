@@ -289,8 +289,11 @@ mfix::InitParams ()
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);
 
-    if (load_balance_type.compare("Greedy") == 0)
-      pp.query("greedy_dir", greedy_dir);
+    if (load_balance_type.compare("Greedy") == 0) {
+      pp.query("greedy_dir",           greedy_dir);
+      pp.query("greedy_3d",            greedy_3d);
+      pp.query("greedy_min_grid_size", greedy_min_grid_size);
+    }
 
     // fluid grids' distribution map
     pp.queryarr("pmap", pmap);
@@ -567,6 +570,9 @@ void mfix::Init (Real time)
                                      solids, m_dem, m_pic, fluid, reactions);
 
       pc->setSortingBinSizes(IntVect(particle_sorting_bin));
+
+      if (load_balance_type.compare("Greedy") == 0)
+        pc->setGreedyRegrid(greedy_dir, greedy_3d, greedy_min_grid_size);
 
       if (!pboxmap.empty())
         pc->setParticleFluidGridMap(pboxmap);

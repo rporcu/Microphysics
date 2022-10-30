@@ -337,7 +337,6 @@ class MFIXParticleContainer final
     void partitionParticleGrids(int lev,
                                 const amrex::BoxArray& fba,
                                 const amrex::DistributionMapping& fdmap,
-                                const int greedy_dir,
                                 amrex::Real imbalance_toler,
                                 amrex::Real partition_factor);
 
@@ -352,6 +351,9 @@ class MFIXParticleContainer final
 
     void setReduceGhostParticles(bool reduce)
     { reduceGhostParticles = reduce; };
+
+    void setGreedyRegrid(int dir, bool partition_3d, int min_size=2)
+    { greedy_dir = dir; greedy_3d = partition_3d; greedy_min_grid_size=min_size;}
 
     const amrex::IntVect& MaxGridSize() const noexcept
     { return max_grid_size; }
@@ -369,6 +371,8 @@ class MFIXParticleContainer final
                        const amrex::IntVect& binsize,
                        amrex::Vector<int>& pcounts,
                        amrex::Vector<int>& poffsets);
+
+    void countParticle(int lev, amrex::iMultiFab& np_mf);
 
     // verify total # particles hasn't been changed, for debugging
     void verifyParticleCount();
@@ -397,6 +401,10 @@ class MFIXParticleContainer final
     amrex::IntVect max_grid_size{-1};
 
     amrex::IntVect m_sorting_bin = amrex::IntVect::TheZeroVector();
+
+    int  greedy_dir           = 0;
+    bool greedy_3d            = false;
+    int  greedy_min_grid_size = 2;
 
     static int domain_bc[6];
 
