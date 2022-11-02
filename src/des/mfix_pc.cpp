@@ -1898,7 +1898,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     // particle counts based on fluid grids
     iMultiFab np_mf_f(The_Pinned_Arena());
     np_mf_f.define(fba, fdmap, 1, 0);
-    // count the particles and copy acroos grids
+    // count the particles and copy across grids
     countParticle(lev, np_mf_p);
     np_mf_f.ParallelCopy(np_mf_p);
 
@@ -1948,9 +1948,9 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
       IntVect lo     = fbox0.smallEnd();
       IntVect stride   {1, fbox0.length(0), fbox0.length(0) * fbox0.length(1)};
 
-      // chop the cutoff chunk to fit in the corrsponding underload ranks
+      // chop the cutoff chunk to fit in the corresponding underload ranks
       // the chop-off workload has be computed by the greedy pass before
-      for (size_t icutoff=0; icutoff<kv.second.size(); ++icutoff) {
+      for (int icutoff=0; icutoff<kv.second.size(); ++icutoff) {
         //AllPrintToFile("debug") << "current remain " << remain << "\n";
         int np_target    = np_cutoff[kv.first][icutoff];
         int np_target_lo = static_cast<int>(np_target * underload_toler);
@@ -2093,7 +2093,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     ParallelDescriptor::ReduceIntMin(ubound_buf.dataPtr(), 3*nbox);
     ParallelDescriptor::ReduceIntMax(lbound_buf.dataPtr(), 3*nbox);
 
-    for (int i=0; i<3*nbox; ++i) {
+    for (size_t i=0; i<3*nbox; ++i) {
       if (  ubound_buf[i] == std::numeric_limits<int>::max() 
          || lbound_buf[i] == std::numeric_limits<int>::min()) {
         Print() << "Greedy 3D cannot balance the current workload, keep "
