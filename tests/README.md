@@ -6,6 +6,7 @@
 ***_FLD02:_ 2D Couette flow in a channel [1]
 ***_FLD03:_ 2D Channel (Poiseuille) flow with specified pressure boundaries  [1]
 ***_FLD04:_ Tracer transport with and without particles
+***_FLD08:_ Flow through a rotated pipe
 
 ## Overview of DEM and Fluid/DEM coupled cases
 
