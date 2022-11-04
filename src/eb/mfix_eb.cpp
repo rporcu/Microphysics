@@ -45,17 +45,13 @@ void mfix::make_eb_geometry ()
     /****************************************************************************
      *                                                                          *
      * Legacy inputs:                                                           *
-     *   -- mfix.hourglass = true <=> mfix.geometry=box                         *
      *   -- mfix.use_walls = true <=> mfix.geometry=general                     *
      *   -- mfix.use_poy2  = true <=> mfix.geometry=general                     *
      *                                                                          *
      ***************************************************************************/
 
 
-    bool hourglass    = false;
     bool eb_general   = false;
-
-    pp.query("hourglass", hourglass);
 
     bool eb_poly2 = false;
     bool eb_walls = false;
@@ -65,26 +61,61 @@ void mfix::make_eb_geometry ()
     eb_general = eb_poly2 || eb_walls;
 
     // Avoid multiple (ambiguous) inputs
-    if (hourglass || eb_general) {
-        if (! geom_type.empty()) {
-            amrex::Abort("The input file cannot specify both:\n"
-                         "mfix.<geom_type>=true and mfix.geometry=<geom_type>\n"
-                         "at the same time."                                   );
-        }
+    if (eb_general) {
+      if (mfixRW->geom_chk_read || !geom_type.empty() || !csg_file.empty()) {
+         amrex::Abort("The input file cannot specify both "
+                      "mfix.<geom_type>=true and another mfix geometry "
+                      "at the same time.");
+      }
     }
 
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(geom_type.empty() || csg_file.empty(),
-                                     "The input file cannot specify both:\n"
-                                     "mfix.<geom_type> and mfix.geometry_filename\n"
-                                     "at the same time.");
+    if (mfixRW->geom_chk_read) {
+       if (mfixRW->geom_chk_write) {
+          amrex::Abort("The input file cannot specify both amr.geom_chk_read and "
+                       "amr.geom_chk_write at the same time.");
+       }
 
-    if (hourglass)  geom_type = "hourglass";
+       if (!geom_type.empty() || !csg_file.empty()) {
+          amrex::Abort("The input file cannot specify both amr.geom_chk_read and "
+                       "another geometry at the same time");
+       }
+
+       std::ifstream chkptfile(mfixRW->geom_chk_file);
+       if (chkptfile.fail()) {
+          amrex::Abort("No amr.geom_chk_file found.");
+       }
+
+       if (levelset_refinement != 1) {
+          std::ifstream refined_chkptfile(mfixRW->geom_refined_chk_file);
+          if (refined_chkptfile.fail()) {
+             amrex::Abort("No amr.geom_refined_chk_file found.");
+          }
+       }
+    } else {
+       if (!geom_type.empty() && !csg_file.empty()) {
+          amrex::Abort("The input file cannot specify both "
+                       "mfix.geometry and mfix.geometry_filename "
+                       "at the same time.");
+       }
+    }
+
     if (eb_general) geom_type = "general";
-    
-    if (mfixRW->read_geom_chk_when_restarting && !mfixRW->restart_file.empty()) {
-       amrex::Print() << "Overriding any EB geometry. Reading from EB checkpoint file." << std::endl;
-       geom_type = "chkptfile";
-    } 
+
+    bool read_from_chkptfile = mfixRW->geom_chk_read;
+    bool write_to_chkptfile = mfixRW->geom_chk_write;
+
+    // Special handling of flags for EB checkpoint file CCSE regtest
+    if (mfixRW->geom_chk_ccse_regtest) {
+       if (mfixRW->restart_file.empty()) {
+          read_from_chkptfile = false;
+          write_to_chkptfile = true;
+       } else {
+          geom_type = "";
+          csg_file = "";
+          read_from_chkptfile = true;
+          write_to_chkptfile = false;
+       }
+    }
 
     /****************************************************************************
      *                                                                          *
@@ -123,8 +154,8 @@ void mfix::make_eb_geometry ()
       // TODO: deal with inflow volfrac
       make_eb_general();
       contains_ebs = true;
-    } else if(geom_type == "chkptfile") {
-      amrex::Print() << "\n Building geometry from chkptfile: " << mfixRW->geom_chkptfile << std::endl;
+    } else if(read_from_chkptfile) {
+      amrex::Print() << "\n Building geometry from chkptfile: " << mfixRW->geom_chk_file << std::endl;
       build_eb_levels_from_chkpt_file();
       contains_ebs = true;
 
@@ -145,13 +176,13 @@ void mfix::make_eb_geometry ()
         // where detected in the mfix.dat file.
     }
 
-    if (mfixRW->write_geom_chk && geom_type != "chkptfile") {
-       eb_levels[0]->write_to_chkpt_file(mfixRW->geom_chkptfile, 
+    if (write_to_chkptfile) {
+       eb_levels[0]->write_to_chkpt_file(mfixRW->geom_chk_file, 
              amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
 
        if (nlev == 1) {
           if (levelset_refinement != 1) {
-             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_refined_chkptfile, 
+             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_refined_chk_file, 
                    amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
           }
        }

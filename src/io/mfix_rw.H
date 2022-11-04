@@ -194,10 +194,11 @@ public:
    std::string restart_file {""};
 
    // Geometry checkpoint file handling inputs
-   std::string geom_chkptfile {"geom_chk"};
-   std::string geom_refined_chkptfile {"geom_refined_chk"};
-   bool write_geom_chk = false;
-   bool read_geom_chk_when_restarting = false; //used when running CCSE test
+   std::string geom_chk_file {"geom_chk"};
+   std::string geom_refined_chk_file {"geom_refined_chk"};
+   bool geom_chk_write = false;
+   bool geom_chk_read = false;
+   bool geom_chk_ccse_regtest = false; // Used when running CCSE test for EB checkpoint files
 
    int report_mass_balance = 0;
    int mass_balance_report_int = -1;

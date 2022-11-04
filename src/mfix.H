@@ -637,9 +637,6 @@ public:
     void make_eb_cyclone ();
     void make_eb_air_reactor ();
     void make_eb_proto_clr ();
-    void make_eb_hourglass ();
-    void make_eb_clr ();
-    void make_eb_clr_riser ();
     void make_eb_regular ();
 
 #ifdef CSG_EB

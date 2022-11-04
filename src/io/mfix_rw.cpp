@@ -98,8 +98,12 @@ void MfixRW::readParameters ()
      pp.query("checkpoint_files_output", checkpoint_files_output);
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
-     pp.query("write_geom_chk", write_geom_chk);
-     pp.query("read_geom_chk_when_restarting", read_geom_chk_when_restarting);
+
+     pp.query("geom_chk_file", geom_chk_file);
+     pp.query("geom_refined_chk_file", geom_refined_chk_file);
+     pp.query("geom_chk_write", geom_chk_write);
+     pp.query("geom_chk_read", geom_chk_read);
+     pp.query("geom_chk_ccse_regtest", geom_chk_ccse_regtest);
 
      std::string walltime_in;
      int has_walltime_limit = pp.query("check_walltime", walltime_in);
