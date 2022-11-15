@@ -4,6 +4,11 @@
 #include <mfix_reactions.H>
 #include <mfix_monitors.H>
 
+
+#include <AMReX_FabArray.H>
+#include <AMReX_FArrayBox.H>
+#include <AMReX_EBCellFlag.H>
+#include <AMReX_MultiFab.H>
 #include <AMReX_MultiCutFab.H>
 
 using namespace amrex;
@@ -25,10 +30,9 @@ MfixRW::WriteMassBalanceReport (const Real new_time)
   const int offset = MFIXSpecies::NMAX;
   const int nspecies_g = fluid.nspecies();
 
-
   if(ParallelDescriptor::IOProcessor()) {
     printf("\n**********");
-    for (int col=0; col < 7; ++col) {
+    for (int col=0; col < 6; ++col) {
       printf("**************");
     }
     printf("****************\n");
@@ -38,41 +42,39 @@ MfixRW::WriteMassBalanceReport (const Real new_time)
 
     mass_balance_report_time = new_time;
 
-    Real tot_flux_in = 0.;
+    Real net_acc(0.);
+    Real net_flux(0.);
     std::vector<Real> error(nspecies_g, 100.);
     std::vector<Real> delta_accum(nspecies_g, 0.);
     std::vector<Real> bc_flux(nspecies_g, 0.);
 
     for (int n=0; n < nspecies_g; ++n) {
       delta_accum[n] = m_mass_accum[n+offset] - m_mass_accum[n] - m_mass_prod[n];
+      net_acc  += delta_accum[n];
       bc_flux[n] = m_mass_inflow[n] - m_mass_outflow[n];
-      tot_flux_in += m_mass_inflow[n];
+      net_flux += bc_flux[n];
     }
 
-    printf("\n  %-8s%14s%14s%14s%14s%14s%14s%14s%14s\n", "Species",
+    printf("\n  %-8s%14s%14s%14s%14s%14s%14s%14s\n", "Species",
            "mass(t+dt)", "mass(t) ", "production",
-           "mass(in)", "mass(out)","net accu","flux   ","% error  ");
+           "mass(in)", "mass(out)","net accu","flux   ");
 
     for (int n=0; n < nspecies_g; ++n) {
-      if( tot_flux_in > 0.) {
-        error[n] = Math::abs((bc_flux[n] - delta_accum[n]) / tot_flux_in )*100.0;
-      }
-      printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", fluid.species_names(n).c_str(),
+      printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", fluid.species_names(n).c_str(),
              m_mass_accum[n+offset], m_mass_accum[n],m_mass_prod[n],
              m_mass_inflow[n], m_mass_outflow[n],
-             delta_accum[n], bc_flux[n], error[n]);
+             delta_accum[n], bc_flux[n]);
 
       m_mass_accum[n] = m_mass_accum[n+offset];
       m_mass_inflow[n] = 0.;
       m_mass_outflow[n] = 0.;
       m_mass_prod[n] = 0.;
     }
-    printf("\n  net accu := mass(t+dt) - mass(t) - production\n");
-    printf("      flux := mass(in) - mass(out)\n");
-    printf("   %% error := 100*(flux - net accu) / (total flux)\n");
+    printf("\n  total accu := %14.4e %77s\n", net_acc,"sum(mass(t+dt) - mass(t) - production)");
+    printf("    net flux := %14.4e %77s\n", net_flux,"sum(mass(in) - mass(out))");
 
     printf("**********");
-    for (int col=0; col < 7; ++col) {
+    for (int col=0; col < 6; ++col) {
       printf("**************");
     }
     printf("****************\n\n");
@@ -89,6 +91,7 @@ MfixRW::ComputeMassAccum (const int offset)
     return;
   }
 
+  amrex::Print() << "MASBALANCE REPORT --> ComputeMassAccum()\n";
   GpuArray<Real, MFIXSpecies::NMAX> accum = {0.};
 
   const int nspecies_g = fluid.nspecies();
@@ -105,29 +108,50 @@ MfixRW::ComputeMassAccum (const int offset)
 
       if (flagfab.getType(bx) != FabType::covered) {
 
-        Array4<Real const> const& volfrac = (ebfactory[lev]->getVolFrac()).const_array(mfi);
-
         Array4<Real const> const& ep_g = m_leveldata[lev]->ep_g->const_array(mfi);
         Array4<Real const> const& ro_g = m_leveldata[lev]->ro_g->const_array(mfi);
         Array4<Real const> const& X_gk = m_leveldata[lev]->X_gk->const_array(mfi);
 
-        for (int n=0; n < nspecies_g; ++n){
+        if (flagfab.getType(bx) == FabType::singlevalued ) {
 
-          ReduceOps<ReduceOpSum> reduce_op;
-          ReduceData<Real> reduce_data(reduce_op);
-          using ReduceTuple = typename decltype(reduce_data)::Type;
+          Array4<Real const> const& volfrac = (ebfactory[lev]->getVolFrac()).const_array(mfi);
 
-          reduce_op.eval(bx, reduce_data, [n, ep_g, ro_g, X_gk, volfrac]
-            AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-          {
-            return { volfrac(i,j,k)*ep_g(i,j,k)*ro_g(i,j,k)*X_gk(i,j,k,n) };
-          });
+          for (int n=0; n < nspecies_g; ++n){
 
-          ReduceTuple host_tuple = reduce_data.value(reduce_op);
-          accum[n] += amrex::get<0>(host_tuple)*vol;
+            ReduceOps<ReduceOpSum> reduce_op;
+            ReduceData<Real> reduce_data(reduce_op);
+            using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        } /* End loop over species */
+            reduce_op.eval(bx, reduce_data, [n, ep_g, ro_g, X_gk, volfrac]
+              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+            {
+              return { volfrac(i,j,k)*ep_g(i,j,k)*ro_g(i,j,k)*X_gk(i,j,k,n) };
+            });
 
+            ReduceTuple host_tuple = reduce_data.value(reduce_op);
+            accum[n] += amrex::get<0>(host_tuple)*vol;
+
+          } /* End loop over species */
+
+        } else {
+
+          for (int n=0; n < nspecies_g; ++n){
+
+            ReduceOps<ReduceOpSum> reduce_op;
+            ReduceData<Real> reduce_data(reduce_op);
+            using ReduceTuple = typename decltype(reduce_data)::Type;
+
+            reduce_op.eval(bx, reduce_data, [n, ep_g, ro_g, X_gk]
+              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+            {
+              return { ep_g(i,j,k)*ro_g(i,j,k)*X_gk(i,j,k,n) };
+            });
+
+            ReduceTuple host_tuple = reduce_data.value(reduce_op);
+            accum[n] += amrex::get<0>(host_tuple)*vol;
+
+          } /* End loop over species */
+        } // FabType
       } // Not covered Fab
     } // loop over MFIter
 
@@ -159,25 +183,59 @@ MfixRW::ComputeMassProduction (const Real dt,
     const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
     const Real vol = dx[0]*dx[1]*dx[2];
 
-    const MultiFab* volfrac =  &(ebfactory[lev]->getVolFrac());
+    for (MFIter mfi(*txfr[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-     MultiFab const& ro_gk_txfr_fab = *(txfr[lev]);
+      const Box& bx = mfi.tilebox();
 
-    for (int n=0; n < nspecies_g; ++n){
+      EBCellFlagFab const& flagfab = ebfactory[lev]->getMultiEBCellFlagFab()[mfi];
 
-      prod[n] = amrex::ReduceSum(*volfrac, ro_gk_txfr_fab, 0,
-      [=] AMREX_GPU_HOST_DEVICE (Box const & bx,
-                                 Array4<const Real> const & vfrc,
-                                 Array4<const Real> const & ro_gk_txfr) -> amrex::Real
-      {
-        Real dm = 0.;
-        amrex::Loop(bx, [n,vfrc,ro_gk_txfr,scomp,&dm] (int i, int j, int k) noexcept
-        {if(vfrc(i,j,k) > 0.0) dm += vfrc(i,j,k)*ro_gk_txfr(i,j,k,n+scomp);});
-        return dm;
-      });
-      prod[n] *= vol;
+      if (flagfab.getType(bx) != FabType::covered) {
 
-    } /* End loop over species */
+        Array4<Real const> const& ep_g = m_leveldata[lev]->ep_g->const_array(mfi);
+        Array4<Real const> const& ro_gk_txfr = txfr[lev]->const_array(mfi);
+
+        if (flagfab.getType(bx) == FabType::singlevalued ) {
+
+          Array4<Real const> const& volfrac = (ebfactory[lev]->getVolFrac()).const_array(mfi);
+
+          for (int n=0; n < nspecies_g; ++n){
+
+            ReduceOps<ReduceOpSum> reduce_op;
+            ReduceData<Real> reduce_data(reduce_op);
+            using ReduceTuple = typename decltype(reduce_data)::Type;
+
+            reduce_op.eval(bx, reduce_data, [n, ep_g, ro_gk_txfr, scomp, volfrac]
+            AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+            {
+              return { volfrac(i,j,k)*ep_g(i,j,k)*ro_gk_txfr(i,j,k,scomp+n) };
+            });
+
+            ReduceTuple host_tuple = reduce_data.value(reduce_op);
+            prod[n] += amrex::get<0>(host_tuple)*vol;
+
+          } /* End loop over species */
+
+        } else {
+
+          for (int n=0; n < nspecies_g; ++n){
+
+            ReduceOps<ReduceOpSum> reduce_op;
+            ReduceData<Real> reduce_data(reduce_op);
+            using ReduceTuple = typename decltype(reduce_data)::Type;
+
+            reduce_op.eval(bx, reduce_data, [n, ep_g, ro_gk_txfr, scomp]
+            AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+            {
+              return { ep_g(i,j,k)*ro_gk_txfr(i,j,k,scomp+n) };
+            });
+
+            ReduceTuple host_tuple = reduce_data.value(reduce_op);
+            prod[n] += amrex::get<0>(host_tuple)*vol;
+
+          } /* End loop over species */
+        } // check on FabType
+      } // FabType check
+    } // FabType is covered
   } // nlev
 
   // Global sum and copy to global variable
@@ -211,7 +269,10 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
     Array<const MultiFab*,3> flux = {flux_x[lev], flux_y[lev], flux_z[lev]};
 
     const GpuArray<Real,3> dx = geom[lev].CellSizeArray();
-    GpuArray<Real,3> da = {dx[1]*dx[2], dx[0]*dx[2], dx[0]*dx[1]};
+
+    // This should be caught elsewhere but just in case...
+    AMREX_ASSERT(dx[0] == dx[1] && dx[1] == dx[2]);
+    Real const da( dx[0]*dx[0] );
 
     amrex::EBFArrayBoxFactory const& fact =
       static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
@@ -228,31 +289,35 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
     Array<Array<Array4<int>,3>,2> bct_extents = {bct_lo, bct_hi};
 
-    // Loop over MFIter
-    for (MFIter mfi(*flux_x[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+    auto areafrac = fact.getAreaFrac();
 
-      const Box& bx = mfi.tilebox();
+    for (int n=0; n < nspecies_g; ++n) {
 
-      EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
+      ReduceOps<ReduceOpSum,ReduceOpSum> reduce_op;
+      ReduceData<Real,Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-      // Only if fab is not covered
-      if (flagfab.getType(amrex::grow(bx,1)) != FabType::covered) {
+      // Loop over MFIter
+      for (MFIter mfi(*m_leveldata[lev]->ep_g, TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        const Box& bx = mfi.tilebox();
+
+        EBCellFlagFab const& flagfab = fact.getMultiEBCellFlagFab()[mfi];
 
         Array<IntVect,2> domain_extents = {domain.smallEnd(), domain.bigEnd()};
 
-        auto areafrac = fact.getAreaFrac();
 
         // Loop over directions
         for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
 
-          // Get flux over direction dir
+            // Get flux over direction dir
           Array4<Real const> const& flux_arr = flux[dir]->const_array(mfi);
           Array4<Real const> const& areafrac_arr = areafrac[dir]->const_array(mfi);
 
-          const Box& local_box = (*flux[dir])[mfi].box();
+          const Box& sbox = (*flux[dir])[mfi].box();
 
           // Save local box extents in a specific container
-          Array<IntVect,2> local_box_extents = {local_box.smallEnd(), local_box.bigEnd()};
+          Array<IntVect,2> sbox_extents = {sbox.smallEnd(), sbox.bigEnd()};
 
           // Loop over face normal
           for (int normal(-1); normal <= 1; normal += 2) {
@@ -261,33 +326,55 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
             const int idx = (normal + 1) / 2;
 
             // On domain face
-            if (local_box_extents[idx][dir] == (domain_extents[idx][dir]+idx)) {
+            if (sbox_extents[idx][dir] == (domain_extents[idx][dir]+idx)) {
 
-              for (int n=0; n < nspecies_g; ++n) {
+              // Create a copy of local box extents
+              Array<IntVect,2> operative_box_extents(sbox_extents);
 
-                ReduceOps<ReduceOpSum,ReduceOpSum> reduce_op;
-                ReduceData<Real,Real> reduce_data(reduce_op);
-                using ReduceTuple = typename decltype(reduce_data)::Type;
+              // Modify operative box extents to make a 2D Box
+              operative_box_extents[(idx+1)%2][dir] = operative_box_extents[idx][dir];
 
-                // Create a copy of local box extents
-                Array<IntVect,2> operative_box_extents(local_box_extents);
+              // Create the 2D Box
+              const Box operative_box(operative_box_extents[0],
+                                      operative_box_extents[1]);
 
-                // Modify operative box extents to make a 2D Box
-                operative_box_extents[(idx+1)%2][dir] = operative_box_extents[idx][dir];
+              // Get the boundary condition type on current face
+              Array4<int>& bc_type = bct_extents[idx][dir];
 
-                // Create the 2D Box
-                const Box operative_box(operative_box_extents[0],
-                                        operative_box_extents[1]);
+              // Get domain index on this face
+              const int domain_idx = domain_extents[idx][dir];
 
-                // Get the boundary condition type on current face
-                Array4<int>& bc_type = bct_extents[idx][dir];
-
-                // Get domain index on this face
-                const int domain_idx = domain_extents[idx][dir];
+              if (flagfab.getType(bx) == FabType::regular ) {
 
                 reduce_op.eval(operative_box, reduce_data, [dir,bc_type,
-                    domain_idx,normal,flux_arr,areafrac_arr,n,scomp]
-                  AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+                domain_idx,normal,flux_arr,n,scomp]
+                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+                {
+                  Real m_in  = 0.;
+                  Real m_out = 0.;
+
+                  IntVect bct_cell(i,j,k);
+                  bct_cell[dir] = domain_idx + normal;
+                  const int bct = bc_type(bct_cell,0);
+
+                  if(bct == BCList::pout) {
+                    //m_out =  1.;
+                    m_out =  normal*flux_arr(i,j,k,n+scomp);
+                  }
+                  else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
+                    //m_in  = 1.;
+                    m_in  = -normal*flux_arr(i,j,k,n+scomp);
+                  }
+
+                  return {m_in, m_out};
+                });
+
+
+              } else if (flagfab.getType(bx) == FabType::singlevalued ) {
+
+                reduce_op.eval(operative_box, reduce_data, [dir,bc_type,
+                domain_idx,normal,flux_arr,areafrac_arr,n,scomp]
+                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
                 {
                   Real m_in  = 0.;
                   Real m_out = 0.;
@@ -298,25 +385,20 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
                   if(bct == BCList::pout) {
                     m_out =  normal*areafrac_arr(i,j,k)*flux_arr(i,j,k,n+scomp);
+                    //m_out =  areafrac_arr(i,j,k);
                   }
                   else if ((bct == BCList::minf) || (bct == BCList::pinf)) {
                     m_in  = -normal*areafrac_arr(i,j,k)*flux_arr(i,j,k,n+scomp);
+                    //m_in  = areafrac_arr(i,j,k);
                   }
 
                   return {m_in, m_out};
                 });
 
-                ReduceTuple host_tuple = reduce_data.value(reduce_op);
-
-                // mass in
-                mass_flow[n] += amrex::get<0>(host_tuple)*da[dir];
-                // mass out
-                mass_flow[n+nspecies_g] += amrex::get<1>(host_tuple)*da[dir];
-
-              }
-            } // Loop over species
+              } // single valued fab
+            } // on domain face
           } // loop over normal direction
-        } // loop over dir
+        } // loop over direction
 
         // Add in mass flow from EB
         if( eb_has_flow && flagfab.getType(bx) == FabType::singlevalued) {
@@ -327,39 +409,35 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
           Array4<Real const> const& eb_vel     = eb_vel_in[lev]->const_array(mfi);
           Array4<Real const> const& eb_species = eb_species_in[lev]->const_array(mfi);
 
+          reduce_op.eval(bx, reduce_data, [n, eb_vel, eb_species, barea]
+            AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+          {
 
-          for (int n=0; n < nspecies_g; ++n) {
+            Real vel_mag = std::sqrt(eb_vel(i,j,k,0)*eb_vel(i,j,k,0) +
+                                     eb_vel(i,j,k,1)*eb_vel(i,j,k,1) +
+                                     eb_vel(i,j,k,2)*eb_vel(i,j,k,2));
 
-              ReduceOps<ReduceOpSum> reduce_op;
-              ReduceData<Real> reduce_data(reduce_op);
-              using ReduceTuple = typename decltype(reduce_data)::Type;
+            return {vel_mag*eb_species(i,j,k,n)*barea(i,j,k), 0.};
 
-              reduce_op.eval(bx, reduce_data, [n, eb_vel, eb_species, barea]
-                AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-              {
+          });
 
-                Real vel_mag = std::sqrt(eb_vel(i,j,k,0)*eb_vel(i,j,k,0) +
-                                         eb_vel(i,j,k,1)*eb_vel(i,j,k,1) +
-                                         eb_vel(i,j,k,2)*eb_vel(i,j,k,2));
-
-                return {vel_mag*eb_species(i,j,k,n)*barea(i,j,k)};
-
-              });
-
-              ReduceTuple host_tuple = reduce_data.value(reduce_op);
-
-              // This should be caught elsewhere but just in case...
-              AMREX_ASSERT(da[0] == da[1] && da[1] == da[2]);
-
-              // mass in
-              mass_flow[n] += amrex::get<0>(host_tuple)*da[0];
-
-          } // Loop over species
         } // eb_has_flow
 
-      } // Not covered Fab
-    } // loop over MFIter
-  } // Loop over levels
+      } // MFIter loop
+
+      ReduceTuple host_tuple = reduce_data.value(reduce_op);
+
+      // mass in
+      mass_flow[n] += amrex::get<0>(host_tuple)*da;
+      // mass out
+      mass_flow[n+nspecies_g] += amrex::get<1>(host_tuple)*da;
+
+    } // Loop over species
+
+  } // loop over levels
+#if 0
+#endif
+
 
   ParallelDescriptor::ReduceRealSum(mass_flow.data(), 2*nspecies_g);
 
@@ -367,6 +445,20 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
   for (int n=0; n < nspecies_g; ++n) {
     m_mass_inflow[n]  += dt*mass_flow[n];
     m_mass_outflow[n] += dt*mass_flow[n+nspecies_g];
+  }
+}
+
+void
+MfixRW::InitMassBalance ()
+{
+  if (report_mass_balance) {
+    for(int n(0); n<MFIXSpecies::NMAX; n++) {
+        m_mass_accum[n] = m_mass_accum[n];
+        m_mass_accum[n] = m_mass_accum[n+MFIXSpecies::NMAX];
+        m_mass_inflow[n] = 0.;
+        m_mass_outflow[n] = 0.;
+        m_mass_prod[n] = 0.;
+    }
   }
 }
 

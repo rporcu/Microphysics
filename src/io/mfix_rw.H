@@ -151,6 +151,8 @@ public:
                                  const amrex::Real time,
                                  const std::string& basename) const;
 
+   void InitMassBalance ();
+
    void ComputeMassAccum (const int offset = 1);
 
    void ComputeMassProduction (const amrex::Real dt,
