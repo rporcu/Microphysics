@@ -243,6 +243,218 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
   // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
   // we do need this to move particles from tile 0 to the correct tile.
   Redistribute();
+
+  // We've already assigned a normal velocity with zero mean and a standard
+  // deviation of 1 to all the particles we generated.
+  if (m_initial_conditions.has_granular_temperature()) {
+
+    const int ic_count = m_initial_conditions.ic().size();
+
+    std::vector<Real> meanVel(4*ic_count, 0);
+
+    // First block: compute mean to force back to zero.
+    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+
+      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
+                              m_initial_conditions.ic(icv).region->hi());
+
+      ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
+      ReduceData<int, Real, Real, Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        Box tilebox = pti.tilebox();
+        AoS& aos = pti.GetArrayOfStructs();
+        ParticleType* pstruct = aos().dataPtr();
+
+        RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+        if (tilebox_region.intersects(ic_region)) {
+
+          const int np = NumberOfParticles(pti);
+
+          SoA& soa = pti.GetStructOfArrays();
+          auto p_realarray = soa.realarray();
+
+          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_region]
+            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+          {
+            const ParticleType p = pstruct[p_id];
+            int cnt = 0;
+            Real velx(0.);
+            Real vely(0.);
+            Real velz(0.);
+            if ( ic_region.contains(p.pos()) ) {
+              cnt = 1;
+              velx = p_realarray[SoArealData::velx][p_id];
+              vely = p_realarray[SoArealData::vely][p_id];
+              velz = p_realarray[SoArealData::velz][p_id];
+            }
+            return {cnt, velx, vely, velz};
+          });
+        }
+      }
+      ReduceTuple host_tuple = reduce_data.value();
+
+      meanVel[0*ic_count + icv] += static_cast<Real>(amrex::get<0>(host_tuple));
+
+      meanVel[1*ic_count + icv] += amrex::get<1>(host_tuple);
+      meanVel[2*ic_count + icv] += amrex::get<2>(host_tuple);
+      meanVel[3*ic_count + icv] += amrex::get<3>(host_tuple);
+    }
+
+    ParallelDescriptor::ReduceRealSum(meanVel.data(), meanVel.size());
+
+    std::vector<Real> granTemp(2*ic_count, 0.);
+
+    // Subtract the mean velocities from each particle random velocity
+    // so the new means are zero. Also, compute the mean granular
+    // temperature.
+    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+
+      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
+                              m_initial_conditions.ic(icv).region->hi());
+
+      Real ic_np = meanVel[icv];
+
+      if (ic_np > 0.) {
+
+        const Real meanU = meanVel[1*ic_count + icv] / ic_np;
+        const Real meanV = meanVel[2*ic_count + icv] / ic_np;
+        const Real meanW = meanVel[3*ic_count + icv] / ic_np;
+
+
+        ReduceOps<ReduceOpSum, ReduceOpSum> reduce_op;
+        ReduceData<int, Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+          Box tilebox = pti.tilebox();
+          AoS& aos = pti.GetArrayOfStructs();
+          ParticleType* pstruct = aos().dataPtr();
+
+          RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tilebox_region.intersects(ic_region)) {
+
+            const int np = NumberOfParticles(pti);
+
+            SoA& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_region,
+              meanU, meanV, meanW]
+              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+            {
+              const ParticleType p = pstruct[p_id];
+
+              int cnt = 0;
+              Real p_granTemp(0.);
+
+              if ( ic_region.contains(p.pos()) ) {
+
+                cnt = 1;
+
+                Real velx = p_realarray[SoArealData::velx][p_id] - meanU;
+                Real vely = p_realarray[SoArealData::vely][p_id] - meanV;
+                Real velz = p_realarray[SoArealData::velz][p_id] - meanW;
+
+                p_granTemp = velx*velx + vely*vely + velz*velz;
+
+                p_realarray[SoArealData::velx][p_id] = velx;
+                p_realarray[SoArealData::vely][p_id] = vely;
+                p_realarray[SoArealData::velz][p_id] = velz;
+              }
+              return {cnt, p_granTemp};
+            });
+          } // tilebox intersects icv
+        } // MFIter loop
+
+          ReduceTuple host_tuple = reduce_data.value();
+
+          granTemp[0*ic_count + icv] = static_cast<Real>(amrex::get<0>(host_tuple));
+          granTemp[1*ic_count + icv] = amrex::get<1>(host_tuple);
+
+      } // ic region has particles
+    } // loop over ic regions
+
+    ParallelDescriptor::ReduceRealSum(granTemp.data(), granTemp.size());
+
+    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+
+      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
+                              m_initial_conditions.ic(icv).region->hi());
+
+      Real ic_np = granTemp[icv];
+
+      if (ic_np > 0.) {
+
+        GpuArray<Real,3> bulkVel;
+        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
+          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
+            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+            const SOLIDS_t& ic_solid = *(m_initial_conditions.ic(icv).get_solid(phase));
+
+            bulkVel[0]= ic_solid.velocity[0];
+            bulkVel[1]= ic_solid.velocity[1];
+            bulkVel[2]= ic_solid.velocity[2];
+
+          }
+        }
+
+        const Real ic_granTemp(granTemp[ic_count + icv] / (3.0*ic_np));
+        const Real scale(std::sqrt(m_initial_conditions.get_granular_temperature(icv)/ic_granTemp));
+
+        // Adjust velocities so that the mean granular temperature is equal
+        // to the desired initial granular temperature from the inputs.
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+          Box tilebox = pti.tilebox();
+          AoS& aos = pti.GetArrayOfStructs();
+          ParticleType* pstruct = aos().dataPtr();
+
+          RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
+
+          if (tilebox_region.intersects(ic_region)) {
+
+            const int np = NumberOfParticles(pti);
+
+            SoA& soa = pti.GetStructOfArrays();
+            auto p_realarray = soa.realarray();
+
+            amrex::ParallelFor(np, [pstruct,p_realarray,ic_region, bulkVel, scale]
+              AMREX_GPU_DEVICE (int p_id) noexcept
+            {
+              const ParticleType p = pstruct[p_id];
+
+              if ( ic_region.contains(p.pos()) ) {
+
+                Real velx = p_realarray[SoArealData::velx][p_id];
+                Real vely = p_realarray[SoArealData::vely][p_id];
+                Real velz = p_realarray[SoArealData::velz][p_id];
+
+                p_realarray[SoArealData::velx][p_id] = bulkVel[0] + scale*velx;
+                p_realarray[SoArealData::vely][p_id] = bulkVel[1] + scale*vely;
+                p_realarray[SoArealData::velz][p_id] = bulkVel[2] + scale*velz;
+
+             }
+            });
+
+          } // tilebox intersects ic region
+        } // MFIter loop
+      } // ic region has particles
+    } // // loop over icv
+  } // has granular temperature
 }
 
 

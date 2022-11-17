@@ -137,6 +137,8 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
       }
     }
 
+    amrex::Real gran_temp(0.);
+
     if (dem.solve() || pic.solve()) {
 
       // If we initialize particles with particle generator
@@ -144,13 +146,14 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
 
         // Get the list of solids used in defining the IC region
         std::vector<std::string> solids_names;
-        {
-          std::string field = "ic."+input_regions[icv];
-          amrex::ParmParse ppSolid(field.c_str());
-          ppSolid.getarr("solids", solids_names);
-          if(AutoParticleInit()) {
-            ppSolid.get("packing", new_ic.packing);
-          }
+
+        std::string regions_field = "ic."+input_regions[icv];
+        amrex::ParmParse ppRegion(regions_field.c_str());
+        ppRegion.getarr("solids", solids_names);
+
+        if(AutoParticleInit()) {
+          ppRegion.get("packing", new_ic.packing);
+          ppRegion.query("granular_temperature", gran_temp);
         }
 
         for (size_t lcs(0); lcs < solids_names.size(); ++lcs) {
@@ -290,6 +293,7 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
 
     m_ic.push_back(new_ic);
     m_np.push_back(0);
+    m_granular_temperature.push_back(gran_temp);
   }
 
 

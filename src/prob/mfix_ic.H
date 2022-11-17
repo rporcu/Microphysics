@@ -47,6 +47,23 @@ class MFIXInitialConditions
       return m_np[icv];
     }
 
+    int has_granular_temperature ( ) const {
+      for (int icv(0); icv < m_granular_temperature.size(); icv++ ) {
+        if (has_granular_temperature(icv)) { return 1; }
+      }
+      return 0;
+    }
+
+    int has_granular_temperature ( const int icv ) const {
+      AMREX_ASSERT( icv < m_granular_temperature.size() );
+      return (m_granular_temperature[icv] > 0. ? 1 : 0);
+    }
+
+    amrex::Real get_granular_temperature ( const int icv ) const {
+      AMREX_ASSERT( icv < m_granular_temperature.size() );
+      return m_granular_temperature[icv];
+    }
+
   private:
 
     amrex::Vector<IC_t> m_ic;
@@ -55,6 +72,7 @@ class MFIXInitialConditions
 
     amrex::Vector<long> m_np;
 
+    amrex::Vector<amrex::Real> m_granular_temperature;
 };
 
 

@@ -124,6 +124,7 @@ ParticlesGenerator::generate (int& particles_count,
 
     amrex::Abort("Unknown particle generator fill type");
   }
+
 }
 
 
@@ -163,6 +164,7 @@ void ParticlesGenerator::generate (int& particles_count,
   const Real ic_v_s = ic_solid.velocity[1];
   const Real ic_w_s = ic_solid.velocity[2];
 
+  const int has_granular_temperature = m_initial_conditions.has_granular_temperature(m_icv);
   const Real statwt = ic_solid.statwt;
 
   auto& aos = particles.GetArrayOfStructs();
@@ -184,7 +186,7 @@ void ParticlesGenerator::generate (int& particles_count,
       diameter_distr_uniform,diameter_distr_normal,diameter_mean,current_size,
       diameter_stddev,diameter_min,diameter_max,density_distr_uniform,
       density_distr_normal,density_mean,density_stddev,density_min,density_max,
-      positions_generator]
+      has_granular_temperature, positions_generator]
     AMREX_GPU_DEVICE (int p, RandomEngine const& engine) noexcept
   {
     const int p_tot = current_size + p;
@@ -235,9 +237,15 @@ void ParticlesGenerator::generate (int& particles_count,
     Real mass = vol * rho;
     Real omoi = 2.5/(mass * rad*rad);
 
-    p_realarray[SoArealData::velx][p_tot] = ic_u_s;
-    p_realarray[SoArealData::vely][p_tot] = ic_v_s;
-    p_realarray[SoArealData::velz][p_tot] = ic_w_s;
+    if (has_granular_temperature) {
+      p_realarray[SoArealData::velx][p_tot] = amrex::RandomNormal(0., 1., engine);
+      p_realarray[SoArealData::vely][p_tot] = amrex::RandomNormal(0., 1., engine);
+      p_realarray[SoArealData::velz][p_tot] = amrex::RandomNormal(0., 1., engine);
+    } else {
+      p_realarray[SoArealData::velx][p_tot] = ic_u_s;
+      p_realarray[SoArealData::vely][p_tot] = ic_v_s;
+      p_realarray[SoArealData::velz][p_tot] = ic_w_s;
+    }
 
     p_realarray[SoArealData::statwt][p_tot] = statwt;
 
