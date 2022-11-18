@@ -528,15 +528,15 @@ FLUID_t::get_density (amrex::Real time) const
     }
   } else { // density not defined
 
-    if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
-        fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
+    if (fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem ||
+        fluid->constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem) {
 
-      const auto& fluid_parms = fluid.parameters();
+      const auto& fluid_parms = fluid->parameters();
 
       amrex::Real MW_g(0.);
 
-      if (fluid.isMixture()) {
-        for (int n(0); n < fluid.nspecies(); n++) {
+      if (fluid->isMixture()) {
+        for (int n(0); n < fluid->nspecies(); n++) {
           MW_g += this->get_species(n, time) / fluid_parms.get_MW_gk<amrex::RunOn::Host>(n);
         }
 
@@ -545,7 +545,7 @@ FLUID_t::get_density (amrex::Real time) const
         MW_g = fluid_parms.get_MW_g<amrex::RunOn::Host>();
       }
 
-      return (fluid.thermodynamic_pressure() * MW_g) /
+      return (fluid->thermodynamic_pressure() * MW_g) /
              (MFIXFluidPhase::R * this->get_temperature(time));
 
     } else {

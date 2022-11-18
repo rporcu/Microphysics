@@ -10,6 +10,8 @@
 #include <mfix_regions.H>
 #include <mfix_species.H>
 
+#include <algorithm>
+
 
 using namespace amrex;
 
@@ -21,7 +23,6 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
                                    MFIXDEM& dem,
                                    MFIXPIC& pic)
 {
-
   // The default type is "AsciiFile" but we can over-write that in the inputs
   // file with "Random"
 
@@ -45,16 +46,52 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
   std::vector<std::string> input_regions;
   pp.queryarr("regions", input_regions);
 
+  {
+    std::string field = "ic";
+    amrex::ParmParse ppIC(field.c_str());
+
+    ppIC.query("allow_regions_overlap", m_allow_overlap);
+
+    std::string ranking_type("Inputs");
+    ppIC.query("ranking_type", ranking_type);
+
+    if(toLower(ranking_type).compare("inputs") == 0) {
+      m_ic_ranking.set_type(ICRankingType::Inputs);
+    } else if (toLower(ranking_type).compare("volume") == 0) {
+      m_ic_ranking.set_type(ICRankingType::Volume);
+    } else if (toLower(ranking_type).compare("priority") == 0) {
+      m_ic_ranking.set_type(ICRankingType::Priority);
+    } else {
+      amrex::Abort("Error");
+    }
+  }
+
   // Loop over ICs
   for (size_t icv=0; icv < input_regions.size(); icv++) {
 
     amrex::Real volfrac_total(0.0);
 
-    IC_t new_ic(fluid);
+    IC_t new_ic(&fluid);
 
     // Set the region for the initial condition.
     new_ic.region = regions.getRegion(input_regions[icv]);
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.region != nullptr, "Invalid ic region!");
+
+    // Check IC regions ranking inputs
+    {
+      std::string field = "ic."+input_regions[icv];
+      amrex::ParmParse ppIC(field.c_str());
+
+      if(m_ic_ranking.get_type() == ICRankingType::Inputs) {
+        new_ic.inputs_order = icv;
+      } else if (m_ic_ranking.get_type() == ICRankingType::Volume) {
+        new_ic.volume = new_ic.region->volume();
+      } else if (m_ic_ranking.get_type() == ICRankingType::Priority) {
+        ppIC.query("priority", new_ic.priority);
+      }
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(new_ic.priority >= 1, "IC priority must be >= 1");
+    }
 
     // Get fluid data.
     if (fluid.solve()) {
@@ -141,19 +178,24 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
 
     if (dem.solve() || pic.solve()) {
 
-      // If we initialize particles with particle generator
+      // solids volfrac in IC region is > 0
       if (new_ic.fluid.volfrac < 1.0) {
 
         // Get the list of solids used in defining the IC region
         std::vector<std::string> solids_names;
+        {
+          std::string field = "ic."+input_regions[icv];
+          amrex::ParmParse ppSolid(field.c_str());
+          ppSolid.getarr("solids", solids_names);
 
-        std::string regions_field = "ic."+input_regions[icv];
-        amrex::ParmParse ppRegion(regions_field.c_str());
-        ppRegion.getarr("solids", solids_names);
+          if (solids_names.size() != 1) {
+            amrex::Abort("Number of solids types in IC region must be equal to 1. Fix inputs!!");
+          }
 
-        if(AutoParticleInit()) {
-          ppRegion.get("packing", new_ic.packing);
-          ppRegion.query("granular_temperature", gran_temp);
+          if(AutoParticleInit()) {
+            ppSolid.get("packing", new_ic.packing);
+            ppSolid.query("granular_temperature", gran_temp);
+          }
         }
 
         for (size_t lcs(0); lcs < solids_names.size(); ++lcs) {
@@ -248,7 +290,7 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
           new_ic.solids.push_back(new_solid);
         }
       }
-      // If we initialize particles through particle_input.dat
+      // either fluid.volfrac == 1, or we read particles from particle_input.dat
       else {
 
         // Get the list of solids used in defining the IC region
@@ -257,6 +299,14 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
           std::string field = "ic."+input_regions[icv];
           amrex::ParmParse ppSolid(field.c_str());
           ppSolid.queryarr("solids", solids_names);
+
+          if (solids_names.size() != 0 && solids_names.size() != 1) {
+            Print() << "Number of solids types in IC region "
+                    << input_regions[icv]
+                    << " must be equal either to 0 or 1\n";
+
+            amrex::Abort("Fix inputs");
+          }
         }
 
         for(size_t lcs(0); lcs < solids_names.size(); ++ lcs) {
@@ -296,6 +346,8 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
     m_granular_temperature.push_back(gran_temp);
   }
 
+  // Sort the IC on the basis of inputs order, priority or volume
+  std::sort(m_ic.begin(), m_ic.end(), m_ic_ranking);
 
 #if 0
   //Dump out what we read for debugging!
@@ -367,4 +419,26 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
 
   }
 #endif
+}
+
+
+bool
+MFIXInitialConditions::ICRanking::operator() (const IC_t& left,
+                                              const IC_t& right) const
+{
+  AMREX_ALWAYS_ASSERT(m_ranking_type != ICRankingType::Invalid);
+
+  if (m_ranking_type == ICRankingType::Inputs) {
+    return left.inputs_order < right.inputs_order;
+  }
+
+  if (m_ranking_type == ICRankingType::Volume) {
+    return left.volume < right.volume;
+  }
+
+  if (m_ranking_type == ICRankingType::Priority) {
+    return left.priority < right.priority;
+  }
+
+  return false;
 }

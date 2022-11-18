@@ -55,7 +55,10 @@ ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
 
 void
 ParticlesGenerator::generate (int& particles_count,
-                              ParticleTileType& particles)
+                              ParticleTileType& particles,
+                              const RealBox* regions,
+                              const int regions_nb,
+                              const int allow_overlap)
 {
   std::string ic_pack_type_str = m_initial_conditions.ic(m_icv).packing;
 
@@ -81,7 +84,9 @@ ParticlesGenerator::generate (int& particles_count,
 
     Hex_ClosePack hex_close_pack(m_plo, m_dx);
     hex_close_pack.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase);
-    generate(particles_count, particles, hex_close_pack);
+
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        hex_close_pack);
 
   } else if (m_dem.solve() && ic_pack_type_str.compare("random") == 0) {
 
@@ -89,14 +94,20 @@ ParticlesGenerator::generate (int& particles_count,
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, false);
-    generate(particles_count, particles, random_fill_dem);
+    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv,
+        m_phase, m_h_data, m_d_data, false);
+
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        random_fill_dem);
 
   } else if (m_pic.solve() && ic_pack_type_str.compare("random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase, false);
-    generate(particles_count, particles, random_fill_pic);
+    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv,
+        m_phase, false);
+
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        random_fill_pic);
 
   } else if (m_dem.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
@@ -104,21 +115,29 @@ ParticlesGenerator::generate (int& particles_count,
     m_d_data.clear();
 
     RandomFill_DEM random_fill_dem(m_plo, m_dx);
-    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv, m_phase, m_h_data, m_d_data, true);
+    random_fill_dem.setup(m_initial_conditions, m_dem, m_bx_lo, m_bx_hi, m_icv,
+        m_phase, m_h_data, m_d_data, true);
 
-    generate(particles_count, particles, random_fill_dem);
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        random_fill_dem);
 
   } else if (m_pic.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
     RandomFill_PIC random_fill_pic(m_plo, m_dx);
-    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase, true);
-    generate(particles_count, particles, random_fill_pic);
+    random_fill_pic.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv,
+        m_phase, true);
+
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        random_fill_pic);
 
   } else if (cube_base > 0) {
 
     nCubePer_Fill n_cube_per_fill(cube_base, m_plo, m_dx);
-    n_cube_per_fill.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase);
-    generate(particles_count, particles, n_cube_per_fill);
+    n_cube_per_fill.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv,
+        m_phase);
+
+    generate(particles_count, particles, regions, regions_nb, allow_overlap,
+        n_cube_per_fill);
 
   } else {
 
@@ -131,6 +150,9 @@ ParticlesGenerator::generate (int& particles_count,
 template <typename F1>
 void ParticlesGenerator::generate (int& particles_count,
                                    ParticleTileType& particles,
+                                   const RealBox* regions,
+                                   const int regions_nb,
+                                   const int allow_overlap,
                                    F1 positions_generator)
 {
   particles_count = positions_generator.get_particles_number();
@@ -186,88 +208,99 @@ void ParticlesGenerator::generate (int& particles_count,
       diameter_distr_uniform,diameter_distr_normal,diameter_mean,current_size,
       diameter_stddev,diameter_min,diameter_max,density_distr_uniform,
       density_distr_normal,density_mean,density_stddev,density_min,density_max,
-      has_granular_temperature, positions_generator]
+      positions_generator,regions,regions_nb,allow_overlap,has_granular_temperature]
     AMREX_GPU_DEVICE (int p, RandomEngine const& engine) noexcept
   {
     const int p_tot = current_size + p;
 
     ParticleType& part = pstruct[p_tot];
 
-    part.id() = id+p;
-    part.cpu() = cpu;
-
     RealVect position = positions_generator.template operator()<run_on>(p, engine);
     part.pos(0) = position[0];
     part.pos(1) = position[1];
     part.pos(2) = position[2];
 
-    Real diameter = 0;
+    part.id() = id+p;
+    part.cpu() = cpu;
 
-    if (diameter_distr_uniform) {
-      diameter = diameter_min + (diameter_max-diameter_min)*amrex::Random(engine);
-    } else if (diameter_distr_normal) {
-      diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
-      while (diameter < diameter_min || diameter_max < diameter){
+    if (!allow_overlap) {
+      for (int box(0); box < regions_nb-1; box++) {
+        if (regions[box].contains(part.pos())) {
+          part.id() = -1;
+        }
+      }
+    }
+
+    if (part.id() >= 0) {
+
+      Real diameter = 0;
+
+      if (diameter_distr_uniform) {
+        diameter = diameter_min + (diameter_max-diameter_min)*amrex::Random(engine);
+      } else if (diameter_distr_normal) {
         diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
+        while (diameter < diameter_min || diameter_max < diameter){
+          diameter = amrex::RandomNormal(diameter_mean, diameter_stddev, engine);
+        }
+      } else {
+        diameter = diameter_mean;
       }
-    } else {
-      diameter = diameter_mean;
-    }
 
-    if (local_cg_dem) {
-      diameter *= std::cbrt(statwt);
-    }
+      if (local_cg_dem) {
+        diameter *= std::cbrt(statwt);
+      }
 
-    Real rad = .5*diameter;
+      Real rad = .5*diameter;
 
-    Real rho = 0;
+      Real rho = 0;
 
-    if (density_distr_uniform) {
-      rho = density_min + (density_max-density_min)*amrex::Random(engine);
-    } else if (density_distr_normal) {
-      rho = amrex::RandomNormal(density_mean, density_stddev, engine);
-      while(rho < density_min || density_max < rho) {
+      if (density_distr_uniform) {
+        rho = density_min + (density_max-density_min)*amrex::Random(engine);
+      } else if (density_distr_normal) {
         rho = amrex::RandomNormal(density_mean, density_stddev, engine);
+        while(rho < density_min || density_max < rho) {
+          rho = amrex::RandomNormal(density_mean, density_stddev, engine);
+        }
+      } else {
+        rho = density_mean;
       }
-    } else {
-      rho = density_mean;
+
+      Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
+      Real mass = vol * rho;
+      Real omoi = 2.5/(mass * rad*rad);
+
+      if (has_granular_temperature) {
+        p_realarray[SoArealData::velx][p_tot] = amrex::RandomNormal(0., 1., engine);
+        p_realarray[SoArealData::vely][p_tot] = amrex::RandomNormal(0., 1., engine);
+        p_realarray[SoArealData::velz][p_tot] = amrex::RandomNormal(0., 1., engine);
+      } else {
+        p_realarray[SoArealData::velx][p_tot] = ic_u_s;
+        p_realarray[SoArealData::vely][p_tot] = ic_v_s;
+        p_realarray[SoArealData::velz][p_tot] = ic_w_s;
+      }
+
+      p_realarray[SoArealData::statwt][p_tot] = statwt;
+
+      p_realarray[SoArealData::radius][p_tot] = rad;
+      p_realarray[SoArealData::density][p_tot] = rho;
+
+      p_realarray[SoArealData::volume][p_tot] = vol;
+      p_realarray[SoArealData::mass][p_tot] = mass;
+      p_realarray[SoArealData::oneOverI][p_tot] = omoi*picmulti;
+
+      p_realarray[SoArealData::omegax][p_tot] = 0.0;
+      p_realarray[SoArealData::omegay][p_tot] = 0.0;
+      p_realarray[SoArealData::omegaz][p_tot] = 0.0;
+
+      p_realarray[SoArealData::dragcoeff][p_tot] = 0.0;
+
+      p_realarray[SoArealData::dragx][p_tot] = 0.0;
+      p_realarray[SoArealData::dragy][p_tot] = 0.0;
+      p_realarray[SoArealData::dragz][p_tot] = 0.0;
+
+      p_intarray[SoAintData::phase][p_tot] = phase;
+      p_intarray[SoAintData::state][p_tot] = 1;
     }
-
-    Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
-    Real mass = vol * rho;
-    Real omoi = 2.5/(mass * rad*rad);
-
-    if (has_granular_temperature) {
-      p_realarray[SoArealData::velx][p_tot] = amrex::RandomNormal(0., 1., engine);
-      p_realarray[SoArealData::vely][p_tot] = amrex::RandomNormal(0., 1., engine);
-      p_realarray[SoArealData::velz][p_tot] = amrex::RandomNormal(0., 1., engine);
-    } else {
-      p_realarray[SoArealData::velx][p_tot] = ic_u_s;
-      p_realarray[SoArealData::vely][p_tot] = ic_v_s;
-      p_realarray[SoArealData::velz][p_tot] = ic_w_s;
-    }
-
-    p_realarray[SoArealData::statwt][p_tot] = statwt;
-
-    p_realarray[SoArealData::radius][p_tot] = rad;
-    p_realarray[SoArealData::density][p_tot] = rho;
-
-    p_realarray[SoArealData::volume][p_tot] = vol;
-    p_realarray[SoArealData::mass][p_tot] = mass;
-    p_realarray[SoArealData::oneOverI][p_tot] = omoi*picmulti;
-
-    p_realarray[SoArealData::omegax][p_tot] = 0.0;
-    p_realarray[SoArealData::omegay][p_tot] = 0.0;
-    p_realarray[SoArealData::omegaz][p_tot] = 0.0;
-
-    p_realarray[SoArealData::dragcoeff][p_tot] = 0.0;
-
-    p_realarray[SoArealData::dragx][p_tot] = 0.0;
-    p_realarray[SoArealData::dragy][p_tot] = 0.0;
-    p_realarray[SoArealData::dragz][p_tot] = 0.0;
-
-    p_intarray[SoAintData::phase][p_tot] = phase;
-    p_intarray[SoAintData::state][p_tot] = 1;
   });
 
   return;

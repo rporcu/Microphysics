@@ -113,7 +113,6 @@ regions.inner-domain.hi  = 0.0007  0.0070  0.0007
 #
 ic.regions = full-domain  inner-domain
 
-
 ic.full-domain.fluid.volfrac     =  1.0
 ic.full-domain.fluid.pressure    =  0.0
 ic.full-domain.fluid.velocity    =  0.0  0.0  0.0

@@ -221,7 +221,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
 
     amrex::Real volfrac_total(0.0);
 
-    BC_t new_bc(fluid);
+    BC_t new_bc(&fluid);
 
     // Set the region for the initial condition.
     new_bc.region = regions.getRegion(input_regions[bcv]);

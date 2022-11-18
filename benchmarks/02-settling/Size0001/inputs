@@ -136,7 +136,6 @@ ic.full-domain.fluid.density     = 1.0
 ic.full-domain.solids = solid0
 ic.full-domain.solid0.temperature = 400
 
-
 ic.sub-domain.fluid.volfrac     = 1.0
 ic.sub-domain.fluid.velocity    = 0.0  0.0  0.0
 ic.sub-domain.fluid.temperature = 800

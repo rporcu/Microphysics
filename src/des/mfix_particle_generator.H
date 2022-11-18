@@ -10,6 +10,7 @@
 #include <mfix_ic.H>
 #include <mfix_dem.H>
 
+
 class ParticlesGenerator {
 
   public:
@@ -31,12 +32,18 @@ class ParticlesGenerator {
 
     // Particle generator
     void generate (int& particles_count,
-                   ParticleTileType& particles);
+                   ParticleTileType& particles,
+                   const amrex::RealBox* regions,
+                   const int regions_nb,
+                   const int allow_overlap);
 
     // Particle generator
     template <typename F1>
     void generate (int& particles_count,
                    ParticleTileType& particles,
+                   const amrex::RealBox* regions,
+                   const int regions_nb,
+                   const int allow_overlap,
                    F1 positions_generator);
 
     // Write particles data

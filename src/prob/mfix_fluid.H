@@ -395,7 +395,7 @@ class MFIXFluidParms {
 
 struct FLUID_t {
 
-  FLUID_t(MFIXFluidPhase& fluid_in) :
+  FLUID_t(MFIXFluidPhase* fluid_in) :
     fluid(fluid_in),
     volfrac(-1.0),
     pressure(-1.0),
@@ -416,7 +416,7 @@ struct FLUID_t {
     temperature_defined(0)
   {}
 
-  MFIXFluidPhase& fluid;
+  MFIXFluidPhase* fluid;
 
   amrex::Real volfrac;
   amrex::Real pressure;

@@ -170,29 +170,46 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
   const auto& flags = particle_ebfactory->getMultiEBCellFlagFab();
 
-  // This uses the particle tile size. Note that the default is to tile so if we
-  //      remove the true and don't explicitly add false it will still tile
-  for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+  const int allow_ic_regions_overlap = m_initial_conditions.allow_overlap();
 
-    const Box& tilebx = mfi.tilebox();
+  // double check if this goes out of MFIter loop
+  MFIXICRegions ic_regions;
 
-    if(flags[mfi].getType(tilebx) != FabType::covered) {
+  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
 
-      auto& particles = DefineAndReturnParticleTile(lev,mfi);
+    AMREX_ALWAYS_ASSERT(m_initial_conditions.ic(icv).solids.size() <= 1);
 
-      for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
 
-        if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
+      const RealBox* ic_region = m_initial_conditions.ic(icv).region;
+      const int ic_region_added = ic_regions.add(*ic_region, m_initial_conditions.allow_overlap());
 
-          for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
-            if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
+      if (ic_region_added) {
 
-              const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+        // Copy IC regions data from host to device
+        const int ic_regions_size = ic_regions.size();
+        Gpu::DeviceVector<RealBox> ic_regions_gpu(ic_regions_size);
+        Gpu::copy(Gpu::hostToDevice, ic_regions.begin(), ic_regions.end(), ic_regions_gpu.begin());
+        const RealBox* ic_regions_ptr = ic_regions_gpu.dataPtr();
 
-              const RealBox* ic_region = m_initial_conditions.ic(icv).region;
-              const Box ic_box = calc_ic_box(Geom(lev), ic_region);
+        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
 
-              if (tilebx.intersects(ic_box)) {
+          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
+
+            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+
+            const Box ic_box = calc_ic_box(Geom(lev), ic_region);
+
+            // This uses the particle tile size. Note that the default is to tile so if we
+            //      remove the true and don't explicitly add false it will still tile
+            for (MFIter mfi = MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+              const Box& tilebx = mfi.tilebox();
+              auto& particles = DefineAndReturnParticleTile(lev, mfi);
+
+              // Now that we know pcount, go ahead and create a particle container for this
+              // grid and add the particles to it
+              if(flags[mfi].getType(tilebx) != FabType::covered && tilebx.intersects(ic_box)) {
 
                 const Box bx = tilebx & ic_box;
 
@@ -208,7 +225,8 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                 // This is particles in this grid for this IC region
                 int pcount = 0;
 
-                particles_generator.generate(pcount, particles);
+                particles_generator.generate(pcount, particles, ic_regions_ptr,
+                    ic_regions_size, allow_ic_regions_overlap);
 
                 // Update the particles NextID
                 ParticleType::NextID(id+pcount);
@@ -219,15 +237,16 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                   particles.push_back_real(start+comp, pcount, 0.);
 
                 total_np[icv] += static_cast<long>(pcount);
-              }
+              } // if Fab is not covered and tilebox intersects IC region
 
-              break; // only one solid phase per icv is allowed
-            } // ep_s > 0
-          } // loop over solids
-        } // ep_g < 1
-      } // loop over ICs
-    } // FabType not covered
-  } // MFIter loop
+            } // MFIter loop
+
+            break; // only one solid phase per icv is allowed
+          } // ep_s > 0
+        } // loop over solids
+      } // if IC region was added 
+    } // ep_g < 1
+  } // loop over ICs
 
   ParallelDescriptor::ReduceLongSum(total_np.data(), m_initial_conditions.ic().size());
 

@@ -345,7 +345,7 @@ class MFIXBoundaryConditions
 struct BC_t {
 
   // Constructor
-  BC_t (MFIXFluidPhase& fluid_in) :
+  BC_t (MFIXFluidPhase* fluid_in) :
     fluid(fluid_in)
   {}
 
