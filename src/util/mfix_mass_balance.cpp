@@ -91,7 +91,6 @@ MfixRW::ComputeMassAccum (const int offset)
     return;
   }
 
-  amrex::Print() << "MASBALANCE REPORT --> ComputeMassAccum()\n";
   GpuArray<Real, MFIXSpecies::NMAX> accum = {0.};
 
   const int nspecies_g = fluid.nspecies();
@@ -312,7 +311,6 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
             // Get flux over direction dir
           Array4<Real const> const& flux_arr = flux[dir]->const_array(mfi);
-          Array4<Real const> const& areafrac_arr = areafrac[dir]->const_array(mfi);
 
           const Box& sbox = (*flux[dir])[mfi].box();
 
@@ -371,6 +369,8 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 
 
               } else if (flagfab.getType(bx) == FabType::singlevalued ) {
+
+                Array4<Real const> const& areafrac_arr = areafrac[dir]->const_array(mfi);
 
                 reduce_op.eval(operative_box, reduce_data, [dir,bc_type,
                 domain_idx,normal,flux_arr,areafrac_arr,n,scomp]
