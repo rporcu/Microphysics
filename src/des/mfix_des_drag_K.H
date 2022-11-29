@@ -298,8 +298,10 @@ struct ComputeDragUser
      *    i, j, k - particle cell indices
      *    pid     - particle id number
      */
-    AMREX_GPU_EXTERNAL
     AMREX_GPU_HOST_DEVICE
+#if defined(AMREX_USE_DPCPP)
+    SYCL_EXTERNAL
+#endif
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
                             amrex::Real fvelx, amrex::Real fvely, amrex::Real fvelz,
