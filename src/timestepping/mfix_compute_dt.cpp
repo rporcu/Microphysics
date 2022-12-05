@@ -41,186 +41,106 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     const auto& fluid_parms = fluid.parameters();
 
-    for (int lev(0); lev <= finest_level; ++lev)
-    {
+    for (int lev(0); lev <= finest_level; ++lev) {
+
       const Real* dx = geom[lev].CellSize();
 
       Real odx(1.0 / dx[0]);
       Real ody(1.0 / dx[1]);
       Real odz(1.0 / dx[2]);
 
-#ifdef AMREX_USE_GPU
-      if (Gpu::inLaunchRegion())
-      {
-        // Reduce max operation for cfl_max
-        ReduceOps<ReduceOpMax> reduce_op;
-        ReduceData<Real> reduce_data(reduce_op);
-        using ReduceTuple = typename decltype(reduce_data)::Type;
+      // Reduce max operation for cfl_max
+      ReduceOps<ReduceOpMax> reduce_op;
+      ReduceData<Real> reduce_data(reduce_op);
+      using ReduceTuple = typename decltype(reduce_data)::Type;
 
-        for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          const auto& ld = *m_leveldata[lev];
-
-          const auto& vel       = ld.vel_g->array(mfi);
-          const auto& ep        = ld.ep_g->array(mfi);
-          const auto& ro        = ld.ro_g->array(mfi);
-          const auto& T_g       = fluid.solve_enthalpy()? ld.T_g->array(mfi) : Array4<const Real>();
-          const auto& gradp     = ld.gp->array(mfi);
-          const auto& txfr_fab  = ld.txfr->array(mfi);
-
-          Box bx(mfi.tilebox());
-
-          const auto& vel_fab   = static_cast<EBFArrayBox const&>((*ld.vel_g)[mfi]);
-
-          const auto& flags     = vel_fab.getEBCellFlagFab();
-          const auto& flags_fab = flags.array();
-
-          // ew need this until we remove static attribute from mfix::gp0
-          const RealVect gp0_dev(gp0);
-          const RealVect gravity_dev(gravity);
-
-          const int adv_enthalpy = fluid.solve_enthalpy();
-
-          const Real mu_g0 = fluid.mu_g();
-
-          // Compute CFL on a per cell basis
-          if (flags.getType(bx) != FabType::covered) {
-
-            reduce_op.eval(bx, reduce_data,
-              [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,mu_g0,
-               flags_fab,T_g,adv_enthalpy,fluid_parms,idx_drag_txfr]
-              AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
-            {
-              Real l_cfl_max = 0._rt;
-
-              if (!flags_fab(i,j,k).isCovered())
-              {
-                RealVect acc(0.);
-                Real qro  = 1.0/ro(i,j,k);
-                Real qep  = 1.0/ep(i,j,k);
-
-                // Compute the three components of the net acceleration
-                // Explicit particle forcing is given by
-                for (int n(0); n < 3; ++n)
-                {
-                  Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                  Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
-
-                  acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
-                }
-
-                Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
-                             amrex::Math::abs(vel(i,j,k,1))*ody +
-                             amrex::Math::abs(vel(i,j,k,2))*odz;
-
-                Real mu_g(0);
-
-                if (adv_enthalpy)
-                  mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
-                else
-                  mu_g = mu_g0;
-
-                Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
-                Real cpv_cfl = c_cfl + v_cfl;
-
-                // MAX CFL factor on cell (i,j,k)
-                Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
-                                                        4*amrex::Math::abs(acc[0])*odx +
-                                                        4*amrex::Math::abs(acc[1])*ody +
-                                                        4*amrex::Math::abs(acc[2])*odz);
-                l_cfl_max = amrex::max(l_cfl_max, cfl_max_cell);
-              }
-
-              return {l_cfl_max};
-            });
-          }
-        }
-
-        ReduceTuple host_tuple = reduce_data.value();
-        cfl_max = amrex::max(cfl_max, amrex::get<0>(host_tuple));
-      }
-      else
-#endif
-      {
 #ifdef _OPENMP
-#pragma omp parallel reduction(max:cfl_max) if (Gpu::notInLaunchRegion())
+#pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-        for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi)
-        {
-          const auto& ld = *m_leveldata[lev];
+      for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-          const auto& vel       = ld.vel_g->const_array(mfi);
-          const auto& ep        = ld.ep_g->const_array(mfi);
-          const auto& ro        = ld.ro_g->const_array(mfi);
-          const auto& T_g       = fluid.solve_enthalpy()? ld.T_g->const_array(mfi) : Array4<const Real>();
-          const auto& gradp     = ld.gp->const_array(mfi);
-          const auto& txfr_fab  = ld.txfr->const_array(mfi);
+        const auto& ld = *m_leveldata[lev];
 
-          Box bx(mfi.tilebox());
+        const auto& vel       = ld.vel_g->array(mfi);
+        const auto& ep        = ld.ep_g->array(mfi);
+        const auto& ro        = ld.ro_g->array(mfi);
+        const auto& T_g       = fluid.solve_enthalpy()? ld.T_g->array(mfi) : Array4<const Real>();
+        const auto& gradp     = ld.gp->array(mfi);
+        const auto& txfr_fab  = ld.txfr->array(mfi);
 
-          const auto& vel_fab   =
-            static_cast<EBFArrayBox const&>((*ld.vel_g)[mfi]);
+        Box bx(mfi.tilebox());
 
-          const auto& flags     = vel_fab.getEBCellFlagFab();
-          const auto& flags_fab = flags.array();
+        const auto& vel_fab   = static_cast<EBFArrayBox const&>((*ld.vel_g)[mfi]);
 
-          // ew need this until we remove static attribute from mfix::gp0
-          const RealVect gp0_dev(gp0);
-          const RealVect gravity_dev(gravity);
+        const auto& flags     = vel_fab.getEBCellFlagFab();
+        const auto& flags_fab = flags.array();
 
-          const int adv_enthalpy = fluid.solve_enthalpy();
+        // ew need this until we remove static attribute from mfix::gp0
+        const RealVect gp0_dev(gp0);
+        const RealVect gravity_dev(gravity);
 
-          const Real mu_g0 = fluid.mu_g();
+        const int adv_enthalpy = fluid.solve_enthalpy();
 
-          // Compute CFL on a per cell basis
-          if (flags.getType(bx) != FabType::covered)
+        const Real mu_g0 = fluid.mu_g();
+
+        // Compute CFL on a per cell basis
+        if (flags.getType(bx) != FabType::covered) {
+
+          reduce_op.eval(bx, reduce_data,
+            [ro,ep,gp0_dev,gradp,txfr_fab,gravity_dev,vel,odx,ody,odz,mu_g0,
+             flags_fab,T_g,adv_enthalpy,fluid_parms,idx_drag_txfr]
+            AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
           {
-            AMREX_LOOP_3D(bx, i, j, k,
+            Real l_cfl_max = 0._rt;
+
+            if (!flags_fab(i,j,k).isCovered())
             {
-              if (!flags_fab(i,j,k).isCovered())
+              RealVect acc(0.);
+              Real qro  = 1.0/ro(i,j,k);
+              Real qep  = 1.0/ep(i,j,k);
+
+              // Compute the three components of the net acceleration
+              // Explicit particle forcing is given by
+              for (int n(0); n < 3; ++n)
               {
-                RealVect acc(0.);
-                Real qro  = 1.0/ro(i,j,k);
-                Real qep  = 1.0/ep(i,j,k);
+                Real delp = gp0_dev[n] + gradp(i,j,k,n);
+                Real fp   = txfr_fab(i,j,k,n) -
+                  txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
 
-                // Compute the three components of the net acceleration
-                // Explicit particle forcing is given by
-                for (int n(0); n < 3; ++n)
-                {
-                  Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                  Real fp   = txfr_fab(i,j,k,n) -
-                    txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
-
-                  acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
-                }
-
-                Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
-                             amrex::Math::abs(vel(i,j,k,1))*ody +
-                             amrex::Math::abs(vel(i,j,k,2))*odz;
-
-                Real mu_g(0);
-
-                if (adv_enthalpy)
-                  mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
-                else
-                  mu_g = mu_g0;
-
-                Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
-                Real cpv_cfl = c_cfl + v_cfl;
-
-                // MAX CFL factor on cell (i,j,k)
-                Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
-                                                        4*amrex::Math::abs(acc[0])*odx +
-                                                        4*amrex::Math::abs(acc[1])*ody +
-                                                        4*amrex::Math::abs(acc[2])*odz);
-                cfl_max = amrex::max(cfl_max, cfl_max_cell);
+                acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
               }
-            });
-          }
+
+              Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
+                           amrex::Math::abs(vel(i,j,k,1))*ody +
+                           amrex::Math::abs(vel(i,j,k,2))*odz;
+
+              Real mu_g(0);
+
+              if (adv_enthalpy)
+                mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
+              else
+                mu_g = mu_g0;
+
+              Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
+              Real cpv_cfl = c_cfl + v_cfl;
+
+              // MAX CFL factor on cell (i,j,k)
+              Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
+                                                      4*amrex::Math::abs(acc[0])*odx +
+                                                      4*amrex::Math::abs(acc[1])*ody +
+                                                      4*amrex::Math::abs(acc[2])*odz);
+              l_cfl_max = amrex::max(l_cfl_max, cfl_max_cell);
+            }
+
+            return {l_cfl_max};
+          });
         }
-      }
-    }
+      } // MFIter
+
+      ReduceTuple host_tuple = reduce_data.value();
+      cfl_max = amrex::max(cfl_max, amrex::get<0>(host_tuple));
+
+    } // lev
 
     // Do global max operation
     ParallelDescriptor::ReduceRealMax(cfl_max);
