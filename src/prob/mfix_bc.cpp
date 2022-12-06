@@ -794,7 +794,7 @@ MFIXBoundaryConditions::read_bc_velocity (amrex::ParmParse pp,
       found = pp.queryktharr("velocity", k, kth_input);
       if (found){
         // Assert that it has the correct length.
-        if ( ( kth_input.size() != 4 ) || ( is_eb && kth_input.size() != 2 )) {
+        if ( ( kth_input.size() != 4 ) || ( !is_eb && kth_input.size() == 2 )) {
           amrex::Print() << "Bad velocity inputs specification:\n";
           for( int lc=0; lc<kth_input.size(); lc++)
             amrex::Print()  << "  " << kth_input[lc];

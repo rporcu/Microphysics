@@ -79,14 +79,14 @@ MFIXBoundaryConditions::set_eb_velocity_bcs (Real time_in,
                  // Flow is specified as a velocity magnitude
                  if ( m_bc[bcv].fluid.eb_vel_is_mag ) {
 
-                   vel_mag = m_bc[bcv].fluid.get_velocity_mag();
+                   vel_mag = m_bc[bcv].fluid.get_velocity_mag(time_in);
 
                  // Volumetric flowrate is specified
                  } else if ( m_bc[bcv].fluid.eb_has_volflow ) {
 
                    Real eb_area = m_bc[bcv].eb.area;
                    if ( eb_area > Real(0.0) ) {
-                     Real volflow = m_bc[bcv].fluid.get_volflow();
+                     Real volflow = m_bc[bcv].fluid.get_volflow(time_in);
                      vel_mag = volflow / eb_area;
                    }
 
