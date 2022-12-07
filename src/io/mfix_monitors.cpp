@@ -279,8 +279,12 @@ Monitor::write_csv (const Real& time,
 //    for (int lev(0); lev < m_nlev; ++lev) {
       setformat(output_file) << time;
       for (int var(0); var < m_monitoring_results[lev].size(); ++var) {
+
+        auto output_value = m_monitoring_results[lev][var];
+        output_value = std::abs(output_value) < 1.e-38 ? 0 : output_value;
+
         output_file << ",";
-        setformat(output_file) << m_monitoring_results[lev][var];
+        setformat(output_file) << output_value;
       }
       output_file << std::endl;
 //    }
@@ -1135,8 +1139,8 @@ PointRegion::convert_mf_if_needed (Vector<const MultiFab*>& mf,
 
       if (mf[var]->boxArray().ixType().nodeCentered()) {
 
-        MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 1, MFInfo(), *m_ebfactory[lev]);
-        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 1);
+        MultiFab* mf_cc = new MultiFab(box_array, d_map, mf[var]->nComp(), 1, MFInfo(), *m_ebfactory[lev]);
+        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], mf[var]->nComp(), 1);
         mf[var] = mf_cc;
         components[var] = 0;
         conversion_flags[var] = 1;
@@ -1227,14 +1231,15 @@ AreaMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
         for(int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
           BoxArray edge_ba = box_array;
           edge_ba.surroundingNodes(dir);
-          mf_fc[dir] = new MultiFab(edge_ba, d_map, 1, 1, MFInfo(), *m_ebfactory[lev]);
+          mf_fc[dir] = new MultiFab(edge_ba, d_map, mf[var]->nComp(), 1, MFInfo(), *m_ebfactory[lev]);
           mf_fc[dir]->setVal(0.);
         }
 
         const auto& geom = m_ebfactory[lev]->Geom();
-        Vector<BCRec> bc_rec(1, BCRec());
+        Vector<BCRec> bc_rec(mf[var]->nComp(), BCRec());
 
-        EB_interp_CellCentroid_to_FaceCentroid(*mf[var], mf_fc, components[var], 0, 1, geom, bc_rec);
+        EB_interp_CellCentroid_to_FaceCentroid(*mf[var], mf_fc, components[var],
+            0, mf[var]->nComp(), geom, bc_rec);
 
         mf[var] = mf_fc[m_direction];
         components[var] = 0;
@@ -1248,8 +1253,8 @@ AreaMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
       } else if (mf[var]->boxArray().ixType().nodeCentered()) {
 
         // first convert to cell centered
-        MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 1, MFInfo(), *m_ebfactory[lev]);
-        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 1);
+        MultiFab* mf_cc = new MultiFab(box_array, d_map, mf[var]->nComp(), 1, MFInfo(), *m_ebfactory[lev]);
+        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], mf[var]->nComp(), 1);
 
         // then interpolate to facecentroid
         Array<MultiFab*, AMREX_SPACEDIM> mf_fc;
@@ -1257,14 +1262,14 @@ AreaMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
         for(int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
           BoxArray edge_ba = box_array;
           edge_ba.surroundingNodes(dir);
-          mf_fc[dir] = new MultiFab(edge_ba, d_map, 1, 1, MFInfo(), *m_ebfactory[lev]);
+          mf_fc[dir] = new MultiFab(edge_ba, d_map, mf[var]->nComp(), 1, MFInfo(), *m_ebfactory[lev]);
           mf_fc[dir]->setVal(0.);
         }
 
         const auto& geom = m_ebfactory[lev]->Geom();
         Vector<BCRec> bc_rec(1, BCRec());
 
-        EB_interp_CellCentroid_to_FaceCentroid(*mf_cc, mf_fc, 0, 0, 1, geom, bc_rec);
+        EB_interp_CellCentroid_to_FaceCentroid(*mf_cc, mf_fc, 0, 0, mf[var]->nComp(), geom, bc_rec);
 
         mf[var] = mf_fc[m_direction];
         components[var] = 0;
@@ -1497,7 +1502,12 @@ AreaRegion::average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceLongSum(&denominator, 1);
 
-    result[var] = numerator / Real(denominator);
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / Real(denominator);
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -1547,7 +1557,12 @@ AreaRegion::stddev (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceLongSum(&denominator, 1);
 
-    result[var] = std::sqrt(numerator / Real(denominator));
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = std::sqrt(numerator / Real(denominator));
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -1605,8 +1620,8 @@ VolumeMonitor::convert_mf_if_needed (Vector<const MultiFab*>& mf,
 
       if (mf[var]->boxArray().ixType().nodeCentered()) {
 
-        MultiFab* mf_cc = new MultiFab(box_array, d_map, 1, 1, MFInfo(), *m_ebfactory[lev]);
-        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], 1, 1);
+        MultiFab* mf_cc = new MultiFab(box_array, d_map, mf[var]->nComp(), 1, MFInfo(), *m_ebfactory[lev]);
+        amrex::average_node_to_cellcenter(*mf_cc, 0, *mf[var], components[var], mf[var]->nComp(), 1);
         mf[var] = mf_cc;
         components[var] = 0;
         conversion_flags[var] = 1;
@@ -1835,7 +1850,12 @@ VolumeRegion::average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceLongSum(&denominator, 1);
 
-    result[var] = numerator / Real(denominator);
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / Real(denominator);
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -1885,7 +1905,12 @@ VolumeRegion::stddev (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceLongSum(&denominator, 1);
 
-    result[var] = std::sqrt(numerator / Real(denominator));
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = std::sqrt(numerator / Real(denominator));
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -2137,7 +2162,12 @@ SurfaceIntegral::area_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -2260,7 +2290,12 @@ SurfaceIntegral::mass_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -2529,7 +2564,12 @@ VolumeIntegral::volume_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -2616,7 +2656,12 @@ VolumeIntegral::mass_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -3157,7 +3202,12 @@ AveragedProperty::average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -3209,7 +3259,12 @@ AveragedProperty::stddev (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = std::sqrt(numerator / denominator);
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = std::sqrt(numerator / denominator);
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -3256,7 +3311,12 @@ AveragedProperty::mass_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;
@@ -3303,7 +3363,12 @@ AveragedProperty::volume_weighted_average (const int lev,
     ParallelDescriptor::ReduceRealSum(&numerator, 1);
     ParallelDescriptor::ReduceRealSum(&denominator, 1);
 
-    result[var] = numerator / denominator;
+    if (std::abs(denominator) > 1.e-15)
+      result[var] = numerator / denominator;
+    else {
+      AMREX_ASSERT(std::abs(numerator) < 1.e-15);
+      result[var] = 0.;
+    }
   }
 
   return result;

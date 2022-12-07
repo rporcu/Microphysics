@@ -462,13 +462,26 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
       monitor.reset_pc(pc);
 
-      plot_test = 0;
+      int monitor_test = 0;
 
-      if (monitor.plot_per_approx() > 0.0) {
-        plot_test = test_per_approx(time, dt, monitor.plot_per_approx());
+      if ( first || (nstep == 0) ) {
+        if ( (plot_int > 0 || plot_per_approx > 0) )
+          monitor_test = 1;
       }
 
-      if ((plot_test == 1) || ((monitor.plot_int() > 0) && (nstep % monitor.plot_int() == 0))) {
+      else if ( last ) {
+        monitor_test = 0;
+      }
+
+      else if (monitor.plot_per_approx() > 0.0) {
+        monitor_test = test_per_approx(time, dt, monitor.plot_per_approx());
+      }
+
+      else if ((monitor.plot_int() > 0) && (nstep % monitor.plot_int() == 0)) {
+        monitor_test = 1;
+      }
+
+      if ( monitor_test == 1 ) {
 
         monitor.write_csv(time, dt);
       }
