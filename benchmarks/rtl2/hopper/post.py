@@ -58,7 +58,7 @@ def plot(refdata: Path) -> Path:
     avg_masked = numpy.ma.masked_where(avg_arr > 0.2, avg_arr)
 
     ax2.plot([-10, 0], [0.117, 0.117], color='k', linewidth=0.5)
-    ax2.plot(x_avg_vals, y_avg_vals, color='r', linewidth=0.5, marker='.')
+    ax2.plot(x_avg_vals[-10:], y_avg_vals[-10:], color='r', linewidth=0.5, marker='.')
     ax2.set_title(r'Recent $T_0$ over time')
     # ax2.set_xlabel("Previous runs")
 
