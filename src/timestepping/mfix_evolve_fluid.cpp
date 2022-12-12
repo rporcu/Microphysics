@@ -36,7 +36,10 @@ mfix::EvolveFluid (int nstep,
     }
 #endif
 
-    amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
+    if (m_run_type != RunType::PIC2DEM)
+      amrex::Print() << "\n ============   NEW TIME STEP   ============ \n";
+    else
+      amrex::Print() << "\nComputing fluid pressure and pressure gradient\n\n";
 
     // Fill ghost nodes and reimpose boundary conditions
     //m_boundary_conditions.set_velocity_bcs(time, vel_g, 0);
@@ -179,13 +182,16 @@ mfix::EvolveFluid (int nstep,
             t_new[lev] = time+dt;
         }
 
-        if (m_steady_state)
-        {
-           amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
-        } else {
-           amrex::Print() << "\n   Step " << nstep+1 << ": from old_time " \
-                          << time << " to new time " << time+dt
-                          << " with dt = " << dt << "\n" << std::endl;
+        if (m_run_type != RunType::PIC2DEM) {
+
+          if (m_steady_state)
+          {
+             amrex::Print() << "\n   Iteration " << iter << " with dt = " << dt << "\n" << std::endl;
+          } else {
+             amrex::Print() << "\n   Step " << nstep+1 << ": from old_time " \
+                            << time << " to new time " << time+dt
+                            << " with dt = " << dt << "\n" << std::endl;
+          }
         }
 
         //

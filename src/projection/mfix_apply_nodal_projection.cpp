@@ -110,17 +110,20 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         }
      }
 
-      // Print level infos
-      if (proj_for_small_dt)
-        amrex::Print() << "Before projection (with small dt modification):" << std::endl;
-      else
-        amrex::Print() << "Before projection:" << std::endl;
+      if (m_run_type != RunType::PIC2DEM) {
 
-      mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
-      mfixRW->mfix_print_max_gp(lev, gp_in);
-      amrex::Print() << "Min and Max of ep_g "
-                     << ep_g_in[lev]->min(0) << " "
-                     << ep_g_in[lev]->max(0) << std::endl;
+        // Print level infos
+        if (proj_for_small_dt)
+          amrex::Print() << "Before projection (with small dt modification):" << std::endl;
+        else
+          amrex::Print() << "Before projection:" << std::endl;
+
+        mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+        mfixRW->mfix_print_max_gp(lev, gp_in);
+        amrex::Print() << "Min and Max of ep_g "
+                       << ep_g_in[lev]->min(0) << " "
+                       << ep_g_in[lev]->max(0) << std::endl;
+      }
     }
 
     // Set velocities BC before projection
@@ -312,14 +315,17 @@ mfix::PostProjectionDiagnostics(Real a_time,
     // Swap ghost cells and apply BCs to velocity
     m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
-    // Print level info after projection
-    for (int lev(0); lev < nlev; lev++)
-    {
-        if (proj_for_small_dt)
-           amrex::Print() << "After  projection (with small dt modification):" << std::endl;
-        else
-           amrex::Print() << "After  projection:" << std::endl;
+    if (m_run_type != RunType::PIC2DEM) {
 
-        mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+      // Print level info after projection
+      for (int lev(0); lev < nlev; lev++)
+      {
+          if (proj_for_small_dt)
+             amrex::Print() << "After  projection (with small dt modification):" << std::endl;
+          else
+             amrex::Print() << "After  projection:" << std::endl;
+
+          mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+      }
     }
 }

@@ -140,7 +140,7 @@ class MFIXParticleContainer final
     int NumberOfParticles (MFIXParIter& pti)
     { return pti.numParticles(); }
 
-    void setTotalNumParticles(const long num_particles)
+    void setTotalNumParticles (const long num_particles)
     {
       this->m_total_numparticle = num_particles;
     }
@@ -224,41 +224,15 @@ class MFIXParticleContainer final
                  amrex::Real dt,
                  amrex::Real time);
 
+    const MFIXFluidPhase& get_fluid () const { return fluid; }
 
-    void SolidsVolumeDeposition (int lev,
-                                 amrex::MultiFab& mf,
-                                 const amrex::MultiFab* volfrac,
-                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+    const MFIXSolidsPhase& get_solids () const { return solids; }
 
-    ///
-    /// Do the actual PIC deposition for CalcVolumeFraction
-    ///
-    template <typename FB>
-    void SolidsVolumeDeposition (FB WeightFunc,
-                                 int lev,
-                                 amrex::MultiFab& mf,
-                                 const amrex::MultiFab* volfrac,
-                                 const amrex::FabArray<amrex::EBCellFlagFab>* flags);
+    const MFIXDEM& get_dem () const { return m_dem; }
 
-    ///
-    /// Do the actual PIC deposition for CalcDragOnFluid
-    ///
-    void InterphaseTxfrDeposition (int lev,
-                                   amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& txfr_mf,
-                                   const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>&);
+    const MFIXPIC& get_pic () const {return m_pic; }
 
-    template <typename F>
-    void InterphaseTxfrDeposition (F WeightFunc,
-                                   int lev,
-                                   amrex::MultiFab& mf_tmp_eps,
-                                   amrex::MultiFab& txfr_mf,
-                                   const amrex::MultiFab* volfrac,
-                                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
-                                   std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>&);
-
+    const MFIXReactions& get_reactions () const { return reactions; }
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities

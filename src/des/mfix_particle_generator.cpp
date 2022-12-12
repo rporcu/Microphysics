@@ -28,10 +28,10 @@
 using namespace amrex;
 
 
-ParticlesGenerator::ParticlesGenerator (const amrex::IntVect& bx_lo,
-                                        const amrex::IntVect& bx_hi,
-                                        const amrex::GpuArray<amrex::Real,3>& plo,
-                                        const amrex::GpuArray<amrex::Real,3>& dx,
+ParticlesGenerator::ParticlesGenerator (const IntVect& bx_lo,
+                                        const IntVect& bx_hi,
+                                        const RealVect& plo,
+                                        const RealVect& dx,
                                         const int id,
                                         const int cpu,
                                         const int icv,
@@ -79,12 +79,15 @@ ParticlesGenerator::generate (int& particles_count,
   else if (ic_pack_type_str.compare("eightper") == 0)
     cube_base = 2;
 
+  const RealBox& ic_region = *(m_initial_conditions.ic(m_icv).region);
+  const SOLIDS_t& ic_solids = *(m_initial_conditions.ic(m_icv).get_solid(m_phase));
+
   // Call generate with specific positions generator
   if (m_dem.solve() && ic_pack_type_str.compare("hcp") == 0) {
 
     Hex_ClosePack hex_close_pack(m_plo, m_dx);
-    hex_close_pack.setup(m_initial_conditions, m_bx_lo, m_bx_hi, m_icv, m_phase);
-
+    hex_close_pack.setup(m_bx_lo, m_bx_hi, ic_region,
+                         ic_solids.diameter.get_mean(), ic_solids.volfrac);
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
         hex_close_pack);
 

@@ -23,10 +23,13 @@ using namespace restart_aux;
 
 void
 mfix::Restart (std::string& restart_file,
-               int *nstep, Real *dt,
+               int *nstep,
+               Real *dt,
                Real *time,
                IntVect& Nrep)
 {
+  if (!restart_file.empty()) {
+
     if (ooo_debug) amrex::Print() << "Restart" << std::endl;
     BL_PROFILE("mfix::Restart()");
 
@@ -74,7 +77,7 @@ mfix::Restart (std::string& restart_file,
 
       is >> nlevs;
       mfixRW->GotoNextLine(is);
-      // finest_level = nlevs-1;
+      finest_level = nlevs-1;
 
       // Time stepping controls
       is >> int_tmp;
@@ -440,6 +443,9 @@ mfix::Restart (std::string& restart_file,
         }
     }
 
+  }
+
+  {
     // make fluid and particle factories
     // This uses particles' ba and dm so it needs to be after setting up pc.
     make_eb_factories();
@@ -459,7 +465,9 @@ mfix::Restart (std::string& restart_file,
 
           if (fluid.solve_enthalpy()) {
             m_leveldata[lev]->T_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->T_go->FillBoundary(geom[lev].periodicity());
             m_leveldata[lev]->h_g->FillBoundary(geom[lev].periodicity());
+            m_leveldata[lev]->h_go->FillBoundary(geom[lev].periodicity());
           }
 
           // Fill the bc's just in case
@@ -526,5 +534,7 @@ mfix::Restart (std::string& restart_file,
       }
     }
 
-    amrex::Print() << "  Done with mfix::Restart " << std::endl;
+  }
+
+  amrex::Print() << "  Done with mfix::Restart " << std::endl;
 }

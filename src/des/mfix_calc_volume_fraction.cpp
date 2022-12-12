@@ -93,7 +93,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
       }
 
       // Deposit particle volume to the grid
-      pc->SolidsVolumeDeposition(lev, *mf_pointer[lev], volfrac, flags);
+      m_solids_volume_deposition->deposit(lev, Geom(0), pc, volfrac, flags, mf_pointer[lev]);
 
       // Move any volume deposited outside the domain back into the domain
       // when BC is either a pressure inlet or mass inflow.

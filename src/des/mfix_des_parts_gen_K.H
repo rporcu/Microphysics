@@ -11,6 +11,16 @@
 #include <AMReX_RealVect.H>
 #include <AMReX_PODVector.H>
 
+// This is a very small number we add to the length to catch
+// any particles that are "on the edge"
+#define small_number 10.*std::numeric_limits<amrex::Real>::epsilon()
+
+#define tolerance std::numeric_limits<amrex::Real>::epsilon()
+
+#define sqrt6x2o3 std::sqrt(6.0)*(2.0/3.0)
+#define sqrt3o3 std::sqrt(3.0)/3.0
+#define sqrt3 std::sqrt(3.0)
+
 #define DEBUG_HCP 0
 
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv!
@@ -27,19 +37,40 @@ class Hex_ClosePack
 {
   public:
     // Constructor
-    Hex_ClosePack (const amrex::GpuArray<amrex::Real,3>& plo,
-                   const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo.data())
-      , m_dx(dx.data())
+    AMREX_GPU_HOST_DEVICE
+    Hex_ClosePack ()
+      : m_is_initialized(0)
+      , m_np(0)
+    {}
+
+    AMREX_GPU_HOST_DEVICE
+    Hex_ClosePack (const amrex::RealVect& plo,
+                   const amrex::RealVect& dx)
+      : m_is_initialized(1)
+      , m_plo(plo)
+      , m_dx(dx)
       , m_np(0)
       , m_verbose(0)
     {}
 
-    void setup (MFIXInitialConditions& initial_conditions,
-                const amrex::IntVect& lo,
+    AMREX_GPU_HOST_DEVICE
+    void initialize (const amrex::RealVect& plo,
+                     const amrex::RealVect& dx)
+    {
+      m_is_initialized = 1;
+
+      for (int dir(0); dir < 3; ++dir) {
+        m_plo[dir] = plo[dir];
+        m_dx[dir] = dx[dir];
+      }
+    }
+
+    AMREX_GPU_HOST_DEVICE
+    void setup (const amrex::IntVect& lo,
                 const amrex::IntVect& hi,
-                const int icv,
-                const int phase)
+                const amrex::RealBox& region,
+                const amrex::Real mean,
+                const amrex::Real eps)
     {
 #if 0
       amrex::ParmParse pp("ic");
@@ -52,22 +83,15 @@ class Hex_ClosePack
 
 
       // physical volume of IC region
-      const amrex::Real ic_vol = initial_conditions.ic(icv).region->volume();
-
-      const auto& ic_solid = *(initial_conditions.ic(icv).get_solid(phase));
-      const amrex::Real mean = ic_solid.diameter.get_mean();
+      const amrex::Real vol = region.volume();
 
       // Total particle count is based on mean particle size
       const long seed =
-        static_cast<long>(ic_vol * ic_solid.volfrac / ((M_PI/6.0)*mean*mean*mean));
+        static_cast<long>(vol * eps / ((M_PI/6.0)*mean*mean*mean));
 
-      m_ic_dlo = amrex::RealVect(initial_conditions.ic(icv).region->lo(0),
-                                 initial_conditions.ic(icv).region->lo(1),
-                                 initial_conditions.ic(icv).region->lo(2));
+      m_ic_dlo = amrex::RealVect(region.lo(0), region.lo(1), region.lo(2));
 
-      amrex::RealVect ic_dhi(initial_conditions.ic(icv).region->hi(0),
-                             initial_conditions.ic(icv).region->hi(1),
-                             initial_conditions.ic(icv).region->hi(2));
+      amrex::RealVect ic_dhi(region.hi(0), region.hi(1), region.hi(2));
 
       const amrex::Real xlen = ic_dhi[0] - m_ic_dlo[0];
       const amrex::Real ylen = ic_dhi[1] - m_ic_dlo[1];
@@ -180,9 +204,11 @@ class Hex_ClosePack
 
       m_r1r2_np = m_p1r1_np + p1r2_np;
 
-      if(m_verbose > 0) {
+#ifndef AMREX_USE_GPU
+      if(m_verbose > 100) {
         amrex::AllPrint() << "rad: " << m_eff_rad << "   seed " << seed << "   m_np " << m_np << "\n";
       }
+#endif
 
 
 #if 0
@@ -216,8 +242,13 @@ class Hex_ClosePack
 
     }
 
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE
     int get_particles_number () const
     { return m_np; }
+
+    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    amrex::Real get_particles_radius () const
+    { return m_eff_rad; }
 
     template <amrex::RunOn >
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -294,19 +325,11 @@ class Hex_ClosePack
     }
 
   private:
-    const amrex::Real sqrt6x2o3 = std::sqrt(6.0)*(2.0/3.0);
-    const amrex::Real sqrt3o3 = std::sqrt(3.0)/3.0;
-    const amrex::Real sqrt3 = std::sqrt(3.0);
+    int m_is_initialized;
 
-    // This is a very small number we add to the length to catch
-    // any particles that are "on the edge"
-    const amrex::Real small_number = 10.*std::numeric_limits<amrex::Real>::epsilon();
+    amrex::RealVect m_plo;
 
-    const amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
-
-    const amrex::RealVect m_plo;
-
-    const amrex::RealVect m_dx;
+    amrex::RealVect m_dx;
 
     int m_np;
 
@@ -343,9 +366,10 @@ class Hex_ClosePack
     amrex::RealVect m_rbx_lo;
     amrex::RealVect m_rbx_hi;
 
-    int m_verbose;
+    int m_verbose = 0;
 
     // Auxiliary functions
+    AMREX_GPU_HOST_DEVICE
     int hcp_i (amrex::Real rad,
                amrex::Real xend,
                int offset_int,
@@ -359,6 +383,7 @@ class Hex_ClosePack
       return i;
     }
 
+    AMREX_GPU_HOST_DEVICE
     int hcp_j (amrex::Real rad,
                amrex::Real yend,
                int offset_int,
@@ -373,6 +398,7 @@ class Hex_ClosePack
     }
 
 
+    AMREX_GPU_HOST_DEVICE
     int hcp_k (amrex::Real rad,
                amrex::Real zend,
                int start_k = 0) const
@@ -384,6 +410,7 @@ class Hex_ClosePack
       return k;
     }
 
+    AMREX_GPU_HOST_DEVICE
     long hcp_count (amrex::Real rad,
                     amrex::Real xlen,
                     amrex::Real ylen,
@@ -422,6 +449,7 @@ class Hex_ClosePack
       // Total number of particles
       const long np = p1_np*p1_cnt + p2_np*p2_cnt;
 
+#ifndef AMREX_USE_GPU
       if(m_verbose >= 100) {
         amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
           << p1_np << "  "
@@ -430,11 +458,13 @@ class Hex_ClosePack
           << p2_cnt << "  "
           << "\n";
       }
+#endif
 
       return np;
 
     }
 
+    AMREX_GPU_HOST_DEVICE
     amrex::Real hcp_rad (amrex::Real rad_in,
                          amrex::Real xlen,
                          amrex::Real ylen,
@@ -449,10 +479,12 @@ class Hex_ClosePack
       const int max_iter = 15;
       int iter(0);
 
+#ifndef AMREX_USE_GPU
       if(m_verbose >= 100) {
         amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
           << "\nTarget particle count: " << target << "\n";
       }
+#endif
 
       long pc0 = hcp_count(rad_in, xlen, ylen, zlen);
       while ((pc0 > target) && (iter < max_iter)) {
@@ -461,11 +493,13 @@ class Hex_ClosePack
         radius = high*rad_in;
         pc0 = hcp_count(radius, xlen, ylen, zlen);
 
+#ifndef AMREX_USE_GPU
         if(m_verbose >= 100) {
           amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
             << "iter " << iter << "   low: " << low
             << "   high: " << high << "   counts: " << pc0 << "\n";
         }
+#endif
         iter++;
       }
 
@@ -478,36 +512,44 @@ class Hex_ClosePack
         radius = scale*rad_in;
         long pc = hcp_count(radius, xlen, ylen, zlen);
 
+#ifndef AMREX_USE_GPU
         if(m_verbose >= 100) {
           amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
             << "Iter " << iter << "   Current count: " << pc
             << "   previous count: " << pc0 << "  scale: " << scale << "\n";
         }
+#endif
 
         if(pc == target || (pc == pc0 && iter > 0)) {
           scale = 1.0;
+#ifndef AMREX_USE_GPU
           if(m_verbose >= 100) {
             amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "          "
               << "We got exactly want we wanted!" << pc << "\n\n";
           }
+#endif
 
         } else if (pc < target) {
           high  = scale;
           scale = 0.5*(low + scale);
+#ifndef AMREX_USE_GPU
           if(m_verbose >= 100) {
             amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "          "
               << "We need more particles!  scale: " << scale << "\n\n";
           }
+#endif
 
         } else {
           high *= ( (scale >= high) ? 2. : 1.);
           low   = amrex::max(scale, 1.0);
           scale = 0.5*(high + scale);
 
+#ifndef AMREX_USE_GPU
           if(m_verbose >= 100) {
             amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs) << "         "
               << "We need fewer particles!  scale: " << scale << "\n\n";
           }
+#endif
         }
 
         pc0 = pc;
@@ -515,10 +557,12 @@ class Hex_ClosePack
         keep_searching = ((scale != 1.0) && (iter < max_iter)) ? 1 : 0;
       }
 
+#ifndef AMREX_USE_GPU
       if(m_verbose >= 100) {
         amrex::PrintToFile("hcp_rad", amrex::Print::AllProcs)
           << "Done: Iterations: " << iter << "  radius: " << radius << "\n\n";
       }
+#endif
 
       return radius;
     }
@@ -538,11 +582,11 @@ class nCubePer_Fill
   public:
     // Constructor
     nCubePer_Fill (const int base,
-                   const amrex::GpuArray<amrex::Real,3>& plo,
-                   const amrex::GpuArray<amrex::Real,3>& dx)
+                   const amrex::RealVect& plo,
+                   const amrex::RealVect& dx)
       : m_base(base)
-      , m_plo(plo.data())
-      , m_dx(dx.data())
+      , m_plo(plo)
+      , m_dx(dx)
       , m_np(0)
     {}
 
@@ -677,10 +721,10 @@ class RandomFill_DEM
 {
   public:
     // Constructor
-    RandomFill_DEM (const amrex::GpuArray<amrex::Real,3>& plo,
-                    const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo.data())
-      , m_dx(dx.data())
+    RandomFill_DEM (const amrex::RealVect& plo,
+                    const amrex::RealVect& dx)
+      : m_plo(plo)
+      , m_dx(dx)
       , m_np(0)
     {}
 
@@ -936,10 +980,10 @@ class RandomFill_PIC
 {
   public:
     // Constructor
-    RandomFill_PIC (const amrex::GpuArray<amrex::Real,3>& plo,
-                    const amrex::GpuArray<amrex::Real,3>& dx)
-      : m_plo(plo.data())
-      , m_dx(dx.data())
+    RandomFill_PIC (const amrex::RealVect& plo,
+                    const amrex::RealVect& dx)
+      : m_plo(plo)
+      , m_dx(dx)
       , m_np(0)
     {}
 

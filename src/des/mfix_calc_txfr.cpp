@@ -3,15 +3,17 @@
 #include <mfix_interp_K.H>
 #include <mfix_eb_interp_shepard_K.H>
 #include <mfix_filcc.H>
-
-#include <AMReX_BC_TYPES.H>
-#include <AMReX_Box.H>
-#include <AMReX_FillPatchUtil.H>
+#include <mfix_deposition_op.H>
 
 #include <mfix_mf_helpers.H>
 #include <mfix_dem.H>
 #include <mfix_des_rrates_K.H>
 #include <mfix_algorithm.H>
+
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_Box.H>
+#include <AMReX_FillPatchUtil.H>
+
 
 void
 mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
@@ -27,12 +29,31 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
 
   const Real strttime = ParallelDescriptor::second();
 
-  using PairIndex = MFIXParticleContainer::PairIndex;
-  std::map<PairIndex, Gpu::DeviceVector<Real>> chem_X_gk_txfr_deposit;
-
   mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in,
-      pressure_g_in, chem_X_gk_txfr_deposit);
+      pressure_g_in);
 
+  mfix_deposit_particles(m_interphase_txfr_deposition, txfr_out, time);
+
+  if (m_verbose > 1) {
+    Real stoptime = ParallelDescriptor::second() - strttime;
+
+    ParallelDescriptor::ReduceRealMax(stoptime, ParallelDescriptor::IOProcessorNumber());
+
+    amrex::Print() << "MFIXParticleContainer::TrilinearDepositionFluidDragForce time: " << stoptime << '\n';
+  }
+
+  if(mfix::m_deposition_diffusion_coeff > 0.) {
+    // Apply mean field diffusion to drag force
+    diffusion_op->diffuse_drag(txfr_out, mfix::m_deposition_diffusion_coeff);
+  }
+}
+
+
+void
+mfix::mfix_deposit_particles (MFIXDepositionOp* deposition_op,
+                              Vector< MultiFab* > const& txfr_out,
+                              const Real time) const
+{
   // ******************************************************************************
   // Now use the transfer coeffs of individual particles to create the
   // interphase transfer terms on the fluid
@@ -47,6 +68,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
         " handle up to 2 levels");
 
   Vector< MultiFab* > txfr_ptr(nlev, nullptr);
+  Vector< MultiFab* > tmp_eps(nlev);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -59,6 +81,9 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
       // particle_box_array, then we just work with this.
       txfr_ptr[lev] = txfr_out[lev];
 
+      const int nghost = txfr_out[lev]->nGrow();
+      tmp_eps[lev] = new MultiFab(grids[lev], dmap[lev], 1, nghost, MFInfo(), *ebfactory[lev]);
+
     } else if (lev == 0 && (!OnSameGrids)) {
 
       // If beta_mf is not defined on the particle_box_array, then we need
@@ -68,11 +93,19 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                    txfr_out[lev]->nComp(),
                                    txfr_out[lev]->nGrow());
 
+      tmp_eps[lev] = new MultiFab(pc->ParticleBoxArray(lev),
+                                  pc->ParticleDistributionMap(lev),
+                                  1,
+                                  txfr_out[lev]->nGrow());
+
     } else {
       // If lev > 0 we make a temporary at the coarse resolution
       BoxArray ba_crse(amrex::coarsen(pc->ParticleBoxArray(lev), this->m_gdb->refRatio(0)));
+
       txfr_ptr[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev),
                                    txfr_out[lev]->nComp(), 1);
+
+      tmp_eps[lev] = new MultiFab(ba_crse, pc->ParticleDistributionMap(lev), 1, 1);
     }
 
     // We must have ghost cells for each FAB so that a particle in one grid can spread
@@ -83,14 +116,13 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
       amrex::Error("Must have at least one ghost cell when in CalcVolumeFraction");
 
     txfr_ptr[lev]->setVal(0.0, 0, txfr_out[lev]->nComp(), txfr_ptr[lev]->nGrow());
+    tmp_eps[lev]->setVal(0.0, 0, tmp_eps[lev]->nComp(), tmp_eps[lev]->nGrow());
   }
 
   const Geometry& gm = Geom(0);
   Vector< const FabArray<EBCellFlagFab>* > flags(nlev, nullptr);
   Vector< const MultiFab* > volfrac(nlev, nullptr);
   Vector< EBFArrayBoxFactory* > crse_factory(nlev, nullptr);
-
-  Vector< MultiFab* > tmp_eps(nlev);
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -118,8 +150,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     // Deposit the interphase transfer forces to the grid
     // Drag force: (beta and beta*particle_vel)
     // Heat transfer: gamma and gamma*particle temperature
-    pc->InterphaseTxfrDeposition(lev, *tmp_eps[lev], *txfr_ptr[lev],
-                                 volfrac[lev], flags[lev], chem_X_gk_txfr_deposit);
+    deposition_op->deposit(lev, Geom(0), pc, volfrac[lev], flags[lev], txfr_ptr[lev], tmp_eps[lev]);
   }
 
   {
@@ -158,10 +189,6 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
     if (lev != 0 && crse_factory[lev] != nullptr)
       delete crse_factory[lev];
   }
-
-  // This might not need to exist on all levels. Maybe only level 0.
-  for (int lev(0); lev < nlev; ++lev)
-    delete tmp_eps[lev];
 
   int  src_nghost = 1;
   int dest_nghost = 0;
@@ -207,22 +234,12 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    if (txfr_ptr[lev] != txfr_out[lev]) {
+    
+    if (txfr_ptr[lev] != txfr_out[lev])
       delete txfr_ptr[lev];
-    }
-  }
 
-  if (m_verbose > 1) {
-    Real stoptime = ParallelDescriptor::second() - strttime;
-
-    ParallelDescriptor::ReduceRealMax(stoptime,ParallelDescriptor::IOProcessorNumber());
-
-    amrex::Print() << "MFIXParticleContainer::TrilinearDepositionFluidDragForce time: " << stoptime << '\n';
-  }
-
-  if(mfix::m_deposition_diffusion_coeff > 0.) {
-    // Apply mean field diffusion to drag force
-    diffusion_op->diffuse_drag(txfr_out, mfix::m_deposition_diffusion_coeff);
+    if (tmp_eps[lev] != nullptr)
+      delete tmp_eps[lev];
   }
 }
 

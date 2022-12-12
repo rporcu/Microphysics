@@ -160,8 +160,8 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 {
   int lev = 0;
 
-  const GpuArray<Real,3>& dx = Geom(lev).CellSizeArray();
-  const GpuArray<Real,3>& plo = Geom(lev).ProbLoArray();
+  const RealVect dx(Geom(lev).CellSize());
+  const RealVect plo(Geom(lev).ProbLo());
 
   // Store particle count totals by IC region
   std::vector<long> total_np(m_initial_conditions.ic().size(), 0);

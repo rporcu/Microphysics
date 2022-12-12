@@ -231,7 +231,8 @@ MFIXDEM::Initialize ()
       amrex::ParmParse ppAMR("amr");
       std::string restart_file {""};
 
-      ppAMR.get("restart", restart_file);
+      if (!ppAMR.query("restart", restart_file))
+        ppAMR.query("convert", restart_file);
 
       const int is_restarting = !(restart_file.empty());
 

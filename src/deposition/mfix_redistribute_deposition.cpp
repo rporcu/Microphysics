@@ -17,7 +17,7 @@ mfix::mfix_redistribute_deposition (int lev,
                                     MultiFab & mf_to_redistribute,
                                     const MultiFab * volfrac,
                                     const FabArray<EBCellFlagFab>* flags_fab,
-                                    Real max_eps)
+                                    Real max_eps) const
 {
    BL_PROFILE("mfix::mfix_redistribute_solids_volume");
 

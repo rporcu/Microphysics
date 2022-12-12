@@ -1,6 +1,7 @@
 #include <AMReX.H>
-#include <mfix_des_K.H>
 
+#include <mfix.H>
+#include <mfix_des_K.H>
 #include <mfix_pc.H>
 #include <mfix_dem.H>
 #include <mfix_calc_cell.H>
@@ -112,10 +113,16 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
         }
 
         ParallelDescriptor::ReduceLongSum(fin_np);
+
+        if (mfix::m_run_type == RunType::PIC2DEM)
+          amrex::Print() << "Final number of particles on level "
+                         << lev << ": " << fin_np << std::endl;
+
         m_total_numparticle = fin_np;
     }
 
-    ReportParticleGenerationStats(lev);
+    if (mfix::m_run_type != RunType::PIC2DEM)
+      ReportParticleGenerationStats(lev);
 
 }
 

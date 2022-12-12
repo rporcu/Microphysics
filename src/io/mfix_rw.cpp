@@ -1,3 +1,4 @@
+#include <mfix.H>
 #include <mfix_rw.H>
 #include <mfix_dem.H>
 #include <mfix_pic.H>
@@ -193,7 +194,8 @@ void MfixRW::readParameters ()
      pp.query("par_ascii_int", par_ascii_int);
      pp.query("par_ascii_per_approx", par_ascii_per_approx);
 
-     pp.query("restart", restart_file);
+     if (!pp.query("restart", restart_file))
+       pp.query("convert", restart_file);
 
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
@@ -396,7 +398,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
     if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
     {
-        if (fluid.solve())
+        if (fluid.solve() && mfix::m_run_type != RunType::PIC2DEM)
           ComputeVort();
 
         WritePlotFile(plot_file, nstep, time);

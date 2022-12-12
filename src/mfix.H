@@ -27,6 +27,7 @@
 #include <hydro_MacProjector.H>
 
 #include <mfix_diffusion_op.H>
+#include <mfix_deposition_op.H>
 #include <mfix_pc.H>
 #include <mfix_ic.H>
 #include <mfix_bc.H>
@@ -40,6 +41,8 @@
 #include <mfix_run_on.H>
 #include <mfix_rw.H>
 
+// Mfix run type
+struct RunType { enum {Standard, Restart, PIC2DEM}; };
 
 // Drag type enumeration
 struct DragType { enum {Invalid=-1, WenYu, Gidaspow, BVK2, SyamOBrien, UserDrag}; };
@@ -110,7 +113,8 @@ class mfix : public AmrCore
     bool IsSteadyState ()
     { return (m_steady_state > 0); }
 
-    void Init (Real time);
+    void Init (Real time,
+               const bool init_fluid_grids = true);
 
     void InitLevelData (Real time);
 
@@ -144,8 +148,11 @@ class mfix : public AmrCore
     void RunCatalystAdaptor ( int nstep, Real time );
 #endif
 
-    void Restart (std::string& restart_chkfile, int* nstep, Real* dt,
-                  Real* time, IntVect& Nrep);
+    void Restart (std::string& restart_chkfile,
+                  int* nstep,
+                  Real* dt,
+                  Real* time,
+                  IntVect& Nrep);
 
     void Regrid ();
 
@@ -302,6 +309,8 @@ class mfix : public AmrCore
     void set_gp0 (const int lev,
                   const Box& domain);
 
+    static int m_run_type;
+
     static int m_drag_type;
 
     static amrex::Real m_SyamOBrien_coeff_c1;
@@ -324,7 +333,6 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
-                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
@@ -334,7 +342,6 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
-                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
 
@@ -345,21 +352,21 @@ class mfix : public AmrCore
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
                                     Vector< Real* > const& pressure_g_in,
-                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff,
                                     F3 HeterogeneousRRates);
 
     void mfix_calc_volume_fraction (Real & sum_vol);
 
-    void mfix_deposition_bcs (int lev, amrex::MultiFab & filled_mf);
+    void mfix_deposition_bcs (int lev,
+                              amrex::MultiFab & filled_mf) const;
 
     void mfix_redistribute_deposition (int lev,
                                        amrex::MultiFab & mf_eps,
                                        amrex::MultiFab & mf_to_redistribute,
                                        const amrex::MultiFab * volfrac,
                                        const amrex::FabArray<EBCellFlagFab>* flags,
-                                       amrex::Real max_eps);
+                                       amrex::Real max_eps) const;
 
     void mfix_set_bc_type (int lev, int nghost_bc);
 
@@ -379,17 +386,17 @@ class mfix : public AmrCore
                                amrex::Vector< amrex::MultiFab* > const& w,
                                amrex::Real time);
 
-  void compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
-                                         amrex::Vector< amrex::MultiFab const*> const& vel_in,
-                                         amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
-                                         amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
-                                         amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
-                                         amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
-                                         amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
-                                         amrex::Vector< amrex::MultiFab const*> const& txfr_in,
-                                         amrex::Vector< amrex::MultiFab const*> const& eb_vel,
-                                         amrex::Vector< amrex::MultiFab      *> const& vel_forces,
-                                         amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
+    void compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
+                                           amrex::Vector< amrex::MultiFab const*> const& vel_in,
+                                           amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
+                                           amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
+                                           amrex::Vector< amrex::MultiFab*      > const& ep_w_mac,
+                                           amrex::Vector< amrex::MultiFab const*> const& ep_g_in,
+                                           amrex::Vector< amrex::MultiFab const*> const& ro_g_in,
+                                           amrex::Vector< amrex::MultiFab const*> const& txfr_in,
+                                           amrex::Vector< amrex::MultiFab const*> const& eb_vel,
+                                           amrex::Vector< amrex::MultiFab      *> const& vel_forces,
+                                           amrex::Vector< amrex::MultiFab const*> const& rhs_mac);
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -408,6 +415,14 @@ class mfix : public AmrCore
 
     std::shared_ptr<Hydro::NodalProjector> nodal_projector;
 
+    ////////////////////////////////////////////////////////////////////////////
+    //
+    // Deposition
+    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    MFIXSolidsVolume* m_solids_volume_deposition;
+    MFIXInterphaseTxfr* m_interphase_txfr_deposition;
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -500,8 +515,7 @@ class mfix : public AmrCore
 
     void mfix_initial_iterations (Real dt, Real stop_time);
 
-public:
-
+  public:
     void mfix_apply_nodal_projection (Vector< amrex::MultiFab* >& a_depdt,
                                       amrex::Real a_time,
                                       amrex::Real a_dt,
@@ -573,8 +587,7 @@ public:
                                     Vector< MultiFab* > const& vel_g_in,
                                     Vector< MultiFab* > const& T_g_in,
                                     Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in,
-                                    std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>&);
+                                    Vector< Real* > const& pressure_g_in);
 
     void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
@@ -586,43 +599,13 @@ public:
                                Real time);
 
   public:
-#if 0
-    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
-                              const Vector< MultiFab* >& ep_g_in,
-                              const Vector< MultiFab* >& ro_g_in,
-                              const Vector< MultiFab* >& vel_g_in,
-                              const Vector< MultiFab* >& p_g_in,
-                              const Vector< MultiFab* >& T_g_in,
-                              const Vector< MultiFab* >& X_gk_in,
-                              const Real time);
+    void mfix_deposit_particles (MFIXDepositionOp* deposition_op,
+                                 Vector< MultiFab* > const& txfr_out,
+                                 const Real time) const;
 
-    template <typename F1>
-    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
-                              const Vector< MultiFab* >& ep_g_in,
-                              const Vector< MultiFab* >& ro_g_in,
-                              const Vector< MultiFab* >& vel_g_in,
-                              const Vector< MultiFab* >& p_g_in,
-                              const Vector< MultiFab* >& T_g_in,
-                              const Vector< MultiFab* >& X_gk_in,
-                              const Real time,
-                              F1 WeightFunc);
-
-    template <typename F1, typename F2, typename F3>
-    void mfix_calc_chem_txfr (const Vector< MultiFab* >& chem_txfr,
-                              const Vector< MultiFab* >& ep_g_in,
-                              const Vector< MultiFab* >& ro_g_in,
-                              const Vector< MultiFab* >& vel_g_in,
-                              const Vector< MultiFab* >& p_g_in,
-                              const Vector< MultiFab* >& T_g_in,
-                              const Vector< MultiFab* >& X_gk_in,
-                              const Real time,
-                              F1 WeightFunc,
-                              F2 HeterogeneousRatesFunc,
-                              F3 HomogeneousRatesFunc);
-#endif
-  protected:
     void AllocateArrays (int lev);
 
+  protected:
     void RegridArrays (int lev);
 
     void RegridLevelSetArray (int a_lev);
@@ -793,13 +776,15 @@ public:
 
     void ChopGrids (const Box& domain, BoxArray& ba, int target_size) const;
 
+  public:
     static int nlev;
     static int ntrac;
 
     // Particle container
     MFIXParticleContainer* pc;
 
-  public:
+    Vector< std::unique_ptr<LevelData> > m_leveldata;
+
     void PIC_to_PIC(const int lev,
                     std::string& restart_file,
                     const int pic_factor);
@@ -810,8 +795,6 @@ public:
     // Debug counter used for tracking number of level-set MultiFabs used in
     // intersection/union
     int ct_ls_mf;
-
-    Vector< std::unique_ptr<LevelData> > m_leveldata;
 
     MFIXParticleContainer* getParticleContainer() const { return pc; };
 
@@ -1153,20 +1136,21 @@ public:
     //! EB factory that lives on the fluid grids
     Vector<std::unique_ptr<EBFArrayBoxFactory> > ebfactory;
 
+    //! EB factory that lives on the particle grids
+    Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
+
+  public:
     amrex::EBFArrayBoxFactory const&
     EBFactory (int lev) const noexcept {
         return static_cast<amrex::EBFArrayBoxFactory const&>(*ebfactory[lev]);
     }
-
-
-    //! EB factory that lives on the particle grids
-    Vector<std::unique_ptr<EBFArrayBoxFactory> > particle_ebfactory;
 
     amrex::EBFArrayBoxFactory const&
     ParticleEBFactory (int lev) const noexcept {
         return static_cast<amrex::EBFArrayBoxFactory const&>(*particle_ebfactory[lev]);
     }
 
+  private:
     bool mfix_update_ebfactory (int a_lev);
 
     // Number of ghost cells for field arrays.

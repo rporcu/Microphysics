@@ -1,3 +1,6 @@
+#ifndef MFIX_DEPOSITION_K_H_
+#define MFIX_DEPOSITION_K_H_
+
 #include "mfix_pc.H"
 #include <mfix.H>
 
@@ -482,3 +485,5 @@ struct CentroidDeposition
           weights[ii][jj][kk] = wx[ii]*wy[jj]*wz[kk];
   }
 };
+
+#endif

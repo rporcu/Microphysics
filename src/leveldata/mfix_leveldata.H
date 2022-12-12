@@ -56,11 +56,11 @@ class LevelData {
                MFIXReactions* reactions_in,
                bool only_ep_g = false);
 
-    // Reset initial values
-    void resetValues (const amrex::Real covered_val);
-
     // Destructor
     ~LevelData ();
+
+    // Reset initial values
+    void resetValues (const amrex::Real covered_val);
 
     // Cell-centered MultiFabs
     // Void fraction

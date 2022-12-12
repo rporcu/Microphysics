@@ -13,23 +13,22 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
-                                      Vector< Real* > const& pressure_g_in,
-                                      std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>& aux)
+                                      Vector< Real* > const& pressure_g_in)
 {
   const amrex::Real small_num = m_dem.small_number();
   const amrex::Real large_num = m_dem.large_number();
   const amrex::Real eps = m_dem.eps();
 
   if (m_drag_type == DragType::WenYu) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragWenYu(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragGidaspow(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragBVK2(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::SyamOBrien) {
@@ -37,11 +36,11 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     const amrex::Real c1 = m_SyamOBrien_coeff_c1;
     const amrex::Real d1 = m_SyamOBrien_coeff_d1;
 
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragSyamOBrien1988(small_num, large_num, eps, c1, d1));
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragUser(small_num, large_num, eps));
   }
   else {
@@ -56,21 +55,20 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
                                       Vector< Real* > const& pressure_g_in,
-                                      std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>& aux,
                                       F1 DragFunc)
 {
   if (fluid.solve_enthalpy())
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux, DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvRanzMarshall(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux, DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvGunn(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::NullConvection) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux, DragFunc,
+      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 NullConvectionCoeff());
     }
     else {
@@ -78,7 +76,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     }
   }
   else {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux, DragFunc,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                               NullConvectionCoeff());
   }
 }
@@ -90,12 +88,11 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
                                       Vector< Real* > const& pressure_g_in,
-                                      std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>& aux,
                                       F1 DragFunc,
                                       F2 ConvectionCoeff)
 {
   if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, aux,
+    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               DragFunc, ConvectionCoeff, HeterogeneousRatesUser());
   } else {
     amrex::Abort("Invalid Reaction Rates Type.");
@@ -109,7 +106,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& T_g_in,
                                       Vector< MultiFab* > const& X_gk_in,
                                       Vector< Real* > const& pressure_g_in,
-                                      std::map<MFIXParticleContainer::PairIndex, Gpu::DeviceVector<Real>>& aux,
                                       F1 DragFunc,
                                       F2 ConvectionCoeff,
                                       F3 HeterogeneousRRates)
@@ -149,6 +145,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // unphysical volume fractions.
   const int dir_bc_in = 2;
   m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_in);
+
+  auto& aux = m_interphase_txfr_deposition->get_aux();
+  aux.clear();
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -289,13 +288,6 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
       const auto bndrycent = &(factory.getBndryCent());
       const auto areafrac = factory.getAreaFrac();
 
-      for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
-
-        PairIndex index(pti.index(), pti.LocalTileIndex());
-        aux[index] = Gpu::DeviceVector<Real>();
-
-      }
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -315,8 +307,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
         const int np = particles.size();
 
-        aux[index].clear();
-        aux[index].resize(fluid.nspecies()*np, 0.);
+        aux[index] = Gpu::DeviceVector<Real>(fluid.nspecies()*np, 0.);
         Real* aux_ptr = aux[index].dataPtr();
 
         Box bx = pti.tilebox();

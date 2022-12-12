@@ -13,6 +13,7 @@ int              mfix::knapsack_nmax        = 128;
 int              mfix::greedy_dir           = 0;
 bool             mfix::greedy_3d            = false;
 int              mfix::greedy_min_grid_size = 2;
+int              mfix::m_run_type           = RunType::Standard;
 int              mfix::m_drag_type          = DragType::Invalid;
 amrex::Real      mfix::m_SyamOBrien_coeff_c1 = -1;
 amrex::Real      mfix::m_SyamOBrien_coeff_d1 = -1;
@@ -35,15 +36,15 @@ RealVect mfix::gp0     {0.};
 // Destructor
 mfix::~mfix ()
 {
-  if (m_dem.solve())
+  if (m_dem.solve() && pc != nullptr)
     delete pc;
 
   for (int lev(0); lev < nlev; ++lev)
   {
     // Face-based coefficients b in MAC projection and implicit diffusion solve
-    delete bcoeff[lev][0];
-    delete bcoeff[lev][1];
-    delete bcoeff[lev][2];
+    for (int dir(0); dir < 3; ++dir)
+      if (bcoeff[lev][dir] != nullptr)
+        delete bcoeff[lev][dir];
   }
 
   // used if load_balance_type == "KnapSack"
@@ -60,6 +61,8 @@ mfix::~mfix ()
     delete fluid_proc[lev];
 
   delete mfixRW;
+  delete m_solids_volume_deposition;
+  delete m_interphase_txfr_deposition;
 }
 
 // Constructor
@@ -131,6 +134,17 @@ mfix::mfix ()
         }
     }
 
+    {
+      ParmParse pp_amr("amr");
+
+      if (pp_amr.contains("restart"))
+        m_run_type = RunType::Restart;
+      else if (pp_amr.contains("convert"))
+        m_run_type = RunType::PIC2DEM;
+      else
+        m_run_type = RunType::Standard;
+    }
+
     mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
                                 ebfactory, dmap, ooo_debug, level_sets, boxArray(),
                                 levelset_refinement, levelset_pad,
@@ -141,6 +155,9 @@ mfix::mfix ()
                                 nghost_eb_full(), m_eb_support_level,
                                 load_balance_type, bc_list, particle_ebfactory,
                                 regions);
+
+    m_solids_volume_deposition = new MFIXSolidsVolume;
+    m_interphase_txfr_deposition = new MFIXInterphaseTxfr;
 }
 
 void

@@ -4,7 +4,8 @@
 #include <AMReX_Box.H>
 #include <AMReX_FillPatchUtil.H>
 
-void mfix::mfix_deposition_bcs (int lev, MultiFab& filled_mf)
+void mfix::mfix_deposition_bcs (int lev,
+                                MultiFab& filled_mf) const
 {
   BL_PROFILE("mfix::mfix_deposition_bcs()");
 

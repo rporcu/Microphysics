@@ -20,8 +20,8 @@ class ParticlesGenerator {
     // Constructor
     ParticlesGenerator (const amrex::IntVect& lo,
                         const amrex::IntVect& hi,
-                        const amrex::GpuArray<amrex::Real,3>& plo,
-                        const amrex::GpuArray<amrex::Real,3>& dx,
+                        const amrex::RealVect& plo,
+                        const amrex::RealVect& dx,
                         const int id,
                         const int cpu,
                         const int icv,
@@ -57,8 +57,8 @@ class ParticlesGenerator {
   private:
     const amrex::IntVect& m_bx_lo;
     const amrex::IntVect& m_bx_hi;
-    const amrex::GpuArray<amrex::Real,3>& m_plo;
-    const amrex::GpuArray<amrex::Real,3>& m_dx;
+    const amrex::RealVect& m_plo;
+    const amrex::RealVect& m_dx;
     const int m_id;
     const int m_cpu;
     const int m_icv;

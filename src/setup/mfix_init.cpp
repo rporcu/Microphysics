@@ -483,14 +483,17 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 }
 
 
-void mfix::Init (Real time)
+void mfix::Init (Real time,
+                 const bool init_fluid_grids)
 {
-    if (ooo_debug) amrex::Print() << "Init" << std::endl;
-    mfixRW->InitIOChkData();
-    mfixRW->InitIOPltData();
+  if (ooo_debug) amrex::Print() << "Init" << std::endl;
+  mfixRW->InitIOChkData();
+  mfixRW->InitIOPltData();
 
-    // Note that finest_level = last level
-    finest_level = nlev-1;
+  // Note that finest_level = last level
+  finest_level = nlev-1;
+
+  if (init_fluid_grids) {
 
     /****************************************************************************
      *                                                                          *
@@ -531,6 +534,11 @@ void mfix::Init (Real time)
 
        MakeNewLevelFromScratch(lev, time, grids[lev], dmap[lev]);
     }
+  }
+
+  {
+    const BoxArray& ba = boxArray(0);
+    const DistributionMapping& dm = DistributionMap(0);
 
     /****************************************************************************
      *                                                                          *
@@ -580,19 +588,20 @@ void mfix::Init (Real time)
       // Updating mfixRW pc pointer is needed since mfix pc has changed
       mfixRW->set_pc(pc);
     }
+  }
 
-    /****************************************************************************
-     *                                                                          *
-     * MFIX-Specific Initialization                                             *
-     *                                                                          *
-     ***************************************************************************/
+  /****************************************************************************
+   *                                                                          *
+   * MFIX-Specific Initialization                                             *
+   *                                                                          *
+   ***************************************************************************/
 
-    // ******************************************************
-    // We only do these at level 0
-    // ******************************************************
+  // ******************************************************
+  // We only do these at level 0
+  // ******************************************************
 
-    for (int lev = 0; lev < nlev; lev++)
-        mfix_set_bc_type(lev,nghost_state());
+  for (int lev = 0; lev < nlev; lev++)
+      mfix_set_bc_type(lev,nghost_state());
 }
 
 void mfix::PruneBaseGrids(BoxArray &ba) const
@@ -845,7 +854,8 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
       if (removeOutOfRange)
         {
 
-          if ((nlev == 1) && (!is_restarting && particle_ebfactory[finest_level]))
+          if ((nlev == 1) &&
+              ((!is_restarting || m_run_type == RunType::PIC2DEM) && particle_ebfactory[finest_level]))
           {
             //___________________________________________________________________
             // Only 1 refined level-set
@@ -878,21 +888,27 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
           }
 
         }
+    }
 
-      if (m_dem.solve()) {
-          pc->MFIX_PC_InitCollisionParams();
-          pc->setSortInt(sort_particle_int);
-          pc->setReduceGhostParticles(reduceGhostParticles);
+    if (m_run_type != RunType::PIC2DEM) {
+
+      if (m_dem.solve() || m_pic.solve()) {
+
+        if (m_dem.solve()) {
+            pc->MFIX_PC_InitCollisionParams();
+            pc->setSortInt(sort_particle_int);
+            pc->setReduceGhostParticles(reduceGhostParticles);
+        }
+
+        if (dual_grid)
+          Regrid();
+
+        if (!is_restarting)
+          pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy());
+
+        if (!fluid.solve())
+            dt = fixed_dt;
       }
-
-      if (dual_grid)
-        Regrid();
-
-      if (!is_restarting)
-        pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy());
-
-      if (!fluid.solve())
-          dt = fixed_dt;
     }
 
     if (fluid.solve())
@@ -1045,10 +1061,13 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
       const Real* dx = geom[0].CellSize();
       const Real cell_volume = dx[0] * dx[1] * dx[2];
 
-      //Calculation of sum_vol_orig for a restarting point
-      sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
+      if (m_run_type != RunType::PIC2DEM) {
 
-      Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
+        //Calculation of sum_vol_orig for a restarting point
+        sum_vol_orig = Utils::volWgtSum(0, *(m_leveldata[0]->ep_g), 0, ebfactory);
+
+        Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
+      }
     }
 }
 
