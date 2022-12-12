@@ -94,18 +94,19 @@ void MFIXParticleContainer::define ()
     setRealCommComp(17, false); // dragy
     setRealCommComp(18, false); // dragz
     setRealCommComp(19, false); // cp_s
-    setRealCommComp(20, true); // temperature
-    setRealCommComp(21, true); // convection
+    setRealCommComp(20, true);  // temperature
+    setRealCommComp(21, true);  // convection
 
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
-    setIntCommComp(0, true); // id
-    setIntCommComp(1, true); // cpu
+    setIntCommComp(0, true);  // id
+    setIntCommComp(1, true);  // cpu
 #else
     setIntCommComp(0, false); // id
     setIntCommComp(1, false); // cpu
 #endif
     setIntCommComp(2, true);  // phase
-    setIntCommComp(3, true); // state
+    setIntCommComp(3, true);  // state
+    setIntCommComp(4, true);  // ptype
 
     // Add solids nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
@@ -324,7 +325,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 updateNeighbors(true);
               }
 #endif
-              buildNeighborList(MFIXCheckPair(m_dem.neighborhood()), false);
+              if( m_dem.pneig_flag() ) {
+                  buildNeighborList(MFIXCheckPolyPair(SoAintData::ptype,m_dem.nptypes(),m_dem.pneighdata()),
+                                    SoAintData::ptype, m_dem.prefratdata(), m_dem.nptypes(), true);
+              } else {
+                  buildNeighborList(MFIXCheckPair(m_dem.neighborhood()), false);
+              }
           } else {
               updateNeighbors();
           }

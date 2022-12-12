@@ -92,6 +92,8 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       // Set other particle properties
       host_intarrays[SoAintData::phase][i]        = pphase;
       host_intarrays[SoAintData::state][i]        = pstate;
+      host_intarrays[SoAintData::ptype][i]        = 0;
+      
       host_realarrays[SoArealData::volume][i]     = pvolume;
       host_realarrays[SoArealData::density][i]    = pdensity;
       host_realarrays[SoArealData::mass][i]       = pmass;

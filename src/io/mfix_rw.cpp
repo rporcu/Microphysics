@@ -317,6 +317,7 @@ MfixRW::Initialize ()
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
+    int_comp_names.push_back("ptype");
   }
 
   // Finalize initialization of solids plot regions

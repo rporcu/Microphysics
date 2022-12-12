@@ -52,6 +52,18 @@ MFIXDEM::Initialize ()
 
   amrex::ParmParse ppDEM("dem");
 
+  // Polydisperse neighbor search
+  ppDEM.query("PolyNeighSearch" , m_pneigh_flag);
+  ppDEM.query("PolyNumTypes"    , m_nptypes);
+  ppDEM.queryarr("PolyRefRatios", m_prefrats);
+  if (m_pneigh_flag) {     
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_nptypes == m_prefrats.size(),
+                                       "Polydisperse refinement ratio size does not match number of types.");
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_nptypes >= 2,
+                                       "Cannot use polydisperse neighbor algorithm with less than 2 types.");
+  }
+
+
   // Names of the solids used to build input regions.
   amrex::Vector<std::string> names;
 

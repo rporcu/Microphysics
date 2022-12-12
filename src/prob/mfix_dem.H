@@ -125,6 +125,19 @@ class MFIXDEM
     amrex::Real neighborhood () const { return m_neighborhood; };
     void set_neighborhood (const amrex::Real val) { m_neighborhood = val; };
 
+    // Polydisperse neighbor search
+    void add_pneighborhood (const amrex::Real val) { m_pneighborhood.push_back(val); }
+    amrex::Real* pneighdata () { return m_pneighborhood.data(); };
+    
+    void add_pbin (const amrex::Real val) { m_pbin.push_back(val); }
+    amrex::Real* pbindata  () { return m_pbin.data();  };
+    
+    int* prefratdata () { return m_prefrats.data(); }
+    
+    bool pneig_flag () { return m_pneigh_flag; };
+    int nptypes ()     { return m_nptypes; };
+    int nppairs ()     { return ( (m_nptypes*(m_nptypes+1)) / 2 ); };
+
     // Coarse-grain DEM
     int cg_dem () const { return m_cg_dem; };
 
@@ -181,6 +194,13 @@ class MFIXDEM
     amrex::Real m_eps;
 
     amrex::Real m_neighborhood;
+
+    // Polydisperse neighbor search
+    amrex::Gpu::DeviceVector<amrex::Real> m_pneighborhood;  // Neighborhood criteria for i-j type pair
+    amrex::Vector<amrex::Real> m_pbin;                      // Bin size for particle `types'
+    amrex::Vector<int> m_prefrats;                          // Refinement ratios that control bin sizes
+    bool m_pneigh_flag;                                     // Flag to use Poly-search algorithm
+    int  m_nptypes;                                         // Number of types
 
     // Coarse-grain DEM
     int m_cg_dem;

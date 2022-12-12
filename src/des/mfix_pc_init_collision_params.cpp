@@ -156,6 +156,52 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   // (3*max_dp/2)^2
   m_dem.set_neighborhood(2.25*max_max_dp*max_max_dp);
 
+  // Polydisperse
+  if (m_dem.pneig_flag()) {
+      int* ref_p = m_dem.prefratdata();
+      amrex::Real* bin_p = m_dem.pbindata();
+      // Set up a the bin vector with type sizes
+      for (int n(0); n<m_dem.nptypes(); ++n) m_dem.add_pbin(max_max_dp / ref_p[n] );
+      // Recursive loop to get smallest->largest ordering (e.g., 0-0 0-1 0-2, 1-1 1-2, 2-2 )
+      int ind(0);
+      for (int i(0); i<m_dem.nptypes(); ++i) {
+          for (int j(i); j<m_dem.nptypes(); ++j) {
+              Real dist = 0.75 * ( bin_p[i] + bin_p[j] ); // 1.5 * (Rp1 + Rp2)
+              m_dem.add_pneighborhood(dist*dist);
+              ++ind;
+          }
+      }
+  
+      // Overwrite ptype based upon bin sizes
+      Gpu::DeviceVector<Real> pbin_d(m_dem.nptypes());
+      Gpu::copy(Gpu::hostToDevice, m_dem.pbindata(),
+                m_dem.pbindata() + m_dem.nptypes() , pbin_d.begin());
+      Real* pbin_p = pbin_d.data();
+      for (int lev = 0; lev < nlev; lev++) {
+          for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+              PairIndex index(pti.index(), pti.LocalTileIndex());
+              auto& soa        = pti.GetStructOfArrays();
+              auto p_realarray = soa.realarray();
+              auto p_intarray  = soa.intarray();
+              const int nrp    = GetParticles(lev)[index].numRealParticles();
+              
+              amrex::ParallelFor(nrp,
+              [p_realarray,p_intarray,pbin_p,lnptypes=m_dem.nptypes()]
+              AMREX_GPU_DEVICE (int i) noexcept
+              {
+                  // Bins are smallest -> largest
+                  for (int n(0); n<lnptypes; ++n) {
+                      Real diameter = 2.0 * p_realarray[SoArealData::radius][i];
+                      if (diameter <= pbin_p[n]) {
+                          p_intarray[SoAintData::ptype][i] = n;
+                          break;
+                      }
+                  }
+              }); // ParallelFor
+          } // ParIter
+      } // lev
+  } // PneighFlag
+
   Real tcoll(1.0);
 
   MFIXDEM::A2D::array_type host_etan, host_etat, host_en;
