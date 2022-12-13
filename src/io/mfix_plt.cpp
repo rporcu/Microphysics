@@ -64,9 +64,6 @@ MfixRW::InitIOPltData ()
       int plt_ccse_regtest = 0;
       pp.query("plt_regtest", plt_ccse_regtest);
 
-      int plt_geom = 0;
-      pp.query("plt_geom", plt_geom);
-
       if (plt_ccse_regtest != 0) {
         plt_vel_g     = 1;
         plt_ep_g      = 1;
@@ -94,17 +91,6 @@ MfixRW::InitIOPltData ()
         plt_cost_p    = 0;
       }
 
-      if (plt_geom != 0) {
-         plt_impf      = 1;
-         plt_centroid  = 1;
-         plt_bndryarea = 1;
-         plt_bndrycent = 1;
-         plt_bndrynorm = 1;
-         plt_areafrac  = 1;
-         plt_facecent  = 1;
-         plt_edgecent  = 1;
-      }
-
       // Count the number of variables to save.
       if (plt_vel_g   == 1) pltVarCount += 3;
       if (plt_gradp_g == 1) pltVarCount += 3;
@@ -120,15 +106,6 @@ MfixRW::InitIOPltData ()
       if (plt_proc    == 1) pltVarCount += 1;
       if (plt_proc_p  == 1) pltVarCount += 1;
       if (plt_cost_p  == 1) pltVarCount += 1;
-
-      if (plt_impf      == 1) pltVarCount += 1;
-      if (plt_centroid  == 1) pltVarCount += 3;
-      if (plt_bndryarea == 1) pltVarCount += 1;
-      if (plt_bndrycent == 1) pltVarCount += 3;
-      if (plt_bndrynorm == 1) pltVarCount += 3;
-      if (plt_areafrac  == 1) pltVarCount += 3;
-      if (plt_facecent  == 1) pltVarCount += 6;
-      if (plt_edgecent  == 1) pltVarCount += 3;
 
       if (fluid.solve_enthalpy()) {
         if (plt_T_g  == 1) pltVarCount += 1;
@@ -392,59 +369,6 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
       // cost of particle cell
       if (plt_cost_p == 1)
         pltFldNames.push_back("cost_p");
-
-      // implicit function or levelset
-      if (plt_impf == 1)
-        pltFldNames.push_back("impf");
-
-      // centroid
-      if (plt_centroid == 1) {
-        pltFldNames.push_back("centroid_x");
-        pltFldNames.push_back("centroid_y");
-        pltFldNames.push_back("centroid_z");
-      }
-
-      // boundary area
-      if (plt_bndryarea == 1)
-        pltFldNames.push_back("bndryarea");
-
-      // boundary centroid
-      if (plt_bndrycent == 1) {
-        pltFldNames.push_back("bndrycent_x");
-        pltFldNames.push_back("bndrycent_y");
-        pltFldNames.push_back("bndrycent_z");
-      }
-
-      // boundary normal
-      if (plt_bndrynorm == 1) {
-        pltFldNames.push_back("bndrynorm_x");
-        pltFldNames.push_back("bndrynorm_y");
-        pltFldNames.push_back("bndrynorm_z");
-      }
-
-      // area fraction
-      if (plt_areafrac == 1) {
-        pltFldNames.push_back("areafrac_x");
-        pltFldNames.push_back("areafrac_y");
-        pltFldNames.push_back("areafrac_z");
-      }
-
-      // face centroid
-      if (plt_facecent == 1) {
-        pltFldNames.push_back("facecent_xy");
-        pltFldNames.push_back("facecent_xz");
-        pltFldNames.push_back("facecent_yx");
-        pltFldNames.push_back("facecent_yz");
-        pltFldNames.push_back("facecent_zx");
-        pltFldNames.push_back("facecent_zy");
-      }
-
-      // edge centroid
-      if (plt_edgecent == 1) {
-        pltFldNames.push_back("edgecent_x");
-        pltFldNames.push_back("edgecent_y");
-        pltFldNames.push_back("edgecent_z");
-      }
 
       // Fluid species mass fractions
       if (fluid.solve_species() && plt_X_gk == 1)
@@ -765,114 +689,6 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
         if (plt_cost_p == 1) {
           mf[lev]->ParallelCopy(*particle_cost[lev], 0, lc, 1, 0, 0);
           lc += 1;
-        }
-
-        // implicit function or levelset
-        if (plt_impf == 1) {
-          if (ebfactory[lev]) {
-            MultiFab::Copy(*mf[lev], ebfactory[lev]->getLevelSet(), 0, lc, 1, 0);
-          } else {
-            mf[lev]->setVal(-1.0, lc, 1, 0);
-          }
-          lc += 1;
-        }
-
-        // centroid
-        if (plt_centroid == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mf = ebfactory[lev]->getCentroid().ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
-          } else {
-            mf[lev]->setVal(0.0, lc, 3, 0);
-          }
-          lc += 3;
-        }
-
-        // boundary area
-        if (plt_bndryarea == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mf = ebfactory[lev]->getBndryArea().ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 1, 0);
-          } else {
-            mf[lev]->setVal(0.0, lc, 1, 0);
-          }
-          lc += 1;
-        }
-
-        // boundary centroid
-        if (plt_bndrycent == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mf = ebfactory[lev]->getBndryCent().ToMultiFab(-1.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
-          } else {
-            mf[lev]->setVal(-1.0, lc, 3, 0);
-          }
-          lc += 3;
-        }
-
-        // boundary normal
-        if (plt_bndrynorm == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mf = ebfactory[lev]->getBndryNormal().ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
-          } else {
-            mf[lev]->setVal(0.0, lc, 3, 0);
-          }
-          lc += 3;
-        }
-
-        // area fraction
-        if (plt_areafrac == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mfx = ebfactory[lev]->getAreaFrac()[0]->ToMultiFab(1.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 1, 0);
-            lc += 1;
-            MultiFab temp_mfy = ebfactory[lev]->getAreaFrac()[1]->ToMultiFab(1.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 1, 0);
-            lc += 1;
-            MultiFab temp_mfz = ebfactory[lev]->getAreaFrac()[2]->ToMultiFab(1.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 1, 0);
-            lc += 1;
-          } else {
-            mf[lev]->setVal(1.0, lc, 3, 0);
-            lc += 3;
-          }
-        }
-
-        // face centroid
-        if (plt_facecent == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mfx = ebfactory[lev]->getFaceCent()[0]->ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 2, 0);
-            lc += 2;
-            MultiFab temp_mfy = ebfactory[lev]->getFaceCent()[1]->ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 2, 0);
-            lc += 2;
-            MultiFab temp_mfz = ebfactory[lev]->getFaceCent()[2]->ToMultiFab(0.0, 0.0);
-            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 2, 0);
-            lc += 2;
-          } else {
-            mf[lev]->setVal(0.0, lc, 6, 0);
-            lc += 6;
-          }
-        }
-
-        // edge centroid
-        if (plt_edgecent == 1) {
-          if (ebfactory[lev]) {
-            MultiFab temp_mfx = ebfactory[lev]->getEdgeCent()[0]->ToMultiFab(1.0, -1.0);
-            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 1, 0);
-            lc += 1;
-            MultiFab temp_mfy = ebfactory[lev]->getEdgeCent()[1]->ToMultiFab(1.0, -1.0);
-            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 1, 0);
-            lc += 1;
-            MultiFab temp_mfz = ebfactory[lev]->getEdgeCent()[2]->ToMultiFab(1.0, -1.0);
-            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 1, 0);
-            lc += 1;
-          } else {
-            mf[lev]->setVal(1.0, lc, 3, 0);
-            lc += 3;
-          }
         }
 
         // Fluid species mass fractions
@@ -1214,9 +1030,9 @@ MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
 
 
 void
-MfixRW::WriteStaticPlotFile (const std::string & plotfilename) const
+MfixRW::WriteStaticPlotFileParticleLevelSet (const std::string & plotfilename) const
 {
-    BL_PROFILE("mfix::WriteStaticPlotFile()");
+    BL_PROFILE("mfix::WriteStaticPlotFileParticleLevelSet()");
 
     Print() << "  Writing static quantities " << plotfilename << std::endl;
 
@@ -1270,6 +1086,162 @@ MfixRW::WriteStaticPlotFile (const std::string & plotfilename) const
     {
         // Don't do this (below) as it zeros out the covered cells...
         // EB_set_covered(* mf[lev], 0.0);
+        mf_ptr[lev] = mf[lev].get();
+    }
+
+    Real time = 0.;
+    Vector<int> istep;
+    istep.resize(nlev,0);
+    amrex::WriteMultiLevelPlotfile(plotfilename, nlev, mf_ptr, static_names,
+                                   geom, time, istep, ref_ratio);
+
+    WriteJobInfo(plotfilename);
+
+    Print() << "  Done writing static quantities " << plotfilename << std::endl;
+}
+
+void
+MfixRW::WriteStaticPlotFileEBGeometry (const std::string & plotfilename) const
+{
+    BL_PROFILE("mfix::WriteStaticPlotFileEBGeometry()");
+
+    Print() << "  Writing static quantities " << plotfilename << std::endl;
+
+    // Static unchanging EB geometry variables
+    Vector<std::string> static_names = 
+      {"volfrac",
+       "impf",
+       "centroid_x", "centroid_y", "centroid_z",
+       "bndryarea",
+       "bndrycent_x", "bndrycent_y", "bndrycent_z",
+       "bndrynorm_x", "bndrynorm_y", "bndrynorm_z",
+       "areafrac_x", "areafrac_y", "areafrac_z",
+       "facecent_xy", "facecent_xz", "facecent_yx", "facecent_yz", "facecent_zx", "facecent_zy",
+       "edgecent_x", "edgecent_y", "edgecent_z"};
+
+    const int ngrow = 0;
+    const int ncomp = static_names.size();
+
+
+    /****************************************************************************
+     *                                                                          *
+     * Collect variables together into a single multi-component MultiFab        *
+     *                                                                          *
+     ***************************************************************************/
+
+    Vector<std::unique_ptr<MultiFab>> mf(nlev);
+    Vector<const MultiFab *>          mf_ptr(nlev);
+
+    for (int lev = 0; lev < nlev; lev++)
+    {
+        mf[lev] = std::make_unique<MultiFab>(grids[lev], dmap[lev], ncomp, ngrow,
+                                             MFInfo(), *ebfactory[lev]);
+
+        int lc = 0;
+
+        // volfrac
+        if (ebfactory[lev]) {
+            MultiFab::Copy(*mf[lev], ebfactory[lev]->getVolFrac(), 0, lc, 1, 0);
+        } else {
+            mf[lev]->setVal(1.0, lc, 1, 0);
+        }
+        lc += 1;
+
+        // implicit function or levelset
+        if (ebfactory[lev]) {
+            MultiFab::Copy(*mf[lev], ebfactory[lev]->getLevelSet(), 0, lc, 1, 0);
+        } else {
+            mf[lev]->setVal(-1.0, lc, 1, 0);
+        }
+        lc += 1;
+
+        // centroid
+        if (ebfactory[lev]) {
+            MultiFab temp_mf = ebfactory[lev]->getCentroid().ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
+        } else {
+            mf[lev]->setVal(0.0, lc, 3, 0);
+        }
+        lc += 3;
+
+        // boundary area
+        if (ebfactory[lev]) {
+            MultiFab temp_mf = ebfactory[lev]->getBndryArea().ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 1, 0);
+        } else {
+            mf[lev]->setVal(0.0, lc, 1, 0);
+        }
+        lc += 1;
+
+        // boundary centroid
+        if (ebfactory[lev]) {
+            MultiFab temp_mf = ebfactory[lev]->getBndryCent().ToMultiFab(-1.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
+        } else {
+            mf[lev]->setVal(-1.0, lc, 3, 0);
+        }
+        lc += 3;
+
+        // boundary normal
+        if (ebfactory[lev]) {
+            MultiFab temp_mf = ebfactory[lev]->getBndryNormal().ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mf, 0, lc, 3, 0);
+        } else {
+            mf[lev]->setVal(0.0, lc, 3, 0);
+        }
+        lc += 3;
+
+        // area fraction
+        if (ebfactory[lev]) {
+            MultiFab temp_mfx = ebfactory[lev]->getAreaFrac()[0]->ToMultiFab(1.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 1, 0);
+            lc += 1;
+            MultiFab temp_mfy = ebfactory[lev]->getAreaFrac()[1]->ToMultiFab(1.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 1, 0);
+            lc += 1;
+            MultiFab temp_mfz = ebfactory[lev]->getAreaFrac()[2]->ToMultiFab(1.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 1, 0);
+            lc += 1;
+        } else {
+            mf[lev]->setVal(1.0, lc, 3, 0);
+            lc += 3;
+        }
+
+        // face centroid
+        if (ebfactory[lev]) {
+            MultiFab temp_mfx = ebfactory[lev]->getFaceCent()[0]->ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 2, 0);
+            lc += 2;
+            MultiFab temp_mfy = ebfactory[lev]->getFaceCent()[1]->ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 2, 0);
+            lc += 2;
+            MultiFab temp_mfz = ebfactory[lev]->getFaceCent()[2]->ToMultiFab(0.0, 0.0);
+            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 2, 0);
+            lc += 2;
+        } else {
+            mf[lev]->setVal(0.0, lc, 6, 0);
+            lc += 6;
+        }
+
+        // edge centroid
+        if (ebfactory[lev]) {
+            MultiFab temp_mfx = ebfactory[lev]->getEdgeCent()[0]->ToMultiFab(1.0, -1.0);
+            MultiFab::Copy(*mf[lev], temp_mfx, 0, lc, 1, 0);
+            lc += 1;
+            MultiFab temp_mfy = ebfactory[lev]->getEdgeCent()[1]->ToMultiFab(1.0, -1.0);
+            MultiFab::Copy(*mf[lev], temp_mfy, 0, lc, 1, 0);
+            lc += 1;
+            MultiFab temp_mfz = ebfactory[lev]->getEdgeCent()[2]->ToMultiFab(1.0, -1.0);
+            MultiFab::Copy(*mf[lev], temp_mfz, 0, lc, 1, 0);
+            lc += 1;
+        } else {
+            mf[lev]->setVal(1.0, lc, 3, 0);
+            lc += 3;
+        }
+    }
+
+    for (int lev = 0; lev < nlev; ++lev)
+    {
         mf_ptr[lev] = mf[lev].get();
     }
 

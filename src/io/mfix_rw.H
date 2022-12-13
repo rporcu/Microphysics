@@ -109,11 +109,7 @@ public:
                   bool first=false, /* first call*/
                   bool last=false   /* last call*/);
 
-   void writeStaticPlotFile () const;
-
-   //! Save variables that don't change to plot file. The idea is that they can
-   //! be saved _once_ per simulations and not repeatedly every Nth time step.
-   void WriteStaticPlotFile (const std::string& plot_file_name) const;
+   void writeStaticPlotFiles () const;
 
    void writeEBSurface () const;
 
@@ -324,9 +320,13 @@ private:
 
    bool write_eb_surface = false;
 
-   // Flag for writing static levelset function in plot file
+   // Flag for writing static particle levelset function in plot file
    bool write_ls = false;
-   std::string static_plt_file {"plt_ls"};
+   std::string static_plt_file_ls {"plt_ls"};
+
+   // Flag for writing static EB geometry data in plot file
+   bool plt_geom = false;
+   std::string static_plt_file_geom {"plt_eb_geom"};
 
 
    // Checkpoint file controls
@@ -431,6 +431,11 @@ private:
                           amrex::Real time) const;
 
    void WriteJobInfo (const std::string& dir) const;
+
+   //! Save variables that don't change to plot file. The idea is that they can
+   //! be saved _once_ per simulations and not repeatedly every Nth time step.
+   void WriteStaticPlotFileParticleLevelSet (const std::string& plotfilename) const;
+   void WriteStaticPlotFileEBGeometry (const std::string& plotfilename) const;
 
    Monitors m_monitors;
 

@@ -72,6 +72,8 @@ particles.tile_size = 1024 1024 1024
 mfix.levelset__refinement    = 4 # levelset resolution
 
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
+mfix.write_ls = true  # Needed to output static plot file with particle levelset
+mfix.plt_geom = true  # Needed to output static plot file with EB geometry
 
 #_______________________________________________________________________
 # Particle load balancing

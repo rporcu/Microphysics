@@ -234,6 +234,7 @@ void MfixRW::readParameters ()
      pp.query("write_ls", write_ls);
      pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
      pp.query("only_print_grid_report", only_print_grid_report);
+     pp.query("plt_geom", plt_geom);
   }
 
   {
@@ -648,10 +649,15 @@ void MfixRW::writeEBSurface() const
      WriteMyEBSurface();
 }
 
-void MfixRW::writeStaticPlotFile() const
+void MfixRW::writeStaticPlotFiles() const
 {
-   if ((m_dem.solve() || m_pic.solve()) && write_ls)
-      WriteStaticPlotFile(static_plt_file);
+   if ((m_dem.solve() || m_pic.solve()) && write_ls) {
+      WriteStaticPlotFileParticleLevelSet(static_plt_file_ls);
+   }
+
+   if (plt_geom) {
+      WriteStaticPlotFileEBGeometry(static_plt_file_geom);
+   }
 }
 
 void MfixRW::reportGridStats() const
