@@ -199,7 +199,7 @@ class MFIXDEM
     amrex::Gpu::DeviceVector<amrex::Real> m_pneighborhood;  // Neighborhood criteria for i-j type pair
     amrex::Vector<amrex::Real> m_pbin;                      // Bin size for particle `types'
     amrex::Vector<int> m_prefrats;                          // Refinement ratios that control bin sizes
-    bool m_pneigh_flag;                                     // Flag to use Poly-search algorithm
+    bool m_pneigh_flag{false};                              // Flag to use Poly-search algorithm
     int  m_nptypes;                                         // Number of types
 
     // Coarse-grain DEM

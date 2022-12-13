@@ -143,7 +143,8 @@ struct MFIXCheckPolyPair
 
   template <int NSR, int NSI, int NAR, int NAI>
   AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile, int i, int j, int type) const
+  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile,
+                   int i, int j, int type, bool ghost_i, bool ghost_j) const
   {
     const auto p1 = ptile.getSuperParticle(i);
     const auto p2 = ptile.getSuperParticle(j);
@@ -151,17 +152,19 @@ struct MFIXCheckPolyPair
     int type_i = p1.idata(typeInd);
     int type_j = p2.idata(typeInd);
 
-    if ((type_i == type) || (type_j == type)) { // One of the particles matches the type being searched
-        if ((i < j) || (type_i < type_j)) {     // Smaller index or type particle finds the neighbor
-            // Get index for NEIGHBORHOOD from analytical partial sums
-            int imin = amrex::min(type_i,type_j);
-            int imax = amrex::max(type_i,type_j);
-            int k    = imin - 1;
-            // \Sum_{i=N-k}^{N} (i)
-            int indx = num_bin_types*(k+1) - (k*(k+1))/2;
-            // \Sum_{i=1}^{l} (i)
-            indx += imax - imin;
-            if ( (p1.pos() - p2.pos()).radSquared() <= neighborhood[indx] ) return true;
+    if (!(ghost_i && ghost_j)) {                    // One particle must be a real particle
+        if ((type_i == type) || (type_j == type)) { // One of the particles matches the type being searched
+            if ((i < j) || (type_i < type_j)) {     // Smaller index or type particle finds the neighbor
+                // Get index for NEIGHBORHOOD from analytical partial sums
+                int imin = amrex::min(type_i,type_j);
+                int imax = amrex::max(type_i,type_j);
+                int k    = imin - 1;
+                // \Sum_{i=N-k}^{N} (i)
+                int indx = num_bin_types*(k+1) - (k*(k+1))/2;
+                // \Sum_{i=1}^{l} (i)
+                indx += imax - imin;
+                if ( (p1.pos() - p2.pos()).radSquared() <= neighborhood[indx] ) return true;
+            }
         }
     }
 

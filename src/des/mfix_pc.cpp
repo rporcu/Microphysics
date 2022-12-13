@@ -351,16 +351,21 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             //const Box& bx = pti.tilebox(); // UNUSED_VARIABLE
             PairIndex index(pti.index(), pti.LocalTileIndex());
 
-            auto& plev = GetParticles(lev);
+            auto& plev  = GetParticles(lev);
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
             ParticleType* pstruct = aos().dataPtr();
+            
+            const auto ntp = aos.size();
+            const int  nrp = GetParticles(lev)[index].numRealParticles();
 
-            const int nrp = GetParticles(lev)[index].numRealParticles();
+            // For multi-grid neighbor list search, we must
+            // loop over the ghost particles to find all coll pairs.
+            const int  nlp = (m_dem.pneig_flag()) ? ntp : nrp;
 
-            auto& soa   = pti.GetStructOfArrays();
+            auto& soa = pti.GetStructOfArrays();
             auto p_realarray = soa.realarray();
-            auto p_intarray = soa.intarray();
+            auto p_intarray  = soa.intarray();
 
             // Number of particles including neighbor particles
             int ntot = nrp;
@@ -405,7 +410,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               const int solve_enthalpy = solids.solve_enthalpy();
 
               // now we loop over the neighbor list and compute the forces
-              amrex::ParallelFor(nrp,
+              amrex::ParallelFor(nlp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,cond_ptr,nbor_data,
                    subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,solids_parms,
                    solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,local_mew=m_dem.mew(),
@@ -425,7 +430,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     //**********************************************************
                     // Particle-wall collisions
                     //**********************************************************
-                    if (walls_in_tile) {
+                    if (walls_in_tile && (i < nrp)) {
 
                       Real rp = p_realarray[SoArealData::radius][i];
 
@@ -640,7 +645,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
                             Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
                                                             Rough,local_k_g,Tp1,Tp2);
-                            HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                            if(i < nrp) HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
                             if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
                           }
                         }
@@ -663,7 +668,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                               const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
                               Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
                                                              kp1,kp2,Tp1,Tp2);
-                              HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                              if(i < nrp) HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
                               if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
                             }
 
@@ -716,7 +721,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                             const int phase1_idx = MFIXSolidsPhase::phase_to_index(phase1);
                             const int phase2_idx = MFIXSolidsPhase::phase_to_index(phase2);
 
-                            Real kn_des = local_kn;
+                            Real kn_des   = local_kn;
                             Real etan_des = local_etan(phase1_idx, phase2_idx);
 
                             // NOTE - we don't use the tangential components right now,
@@ -813,17 +818,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         } // end overlap
                     } // end neighbor loop
 
-                    HostDevice::Atomic::Add(&fc_ptr[i         ], total_force[0]);
-                    HostDevice::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
-                    HostDevice::Atomic::Add(&fc_ptr[i + 2*ntot], total_force[2]);
+                    if(i < nrp) {
+                        HostDevice::Atomic::Add(&fc_ptr[i         ], total_force[0]);
+                        HostDevice::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
+                        HostDevice::Atomic::Add(&fc_ptr[i + 2*ntot], total_force[2]);
 
-                    HostDevice::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
-                    HostDevice::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
-                    HostDevice::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
-
-
-                    if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
-                      p_intarray[SoAintData::state][i] = 1;
+                        HostDevice::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
+                        HostDevice::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
+                        HostDevice::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
+                    
+                        if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
+                            p_intarray[SoAintData::state][i] = 1;
+                    }
               });
 
               Gpu::Device::synchronize();
