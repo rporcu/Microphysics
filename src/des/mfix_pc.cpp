@@ -327,7 +327,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 #endif
               if( m_dem.pneig_flag() ) {
                   buildNeighborList(MFIXCheckPolyPair(SoAintData::ptype,m_dem.nptypes(),m_dem.pneighdata()),
-                                    SoAintData::ptype, m_dem.prefratdata(), m_dem.nptypes(), true);
+                                    SoAintData::ptype, m_dem.prefratdata(), m_dem.nptypes(), false);
               } else {
                   buildNeighborList(MFIXCheckPair(m_dem.neighborhood()), false);
               }

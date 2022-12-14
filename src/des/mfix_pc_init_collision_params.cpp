@@ -158,12 +158,12 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
   // Polydisperse
   if (m_dem.pneig_flag()) {
-      int* ref_p = m_dem.prefratdata();
-      amrex::Real* bin_p = m_dem.pbindata();
       // Set up a the bin vector with type sizes
-      for (int n(0); n<m_dem.nptypes(); ++n) m_dem.add_pbin(max_max_dp / ref_p[n] );
+      int* ref_p = m_dem.prefratdata();
+      for (int n(0); n<m_dem.nptypes(); ++n) m_dem.add_pbin(max_max_dp / (amrex::Real) ref_p[n] );
       // Recursive loop to get smallest->largest ordering (e.g., 0-0 0-1 0-2, 1-1 1-2, 2-2 )
       int ind(0);
+      amrex::Real* bin_p = m_dem.pbindata();
       for (int i(0); i<m_dem.nptypes(); ++i) {
           for (int j(i); j<m_dem.nptypes(); ++j) {
               Real dist = 0.75 * ( bin_p[i] + bin_p[j] ); // 1.5 * (Rp1 + Rp2)
@@ -176,7 +176,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
       Gpu::DeviceVector<Real> pbin_d(m_dem.nptypes());
       Gpu::copy(Gpu::hostToDevice, m_dem.pbindata(),
                 m_dem.pbindata() + m_dem.nptypes() , pbin_d.begin());
-      Real* pbin_p = pbin_d.data();
+      Real* bin_d = pbin_d.data();
       for (int lev = 0; lev < nlev; lev++) {
           for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
               PairIndex index(pti.index(), pti.LocalTileIndex());
@@ -186,13 +186,13 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
               const int nrp    = GetParticles(lev)[index].numRealParticles();
               
               amrex::ParallelFor(nrp,
-              [p_realarray,p_intarray,pbin_p,lnptypes=m_dem.nptypes()]
+              [p_realarray,p_intarray,bin_d,lnptypes=m_dem.nptypes()]
               AMREX_GPU_DEVICE (int i) noexcept
               {
                   // Bins are smallest -> largest
                   for (int n(0); n<lnptypes; ++n) {
                       Real diameter = 2.0 * p_realarray[SoArealData::radius][i];
-                      if (diameter <= pbin_p[n]) {
+                      if (diameter <= bin_d[n]) {
                           p_intarray[SoAintData::ptype][i] = n;
                           break;
                       }

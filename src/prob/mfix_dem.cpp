@@ -55,10 +55,13 @@ MFIXDEM::Initialize ()
   // Polydisperse neighbor search
   ppDEM.query("PolyNeighSearch" , m_pneigh_flag);
   ppDEM.query("PolyNumTypes"    , m_nptypes);
+  m_prefrats.resize(m_nptypes);
   ppDEM.queryarr("PolyRefRatios", m_prefrats);
-  if (m_pneigh_flag) {     
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_nptypes == m_prefrats.size(),
-                                       "Polydisperse refinement ratio size does not match number of types.");
+  if (m_pneigh_flag) {
+      amrex::Print() << m_nptypes << ' ' << m_prefrats.size() << ' '
+                     << m_prefrats[0] << ' ' << m_prefrats[1] << "\n";
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_prefrats.back() == 1,
+                                       "The largest polydisperse refinement ratio must be 1.");
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_nptypes >= 2,
                                        "Cannot use polydisperse neighbor algorithm with less than 2 types.");
   }
