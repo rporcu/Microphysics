@@ -97,11 +97,11 @@ class MFIXInterphaseTxfr : public MFIXDepositionOp
                   amrex::MultiFab* txfr_mf,
                   amrex::MultiFab* eps_mf);
 
-    std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>& get_aux ()
+    amrex::Vector<std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>>& get_aux ()
     { return m_aux; }
 
   private:
-    std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>> m_aux;
+    amrex::Vector<std::map<PairIndex, amrex::Gpu::DeviceVector<amrex::Real>>> m_aux;
 };
 
 #endif

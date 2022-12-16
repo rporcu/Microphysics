@@ -265,9 +265,9 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
       FArrayBox& eps_fab  = (*eps_mf)[pti];
       FArrayBox& txfr_fab = (*txfr_mf)[pti];
 
-      auto aux_iterator = m_aux.find(index);
+      auto aux_iterator = m_aux[lev].find(index);
 
-      AMREX_ASSERT(aux_iterator != m_aux.end());
+      AMREX_ASSERT(aux_iterator != m_aux[lev].end());
 
       const auto& aux_vector = aux_iterator->second;
       const Real* aux_ptr = aux_vector.dataPtr();

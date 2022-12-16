@@ -148,6 +148,17 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
   auto& aux = m_interphase_txfr_deposition->get_aux();
   aux.clear();
+  aux.resize(nlev);
+
+  for (int lev = 0; lev < nlev; lev++) {
+    aux[lev].clear();
+
+    for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
+
+      PairIndex index(pti.index(), pti.LocalTileIndex());
+      aux[lev][index] = Gpu::DeviceVector<Real>();
+    }
+  }
 
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -307,8 +318,9 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
 
         const int np = particles.size();
 
-        aux[index] = Gpu::DeviceVector<Real>(fluid.nspecies()*np, 0.);
-        Real* aux_ptr = aux[index].dataPtr();
+        aux[lev][index].clear();
+        aux[lev][index].resize(fluid.nspecies()*np, 0.);
+        Real* aux_ptr = aux[lev][index].dataPtr();
 
         Box bx = pti.tilebox();
 
