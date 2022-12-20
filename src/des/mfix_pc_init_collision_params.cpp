@@ -160,12 +160,12 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
   if (m_dem.pneig_flag()) {
       // Set up a the bin vector with type sizes
       int* ref_p = m_dem.prefratdata();
-      auto pbin  = m_dem.get_pbin();
+      auto& pbin = m_dem.get_pbin();
       for (int n(0); n<m_dem.nptypes(); ++n) pbin.push_back(max_max_dp / (amrex::Real) ref_p[n] );
       // Recursive loop to get smallest->largest ordering (e.g., 0-0 0-1 0-2, 1-1 1-2, 2-2 )
       int ind(0);
-      amrex::Real* bin_p = m_dem.pbindata();
-      auto pneighborhood = m_dem.get_pneighborhood();
+      amrex::Real* bin_p  = m_dem.pbindata();
+      auto& pneighborhood = m_dem.get_pneighborhood();
       for (int i(0); i<m_dem.nptypes(); ++i) {
           for (int j(i); j<m_dem.nptypes(); ++j) {
               Real dist = 0.75 * ( bin_p[i] + bin_p[j] ); // 1.5 * (Rp1 + Rp2)
