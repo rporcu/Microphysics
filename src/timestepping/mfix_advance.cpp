@@ -824,11 +824,16 @@ mfix::steady_state_reached (Real dt, int iter)
        //
        // Print out info on steady state checks
        //
-       amrex::Print() << "\nSteady state check at level " << lev << ":\n";
-       amrex::Print() << "||u-uo||/||uo|| , du/dt  = " << tmp1 <<" , "<< delta_u/dt << "\n";
-       amrex::Print() << "||v-vo||/||vo|| , dv/dt  = " << tmp2 <<" , "<< delta_v/dt << "\n";
-       amrex::Print() << "||w-wo||/||wo|| , dw/dt  = " << tmp3 <<" , "<< delta_w/dt << "\n";
-       amrex::Print() << "||p-po||/||po|| , dp/dt  = " << tmp4 <<" , "<< delta_p/dt << "\n";
+       amrex::Print() << "\nSteady state check at level " << lev << ":"
+         << "\n||u-uo||/||uo|| = " << std::setw(12) << std::scientific << std::setprecision(4) << tmp1
+         << "      du/dt = " << std::setw(12) << std::scientific << std::setprecision(4) << delta_u/dt
+         << "\n||v-vo||/||vo|| = " << std::setw(12) << std::scientific << std::setprecision(4) << tmp2
+         << "      dv/dt = " << std::setw(12) << std::scientific << std::setprecision(4) << delta_v/dt
+         << "\n||w-wo||/||wo|| = " << std::setw(12) << std::scientific << std::setprecision(4) << tmp3
+         << "      dw/dt = " << std::setw(12) << std::scientific << std::setprecision(4) << delta_w/dt
+         << "\n||p-po||/||po|| = " << std::setw(12) << std::scientific << std::setprecision(4) << tmp4
+         << "      dp/dt = " << std::setw(12) << std::scientific << std::setprecision(4) << delta_p/dt
+         << "\n\n";
     }
 
     int reached = 1;
