@@ -110,7 +110,7 @@ build:dpcpp:
   needs: ['build-dpcpp-env']
   variables:
     CC: clang-12
-    CXX: dpcpp
+    CXX: icpx
   script:
     - source /opt/intel/oneapi/setvars.sh
     - cmake -S .
