@@ -483,6 +483,9 @@ class Suite:
         self.job_manager = ""
         self.partition = ""
         self.cpus_per_task = 1
+        self.slurm_command = ""
+        self.ntasks_per_node = None
+        self.ntasks_per_socket = None
 
         self.reportActiveTestsOnly = 0
         self.goUpLink = 0

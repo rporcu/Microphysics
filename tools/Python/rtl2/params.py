@@ -292,6 +292,27 @@ def load_params(args):
             " then 'partition' must be set to the SLURM partition/queue."
         )
 
+    if mysuite.job_manager == "slurm" and not mysuite.slurm_command:
+        mysuite.log.fail(
+            f"ERROR: In {args.input_file[0]},"
+            " when 'job_manager' is 'slurm',"
+            " then 'slurm_command' must be set to the 'srun' or 'salloc'."
+        )
+
+    if mysuite.slurm_command == "salloc" and not mysuite.ntasks_per_node:
+        mysuite.log.fail(
+            f"ERROR: In {args.input_file[0]},"
+            " when 'slurm_command' is 'salloc',"
+            " then 'ntasks_per_node' must be set."
+        )
+
+    if mysuite.slurm_command == "salloc" and not mysuite.ntasks_per_socket:
+        mysuite.log.fail(
+            f"ERROR: In {args.input_file[0]},"
+            " when 'slurm_command' is 'salloc',"
+            " then 'ntasks_per_socket' must be set."
+        )
+
     if any_MPI and mysuite.MPIcommand == "":
         mysuite.log.fail("ERROR: some tests are MPI parallel, but MPIcommand not defined")
 

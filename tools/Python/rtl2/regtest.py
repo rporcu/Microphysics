@@ -27,6 +27,7 @@ import tarfile
 import time
 import re
 import json
+import math
 from pathlib import Path
 from typing import List, Tuple
 
@@ -439,27 +440,52 @@ async def run_local(runners):
 
 
 async def run_slurm(runners, args, suite):
-    sb_fname = suite.testDir / "rtl2.conf"
-    ntasks, sb_s = srun_script(suite, runners, args)
     assert suite.testDir.is_dir()
     suite.full_test_dir.mkdir(exist_ok=True, parents=True)
-    with open(sb_fname, "w") as sb:
-        sb.write(sb_s)
-    sb_fname.chmod(0o755)
-    cmdline = [
-        "srun",
-        "-W0",
-        "-c",
-        str(suite.cpus_per_task),
-        "-p",
-        str(suite.partition),
-        "-n",
-        str(ntasks),
-        "--multi-prog",
-        sb_fname.as_posix(),
-    ]
-    wall_time = time.time()
-    subprocess.run(cmdline, check=False)
+
+    if suite.slurm_command == "salloc":
+       tasks_and_cmds = salloc_cmds(suite, runners, args)
+       wall_time = time.time()
+       child_processes = []
+       for task_and_cmd in tasks_and_cmds:
+          ntasks, mpicmd = task_and_cmd
+          nnodes = math.ceil(ntasks/suite.ntasks_per_node)
+          cmdline = [
+              "salloc",
+              "-p", str(suite.partition),
+              "--nodes", str(nnodes),
+              "--ntasks-per-node", str(suite.ntasks_per_node),
+              "--ntasks-per-socket", str(suite.ntasks_per_socket),
+              "--job-name", "rtl2." + str(suite.Label),
+              "bash", "-c", mpicmd
+          ]
+          p = subprocess.Popen(cmdline)
+          child_processes.append(p)
+
+       for cp in child_processes:
+          cp.wait()
+
+    elif suite.slurm_command == "srun":
+       sb_fname = suite.testDir / "rtl2.conf"
+       ntasks, sb_s = srun_script(suite, runners, args)
+       with open(sb_fname, "w") as sb:
+           sb.write(sb_s)
+       sb_fname.chmod(0o755)
+       cmdline = [
+           "srun",
+           "-W0",
+           "-c",
+           str(suite.cpus_per_task),
+           "-p",
+           str(suite.partition),
+           "-n",
+           str(ntasks),
+           "--multi-prog",
+           sb_fname.as_posix(),
+       ]
+       wall_time = time.time()
+       subprocess.run(cmdline, check=False)
+
     wall_time = time.time() - wall_time
     for runner in runners:
         runner.test.wall_time = wall_time
@@ -479,6 +505,18 @@ def srun_script(suite: Suite, runners: List["TestRunner"], args: List[str]) -> T
 
     ntasks = task_id
     return ntasks, "\n".join(lines)
+
+
+def salloc_cmds(suite: Suite, runners: List["TestRunner"], args: List[str]) -> List[Tuple[int, str]]:
+    tasks_and_cmds = []
+    task_id = 0
+    for runner in runners:
+        outdir = runner.test.output_dir
+        rcmd = runner.test.command(suite, runner.test.base_command(suite, args))
+        cmd = f"cd {outdir} && {rcmd}"
+        tasks_and_cmds.append((runner.test.numprocs, cmd))
+
+    return tasks_and_cmds
 
 
 def toppath():
