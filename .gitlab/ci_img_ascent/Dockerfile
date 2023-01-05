@@ -1,6 +1,6 @@
 #Docker Image for ascent
 
-FROM ubuntu:20.04
+FROM public.ecr.aws/lts/ubuntu:20.04
 
 LABEL maintainer="Deepak Rangarajan <deepak.rangarajan@netl.doe.gov>"
 
