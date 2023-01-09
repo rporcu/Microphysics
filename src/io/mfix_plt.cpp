@@ -269,9 +269,9 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
 
   }
 
-  input_value = 0;
-  pp.query("plt_ptype", input_value);
-  write_int_comp_out[SoAintData::ptype] = input_value;
+  int input_value0 = 0;
+  pp.query("plt_ptype", input_value0);
+  write_int_comp_out[SoAintData::ptype] = input_value0;
 
 }
 
