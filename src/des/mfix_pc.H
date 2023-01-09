@@ -134,7 +134,7 @@ struct MFIXCheckFullPair
 /// Neighbor search with multi-grid for polydisperse flows
 ///
 struct MFIXCheckPolyPair
-{   
+{
     int typeInd;
     int num_bin_types;
     amrex::Real* neighborhood;

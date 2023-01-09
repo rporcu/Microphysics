@@ -1113,7 +1113,7 @@ MfixRW::WriteStaticPlotFileEBGeometry (const std::string & plotfilename) const
     Print() << "  Writing static quantities " << plotfilename << std::endl;
 
     // Static unchanging EB geometry variables
-    Vector<std::string> static_names = 
+    Vector<std::string> static_names =
       {"volfrac",
        "impf",
        "centroid_x", "centroid_y", "centroid_z",

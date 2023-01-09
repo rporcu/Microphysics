@@ -355,7 +355,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto& ptile = plev[index];
             auto& aos   = ptile.GetArrayOfStructs();
             ParticleType* pstruct = aos().dataPtr();
-            
+
             const auto ntp = aos.size();
             const int  nrp = GetParticles(lev)[index].numRealParticles();
 
@@ -826,7 +826,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                         HostDevice::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
                         HostDevice::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
                         HostDevice::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
-                    
+
                         if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
                             p_intarray[SoAintData::state][i] = 1;
                     }
@@ -1800,7 +1800,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   }
 
   // find the indices of the overload and underload fluid boxes
-  Real avg_np     = static_cast<Real>(m_total_numparticle) 
+  Real avg_np     = static_cast<Real>(m_total_numparticle)
                   / ParallelDescriptor::NProcs();
   int  o_toler_np = static_cast<int>(avg_np * overload_toler);
   int  u_toler_np = static_cast<int>(avg_np * underload_toler);
@@ -1817,7 +1817,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
   for (auto i=0; i<pcount_rank.size(); ++i)
     if (pcount_rank[i] < u_toler_np)  underload_ranks.push_back(i);
   // debug
-  Print() << "avg np: "              << avg_np 
+  Print() << "avg np: "              << avg_np
           << " overload tolerance "  << overload_toler
           << " underload tolerance " << underload_toler << "\n";
 
@@ -1882,7 +1882,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
           break;
 
       // chop the most overload box
-      int chop_pos = fbl_vec[o_boxid].length(greedy_dir) 
+      int chop_pos = fbl_vec[o_boxid].length(greedy_dir)
                    - chop_nbin * binsize[greedy_dir]
                    + fbl_vec[o_boxid].smallEnd(greedy_dir);
       fbl_vec.push_back(fbl_vec[o_boxid].chop(greedy_dir, chop_pos));
@@ -1927,7 +1927,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
       int chop_np = min(o_pair.second - avg_np, avg_np - u_pair.second);
 
       // Append a placeholder for the cutoff, shape will be set later
-      fbl_vec.push_back(Box(IntVect{std::numeric_limits<int>::min()}, 
+      fbl_vec.push_back(Box(IntVect{std::numeric_limits<int>::min()},
                             IntVect{std::numeric_limits<int>::max()}));
       new_ppmap.push_back(u_pair.first);
       m_pboxid_to_fboxid.push_back(o_boxid);
@@ -1952,7 +1952,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     for (auto& kv: id_cutoff) {
       // get # particles in current overload fluid box
       const IArrayBox&         np_fab = np_mf_f[kv.first];
-      Array4<int const> const& np_arr = np_fab.const_array(); 
+      Array4<int const> const& np_arr = np_fab.const_array();
       const int*               np_ptr = np_arr.dataPtr();
 
       Box&    fbox0  = fbl_vec0[kv.first];
@@ -1984,7 +1984,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
           int dir0 = (chop_dir + 1) % AMREX_SPACEDIM;
           int dir1 = (chop_dir + 2) % AMREX_SPACEDIM;
 
-          int chop_lo  = remain.smallEnd(chop_dir) + greedy_min_grid_size; 
+          int chop_lo  = remain.smallEnd(chop_dir) + greedy_min_grid_size;
           int chop_hi  = remain.bigEnd  (chop_dir);
           int chop_pos = chop_hi;
 
@@ -2005,7 +2005,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
             }
 
             int np_diff = std::abs(np_target - np_tmp - np_slice);
-            if (np_diff > np_diff_prev && chop_hi - chop_pos + 1 >= greedy_min_grid_size) { 
+            if (np_diff > np_diff_prev && chop_hi - chop_pos + 1 >= greedy_min_grid_size) {
               ++chop_pos;
               break;
             }
@@ -2106,7 +2106,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
     ParallelDescriptor::ReduceIntMax(lbound_buf.dataPtr(), 3*nbox);
 
     for (size_t i=0; i<3*nbox; ++i) {
-      if (  ubound_buf[i] == std::numeric_limits<int>::max() 
+      if (  ubound_buf[i] == std::numeric_limits<int>::max()
          || lbound_buf[i] == std::numeric_limits<int>::min()) {
         Print() << "Greedy 3D cannot balance the current workload, keep "
                 << "current particle box array and distribution map.\n";
@@ -2116,7 +2116,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
 
     // unpack the buffer
     for (size_t i=0; i<nbox; ++i) {
-      fbl_vec[i] = 
+      fbl_vec[i] =
         Box(IntVect{lbound_buf[3*i], lbound_buf[3*i+1], lbound_buf[3*i+2]},
             IntVect{ubound_buf[3*i], ubound_buf[3*i+1], ubound_buf[3*i+2]});
     }

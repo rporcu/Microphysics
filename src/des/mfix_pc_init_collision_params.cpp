@@ -173,7 +173,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
               ++ind;
           }
       }
-  
+
       // Overwrite ptype based upon bin sizes
       Gpu::DeviceVector<Real> pbin_d(m_dem.nptypes());
       Gpu::copy(Gpu::hostToDevice, m_dem.pbindata(), m_dem.pbindata() + m_dem.nptypes(), pbin_d.begin());
@@ -185,7 +185,7 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
               auto p_realarray = soa.realarray();
               auto p_intarray  = soa.intarray();
               const int nrp    = GetParticles(lev)[index].numRealParticles();
-              
+
               amrex::ParallelFor(nrp,
               [p_realarray,p_intarray,bin_d,lnptypes=m_dem.nptypes()]
               AMREX_GPU_DEVICE (int i) noexcept

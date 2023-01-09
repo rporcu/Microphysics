@@ -128,12 +128,12 @@ class MFIXDEM
     // Polydisperse neighbor search
     amrex::Gpu::DeviceVector<amrex::Real>& get_pneighborhood () { return m_pneighborhood; }
     amrex::Real* pneighdata () { return m_pneighborhood.data(); }
-    
+
     amrex::Vector<amrex::Real>& get_pbin () { return m_pbin; }
     amrex::Real* pbindata  () { return m_pbin.data();  }
-    
+
     int* prefratdata () { return m_prefrats.data(); }
-    
+
     bool pneig_flag () { return m_pneigh_flag; }
     int nptypes ()     { return m_nptypes; }
     int nppairs ()     { return ( (m_nptypes*(m_nptypes+1)) / 2 ); }

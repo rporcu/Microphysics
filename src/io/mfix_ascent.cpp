@@ -156,7 +156,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       int_comp_names.push_back("phase");
       int_comp_names.push_back("state");
       int_comp_names.push_back("ptype");
-      
+
       amrex::ParticleContainerToBlueprint(*pc,
                 real_comp_names, int_comp_names, node);
     }

@@ -93,7 +93,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       host_intarrays[SoAintData::phase][i]        = pphase;
       host_intarrays[SoAintData::state][i]        = pstate;
       host_intarrays[SoAintData::ptype][i]        = 0;
-      
+
       host_realarrays[SoArealData::volume][i]     = pvolume;
       host_realarrays[SoArealData::density][i]    = pdensity;
       host_realarrays[SoArealData::mass][i]       = pmass;
@@ -246,7 +246,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
             break; // only one solid phase per icv is allowed
           } // ep_s > 0
         } // loop over solids
-      } // if IC region was added 
+      } // if IC region was added
     } // ep_g < 1
   } // loop over ICs
 
