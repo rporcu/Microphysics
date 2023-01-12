@@ -1,6 +1,6 @@
 # Docker Image for running MfiX-Exa ctests
 
-FROM public.ecr.aws/lts/ubuntu:20.04
+FROM ubuntu:20.04
 
 LABEL maintainer="Justin Weber <justin.weber@netl.doe.gov>"
 
