@@ -92,7 +92,9 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       // Set other particle properties
       host_intarrays[SoAintData::phase][i]        = pphase;
       host_intarrays[SoAintData::state][i]        = pstate;
+#if MFIX_POLYDISPERSE
       host_intarrays[SoAintData::ptype][i]        = 0;
+#endif
 
       host_realarrays[SoArealData::volume][i]     = pvolume;
       host_realarrays[SoArealData::density][i]    = pdensity;

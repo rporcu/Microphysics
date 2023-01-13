@@ -82,7 +82,9 @@ mfix::RunCatalystAdaptor ( int nstep, Real time )
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
+#if MFIX_POLYDISPERSE
     int_comp_names.push_back("ptype");
+#endif
 
     MFIXParticleContainer* pc = getParticleContainer();
 

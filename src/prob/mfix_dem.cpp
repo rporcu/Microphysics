@@ -55,6 +55,9 @@ MFIXDEM::Initialize ()
   // Polydisperse neighbor search
   ppDEM.query("PolyNeighSearch" , m_pneigh_flag);
   if (m_pneigh_flag) {
+#if !(MFIX_POLYDISPERSE)
+      amrex::Abort("MFIX was not built with POLYDISPERSE support");
+#endif
       ppDEM.query("PolyNumTypes"    , m_nptypes);
       m_prefrats.resize(m_nptypes);
       ppDEM.queryarr("PolyRefRatios", m_prefrats);

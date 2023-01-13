@@ -269,9 +269,11 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
 
   }
 
+#if MFIX_POLYDISPERSE
   int input_value0 = 0;
   pp.query("plt_ptype", input_value0);
   write_int_comp_out[SoAintData::ptype] = input_value0;
+#endif
 
 }
 

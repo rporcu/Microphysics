@@ -2,26 +2,30 @@
  MFIx Job Information
 ===============================================================================
 number of MPI processes: 1
+number of threads:       1
 
 
 ===============================================================================
  Build Information
 ===============================================================================
-build date:    Jan  9 2023 15:32:52
-build machine: Linux n1634 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC 2017 x86_64
-build dir:     /nfs/home/2/jmusser/mfix/build-exa/src
-AMReX dir:     /nfs/home/2/jmusser/mfix/exa/subprojects/amrex
+build date:    Aug  5 2020 16:20:40
+build machine: Linux login02 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC 2017 x86_64
+build dir:     /.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/build/src
+AMReX dir:     /.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex
 
 COMP:          GNU
-COMP version:  9.3.0
+COMP version:  8.4.0
 
-C++ compiler:  /nfs/apps/Compilers/GNU/9.3.0/bin/c++
-C++ flags:     -I/nfs/home/2/jmusser/mfix/exa/src -I/nfs/home/2/jmusser/mfix/exa/src/io -I/nfs/home/2/jmusser/mfix/exa/src/convection -I/nfs/home/2/jmusser/mfix/exa/src/interpolation -I/nfs/home/2/jmusser/mfix/exa/src/deposition -I/nfs/home/2/jmusser/mfix/exa/src/des -I/nfs/home/2/jmusser/mfix/exa/src/pic -I/nfs/home/2/jmusser/mfix/exa/src/diffusion -I/nfs/home/2/jmusser/mfix/exa/src/leveldata -I/nfs/home/2/jmusser/mfix/exa/src/projection -I/nfs/home/2/jmusser/mfix/exa/src/setup -I/nfs/home/2/jmusser/mfix/exa/src/util -I/nfs/home/2/jmusser/mfix/exa/src/prob -I/nfs/home/2/jmusser/mfix/exa/src/eb -I/nfs/home/2/jmusser/mfix/exa/src/timestepping -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/Base -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/Base/Parser -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/Boundary -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/AmrCore -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/Amr -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/EB -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/LinearSolvers/MLMG -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/LinearSolvers/OpenBC -I/nfs/home/2/jmusser/mfix/exa/subprojects/amrex/Src/Particle -I/nfs/home/2/jmusser/mfix/build-exa/subprojects/amrex -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/Slopes -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/Utils -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/MOL -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/Godunov -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/BDS -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/Projections -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/EBMOL -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/EBGodunov -I/nfs/home/2/jmusser/mfix/exa/subprojects/AMReX-Hydro/Redistribution -O3 -DNDEBUG  -Werror=return-type
+C++ compiler:  /nfs/apps/MPI/openmpi/4.0.3/gnu/8.4.0/cuda/10.2/bin/mpic++
+C++ flags:     -DAMREX_GIT_VERSION="20.07-38-g276b9aec2da8" -DAMREX_USE_MPI -DBL_USE_MPI -DAMREX_USE_OMP -DBL_USE_OMP -DAMREX_SPACEDIM=3 -DBL_SPACEDIM=3 -DAMREX_Linux -DBL_Linux -DBL_FORT_USE_UNDERSCORE -DAMREX_USE_EB -DAMREX_PARTICLES -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/convection -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/interpolation -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/deposition -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/des -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/pic -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/diffusion -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/leveldata -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/projection -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/setup -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/util -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/mods -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/eb -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/timestepping -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/build/subprojects/amrex/mod_files -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Base -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Boundary -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/AmrCore -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Amr -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/EB -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/LinearSolvers/MLMG -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/LinearSolvers/Projections -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Particle -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Extern/amrdata -O3 -DNDEBUG  -fopenmp -Werror=return-type
+
+Fortran comp:  /nfs/apps/MPI/openmpi/4.0.3/gnu/8.4.0/cuda/10.2/bin/mpifort
+Fortran flags: -DAMREX_GIT_VERSION="20.07-38-g276b9aec2da8" -DAMREX_USE_MPI -DBL_USE_MPI -DAMREX_USE_OMP -DBL_USE_OMP -DAMREX_SPACEDIM=3 -DBL_SPACEDIM=3 -DAMREX_Linux -DBL_Linux -DBL_LANG_FORT -DAMREX_LANG_FORT -DBL_FORT_USE_UNDERSCORE -DAMREX_USE_EB -DAMREX_PARTICLES -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/convection -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/interpolation -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/deposition -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/des -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/pic -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/diffusion -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/leveldata -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/projection -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/setup -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/util -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/mods -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/eb -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/src/timestepping -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/build/subprojects/amrex/mod_files -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Base -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Boundary -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/AmrCore -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Amr -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/EB -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/LinearSolvers/MLMG -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/LinearSolvers/Projections -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Particle -I/.nfs/home/2/porcur/Workspace/mfix-exa/change_constraint/subprojects/amrex/Src/Extern/amrdata -O3 -DNDEBUG -O3
 
 Link flags:    
-Libraries:     Threads::Threads MPI::MPI_C MPI::MPI_CXX
-MFIX git hash: 23.01-12-gd119d3b37c38
-AMReX git hash: 23.01-8-g0c3fff43aa68
+Libraries:     mpi_usempif08 mpi_usempi_ignore_tkr mpi_mpifh mpi gfortran m gcc_s gcc quadmath pthread c /.nfs/misc/apps/Compilers/GNU/8.4.0/lib64/libgomp.so
+MFIX git hash: 20.06-305-gd345c146289b-dirty
+AMReX git hash: 20.07-38-g276b9aec2da8
 
 
 ===============================================================================

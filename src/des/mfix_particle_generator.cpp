@@ -303,7 +303,9 @@ void ParticlesGenerator::generate (int& particles_count,
 
       p_intarray[SoAintData::phase][p_tot] = phase;
       p_intarray[SoAintData::state][p_tot] = 1;
+#if MFIX_POLYDISPERSE
       p_intarray[SoAintData::ptype][p_tot] = 0;
+#endif
     }
   });
 

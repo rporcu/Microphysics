@@ -61,6 +61,7 @@ option( MFIX_OMP    "Enable OpenMP" NO )
 option( MFIX_MPI    "Enable MPI"   YES )
 
 option( MFIX_CATALYST "Enable Catalyst 2.0 support" NO )
+option( MFIX_POLYDISPERSE "Enable polydisperse support" NO )
 
 include(CMakeDependentOption)
 cmake_dependent_option( MFIX_MPI_THREAD_MULTIPLE
@@ -180,4 +181,8 @@ message("adding catalyst")
    find_package(catalyst 2.0 REQUIRED)
    target_link_libraries(mfixcore PUBLIC catalyst::catalyst)
    target_compile_definitions(mfixcore PUBLIC MFIX_CATALYST)
+endif()
+
+if(MFIX_POLYDISPERSE)
+   target_compile_definitions(mfixcore PUBLIC MFIX_POLYDISPERSE)
 endif()

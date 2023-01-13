@@ -317,7 +317,9 @@ MfixRW::Initialize ()
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
+#if MFIX_POLYDISPERSE
     int_comp_names.push_back("ptype");
+#endif
   }
 
   // Finalize initialization of solids plot regions

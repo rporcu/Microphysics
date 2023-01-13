@@ -194,7 +194,11 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
                   for (int n(0); n<lnptypes; ++n) {
                       Real diameter = 2.0 * p_realarray[SoArealData::radius][i];
                       if (diameter <= bin_d[n]) {
+#if MFIX_POLYDISPERSE
                           p_intarray[SoAintData::ptype][i] = n;
+#else
+                          amrex::Abort("MFIX not built with POLYDISPERSE support");
+#endif
                           break;
                       }
                   }

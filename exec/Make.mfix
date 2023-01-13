@@ -12,6 +12,10 @@ $(info Loading $(TOP)/tools/GNUMake/packages/Make.csgeb...)
 include        $(TOP)/tools/GNUMake/packages/Make.csgeb
 endif
 
+ifeq ($(USE_POLYDISPERSE),TRUE)
+CPPFLAGS += -DMFIX_POLYDISPERSE
+endif
+
 #These are the directories in mfix/src_cc
 Bdirs	:= src
 Bdirs	+= src/des

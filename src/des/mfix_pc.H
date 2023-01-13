@@ -80,7 +80,9 @@ struct SoAintData
   enum {
     phase = 0,
     state,
+#if MFIX_POLYDISPERSE
     ptype,
+#endif
     count
   };
 };

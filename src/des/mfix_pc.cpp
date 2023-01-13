@@ -106,7 +106,9 @@ void MFIXParticleContainer::define ()
 #endif
     setIntCommComp(2, true);  // phase
     setIntCommComp(3, true);  // state
+#if MFIX_POLYDISPERSE
     setIntCommComp(4, true);  // ptype
+#endif
 
     // Add solids nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
@@ -326,8 +328,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               }
 #endif
               if( m_dem.pneig_flag() ) {
+#if MFIX_POLYDISPERSE
                   buildNeighborList(MFIXCheckPolyPair(SoAintData::ptype,m_dem.nptypes(),m_dem.pneighdata()),
                                     SoAintData::ptype, m_dem.prefratdata(), m_dem.nptypes(), false);
+#else
+                  amrex::Abort("MFIX not built with POLYDISPERSE support");
+#endif
               } else {
                   buildNeighborList(MFIXCheckPair(m_dem.neighborhood()), false);
               }
