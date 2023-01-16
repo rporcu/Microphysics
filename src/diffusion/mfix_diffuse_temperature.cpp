@@ -47,14 +47,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   const int fluid_is_a_mixture = fluid.isMixture();
   const int nspecies_g = fluid.nspecies();
 
-  amrex::Vector<amrex::MultiFab*> T_g_old(finest_level+1, nullptr);
-
-  for (int lev(0); lev <= finest_level; ++lev) {
-    T_g_old[lev] = new amrex::MultiFab(grids[lev], dmap[lev], 1, 1, MFInfo(),
-                                       *ebfactory[lev]);
-    MultiFab::Copy(*T_g_old[lev], *T_g[lev], 0, 0, 1, 1);
-  }
-
   amrex::Vector<amrex::MultiFab*> A(finest_level+1, nullptr);
 
   for (int lev(0); lev <= finest_level; ++lev) {
@@ -103,6 +95,44 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   const amrex::Real update_rel_tol = reltol*norm0(T_g);
   //const amrex::Real residue_rel_tol = reltol*norm0(residue);
 
+  Vector<MultiFab*> k_g_on_eb(finest_level+1, nullptr);
+
+  if (m_embedded_boundaries.fix_temperature()) {
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
+
+      // The following is a WIP in AMReX
+      //temperature_matrix->setPhiOnCentroid();
+
+      k_g_on_eb[lev] = new MultiFab(T_g_on_eb[lev]->boxArray(),
+                                    T_g_on_eb[lev]->DistributionMap(),
+                                    T_g_on_eb[lev]->nComp(), T_g_on_eb[lev]->nGrow(),
+                                    MFInfo(), T_g_on_eb[lev]->Factory());
+
+      k_g_on_eb[lev]->setVal(0);
+
+#ifdef _OPENMP
+#pragma omp parallel if (Gpu::notInLaunchRegion())
+#endif
+      for (MFIter mfi(*T_g_on_eb[lev]); mfi.isValid(); ++mfi)
+      {
+        Box const& bx = mfi.growntilebox(IntVect(1,1,1));
+
+        if (bx.ok()) {
+          Array4<Real      > const& k_g_on_eb_array = k_g_on_eb[lev]->array(mfi);
+          Array4<Real const> const& T_g_on_eb_array = T_g_on_eb[lev]->const_array(mfi);
+
+          amrex::ParallelFor(bx, [k_g_on_eb_array,T_g_on_eb_array,fluid_parms]
+            AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+          {
+            if (T_g_on_eb_array(i,j,k) > 0)
+              k_g_on_eb_array(i,j,k) = fluid_parms.calc_k_g(T_g_on_eb_array(i,j,k));
+          });
+        }
+      }
+    }
+  }
+
   do {
 
     // Set alpha and beta
@@ -132,13 +162,13 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           Array4<Real      > const& A_array       = A[lev]->array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array    = ro_g[lev]->const_array(mfi);
-          Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
+          Array4<Real const> const& T_g_array     = T_g[lev]->const_array(mfi);
           Array4<Real const> const& X_gk_array    = fluid_is_a_mixture ?
             X_gk[lev]->const_array(mfi) : dummy_arr;
 
           auto const& flags_arr = flags.const_array();
 
-          amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ro_g_array,fluid_parms,
+          amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms,
               A_array,X_gk_array,dt,fluid_is_a_mixture,nspecies_g,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -146,19 +176,19 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
             if (!cell_is_covered) {
 
-              const Real T_g_old_loc = T_g_old_array(i,j,k);
+              const Real T_g_loc = T_g_array(i,j,k);
               
               Real cp_g_loc(0);
 
               if (!fluid_is_a_mixture) {
 
-                cp_g_loc = fluid_parms.calc_cp_g<run_on>(T_g_old_loc);
+                cp_g_loc = fluid_parms.calc_cp_g<run_on>(T_g_loc);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
                   
-                  const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(T_g_old_loc, n);
+                  const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(T_g_loc, n);
 
                   cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
                 }
@@ -187,14 +217,14 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         {
           Array4<Real      > const& ep_k_g_array  = ep_k_g.array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
-          Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
+          Array4<Real const> const& T_g_array     = T_g[lev]->const_array(mfi);
 
-          amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ep_k_g_array,fluid_parms]
+          amrex::ParallelFor(bx, [ep_g_array,T_g_array,ep_k_g_array,fluid_parms]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
-            const Real T_g_old_loc = T_g_old_array(i,j,k);
+            const Real T_g_loc = T_g_array(i,j,k);
 
-            ep_k_g_array(i,j,k) = ep_g_array(i,j,k)*fluid_parms.calc_k_g(T_g_old_loc);
+            ep_k_g_array(i,j,k) = ep_g_array(i,j,k)*fluid_parms.calc_k_g(T_g_loc);
           });
         }
       }
@@ -203,36 +233,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
                                               0, 1, geom[lev], bcs_dummy);
 
       if (m_embedded_boundaries.fix_temperature()) {
-        // The following is a WIP in AMReX
-        //temperature_matrix->setPhiOnCentroid();
-
-        MultiFab k_g_on_eb(T_g_on_eb[lev]->boxArray(), T_g_on_eb[lev]->DistributionMap(),
-                           T_g_on_eb[lev]->nComp(), T_g_on_eb[lev]->nGrow(), MFInfo(),
-                           T_g_on_eb[lev]->Factory());
-
-        k_g_on_eb.setVal(0);
-
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        for (MFIter mfi(*T_g_on_eb[lev]); mfi.isValid(); ++mfi)
-        {
-          Box const& bx = mfi.growntilebox(IntVect(1,1,1));
-
-          if (bx.ok()) {
-            Array4<Real      > const& k_g_on_eb_array = k_g_on_eb.array(mfi);
-            Array4<Real const> const& T_g_on_eb_array = T_g_on_eb[lev]->const_array(mfi);
-
-            amrex::ParallelFor(bx, [k_g_on_eb_array,T_g_on_eb_array,fluid_parms]
-              AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-            {
-              if (T_g_on_eb_array(i,j,k) > 0)
-                k_g_on_eb_array(i,j,k) = fluid_parms.calc_k_g(T_g_on_eb_array(i,j,k));
-            });
-          }
-        }
-
-        temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], k_g_on_eb);
+        temperature_matrix->setEBDirichlet(lev, *T_g_on_eb[lev], *k_g_on_eb[lev]);
       }
 
       temperature_matrix->setACoeffs(lev, *A[lev]);
@@ -259,21 +260,21 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
           Array4<Real      > const& rhs_array     = rhs[lev]->array(mfi);
           Array4<Real const> const& ep_g_array    = ep_g[lev]->const_array(mfi);
           Array4<Real const> const& ro_g_array    = ro_g[lev]->const_array(mfi);
-          Array4<Real const> const& T_g_old_array = T_g_old[lev]->const_array(mfi);
+          Array4<Real const> const& T_g_array     = T_g[lev]->const_array(mfi);
           Array4<Real const> const& h_g_array     = h_g[lev]->const_array(mfi);
           Array4<Real const> const& X_gk_array    = fluid_is_a_mixture ?
             X_gk[lev]->const_array(mfi) : dummy_arr;
 
           auto const& flags_arr = flags.const_array();
 
-          amrex::ParallelFor(bx, [ep_g_array,T_g_old_array,ro_g_array,fluid_parms,
+          amrex::ParallelFor(bx, [ep_g_array,T_g_array,ro_g_array,fluid_parms,
               X_gk_array,h_g_array,dt,fluid_is_a_mixture,nspecies_g,rhs_array,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
             if (!cell_is_covered) {
-              const Real T_g_old_loc = T_g_old_array(i,j,k);
+              const Real T_g_loc = T_g_array(i,j,k);
               const Real ep_ro_g_loc = ep_g_array(i,j,k)*ro_g_array(i,j,k);
               
               Real cp_g_loc(0);
@@ -281,22 +282,22 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
               if (!fluid_is_a_mixture) {
 
-                cp_g_loc = fluid_parms.calc_cp_g<run_on>(T_g_old_loc);
-                h_g_loc = fluid_parms.calc_h_g<run_on>(T_g_old_loc);
+                cp_g_loc = fluid_parms.calc_cp_g<run_on>(T_g_loc);
+                h_g_loc = fluid_parms.calc_h_g<run_on>(T_g_loc);
 
               } else {
 
                 for (int n(0); n < nspecies_g; ++n) {
                   
-                  const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(T_g_old_loc, n);
-                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(T_g_old_loc, n);
+                  const Real cp_gk = fluid_parms.calc_cp_gk<run_on>(T_g_loc, n);
+                  const Real h_gk = fluid_parms.calc_h_gk<run_on>(T_g_loc, n);
 
                   cp_g_loc += X_gk_array(i,j,k,n)*cp_gk;
                   h_g_loc += X_gk_array(i,j,k,n)*h_gk;
                 }
               }
 
-              rhs_array(i,j,k) = ep_ro_g_loc*cp_g_loc*T_g_old_loc -
+              rhs_array(i,j,k) = ep_ro_g_loc*cp_g_loc*T_g_loc -
                                  ep_ro_g_loc*h_g_loc +
                                  ep_ro_g_loc*h_g_array(i,j,k);
             }
@@ -304,7 +305,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
         }
       }
 
-      MultiFab::Copy(*phi[lev], *T_g_old[lev], 0, 0, 1, 1);
+      MultiFab::Copy(*phi[lev], *T_g[lev], 0, 0, 1, 1);
       temperature_matrix->setLevelBC(lev, GetVecOfConstPtrs(phi)[lev]);
     } // end of loop on lev
 
@@ -319,11 +320,9 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
     // TODO
     // Here compute update = phi - T_g
-    // so we don't need to allocate T_g_old
 
     for(int lev = 0; lev <= finest_level; lev++) {
       phi[lev]->FillBoundary(geom[lev].periodicity());
-      MultiFab::Copy(*T_g[lev], *phi[lev], 0, 0, 1, 1);
     }
 
     for(int lev = 0; lev <= finest_level; lev++) {
@@ -340,20 +339,20 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
         if (bx.ok())
         {
-          Array4<Real      > const& update_array  = update[lev]->array(mfi);
-          Array4<Real      > const& T_g_old_array = T_g_old[lev]->array(mfi);
-          Array4<Real const> const& T_g_array     = T_g[lev]->const_array(mfi);
+          Array4<Real      > const& update_array = update[lev]->array(mfi);
+          Array4<Real      > const& T_g_array    = T_g[lev]->array(mfi);
+          Array4<Real const> const& phi_array    = phi[lev]->const_array(mfi);
 
           auto const& flags_arr = flags.const_array();
 
-          amrex::ParallelFor(bx, [update_array,T_g_old_array,T_g_array,flags_arr]
+          amrex::ParallelFor(bx, [update_array,T_g_array,phi_array,flags_arr]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
 
             if (!cell_is_covered) {
-              update_array(i,j,k) = T_g_array(i,j,k) - T_g_old_array(i,j,k);
-              T_g_old_array(i,j,k) = T_g_array(i,j,k);
+              update_array(i,j,k) = phi_array(i,j,k) - T_g_array(i,j,k);
+              T_g_array(i,j,k) = phi_array(i,j,k);
             }
           });
         }
@@ -371,10 +370,15 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
            (norm0(update) > update_rel_tol));
 
   for (int lev(0); lev <= finest_level; ++lev) {
-    delete T_g_old[lev];
     delete A[lev];
     delete update[lev];
 //    delete residue[lev];
+  }
+
+  if (m_embedded_boundaries.fix_temperature()) {
+    for (int lev = 0; lev <= finest_level; ++lev) {
+      delete k_g_on_eb[lev];
+    }
   }
 
   // **************************************************************************
@@ -392,7 +396,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       const EBFArrayBox& epg_fab = static_cast<EBFArrayBox const&>((*ep_g[lev])[mfi]);
       const EBCellFlagFab& flags = epg_fab.getEBCellFlagFab();
 
-      Box const& bx = mfi.tilebox();
+      Box const& bx = mfi.growntilebox(IntVect(1,1,1));
 
       Array4<Real const> dummy_arr;
 
