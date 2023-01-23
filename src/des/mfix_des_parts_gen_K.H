@@ -40,8 +40,28 @@ class Hex_ClosePack
     AMREX_GPU_HOST_DEVICE
     Hex_ClosePack ()
       : m_is_initialized(0)
+      , m_plo(0.)
+      , m_dx(0.)
       , m_np(0)
+      , m_p1r1_np(0)
+      , m_p2r1_np(0)
+      , m_p1_np(0)
+      , m_p1p2_np(0)
+      , m_r1r2_np(0)
+      , m_klo(0)
+      , m_p1_jlo(0)
+      , m_p1r1_ilo(0)
+      , m_p1r2_ilo(0)
+      , m_p2_jlo(0)
+      , m_p2r1_ilo(0)
+      , m_p2r2_ilo(0)
+      , m_ic_dlo(0.)
+      , m_eff_rad(0)
+      , m_rbx_lo(0.)
+      , m_rbx_hi(0.)
+      , m_verbose(0)
     {}
+
 
     AMREX_GPU_HOST_DEVICE
     Hex_ClosePack (const amrex::RealVect& plo,
@@ -50,6 +70,22 @@ class Hex_ClosePack
       , m_plo(plo)
       , m_dx(dx)
       , m_np(0)
+      , m_p1r1_np(0)
+      , m_p2r1_np(0)
+      , m_p1_np(0)
+      , m_p1p2_np(0)
+      , m_r1r2_np(0)
+      , m_klo(0)
+      , m_p1_jlo(0)
+      , m_p1r1_ilo(0)
+      , m_p1r2_ilo(0)
+      , m_p2_jlo(0)
+      , m_p2r1_ilo(0)
+      , m_p2r2_ilo(0)
+      , m_ic_dlo(0.)
+      , m_eff_rad(0)
+      , m_rbx_lo(0.)
+      , m_rbx_hi(0.)
       , m_verbose(0)
     {}
 
@@ -70,7 +106,8 @@ class Hex_ClosePack
                 const amrex::IntVect& hi,
                 const amrex::RealBox& region,
                 const amrex::Real mean,
-                const amrex::Real eps)
+                const amrex::Real eps,
+                const amrex::Real eps_tolerance = 1.e-15)
     {
 #if 0
       amrex::ParmParse pp("ic");
@@ -85,9 +122,23 @@ class Hex_ClosePack
       // physical volume of IC region
       const amrex::Real vol = region.volume();
 
+      m_np = 0;
+
+      if (!m_is_initialized) {
+        return;
+      }
+
+      if (!(eps > eps_tolerance && eps < 1.)) {
+        return;
+      }
+
       // Total particle count is based on mean particle size
       const long seed =
         static_cast<long>(vol * eps / ((M_PI/6.0)*mean*mean*mean));
+
+      if (seed == 0) {
+        return;
+      }
 
       m_ic_dlo = amrex::RealVect(region.lo(0), region.lo(1), region.lo(2));
 

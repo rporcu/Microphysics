@@ -98,9 +98,7 @@ class MFIXRestarter
                              const Long* gen_number_ptr,
                              const Long* gen_indexes_ptr,
                              const int id,
-                             const int cpu,
-                             const MFIXSolidsPhase& solids,
-                             const int idx_species) const;
+                             const int cpu) const;
 
     void init_particles (const mfix* mfix_coarse,
                          MFIXParticleContainer* pc_fine) const;
@@ -111,6 +109,7 @@ class MFIXRestarter
 
     int m_refinement_ratio;
 
+    amrex::Real m_eps_tolerance;
     amrex::Real m_eps_overflow;
 
     int nlev;

@@ -185,8 +185,10 @@ int main (int argc, char* argv[])
     mfix_restarter.generate_particles(&mfix_coarse, &mfix_fine);
 
     // Free coarse fluid data
-    for (int lev(0); lev < mfix_coarse.nlev; ++lev)
-      mfix_coarse.m_leveldata[lev].reset();
+    for (int lev(0); lev < mfix_coarse.nlev; ++lev) {
+      auto obj =  mfix_coarse.m_leveldata[lev].release();
+      delete obj;
+    }
 
     int restart_flag(1);
 
