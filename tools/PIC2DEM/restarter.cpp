@@ -38,6 +38,8 @@ MFIXRestarter::MFIXRestarter (const int nlev_in)
   : m_refinement_ratio(1)
   , m_eps_tolerance(1.e-15)
   , m_eps_overflow(1.)
+  , m_inputs_pdiameter(0.)
+  , m_inputs_pdensity(0.)
   , nlev(nlev_in)
   , avgdPIC_coarse(nlev_in, nullptr)
   , avgdPIC_fine(nlev_in, nullptr)
@@ -308,8 +310,6 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
 
     Transfer txfr_idxs(solids);
     const int idx_eps = txfr_idxs.idx_eps;
-    const int idx_radius = txfr_idxs.idx_radius;
-    const int idx_density = txfr_idxs.idx_density;
     const int idx_vel = txfr_idxs.idx_vel;
     const int idx_temp = txfr_idxs.idx_temp;
     const int idx_species = txfr_idxs.idx_species;
@@ -331,15 +331,13 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
       const int solve_species  = solids.solve_species();
 
       amrex::ParallelFor(box, [avgdPIC_arr,solve_enthalpy,solve_species,idx_eps,
-          idx_vel,idx_species,idx_temp,nspecies_s,idx_radius,idx_density]
+          idx_vel,idx_species,idx_temp,nspecies_s]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real eps = avgdPIC_arr(i,j,k,idx_eps);
 
         if (eps < 1.e-15) {
 
-          avgdPIC_arr(i,j,k,idx_radius) = 0.;
-          avgdPIC_arr(i,j,k,idx_density) = 0.;
           avgdPIC_arr(i,j,k,idx_vel+0) = 0.;
           avgdPIC_arr(i,j,k,idx_vel+1) = 0.;
           avgdPIC_arr(i,j,k,idx_vel+2) = 0.;
@@ -353,8 +351,6 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
 
         } else {
 
-          avgdPIC_arr(i,j,k,idx_radius) /= eps;
-          avgdPIC_arr(i,j,k,idx_density) /= eps;
           avgdPIC_arr(i,j,k,idx_vel+0) /= eps;
           avgdPIC_arr(i,j,k,idx_vel+1) /= eps;
           avgdPIC_arr(i,j,k,idx_vel+2) /= eps;
@@ -447,8 +443,6 @@ MFIXPICDeposition::deposit (F WeightFunc,
 
   Transfer txfr_idxs(solids);
   const int idx_eps     = txfr_idxs.idx_eps;
-  const int idx_radius  = txfr_idxs.idx_radius;
-  const int idx_density = txfr_idxs.idx_density;
   const int idx_vel     = txfr_idxs.idx_vel;
   const int idx_temp    = txfr_idxs.idx_temp;
   const int idx_species = txfr_idxs.idx_species;
@@ -487,8 +481,8 @@ MFIXPICDeposition::deposit (F WeightFunc,
 
       if ((*flags)[pti].getType(box) != FabType::covered) {
 
-        const auto& eps_arr = eps_fab.array();
-        const auto& txfr_arr = txfr_fab.array();
+        auto eps_arr = eps_fab.array();
+        auto txfr_arr = txfr_fab.array();
         const auto& flags_arr = flags->const_array(pti);
         const auto& vfrac_arr = volfrac->const_array(pti);
 
@@ -526,7 +520,7 @@ MFIXPICDeposition::deposit (F WeightFunc,
         amrex::ParallelFor(nrp, [pstruct,p_realarray,plo,dx,dxi,ptile_data,dV,idx_eps,
             deposition_scale_factor,WeightFunc,flags_arr,txfr_arr,solve_enthalpy,
             idx_vel,idx_temp,idx_species,nspecies_s,idx_X_sn,solve_species,vfrac_arr,
-            idx_radius,idx_density,eps_arr]
+            eps_arr]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -574,9 +568,6 @@ MFIXPICDeposition::deposit (F WeightFunc,
                 HostDevice::Atomic::Add(&eps_arr(i+ii,j+jj,k+kk), statwt*weight);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_eps), statwt*weight);
 
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_radius), statwt*weight*pradius);
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_density), statwt*weight*pdensity);
-
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+0), statwt*weight*pvel_x);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+1), statwt*weight*pvel_y);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+2), statwt*weight*pvel_z);
@@ -622,6 +613,43 @@ MFIXPICDeposition::deposit (F WeightFunc,
 
 
 void
+MFIXRestarter::get_particles_radius_and_density (const mfix* mfix_ptr)
+{
+  int pdiameter_assigned(0);
+  int pdensity_assigned(0);
+
+  const auto& ics = mfix_ptr->m_initial_conditions.ic();
+
+  for (int icv(0); icv < ics.size(); ++icv) {
+
+    const auto& solids_ics = ics[icv].solids;
+
+    for (int lcs(0); lcs < solids_ics.size(); ++lcs) {
+
+      const auto& solids = solids_ics[lcs];
+
+      if (solids.volfrac > 1.e-15) {
+
+        if (!pdiameter_assigned) {
+          m_inputs_pdiameter = solids.diameter.get_mean();
+          pdiameter_assigned = 1;
+        } else {
+          AMREX_ALWAYS_ASSERT(std::abs(m_inputs_pdiameter - solids.diameter.get_mean()) < 1.e-15);
+        }
+
+        if (!pdensity_assigned) {
+          m_inputs_pdensity = solids.density.get_mean();
+          pdensity_assigned = 1;
+        } else {
+          AMREX_ALWAYS_ASSERT(std::abs(m_inputs_pdensity - solids.density.get_mean()) < 1.e-15);
+        }
+      }
+    }
+  }
+}
+
+
+void
 MFIXRestarter::generate_particles (const mfix* mfix_coarse,
                                    mfix* mfix_fine) const
 {
@@ -658,10 +686,8 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
   Transfer txfr_idxs(solids);
   const int idx_eps = txfr_idxs.idx_eps;
-  const int idx_radius = txfr_idxs.idx_radius;
 
   MultiFab* eps_ptr;
-  MultiFab* pradius_ptr;
 
   MultiFab* epg_ptr;
 
@@ -681,10 +707,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
     eps_ptr->setVal(0.);
     MultiFab::Copy(*eps_ptr, *avgdPIC_fine[lev], idx_eps, 0, 1, 0);
 
-    pradius_ptr = new MultiFab(f_ba, f_dmap, 1, 0, MFInfo());
-    pradius_ptr->setVal(0.);
-    MultiFab::Copy(*pradius_ptr, *avgdPIC_fine[lev], idx_radius, 0, 1, 0);
-
     epg_ptr = mfix_fine->m_leveldata[lev]->ep_g;
 
   } else {
@@ -692,10 +714,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
     eps_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
     eps_ptr->setVal(0.);
     eps_ptr->ParallelCopy(*avgdPIC_fine[lev], idx_eps, 0, 1, 0, 0);
-
-    pradius_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
-    pradius_ptr->setVal(0.);
-    pradius_ptr->ParallelCopy(*avgdPIC_fine[lev], idx_radius, 0, 1, 0, 0);
 
     epg_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
     epg_ptr->setVal(0.);
@@ -705,9 +723,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
   eps_ptr->FillBoundary(geom_fine.periodicity());
   EB_set_covered(*eps_ptr, mfix::covered_val);
-
-  pradius_ptr->FillBoundary(geom_fine.periodicity());
-  EB_set_covered(*pradius_ptr, mfix::covered_val);
 
   epg_ptr->FillBoundary(geom_fine.periodicity());
   EB_set_covered(*epg_ptr, mfix::covered_val);
@@ -720,6 +735,8 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
   const auto& flags = mfix_fine->ParticleEBFactory(lev).getMultiEBCellFlagFab();
 
   using PairIndex = MFIXParticleContainer::PairIndex;
+
+  const Real pdiameter = m_inputs_pdiameter;
 
   for (MFIter mfi = pc_fine->MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
@@ -753,7 +770,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
     Long* gen_indexes_ptr = gen_indexes.dataPtr();
 
     Array4<const Real> const& eps_arr = eps_ptr->const_array(mfi);
-    Array4<const Real> const& pradius_arr = pradius_ptr->const_array(mfi);
 
     Array4<const Real> const& epg_arr = epg_ptr->const_array(mfi);
 
@@ -764,8 +780,7 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
     // compute nb of particles for each cell
     amrex::ParallelFor(bx, [plo,dx,bx_smallEnd,bx_size,eps_arr,flags_arr,
-        hcp_vector_ptr,pradius_arr,epg_arr,gen_number_ptr,eps_overflow,
-        eps_tolerance]
+        hcp_vector_ptr,epg_arr,gen_number_ptr,eps_overflow,eps_tolerance,pdiameter]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       amrex::Real eps = (1.-epg_arr(i,j,k))*eps_overflow;
@@ -779,12 +794,10 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
       RealBox region(dlo.begin(), dhi.begin());
 
-      Real diameter = 2*pradius_arr(i,j,k);
-
       if (flags_arr(i,j,k).isCovered())
         eps = 1.e+40;
 
-      hcp_vector_ptr[n].setup({i,j,k}, {i,j,k}, region, diameter, eps, eps_tolerance);
+      hcp_vector_ptr[n].setup({i,j,k}, {i,j,k}, region, pdiameter, eps, eps_tolerance);
 
       if (eps > eps_tolerance && eps < 1.) {
 
@@ -839,7 +852,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
   }
 
   delete eps_ptr;
-  delete pradius_ptr;
 
   if (!OnSameGrids)
     delete epg_ptr;
@@ -946,6 +958,9 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
   const int nspecies_s = solids.nspecies();
   const int idx_species = pc_fine->m_runtimeRealData.X_sn;
 
+  const Real pdiameter = m_inputs_pdiameter;
+  const Real pdensity = m_inputs_pdensity;
+
   Transfer fld_transfer(solids);
 
   for (int lev = 0; lev < nlev; lev++) {
@@ -1000,7 +1015,8 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
       const auto& avgdPIC_array = avgdPIC_ptr->const_array(pti);
 
       ParallelFor(np, [pstruct,p_realarray,ptile_data,solve_species,plo,
-          avgdPIC_array,nspecies_s,idx_species,fld_transfer,dxi,solve_enthalpy]
+          avgdPIC_array,nspecies_s,idx_species,fld_transfer,dxi,solve_enthalpy,
+          pdiameter,pdensity]
         AMREX_GPU_DEVICE (int p) noexcept
       {
         MFIXParticleContainer::ParticleType& part = pstruct[p];
@@ -1015,8 +1031,8 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
 
         int i = ijk[0]; int j = ijk[1]; int k = ijk[2];
 
-        p_realarray[SoArealData::radius][p] = avgdPIC_array(i,j,k,fld_transfer.idx_radius);
-        p_realarray[SoArealData::density][p] = avgdPIC_array(i,j,k,fld_transfer.idx_density);
+        p_realarray[SoArealData::radius][p] = .5*pdiameter;
+        p_realarray[SoArealData::density][p] = pdensity;
 
         const Real radius = p_realarray[SoArealData::radius][p];
         const Real volume = (4./3.)*M_PI*(radius*radius*radius);

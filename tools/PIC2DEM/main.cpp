@@ -182,6 +182,7 @@ int main (int argc, char* argv[])
     // add here the copy of fluid's coarse to fine variables in here
     mfix_restarter.txfr_fluid_data(&mfix_coarse, &mfix_fine);
 
+    mfix_restarter.get_particles_radius_and_density(&mfix_fine);
     mfix_restarter.generate_particles(&mfix_coarse, &mfix_fine);
 
     // Free coarse fluid data
