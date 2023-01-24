@@ -139,7 +139,7 @@ mfix::mfix ()
 
       if (pp_amr.contains("restart"))
         m_run_type = RunType::Restart;
-      else if (pp_amr.contains("convert"))
+      else if (ParmParse("pic2dem").contains("convert"))
         m_run_type = RunType::PIC2DEM;
       else
         m_run_type = RunType::Standard;

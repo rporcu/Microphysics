@@ -195,7 +195,7 @@ void MfixRW::readParameters ()
      pp.query("par_ascii_per_approx", par_ascii_per_approx);
 
      if (!pp.query("restart", restart_file))
-       pp.query("convert", restart_file);
+       ParmParse("pic2dem").query("convert", restart_file);
 
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);

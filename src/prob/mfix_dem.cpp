@@ -248,7 +248,7 @@ MFIXDEM::Initialize ()
       std::string restart_file {""};
 
       if (!ppAMR.query("restart", restart_file))
-        ppAMR.query("convert", restart_file);
+        ParmParse("pic2dem").query("convert", restart_file);
 
       const int is_restarting = !(restart_file.empty());
 
