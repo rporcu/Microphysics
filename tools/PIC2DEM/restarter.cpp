@@ -664,8 +664,7 @@ MFIXRestarter::generate_particles (const mfix* mfix_coarse,
 
     amrex::Print() << "Auto generating particles ..." << std::endl;
 
-//    init_particles(mfix_coarse, pc_fine);
-    init_particles(mfix_fine, pc_fine);
+    init_particles(mfix_coarse, pc_fine);
 
     pc_fine->Redistribute();
 
@@ -677,27 +676,25 @@ MFIXRestarter::generate_particles (const mfix* mfix_coarse,
 
 
 void
-MFIXRestarter::init_particles (const mfix* mfix_fine,
+MFIXRestarter::init_particles (const mfix* mfix_coarse,
                                MFIXParticleContainer* pc_fine) const
 {
   int lev = 0;
 
-  const auto& solids = mfix_fine->solids;
+  const auto& solids = mfix_coarse->solids;
 
   Transfer txfr_idxs(solids);
   const int idx_eps = txfr_idxs.idx_eps;
 
   MultiFab* eps_ptr;
 
-  MultiFab* epg_ptr;
+  const auto& geom_coarse = mfix_coarse->Geom(lev);
 
-  const auto& geom_fine = mfix_fine->Geom(lev);
+  const auto& f_ba = mfix_coarse->boxArray(lev);
+  const auto& f_dmap = mfix_coarse->DistributionMap(lev);
 
-  const auto& f_ba = mfix_fine->boxArray(lev);
-  const auto& f_dmap = mfix_fine->DistributionMap(lev);
-
-  const BoxArray& p_ba = mfix_fine->ParticleEBFactory(lev).boxArray();
-  const DistributionMapping& p_dmap = mfix_fine->ParticleEBFactory(lev).DistributionMap();
+  const BoxArray& p_ba = mfix_coarse->ParticleEBFactory(lev).boxArray();
+  const DistributionMapping& p_dmap = mfix_coarse->ParticleEBFactory(lev).DistributionMap();
 
   bool OnSameGrids = ((f_dmap == p_dmap) && (f_ba.CellEqual(p_ba)));
 
@@ -705,46 +702,37 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
     eps_ptr = new MultiFab(f_ba, f_dmap, 1, 0, MFInfo());
     eps_ptr->setVal(0.);
-    MultiFab::Copy(*eps_ptr, *avgdPIC_fine[lev], idx_eps, 0, 1, 0);
-
-    epg_ptr = mfix_fine->m_leveldata[lev]->ep_g;
+    MultiFab::Copy(*eps_ptr, *avgdPIC_coarse[lev], idx_eps, 0, 1, 0);
 
   } else {
 
     eps_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
     eps_ptr->setVal(0.);
-    eps_ptr->ParallelCopy(*avgdPIC_fine[lev], idx_eps, 0, 1, 0, 0);
-
-    epg_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
-    epg_ptr->setVal(0.);
-    epg_ptr->ParallelCopy(*(mfix_fine->m_leveldata[lev]->ep_g), 0, 0, 1, 0, 0);
+    eps_ptr->ParallelCopy(*avgdPIC_coarse[lev], idx_eps, 0, 1, 0, 0);
 
   }
 
-  eps_ptr->FillBoundary(geom_fine.periodicity());
+  eps_ptr->FillBoundary(geom_coarse.periodicity());
   EB_set_covered(*eps_ptr, mfix::covered_val);
 
-  epg_ptr->FillBoundary(geom_fine.periodicity());
-  EB_set_covered(*epg_ptr, mfix::covered_val);
-
-  const RealVect dx(geom_fine.CellSize());
-  const RealVect plo(geom_fine.ProbLo());
+  const RealVect dx(geom_coarse.CellSize());
+  const RealVect plo(geom_coarse.ProbLo());
 
   Long total_np = 0;
 
-  const auto& flags = mfix_fine->ParticleEBFactory(lev).getMultiEBCellFlagFab();
-
-  using PairIndex = MFIXParticleContainer::PairIndex;
+  const auto& flags = mfix_coarse->ParticleEBFactory(lev).getMultiEBCellFlagFab();
 
   const Real pdiameter = m_inputs_pdiameter;
 
   for (MFIter mfi = pc_fine->MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
 
-    const Box& bx = mfi.tilebox();
-
     // Now that we know pcount, go ahead and create a particle container for this
     // grid and add the particles to it
     auto& particles = pc_fine->DefineAndReturnParticleTile(lev, mfi);
+
+    // Get the fine box and coarsen it
+    Box bx = mfi.tilebox();
+    bx.coarsen(m_refinement_ratio);
 
     Gpu::DeviceVector<Hex_ClosePack> hcp_vector;
     Gpu::DeviceVector<Long> gen_indexes;
@@ -755,8 +743,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
     const int bx_numPts = bx.numPts();
 
     AMREX_ALWAYS_ASSERT(bx_numPts == (bx_size[0]*bx_size[1]*bx_size[2]));
-
-    PairIndex index(mfi.index(), mfi.LocalTileIndex());
 
     hcp_vector.clear();
     gen_indexes.clear();
@@ -771,8 +757,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
     Array4<const Real> const& eps_arr = eps_ptr->const_array(mfi);
 
-    Array4<const Real> const& epg_arr = epg_ptr->const_array(mfi);
-
     Array4<EBCellFlag const> const& flags_arr = flags.const_array(mfi);
 
     const amrex::Real eps_tolerance = m_eps_tolerance;
@@ -780,10 +764,10 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
 
     // compute nb of particles for each cell
     amrex::ParallelFor(bx, [plo,dx,bx_smallEnd,bx_size,eps_arr,flags_arr,
-        hcp_vector_ptr,epg_arr,gen_number_ptr,eps_overflow,eps_tolerance,pdiameter]
+        hcp_vector_ptr,gen_number_ptr,eps_overflow,eps_tolerance,pdiameter]
       AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      amrex::Real eps = (1.-epg_arr(i,j,k))*eps_overflow;
+      amrex::Real eps = eps_arr(i,j,k)*eps_overflow;
 
       amrex::RealVect dlo(plo[0] + dx[0]*i, plo[1] + dx[1]*j, plo[2] + dx[2]*k);
       amrex::RealVect dhi(plo[0] + dx[0]*(i+1), plo[1] + dx[1]*(j+1), plo[2] + dx[2]*(k+1));
@@ -852,9 +836,6 @@ MFIXRestarter::init_particles (const mfix* mfix_fine,
   }
 
   delete eps_ptr;
-
-  if (!OnSameGrids)
-    delete epg_ptr;
 
   ParallelDescriptor::ReduceLongSum(total_np);
 
