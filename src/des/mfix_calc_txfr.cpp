@@ -34,6 +34,33 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
 
   mfix_deposit_particles(m_interphase_txfr_deposition, txfr_out, time);
 
+  // Note: txfr quantities related to heterogeneous chemical reactions are in
+  // terms of mass instead of density. In deposition we divide by volfrac*dx^3,
+  // so we still need to divide by ep_g
+  {
+    InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
+
+    const int idx_Xg_txfr   = txfr_idxs.chem_ro_gk;
+    const int idx_velg_txfr = txfr_idxs.chem_vel;
+    const int idx_hg_txfr   = txfr_idxs.chem_h;
+
+    for (int lev(0); lev < nlev; ++lev) {
+
+      // mass txfr
+      for (int n_g(0); n_g < fluid.nspecies(); ++n_g) {
+        MultiFab::Divide(*txfr_out[lev], *ep_g_in[lev], 0, idx_Xg_txfr+n_g, 1, txfr_out[lev]->nGrow());
+      }
+
+      // vel txfr
+      for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+        MultiFab::Divide(*txfr_out[lev], *ep_g_in[lev], 0, idx_velg_txfr+dir, 1, txfr_out[lev]->nGrow());
+      }
+
+      // h txfr
+      MultiFab::Divide(*txfr_out[lev], *ep_g_in[lev], 0, idx_hg_txfr, 1, txfr_out[lev]->nGrow());
+    }
+  }
+
   if (m_verbose > 1) {
     Real stoptime = ParallelDescriptor::second() - strttime;
 
@@ -154,7 +181,6 @@ mfix::mfix_deposit_particles (MFIXDepositionOp* deposition_op,
   }
 
   {
-
     // The deposition occurred on level 0, thus the next few operations
     // only need to be carried out on level 0.
     int lev(0);
@@ -718,103 +744,21 @@ mfix::mfix_calc_txfr_particle (Real time,
 
 
             if (solve_reactions) {
-              // Extract species mass fractions
-              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
-              X_sn.fill(0.);
 
-              for (int n_s(0); n_s < nspecies_s; n_s++) {
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn + n_s][p_id];
-              }
+              // Note: species mass txfr due to heterogeneous chemical reactions
+              // is already stored in the corresponding particles runtime data
 
-              // Extract interpolated thermodynamic pressure
-              const Real ep_g = interp_loc[7];
-              const Real ro_g = interp_loc[8];
-              Real* X_gk      = &interp_loc[9];
-              const Real p_g  = interp_loc[9+nspecies_g];
-
-              const Real ep_s = 1. - ep_g;
-              const Real ro_p = p_realarray[SoArealData::density][p_id];
-
-              GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
-              R_q_heterogeneous.fill(0.);
-
-              const RealVect pvel(p_realarray[SoArealData::velx][p_id],
-                                  p_realarray[SoArealData::vely][p_id],
-                                  p_realarray[SoArealData::velz][p_id]);
-
-              const Real T_p = p_realarray[SoArealData::temperature][p_id];
-              const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
-
-              HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
-                                                              reactions_parms,
-                                                              solids_parms, X_sn.data(),
-                                                              ro_p, ep_s, T_p,
-                                                              pvel, fluid_parms,
-                                                              X_gk, ro_g, ep_g, T_g,
-                                                              vel_g, DP, p_g);
-
-              //***************************************************************
-              // Loop over solids species for computing solids txfr rates
-              //***************************************************************
-              Real G_m_p_heterogeneous(0.);
-
-              for (int n_s(0); n_s < nspecies_s; n_s++) {
-                Real G_m_sn_heterogeneous(0.);
-
-                // Loop over reactions to compute each contribution
-                for (int q(0); q < nreactions; q++) {
-
-                  const Real stoich_coeff = solids_parms.get_stoich_coeff<run_on>(n_s, q);
-
-                  // Compute solids species n_s transfer rate for reaction q
-                  const Real MW_sn = solids_parms.get_MW_sn<run_on>(n_s);
-                  Real G_m_sn_q = stoich_coeff * MW_sn * R_q_heterogeneous[q];
-
-                  G_m_sn_heterogeneous += G_m_sn_q;
-                }
-
-                ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = G_m_sn_heterogeneous;
-
-                G_m_p_heterogeneous += G_m_sn_heterogeneous;
-              }
-
-              //***************************************************************
-              // Loop over fluid species for computing fluid txfr rates
-              //***************************************************************
-              Real G_H_g_heterogeneous(0.);
-
-              for (int n_g(0); n_g < nspecies_g; n_g++) {
-
-                // Loop over reactions to compute each contribution
-                for (int q(0); q < nreactions; q++) {
-
-                  Real stoich_coeff = fluid_parms.get_stoich_coeff<run_on>(n_g, q);
-
-                  // Compute fluid species n_g transfer rate for reaction q
-                  const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n_g);
-                  Real G_m_gk_q = stoich_coeff * MW_gk * R_q_heterogeneous[q];
-
-                  // Contribution to the particle
-                  const Real h_gk_T_p = fluid_parms.calc_h_gk<run_on>(T_p, n_g);
-                  const Real h_gk_T_g = fluid_parms.calc_h_gk<run_on>(T_g, n_g);
-
-                  const Real G_H_pk_q = h_gk_T_g * amrex::min(0., G_m_gk_q);
-                  const Real G_H_gk_q = h_gk_T_p * amrex::max(0., G_m_gk_q);
-
-                  G_H_g_heterogeneous += (G_H_pk_q + G_H_gk_q);
-                }
-              }
-
-              //***************************************************************
-              //
-              //***************************************************************
+              // Note: ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] currently
+              // contains the particle mass txfr rate
+              const Real G_m_p_heterogeneous = ptile_data.m_runtime_rdata[idx_vel_txfr][p_id];
               const Real coeff = amrex::max(0., G_m_p_heterogeneous);
+
               ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = coeff*vel_g[0];
               ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = coeff*vel_g[1];
               ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff*vel_g[2];
 
-              // Write the result in the enthalpy transfer space
-              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -G_H_g_heterogeneous;
+              // Note: enthalpy txfr due to heterogeneous chemical reactions is
+              // already stored in ptile_data.m_runtime_rdata[idx_h_txfr][p_id]
             }
 
           }); // particle loop

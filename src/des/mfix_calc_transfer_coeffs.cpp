@@ -571,13 +571,37 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                                               X_gk, ro_g, ep_g, T_g,
                                                               vel_g, DP, p_g);
 
-              // Total transfer rates
-              Real G_m_g_heterogeneous(0.);
-              Real G_H_g_heterogeneous(0.);
+              //***************************************************************
+              // Loop over solids species for computing solids txfr rates
+              //***************************************************************
+              Real G_m_p_heterogeneous(0.);
+
+              for (int n_s(0); n_s < nspecies_s; n_s++) {
+                Real G_m_sn_heterogeneous(0.);
+
+                // Loop over reactions to compute each contribution
+                for (int q(0); q < nreactions; q++) {
+
+                  const Real stoich_coeff = solids_parms.get_stoich_coeff<run_on>(n_s, q);
+
+                  // Compute solids species n_s transfer rate for reaction q
+                  const Real MW_sn = solids_parms.get_MW_sn<run_on>(n_s);
+                  Real G_m_sn_q = stoich_coeff * MW_sn * R_q_heterogeneous[q];
+
+                  G_m_sn_heterogeneous += G_m_sn_q;
+                }
+
+                ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = G_m_sn_heterogeneous;
+
+                G_m_p_heterogeneous += G_m_sn_heterogeneous;
+              }
 
               //***************************************************************
               // Loop over fluid species for computing fluid txfr rates
               //***************************************************************
+              Real G_m_g_heterogeneous(0.);
+              Real G_H_g_heterogeneous(0.);
+
               for (int n_g(0); n_g < nspecies_g; n_g++) {
                 Real G_m_gk_heterogeneous(0.);
 
@@ -607,14 +631,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                 G_m_g_heterogeneous += G_m_gk_heterogeneous;
               }
 
+              AMREX_ASSERT(std::abs(G_m_p_heterogeneous + G_m_g_heterogeneous) < 1.e-15);
+
               //***************************************************************
               //
               //***************************************************************
-              const Real coeff = amrex::max(0., G_m_g_heterogeneous);
-              ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] = coeff;
+              ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] = G_m_p_heterogeneous;
 
               // Write the result in the enthalpy transfer space
-              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = G_H_g_heterogeneous;
+              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -G_H_g_heterogeneous;
             }
 
           }); // pid

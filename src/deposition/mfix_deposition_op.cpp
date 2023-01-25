@@ -211,9 +211,9 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
   BL_PROFILE("MFIXParticleContainer::InterphaseTxfrDeposition()");
 
   // We always use the coarse dx
-  const auto      plo = geom.ProbLoArray();
-  const auto      dx  = geom.CellSizeArray();
-  const auto      dxi = geom.InvCellSizeArray();
+  const auto plo = geom.ProbLoArray();
+  const auto dx  = geom.CellSizeArray();
+  const auto dxi = geom.InvCellSizeArray();
 
   const auto reg_cell_vol = dx[0]*dx[1]*dx[2];
 
@@ -375,13 +375,22 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
           Real h_chem_txfr(0);
 
           if (solve_reactions) {
-            Real psigma = statwt * ptile_data.m_runtime_rdata[idx_vel_txfr][ip] / reg_cell_vol;
+            // Note: ptile_data.m_runtime_rdata[idx_vel_txfr][ip] currently
+            // contains G_m_p_heterogeneous
+            const Real G_m_g_heterogeneous = -1*ptile_data.m_runtime_rdata[idx_vel_txfr][ip];
+            const Real coeff = amrex::max(0., G_m_g_heterogeneous);
+
+            Real psigma = statwt * coeff / reg_cell_vol;
 
             velx_chem_txfr = p_realarray[SoArealData::velx][ip] * psigma;
             vely_chem_txfr = p_realarray[SoArealData::vely][ip] * psigma;
             velz_chem_txfr = p_realarray[SoArealData::velz][ip] * psigma;
 
-            h_chem_txfr = statwt * ptile_data.m_runtime_rdata[idx_h_txfr][ip] / reg_cell_vol;
+            // Note: ptile_data.m_runtime_rdata[idx_h_txfr][ip] currently
+            // contains the opposite of G_H_g_heterogeneous
+            const Real G_H_g_heterogeneous = -1*ptile_data.m_runtime_rdata[idx_h_txfr][ip];
+
+            h_chem_txfr = statwt * G_H_g_heterogeneous / reg_cell_vol;
           }
 
           // Deposition
