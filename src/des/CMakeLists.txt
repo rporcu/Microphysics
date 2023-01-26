@@ -20,5 +20,6 @@ target_sources( mfixcore
    mfix_calc_transfer_coeffs.cpp
    mfix_calc_volume_fraction.cpp
    mfix_calc_txfr.cpp
+   mfix_pc_mass_balance.cpp
    )
 

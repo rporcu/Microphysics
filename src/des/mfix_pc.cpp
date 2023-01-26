@@ -165,7 +165,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                              const int ls_refinement,
                                              MultiFab* cost,
                                              std::string& knapsack_weight_type,
-                                             int& nsubsteps)
+                                             int& nsubsteps,
+                                             int compute_mass_balance)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
@@ -319,7 +320,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         if (solids.update_momentum()) {
           if (n % 25 == 0) {
               clearNeighbors();
-              Redistribute(0, 0, 0, 1);
+              Redistribute(0, 0, 0, 0); // Do not remove negatives
               fillNeighbors();
 #ifdef AMREX_USE_GPU
               if (reduceGhostParticles) {
@@ -1201,6 +1202,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
         n += 1;
 
     } // end of loop over substeps
+
+
+    if ( compute_mass_balance ) {
+      ComputeMassProduction(lev, dt);
+      ComputeMassOutflow(lev);
+    }
 
     // Redistribute particles at the end of all substeps (note that the particle
     // neighbour list needs to be reset when redistributing).

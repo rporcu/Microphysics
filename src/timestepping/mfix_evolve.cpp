@@ -22,13 +22,6 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       mfix_calc_volume_fraction(sum_vol);
       //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
 
-      if ((amrex::Math::abs(sum_vol_orig - sum_vol) > 1.e-12 * sum_vol_orig) &&
-          (m_run_type != RunType::PIC2DEM)) {
-
-        amrex::Print() << "Original volume fraction " << sum_vol_orig << std::endl;
-        amrex::Print() << "New      volume fraction " << sum_vol      << std::endl;
-      }
-
       coupling_timing = ParallelDescriptor::second() - start_coupling;
     }
 
@@ -99,7 +92,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                     particle_ebfactory[ilev].get(), ls_data,
                                     levelset_refinement,
                                     particle_cost[ilev],
-                                    knapsack_weight_type, nsubsteps);
+                                    knapsack_weight_type, nsubsteps,
+                                    mfixRW->report_mass_balance);
           }
           else
           {
@@ -115,7 +109,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
                                       ebfactory[lev].get(),
                                       particle_ebfactory[lev].get(), ls_data, 1,
                                       particle_cost[lev],
-                                      knapsack_weight_type, nsubsteps);
+                                      knapsack_weight_type, nsubsteps,
+                                      mfixRW->report_mass_balance);
               }
           }
       }

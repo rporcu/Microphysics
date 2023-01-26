@@ -187,9 +187,9 @@ class MFIXParticleContainer final
     { return pti.numParticles(); }
 
     void setTotalNumParticles (const long num_particles)
-    {
-      this->m_total_numparticle = num_particles;
-    }
+    { this->m_total_numparticle = num_particles; }
+
+    long getTotalNumParticles () { return m_total_numparticle; }
 
     MFIXParticleContainer (amrex::AmrCore* amr_core,
                            MFIXInitialConditions& initial_conditions,
@@ -254,7 +254,8 @@ class MFIXParticleContainer final
                           const int ls_refinement,
                           amrex::MultiFab * cost,
                           std::string & knapsack_weight_type,
-                          int & nsubsteps);
+                          int & nsubsteps,
+                          int compute_mass_balance);
 
     void mfix_pc_inflow (int lev,
                          amrex::Real dt,
@@ -279,6 +280,12 @@ class MFIXParticleContainer final
     const MFIXPIC& get_pic () const {return m_pic; }
 
     const MFIXReactions& get_reactions () const { return reactions; }
+
+    amrex::Real get_mass_prod ( int const idx ) { return m_p_mass_prod[idx]; }
+    amrex::Real get_mass_accum ( int const idx ) { return m_p_mass_accum[idx]; }
+    amrex::Real get_mass_inflow ( int const idx ) { return m_p_mass_inflow[idx]; }
+    amrex::Real get_mass_outflow ( int const idx ) { return m_p_mass_outflow[idx]; }
+
 
     //
     // Postprocessing utilities to compute spatially-averaged particle velocities
@@ -403,6 +410,14 @@ class MFIXParticleContainer final
 
     void setParticleFluidGridMap(const amrex::Vector<int>& boxmap);
 
+    void ComputeMassAccum ( int const a_offset );
+
+    void ComputeMassProduction (int const a_lev, amrex::Real const a_dt);
+
+    void ComputeMassOutflow (int const a_lev);
+
+    void ResetMassBalance (int const a_n);
+
   private:
     int nlev;
 
@@ -429,6 +444,12 @@ class MFIXParticleContainer final
     static int domain_bc[6];
 
     long m_total_numparticle = 0;
+
+    amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> m_p_mass_accum   = {0.};
+    amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_p_mass_inflow  = {0.};
+    amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_p_mass_outflow = {0.};
+    amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_p_mass_prod    = {0.};
+
     amrex::Vector<int> m_pboxid_to_fboxid;
 
     static void ReadStaticParameters ();
