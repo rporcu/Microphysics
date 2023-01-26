@@ -154,8 +154,6 @@ mfix::mfix_deposit_particles (MFIXDepositionOp* deposition_op,
 
   for (int lev = 0; lev < nlev; lev++) {
 
-    tmp_eps[lev] = (MFHelpers::createFrom(*txfr_ptr[lev], 0.0)).release();
-
     // Use level 0 to define the EB factory. If we are not on level 0
     // then create a copy of the coarse factory to use.
 
@@ -261,7 +259,7 @@ mfix::mfix_deposit_particles (MFIXDepositionOp* deposition_op,
   }
 
   for (int lev = 0; lev < nlev; lev++) {
-    
+
     if (txfr_ptr[lev] != txfr_out[lev])
       delete txfr_ptr[lev];
 
