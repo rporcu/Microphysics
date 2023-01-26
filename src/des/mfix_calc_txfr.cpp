@@ -37,7 +37,8 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
   // Note: txfr quantities related to heterogeneous chemical reactions are in
   // terms of mass instead of density. In deposition we divide by volfrac*dx^3,
   // so we still need to divide by ep_g
-  {
+  if (reactions.solve()) {
+
     InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
     const int idx_Xg_txfr   = txfr_idxs.chem_ro_gk;
