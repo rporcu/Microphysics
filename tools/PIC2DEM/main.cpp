@@ -81,15 +81,12 @@ int main (int argc, char* argv[])
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix_coarse;
-    mfix mfix_fine;
     MFIXRestarter mfix_restarter(mfix_coarse.nlev);
 
     auto& rw_coarse = *(mfix_coarse.mfixRW);
-    auto& rw_fine = *(mfix_fine.mfixRW);
 
     // Initialize internals from ParamParse database
     mfix_coarse.InitParams();
-    mfix_fine.InitParams();
 
     // Initialize memory for data-array internals
     mfix_coarse.ResizeArrays();
@@ -119,8 +116,6 @@ int main (int argc, char* argv[])
     // mfix::levelset_restart is set to false again (so that the level-sets
     // are recomputed for the replicated system).
     mfix_coarse.levelset_restart = true;
-    mfix_fine.levelset_restart = false;
-    rw_fine.restart_file.clear();
 
     // NOTE: during replication 1) this also re-builds ebfactories and
     // level-set 2) this can change the grids
@@ -135,6 +130,18 @@ int main (int argc, char* argv[])
 //    }
 
     mfix_restarter.allocate_coarse_arrays(&mfix_coarse);
+
+    mfix_restarter.change_inputs_table();
+
+    mfix mfix_fine;
+
+    auto& rw_fine = *(mfix_fine.mfixRW);
+
+    mfix_fine.InitParams();
+
+    mfix_fine.levelset_restart = false;
+
+    rw_fine.restart_file.clear();
 
     // Set fine mesh objects
     mfix_restarter.set_fine_objects(&mfix_fine, &mfix_coarse);

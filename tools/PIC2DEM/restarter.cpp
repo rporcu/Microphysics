@@ -99,6 +99,111 @@ MFIXRestarter::allocate_fine_arrays (const mfix* mfix_fine)
 
 
 void
+MFIXRestarter::change_inputs_table () const
+{
+  amrex::single_task( [] () 
+  {
+    ParmParse pp_eb2("eb2");
+
+    // Small volfrac
+    Real refined_small_volfrac(0.);
+    int contains_refined_small_volfrac = pp_eb2.query("refined_small_volfrac", refined_small_volfrac);
+
+    if (contains_refined_small_volfrac) {
+      if (pp_eb2.contains("small_volfrac"))
+        pp_eb2.remove("small_volfrac");
+
+      pp_eb2.add("small_volfrac", refined_small_volfrac);
+    }
+
+    ParmParse pp_amr("amr");
+
+    // Geom chk file
+    std::string refined_geom_chk_file("");
+    int contains_refined_geom_chk_file = pp_amr.query("refined_geom_chk_file", refined_geom_chk_file);
+
+    if (contains_refined_geom_chk_file) {
+      if (pp_amr.contains("geom_chk_file")) {
+        pp_amr.remove("geom_chk_file");
+      }
+
+//      AMREX_ALWAYS_ASSERT(!pp_amr.contains("geom_chk_file"));
+
+      pp_amr.add("geom_chk_file", refined_geom_chk_file);
+      AMREX_ALWAYS_ASSERT(pp_amr.contains("geom_chk_file"));
+    }
+
+    // Geom chk refined file
+    std::string refined_geom_chk_refined_file("");
+    int contains_refined_geom_chk_refined_file =
+      pp_amr.query("refined_geom_chk_refined_file", refined_geom_chk_refined_file);
+
+    if (contains_refined_geom_chk_refined_file) {
+      if (pp_amr.contains("geom_chk_refined_file"))
+        pp_amr.remove("geom_chk_refined_file");
+
+      pp_amr.add("geom_chk_refined_file", refined_geom_chk_refined_file);
+    }
+
+    // Geom chk write
+    bool refined_geom_chk_write(0);
+    int contains_refined_geom_chk_write = pp_amr.query("refined_geom_chk_write", refined_geom_chk_write);
+
+    if (contains_refined_geom_chk_write) {
+      if (pp_amr.contains("geom_chk_write"))
+        pp_amr.remove("geom_chk_write");
+
+      pp_amr.add("geom_chk_write", refined_geom_chk_write);
+    }
+
+    // Geom chk read
+    bool refined_geom_chk_read(0);
+    int contains_refined_geom_chk_read = pp_amr.query("refined_geom_chk_read", refined_geom_chk_read);
+
+    if (contains_refined_geom_chk_read) {
+      if (pp_amr.contains("geom_chk_read"))
+        pp_amr.remove("geom_chk_read");
+
+      pp_amr.add("geom_chk_read", refined_geom_chk_read);
+    }
+
+    // Geometry filename
+    if (!refined_geom_chk_read) {
+
+      ParmParse pp_pic2dem("pic2dem");
+      ParmParse pp_mfix("mfix");
+
+      std::string geometry_filename("");
+      int contains_pic2dem_geometry_filename = pp_pic2dem.query("geometry_filename", geometry_filename);
+      int contains_mfix_geometry_filename = pp_mfix.contains("geometry_filename");
+
+      if (contains_pic2dem_geometry_filename && !contains_mfix_geometry_filename) {
+
+        pp_pic2dem.remove("geometry_filename");
+
+        pp_mfix.add("geometry_filename", geometry_filename);
+
+        if (pp_amr.contains("geom_chk_read"))
+          pp_amr.remove("geom_chk_read");
+      }
+    } else {
+
+      ParmParse pp_mfix("mfix");
+
+      int contains_mfix_geometry_filename = pp_mfix.contains("geometry_filename");
+
+      if (contains_mfix_geometry_filename) {
+
+        pp_mfix.remove("geometry_filename");
+      }
+    }
+  });
+
+  ParallelDescriptor::Barrier();
+}
+
+
+void
 MFIXRestarter::set_fine_objects (mfix* mfix_fine,
                                  const mfix* mfix_coarse) const
 {

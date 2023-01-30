@@ -74,6 +74,8 @@ class MFIXRestarter
 
     void allocate_fine_arrays (const mfix* mfix_fine);
 
+    void change_inputs_table () const;
+
     void set_fine_objects (mfix* mfix_fine,
                            const mfix* mfix_coarse) const;
 
