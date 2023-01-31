@@ -137,7 +137,6 @@ build:hip:
     - cmake -S .
             -B build
             -DAMReX_AMD_ARCH=gfx908
-            -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_MODULE_PATH=$PWD/build
             -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=HIP
