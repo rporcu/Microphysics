@@ -278,6 +278,9 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
     // First block: compute mean to force back to zero.
     for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
 
+      // Avoid destroying fluctuations with nested regions
+      if (!m_initial_conditions.has_granular_temperature(icv)) continue;
+
       const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
                               m_initial_conditions.ic(icv).region->hi());
 
