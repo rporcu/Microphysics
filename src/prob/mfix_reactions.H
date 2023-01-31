@@ -152,21 +152,25 @@ class MFIXChemicalReaction {
     amrex::Vector<int> m_products_phases;
 
     // Get reactants data
-    std::string parse_reactants(const std::string& formula);
+    std::string parse_reactants (const std::string& formula);
 
     // Get reactants data
-    std::string parse_products(const std::string& formula);
+    std::string parse_products (const std::string& formula);
 
     // Extract stoichiometric data
-    void parse_stoichiometric_data(const std::string& s,
-                                   amrex::Vector<std::string>& compounds,
-                                   amrex::Vector<int>& compounds_id,
-                                   amrex::Vector<amrex::Real>& coefficients,
-                                   amrex::Vector<int>& phases,
-                                   const MFIXSpecies& species);
+    void parse_stoichiometric_data (const std::string& s,
+                                    amrex::Vector<std::string>& compounds,
+                                    amrex::Vector<int>& compounds_id,
+                                    amrex::Vector<amrex::Real>& coefficients,
+                                    amrex::Vector<int>& phases,
+                                    const MFIXSpecies& species);
+
+    void check_mass_balance (const MFIXSpecies& species);
 
     // Parse reaction
-    void parse_reaction(const MFIXSpecies& species);
+    void parse_reaction (const MFIXSpecies& species);
+
+    amrex::Real m_mass_balance_tolerance;
 };
 
 #endif

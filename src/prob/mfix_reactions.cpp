@@ -120,7 +120,7 @@ void MFIXReactions::Initialize (const MFIXSpecies& species)
 
 // REACTION_T Class Constructor
 MFIXChemicalReaction::MFIXChemicalReaction (const std::string& reaction,
-                                    const MFIXSpecies& species)
+                                            const MFIXSpecies& species)
   : m_type(ReactionType::Invalid)
   , m_formula(reaction)
   , m_phases(0)
@@ -132,8 +132,12 @@ MFIXChemicalReaction::MFIXChemicalReaction (const std::string& reaction,
   , m_products_IDs(0)
   , m_products_coeffs(0)
   , m_products_phases(0)
+  , m_mass_balance_tolerance(1.e-12)
 {
   parse_reaction(species);
+
+  ParmParse pp_reactions("chemistry");
+  pp_reactions.query("mass_balance_tolerance", m_mass_balance_tolerance);
 }
 
 
@@ -195,11 +199,11 @@ MFIXChemicalReaction::parse_products(const std::string& formula)
 
 void
 MFIXChemicalReaction::parse_stoichiometric_data(const std::string& s,
-                                            amrex::Vector<std::string>& compounds,
-                                            amrex::Vector<int>& compounds_id,
-                                            amrex::Vector<amrex::Real>& coefficients,
-                                            amrex::Vector<int>& phases,
-                                            const MFIXSpecies& species)
+                                                amrex::Vector<std::string>& compounds,
+                                                amrex::Vector<int>& compounds_id,
+                                                amrex::Vector<amrex::Real>& coefficients,
+                                                amrex::Vector<int>& phases,
+                                                const MFIXSpecies& species)
 {
   std::string formula(chemistry_aux::trim(s));
   std::replace(formula.begin(), formula.end(), '+', ' ');
@@ -272,6 +276,44 @@ MFIXChemicalReaction::parse_stoichiometric_data(const std::string& s,
 
 
 void
+MFIXChemicalReaction::check_mass_balance (const MFIXSpecies& species)
+{
+  AMREX_ASSERT(m_reactants_IDs.size() == m_reactants_coeffs.size());
+  AMREX_ASSERT(m_products_IDs.size() == m_products_coeffs.size());
+
+  Real reactants_mass(0.);
+  Real products_mass(0.);
+
+  for (int n(0); n < m_reactants_IDs.size(); ++n) {
+    int ID = m_reactants_IDs[n];
+    reactants_mass += (-1.*m_reactants_coeffs[n])*species.MW_k(ID);
+  }
+
+  for (int n(0); n < m_products_IDs.size(); ++n) {
+    int ID = m_products_IDs[n];
+    products_mass += m_products_coeffs[n]*species.MW_k(ID);
+  }
+
+  Real diff_mass = std::abs(reactants_mass-products_mass);
+
+  if(diff_mass > m_mass_balance_tolerance) {
+
+    Print() << "\nUnbalanced reaction: " << m_formula << "\n\n";
+
+    Print() << "Reactants mass balance: " << reactants_mass << "\n"
+            << "Products mass balance: " << products_mass << "\n\n";
+
+    Print() << "Mass balance difference: " << diff_mass << "\n"
+            << "Mass balance tolerance: " << m_mass_balance_tolerance << "\n\n";
+
+    amrex::Abort("Fix inputs either in species mass fractions or chemical reactions");
+  }
+
+  return;
+}
+
+
+void
 MFIXChemicalReaction::parse_reaction(const MFIXSpecies& species)
 {
   // remove spaces from reaction reaction_formula string
@@ -305,6 +347,8 @@ MFIXChemicalReaction::parse_reaction(const MFIXSpecies& species)
   // Get the production part stoichiometric coefficients, elements and phases
   parse_stoichiometric_data(production_part, m_products, m_products_IDs,
                             m_products_coeffs, m_products_phases, species);
+
+  check_mass_balance(species);
 
   // Fill m_phases with all the phases found in reactants
   for (const int phase: m_reactants_phases)
