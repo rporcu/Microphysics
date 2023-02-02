@@ -134,10 +134,10 @@ MFIXChemicalReaction::MFIXChemicalReaction (const std::string& reaction,
   , m_products_phases(0)
   , m_mass_balance_tolerance(1.e-12)
 {
-  parse_reaction(species);
-
   ParmParse pp_reactions("chemistry");
   pp_reactions.query("mass_balance_tolerance", m_mass_balance_tolerance);
+
+  parse_reaction(species);
 }
 
 
