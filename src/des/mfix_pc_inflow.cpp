@@ -91,7 +91,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
       const Box ic_bx = calc_ic_box(Geom(lev), m_boundary_conditions.bc(bcv).region);
 
-      for (MFIter mfi = MakeMFIter(lev,true); mfi.isValid(); ++mfi) {
+      for (MFIter mfi = MakeMFIter(lev); mfi.isValid(); ++mfi) {
 
         const Box& tile_box = mfi.tilebox();
         FabType t = flags[mfi].getType(tile_box);
