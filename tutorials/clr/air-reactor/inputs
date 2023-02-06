@@ -98,7 +98,6 @@ amr.check_file     ="chk"
 #----------------------------------------------------------------------
 
 mfix.fixed_dt = 0
-mfix.cfl      = 0.5
 
 mfix.dt_min   = 1.e-7
 mfix.dt_max   = 5.e-5
@@ -109,12 +108,6 @@ mfix.drag_type = "WenYu"
 
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
-
-
-#_______________________________________________________________________
-# Species settings
-#
-species.solve = 0
 
 
 #_______________________________________________________________________
@@ -166,11 +159,11 @@ regions.full-domain.hi = 3.7584  0.2784  0.2784
 regions.riser.lo       = 0.0000  0.0000  0.0000
 regions.riser.hi       = 0.1000  0.2784  0.2784
 
-#regions.inflow.lo      = 0.0000  0.0000  0.0000
-#regions.inflow.hi      = 0.0000  0.2784  0.2784
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.2784  0.2784
 
-#regions.outflow.lo     = 0.0000  0.0000  0.2784
-#regions.outflow.hi     = 3.7584  0.2784  0.2784
+regions.outflow.lo     = 0.0000  0.0000  0.2784
+regions.outflow.hi     = 3.7584  0.2784  0.2784
 
 
 #_______________________________________________________________________
@@ -196,6 +189,7 @@ ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = hdpe
+ic.riser.packing = oneper
 
 ic.riser.hdpe.volfrac  = 0.0010
 ic.riser.hdpe.velocity = 0.0  0.0  0.0
@@ -207,56 +201,29 @@ ic.riser.hdpe.density =  constant
 ic.riser.hdpe.density.constant = 860.0
 
 
-#_______________________________________________________________________
-# Boundary Conditions
-#
-# --- suggested change:
-#
-#bc.regions = inflow  outflow
-
-
 #! EB geometry
 #!-----------------------------------------------------------//
 
-mfix.geometry = "air-reactor"
+mfix.geometry_filename = "air-reactor.csg"
 
-# --- suggested change:
+#_______________________________________________________________________
+# Boundary Conditions
 #
-#bc.geometry = "air-reactor"
-
-airreactor.radius0 = 0.0762    # reactor radius
-airreactor.height0 = 0.7720    # reactor height
-
-airreactor.c2c     = 0.0762    # cylinder-to-cylinder height
-
-airreactor.radius1 = 0.03175   # riser radius
-airreactor.height1 = 3.7084    # total riser height
-
-airreactor.outlet  = 3.6322    # outlet height from bottom
-
+bc.regions = inflow  outflow
 
 #! Mass inflow
 #!-----------------------------------------------------------//
+bc.inflow = mi
 
-xlo.type = mi
-xlo.velocity = 0.01
-
-# --- suggested change:
-#
-#bc.inflow.type = mi
-#
-#bc.inflow.fluid.volfrac =  1.0
-#bc.inflow.fluid.density =  1.0
-#bc.inflow.fluid.velocity = 0.01  0.00  0.00
+bc.inflow.fluid.volfrac =  1.0
+bc.inflow.fluid.density =  1.0
+bc.inflow.fluid.velocity = 0.01  0.00  0.00
 
 
 #! Pressure outflow
 #!-----------------------------------------------------------//
-
-zhi.type = po
-zhi.pressure = 101325.0
-
-# --- suggested change:
 #
-#bc.outflow.type = po
-#bc.outflow.fluid.pressure = 101325.0
+bc.outflow = po
+bc.outflow.fluid.pressure = 101325.0
+
+mfix.stop_for_unused_inputs = true

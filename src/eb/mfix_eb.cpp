@@ -26,7 +26,7 @@ void mfix::make_eb_geometry ()
     /****************************************************************************
      *                                                                          *
      * mfix.geometry=<string> specifies the EB geometry. <string> can be on of  *
-     * box, cylinder, hopper, clr, clr_riser, general (or blank)                *
+     * box, cylinder, hopper, generic (or blank)                                         *
      *                                                                          *
      ***************************************************************************/
 
@@ -42,33 +42,7 @@ void mfix::make_eb_geometry ()
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE( csg_file.empty(), "CSG Geometry defined in input deck but solver not built with CSG support!");
 #endif
 
-    /****************************************************************************
-     *                                                                          *
-     * Legacy inputs:                                                           *
-     *   -- mfix.use_walls = true <=> mfix.geometry=general                     *
-     *   -- mfix.use_poy2  = true <=> mfix.geometry=general                     *
-     *                                                                          *
-     ***************************************************************************/
-
-
-    bool eb_general   = false;
-
-    bool eb_poly2 = false;
-    bool eb_walls = false;
-
-    pp.query("use_poly2", eb_poly2);
-    pp.query("use_walls", eb_walls);
-    eb_general = eb_poly2 || eb_walls;
-
     // Avoid multiple (ambiguous) inputs
-    if (eb_general) {
-      if (mfixRW->geom_chk_read || !geom_type.empty() || !csg_file.empty()) {
-         amrex::Abort("The input file cannot specify both "
-                      "mfix.<geom_type>=true and another mfix geometry "
-                      "at the same time.");
-      }
-    }
-
     if (mfixRW->geom_chk_read) {
        if (mfixRW->geom_chk_write) {
           amrex::Abort("The input file cannot specify both amr.geom_chk_read and "
@@ -98,8 +72,6 @@ void mfix::make_eb_geometry ()
                        "at the same time.");
        }
     }
-
-    if (eb_general) geom_type = "general";
 
     bool read_from_chkptfile = mfixRW->geom_chk_read;
     bool write_to_chkptfile = mfixRW->geom_chk_write;
@@ -137,23 +109,10 @@ void mfix::make_eb_geometry ()
         amrex::Print() << "\n Building hopper geometry." << std::endl;
         make_eb_hopper();
         contains_ebs = true;
-    } else if (geom_type == "cyclone") {
-        amrex::Print() << "\n Building cyclone geometry." << std::endl;
-        make_eb_cyclone();
+    } else if (geom_type == "generic") {
+        amrex::Print() << "\n Building generic geometry." << std::endl;
+        make_eb_generic();
         contains_ebs = true;
-    } else if(geom_type == "air-reactor") {
-      amrex::Print() << "\n Building air-reactor geometry." << std::endl;
-        make_eb_air_reactor();
-        contains_ebs = true;
-    } else if(geom_type == "prototype clr") {
-      amrex::Print() << "\n Building full-loop clr." << std::endl;
-      make_eb_proto_clr();
-      contains_ebs = true;
-    } else if(geom_type == "general") {
-      amrex::Print() << "\n Building general geometry (poly2 with extra walls)." << std::endl;
-      // TODO: deal with inflow volfrac
-      make_eb_general();
-      contains_ebs = true;
     } else if(read_from_chkptfile) {
       amrex::Print() << "\n Building geometry from chkptfile: " << mfixRW->geom_chk_file << std::endl;
       build_eb_levels_from_chkpt_file();

@@ -7,24 +7,89 @@ amrex.fpe_trap_invalid = 1
 mfix.max_step   = 10
 #mfix.stop_time = 10.0
 
+mfix.max_solids_volume_fraction = 0.73
+
 #----------------------------------------------------------------------
 # Solver settings
 #----------------------------------------------------------------------
 
-# Nodal solver
-nodal_proj.verbose    = 2
-nodal_proj.maxiter = 2000
-nodal_proj.bottom_verbose = 0
-nodal_proj.bottom_maxiter = 1000
-nodal_proj.mg_rtol       = 1.e-8
+# MAC solver settings ...............................................
+mac_proj.mg_max_coarsening_level = 64
+
+mac_proj.mg_rtol         = 1.0e-4  # 1.0e-11
+mac_proj.mg_atol         = 1.0e-8  # 1.0e-14
+
+mac_proj.verbose         =      0  #
+mac_proj.maxiter         =    200  # 200
+mac_proj.bottom_verbose  =      0  # default
+mac_proj.bottom_maxiter  =    200  # 200
+
+mac_proj.maxorder        =      3  # default
+mac_proj.bottom_rtol     = 1.0e-4  # default
+#mac_proj.bottom_atol    =   -1.0
+
+mac_proj.num_pre_smooth  =      2  # default
+mac_proj.num_post_smooth =      2  # default
+
+mac_proj.bottom_solver   =  hypre  # bicg default
+
+#mac_proj.hypre_namespace = "mac_proj.hypre"
 
 
-# MAC solver
-mac_proj.verbose     = 2
-mac_proj.maxiter  = 2000
-mac_proj.bottom_verbose  = 0
-mac_proj.bottom_maxiter  = 1000
-mac_proj.mg_rtol        = 1.e-8
+# Nodal solver settings ...............................................
+nodal_proj.mg_max_coarsening_level = 64
+
+nodal_proj.mg_rtol         = 1.0e-4  # 1.0e-11
+nodal_proj.mg_atol         = 1.0e-8  # 1.0e-14
+
+nodal_proj.verbose         =      0  # default
+nodal_proj.maxiter         =    100  # 100
+nodal_proj.bottom_verbose  =      0  # default
+nodal_proj.bottom_maxiter  =    100  # 100
+
+nodal_proj.bottom_rtol     = 1.0e-4  # default
+#nodal_proj.bottom_atol    =   -1.0
+
+nodal_proj.num_pre_smooth  =      2  # default 2
+nodal_proj.num_post_smooth =      2  # default 2
+
+nodal_proj.bottom_solver   =  hypre  # bicg default
+
+# HYPRE settings ......................................................
+hypre.hypre_preconditioner = BoomerAMG
+hypre.hypre_solver = GMRES
+ 
+hypre.verbose      = 0
+hypre.bamg_verbose = 0
+ 
+hypre.num_krylov        = 100 # (modify as needed)
+hypre.bamg_coarsen_type =   8 # (If on the CPU, use 10)
+ 
+hypre.bamg_interp_type = 6
+ 
+hypre.bamg_relax_type = 12
+#hypre.bamg_down_relax_type   =  11
+#hypre.bamg_up_relax_type     =  11
+#hypre.bamg_coarse_relax_type =  11  # or 9
+ 
+hypre.bamg_num_sweeps = 4
+#hypre.bamg_num_down_sweeps   = 1
+#hypre.bamg_num_up_sweeps     = 2
+#hypre.bamg_num_coarse_sweeps = 1
+ 
+hypre.bamg_cycle_type = 1
+hypre.bamg_relax_order = 0
+hypre.bamg_trunc_factor = 0.1
+hypre.bamg_max_levels = 5
+hypre.bamg_agg_num_levels = 1
+hypre.bamg_agg_interp_type = 7 #(Try 4 or 5)
+hypre.bamg_agg_pmax_elmts = 3
+hypre.bamg_pmax_elmts = 3
+hypre.bamg_keep_transpose = 1
+ 
+hypre.recompute_preconditioner = 0 # 1 if the mxtrix changes
+ 
+hypre.write_matrix_files = 0
 
 #----------------------------------------------------------------------
 # Particle initialization
@@ -96,14 +161,13 @@ particles.tile_size = 1024 1024 1024
 # Level-set refinement and padding
 mfix.levelset__refinement = 2 # levelset resolution
 
-mfix.write_eb_surface = true  # Needed to output eb-surfaces
+mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
 #! EB geometry
 #!-----------------------------------------------------------//
 
-mfix.geometry = "prototype clr"
-# mfix.geometry_filename = "clr.csg"
+mfix.geometry_filename = "clr.csg"
 
 eb2.small_volfrac = 1.e-6
 
@@ -148,6 +212,12 @@ fluid.solve = fluid
 
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
+
+
+#_______________________________________________________________________
+# Solids properties
+#
+solids.types = solid0
 
 
 #_______________________________________________________________________
@@ -219,14 +289,14 @@ ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 
 # riser section (above air reactor)
 #---------------------------------------------------------------------//
-ic.riser.fluid.volfrac  = 0.2
+ic.riser.fluid.volfrac  = 0.6
 ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = solid0
 ic.riser.packing = hcp
 
-ic.riser.solid0.volfrac  = 0.8
+ic.riser.solid0.volfrac  = 0.4
 ic.riser.solid0.velocity = 0.0  0.0  0.0
 
 ic.riser.solid0.diameter = constant
@@ -238,14 +308,14 @@ ic.riser.solid0.density.constant  = 1000.0
 
 # fuel reactor
 #---------------------------------------------------------------------//
-ic.fuel-reactor.fluid.volfrac  = 0.4
+ic.fuel-reactor.fluid.volfrac  = 0.6
 ic.fuel-reactor.fluid.density  = 1.0
 ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
 
 ic.fuel-reactor.solids = solid0
 ic.fuel-reactor.packing = hcp
 
-ic.fuel-reactor.solid0.volfrac  = 0.6
+ic.fuel-reactor.solid0.volfrac  = 0.4
 ic.fuel-reactor.solid0.velocity = 0.0  0.0  0.0
 
 ic.fuel-reactor.solid0.diameter = constant
@@ -257,14 +327,14 @@ ic.fuel-reactor.solid0.density.constant  = 1000.0
 
 #  loop-seal
 #---------------------------------------------------------------------//
-ic.loop-seal.fluid.volfrac  = 0.4
+ic.loop-seal.fluid.volfrac  = 0.6
 ic.loop-seal.fluid.density  = 1.0
 ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
 
 ic.loop-seal.solids = solid0
 ic.loop-seal.packing = hcp
 
-ic.loop-seal.solid0.volfrac  = 0.6
+ic.loop-seal.solid0.volfrac  = 0.4
 ic.loop-seal.solid0.velocity = 0.0  0.0  0.0
 
 ic.loop-seal.solid0.diameter = constant
@@ -324,3 +394,5 @@ bc.inflow.fluid.velocity =  0.01  0.0  0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  101325.0
+
+mfix.stop_for_unused_inputs = true

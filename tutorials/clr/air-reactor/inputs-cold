@@ -59,7 +59,6 @@ particles.tile_size = 1024 1024 1024
 #_______________________________________________________________________
 # Particle load balancing
 
-mfix.load_balance_type = "FixedSize"
 #mfix.load_balance_type = "KnapSack"
 
 amr.dual_grid          =  0
@@ -99,7 +98,6 @@ amr.check_file     ="chk"
 #----------------------------------------------------------------------
 
 mfix.fixed_dt = 0
-mfix.cfl      = 0.5
 
 mfix.dt_min   = 1.e-7
 mfix.dt_max   = 5.e-5
@@ -113,17 +111,11 @@ mfix.levelset__refinement = 2 # levelset resolution
 
 
 #_______________________________________________________________________
-# Species settings
-#
-species.solve = 0
-
-
-#_______________________________________________________________________
 # Fluid model settings
 #
 fluid.solve = fluid
 
-fluid.viscosity.model    = constant
+fluid.viscosity    = constant
 fluid.viscosity.constant = 2.0e-5
 
 
@@ -136,7 +128,7 @@ solids.types = hdpe
 #_______________________________________________________________________
 # DEM model settings
 #
-dem.solids = hdpe
+dem.solve = hdpe
 
 dem.friction_coeff.pp     =     0.25
 dem.friction_coeff.pw     =     0.15
@@ -179,7 +171,7 @@ regions.outflow.hi     = 3.7584  0.2784  0.2784
 
 ic.regions = full-domain  riser
 
-ic.particle_init_type = Auto
+mfix.particle_init_type = Auto
 
 
 # Background IC covering the full domain with gas.
@@ -196,6 +188,7 @@ ic.riser.fluid.density  = 1.0
 ic.riser.fluid.velocity = 0.0  0.0  0.0
 
 ic.riser.solids = hdpe
+ic.riser.packing = hcp
 
 ic.riser.hdpe.volfrac  = 0.0010
 ic.riser.hdpe.velocity = 0.0  0.0  0.0
@@ -217,22 +210,16 @@ bc.regions = inflow  outflow
 #! EB geometry
 #!-----------------------------------------------------------//
 
-bc.geometry = "air-reactor"
+mfix.geometry_filename = "air-reactor.csg"
 
-airreactor.radius0 = 0.0762    # reactor radius
-airreactor.height0 = 0.7720    # reactor height
-
-airreactor.c2c     = 0.0762    # cylinder-to-cylinder height
-
-airreactor.radius1 = 0.03175   # riser radius
-airreactor.height1 = 3.7084    # total riser height
-
-airreactor.outlet  = 3.6322    # outlet height from bottom
-
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = inflow  outflow
 
 #! Mass inflow
 #!-----------------------------------------------------------//
-bc.inflow.type = mi
+bc.inflow = mi
 
 bc.inflow.fluid.volfrac =  1.0
 bc.inflow.fluid.density =  1.0
@@ -241,5 +228,8 @@ bc.inflow.fluid.velocity = 0.01  0.00  0.00
 
 #! Pressure outflow
 #!-----------------------------------------------------------//
-bc.outflow.type = po
+#
+bc.outflow = po
 bc.outflow.fluid.pressure = 101325.0
+
+mfix.stop_for_unused_inputs = true

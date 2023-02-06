@@ -11,20 +11,83 @@ mfix.max_step   = 1000
 # Solver settings
 #----------------------------------------------------------------------
 
-# Nodal solver
-nodal_proj.verbose    = 0
-nodal_proj.maxiter = 2000
-nodal_proj.bottom_verbose = 0
-nodal_proj.bottom_maxiter = 1000
-nodal_proj.mg_rtol       = 1.e-8
+# MAC solver settings ...............................................
+mac_proj.mg_max_coarsening_level = 64
+
+mac_proj.mg_rtol         = 1.0e-4  # 1.0e-11
+mac_proj.mg_atol         = 1.0e-8  # 1.0e-14
+
+mac_proj.verbose         =      0  #
+mac_proj.maxiter         =    200  # 200
+mac_proj.bottom_verbose  =      0  # default
+mac_proj.bottom_maxiter  =    200  # 200
+
+mac_proj.maxorder        =      3  # default
+mac_proj.bottom_rtol     = 1.0e-4  # default
+#mac_proj.bottom_atol    =   -1.0
+
+mac_proj.num_pre_smooth  =      2  # default
+mac_proj.num_post_smooth =      2  # default
+
+mac_proj.bottom_solver   =  hypre  # bicg default
+
+#mac_proj.hypre_namespace = "mac_proj.hypre"
 
 
-# MAC solver
-mac_proj.verbose     = 0
-mac_proj.maxiter  = 2000
-mac_proj.bottom_verbose  = 0
-mac_proj.bottom_maxiter  = 1000
-mac_proj.mg_rtol        = 1.e-8
+# Nodal solver settings ...............................................
+nodal_proj.mg_max_coarsening_level = 64
+
+nodal_proj.mg_rtol         = 1.0e-4  # 1.0e-11
+nodal_proj.mg_atol         = 1.0e-8  # 1.0e-14
+
+nodal_proj.verbose         =      0  # default
+nodal_proj.maxiter         =    100  # 100
+nodal_proj.bottom_verbose  =      0  # default
+nodal_proj.bottom_maxiter  =    100  # 100
+
+nodal_proj.bottom_rtol     = 1.0e-4  # default
+#nodal_proj.bottom_atol    =   -1.0
+
+nodal_proj.num_pre_smooth  =      2  # default 2
+nodal_proj.num_post_smooth =      2  # default 2
+
+nodal_proj.bottom_solver   =  hypre  # bicg default
+
+# HYPRE settings ......................................................
+hypre.hypre_preconditioner = BoomerAMG
+hypre.hypre_solver = GMRES
+ 
+hypre.verbose      = 0
+hypre.bamg_verbose = 0
+ 
+hypre.num_krylov        = 100 # (modify as needed)
+hypre.bamg_coarsen_type =   8 # (If on the CPU, use 10)
+ 
+hypre.bamg_interp_type = 6
+ 
+hypre.bamg_relax_type = 12
+#hypre.bamg_down_relax_type   =  11
+#hypre.bamg_up_relax_type     =  11
+#hypre.bamg_coarse_relax_type =  11  # or 9
+ 
+hypre.bamg_num_sweeps = 4
+#hypre.bamg_num_down_sweeps   = 1
+#hypre.bamg_num_up_sweeps     = 2
+#hypre.bamg_num_coarse_sweeps = 1
+ 
+hypre.bamg_cycle_type = 1
+hypre.bamg_relax_order = 0
+hypre.bamg_trunc_factor = 0.1
+hypre.bamg_max_levels = 5
+hypre.bamg_agg_num_levels = 1
+hypre.bamg_agg_interp_type = 7 #(Try 4 or 5)
+hypre.bamg_agg_pmax_elmts = 3
+hypre.bamg_pmax_elmts = 3
+hypre.bamg_keep_transpose = 1
+ 
+hypre.recompute_preconditioner = 0 # 1 if the mxtrix changes
+ 
+hypre.write_matrix_files = 0
 
 #----------------------------------------------------------------------
 # Particle initialization
@@ -36,7 +99,6 @@ mfix.particle_init_type = "Auto"
 # Fluid solver
 #----------------------------------------------------------------------
 mfix.fixed_dt = 0
-mfix.cfl      = 0.5
 
 mfix.gravity =  -9.81  0.0  0.0
 
@@ -48,18 +110,18 @@ mfix.initial_iterations = 3
 
 mfix.drag_type = "WenYu"
 
-mfix.advect_density         = 1
-mfix.advect_enthalpy        = 1
-mfix.advect_fluid_species   = 1
-mfix.solve_reactions        = 1
-mfix.open_system_constraint = 1
+mfix.advect_density    = 1
+mfix.advect_enthalpy   = 1
+mfix.solve_species     = 1
+mfix.constraint_type = IdealGasOpenSystem
+
+mfix.max_solids_volume_fraction = 0.73
 
 amr.plt_regtest = 0
 
 amr.plt_volfrac = 1
 amr.plt_T_g = 1
 amr.plt_X_g = 1
-amr.plt_ro_txfr = 1
 amr.plt_vel_g = 1
 amr.plt_ep_g = 1
 amr.plt_p_g = 1
@@ -69,7 +131,6 @@ amr.plt_T_p = 1
 amr.plt_vel_p = 1
 amr.plt_ro_p = 1
 amr.plt_mass = 1
-amr.plt_species_p = 1
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -95,7 +156,7 @@ amr.blocking_factor = 32
 # Fluid
 amr.max_grid_size_x = 32
 amr.max_grid_size_y = 32
-amr.max_grid_size_z = 48
+amr.max_grid_size_z = 32
 
 # Particles (not with KDTree)
 #particles.max_grid_size_x =   64
@@ -124,8 +185,7 @@ mfix.write_ls         = false  # Needed to output level set
 #! EB geometry
 #!-----------------------------------------------------------//
 
-mfix.geometry = "prototype clr"
-# mfix.geometry_filename = "clr.csg"
+mfix.geometry_filename = "clr.csg"
 
 eb2.small_volfrac = 1.e-6
 
@@ -167,26 +227,18 @@ amr.check_file     ="chk"
 #
 species.solve = Fe2O3 CH4 FeO CO H2O H2 O2 N2 CO2
 
-species.Fe2O3.molecular_weight = 159.69
-species.CH4.molecular_weight = 16.04
-species.FeO.molecular_weight = 71.84
-species.CO.molecular_weight = 28.01
-species.H2O.molecular_weight = 18.02
-species.H2.molecular_weight = 2.02
-species.O2.molecular_weight = 32.00
-species.N2.molecular_weight = 28.01
-species.CO2.molecular_weight = 44.01
+species.Fe2O3.molecular_weight = 159.68820e-3
+species.CH4.molecular_weight = 16.04276e-3
+species.FeO.molecular_weight = 71.84440e-3
+species.CO.molecular_weight = 28.01340e-3
+species.H2O.molecular_weight = 18.01528e-3
+species.H2.molecular_weight = 2.01588e-3
+species.O2.molecular_weight = 31.99880e-3
+species.N2.molecular_weight = 28.01340e-3
+species.CO2.molecular_weight = 44.00980e-3
 
 species.diffusivity = constant
-species.Fe2O3.diffusivity.constant = 0
-species.CH4.diffusivity.constant = 2.1e-5
-species.FeO.diffusivity.constant = 0
-species.CO.diffusivity.constant = 2.1e-5
-species.H2O.diffusivity.constant = 2.1e-5
-species.H2.diffusivity.constant = 2.1e-5
-species.O2.diffusivity.constant = 2.1e-5
-species.N2.diffusivity.constant = 2.1e-5
-species.CO2.diffusivity.constant = 2.1e-5
+species.diffusivity.constant = 2.1e-5
 
 species.specific_heat = constant
 species.Fe2O3.specific_heat.constant = 751.456
@@ -205,8 +257,6 @@ species.CO2.specific_heat.constant = 939
 #
 fluid.solve = fluid
 
-fluid.molecular_weight = mixture
-
 fluid.viscosity          = constant
 fluid.viscosity.constant = 2.0e-5
 
@@ -215,6 +265,7 @@ fluid.thermal_conductivity.constant = 0.024
 
 fluid.species = CH4 CO H2O H2 O2 N2 CO2
 
+fluid.specific_heat = mixture
 
 #_______________________________________________________________________
 # Solids properties
@@ -223,6 +274,7 @@ solids.types = solid0
 
 solids.species  =  Fe2O3 FeO
 
+solids.specific_heat = mixture
 
 #_______________________________________________________________________
 # DEM model settings
@@ -249,10 +301,11 @@ dem.damping_tang_fac.pw   =     0.5
 #
 chemistry.solve  = Hem_CH4 Hem_H2 Hem_CO Wus_O2
 
-chemistry.Hem_CH4.reaction = 4Fe2O3(s)+CH4(g)-->8FeO(s)+CO2(g)+2H2O(g)
+chemistry.Hem_CH4.reaction = Fe2O3(s)+0.25CH4(g)-->2.FeO(s)+0.25CO2(g)+0.5H2O(g)
 chemistry.Hem_H2.reaction = Fe2O3(s)+H2(g)-->2FeO(s)+H2O(g)
 chemistry.Hem_CO.reaction = Fe2O3(s)+CO(g)-->2FeO(s)+CO2(g)
-chemistry.Wus_O2.reaction = 4FeO(s)+O2(g)-->2Fe2O3(s)
+chemistry.Wus_O2.reaction = FeO(s)+0.25O2(g)-->0.5Fe2O3(s)
+chemistry.mass_balance_tolerance = 1.e-5
 
 
 #_______________________________________________________________________
@@ -304,7 +357,6 @@ mfix.particle_init_type = Auto
 # Background IC covering the full domain with gas.
 #---------------------------------------------------------------------//
 ic.full-domain.fluid.volfrac  = 1.0
-ic.full-domain.fluid.density  = 1.0
 ic.full-domain.fluid.velocity = 0.0  0.0  0.0
 ic.full-domain.fluid.temperature = 1100
 
@@ -316,30 +368,10 @@ ic.full-domain.fluid.species.O2  = 0.0
 ic.full-domain.fluid.species.N2  = 0.0
 ic.full-domain.fluid.species.CO2 = 0.0
 
-ic.full-domain.solids = solid0
-ic.full-domain.packing = none
-
-ic.full-domain.solid0.volfrac  = 0.0
-ic.full-domain.solid0.velocity = 0.0  0.0  0.0
-
-ic.full-domain.solid0.temperature = 1100
-
-ic.full-domain.solid0.species.Fe2O3 = 1.0
-ic.full-domain.solid0.species.FeO   = 0.0
-
-ic.full-domain.solid0.diameter = constant
-ic.full-domain.solid0.diameter.constant = 1250.0e-6
-
-ic.full-domain.solid0.density =  constant
-ic.full-domain.solid0.density.constant  = 1000.0
-
-
 # riser section (above air reactor)
 #---------------------------------------------------------------------//
-ic.riser.fluid.volfrac  = 0.2
-ic.riser.fluid.density  = 1.0
+ic.riser.fluid.volfrac  = 0.6
 ic.riser.fluid.velocity = 0.0  0.0  0.0
-
 ic.riser.fluid.temperature = 1100
 
 ic.riser.fluid.species.CH4 = 0.0
@@ -353,7 +385,7 @@ ic.riser.fluid.species.CO2 = 0.0
 ic.riser.solids = solid0
 ic.riser.packing = oneper
 
-ic.riser.solid0.volfrac  = 0.8
+ic.riser.solid0.volfrac  = 0.4
 ic.riser.solid0.velocity = 0.0  0.0  0.0
 
 ic.riser.solid0.temperature = 1100
@@ -370,10 +402,8 @@ ic.riser.solid0.density.constant  = 1000.0
 
 # fuel reactor
 #---------------------------------------------------------------------//
-ic.fuel-reactor.fluid.volfrac  = 0.4
-ic.fuel-reactor.fluid.density  = 1.0
+ic.fuel-reactor.fluid.volfrac  = 0.6
 ic.fuel-reactor.fluid.velocity = 0.0  0.0  0.0
-
 ic.fuel-reactor.fluid.temperature = 1100
 
 ic.fuel-reactor.fluid.species.CH4 = 0.0
@@ -387,7 +417,7 @@ ic.fuel-reactor.fluid.species.CO2 = 0.0
 ic.fuel-reactor.solids = solid0
 ic.fuel-reactor.packing = hcp
 
-ic.fuel-reactor.solid0.volfrac  = 0.6
+ic.fuel-reactor.solid0.volfrac  = 0.4
 ic.fuel-reactor.solid0.velocity = 0.0  0.0  0.0
 
 ic.fuel-reactor.solid0.temperature = 1100
@@ -404,10 +434,8 @@ ic.fuel-reactor.solid0.density.constant  = 1000.0
 
 #  loop-seal
 #---------------------------------------------------------------------//
-ic.loop-seal.fluid.volfrac  = 0.1
-ic.loop-seal.fluid.density  = 1.0
+ic.loop-seal.fluid.volfrac  = 0.6
 ic.loop-seal.fluid.velocity = 0.0  0.0  0.0
-
 ic.loop-seal.fluid.temperature = 1100
 
 ic.loop-seal.fluid.species.CH4 = 0.0
@@ -421,7 +449,7 @@ ic.loop-seal.fluid.species.CO2 = 0.0
 ic.loop-seal.solids = solid0
 ic.loop-seal.packing = hcp
 
-ic.loop-seal.solid0.volfrac  = 0.9
+ic.loop-seal.solid0.volfrac  = 0.4
 ic.loop-seal.solid0.velocity = 0.0  0.0  0.0
 
 ic.loop-seal.solid0.temperature = 1100
@@ -437,10 +465,8 @@ ic.loop-seal.solid0.density.constant  = 1000.0
 
 #  air-reactor
 #---------------------------------------------------------------------//
-ic.air-reactor.fluid.volfrac  = 0.1
-ic.air-reactor.fluid.density  = 1.0
+ic.air-reactor.fluid.volfrac  = 0.6
 ic.air-reactor.fluid.velocity = 0.0  0.0  0.0
-
 ic.air-reactor.fluid.temperature = 1100
 
 ic.air-reactor.fluid.species.CH4 = 0.0
@@ -454,7 +480,7 @@ ic.air-reactor.fluid.species.CO2 = 0.0
 ic.air-reactor.solids = solid0
 ic.air-reactor.packing = hcp
 
-ic.air-reactor.solid0.volfrac  = 0.9
+ic.air-reactor.solid0.volfrac  = 0.4
 ic.air-reactor.solid0.velocity = 0.0  0.0  0.0
 
 ic.air-reactor.solid0.temperature = 1100
@@ -472,9 +498,7 @@ ic.air-reactor.solid0.density.constant  = 1000.0
 #  cyclone
 #---------------------------------------------------------------------//
 ic.cyclone.fluid.volfrac  = 0.99
-ic.cyclone.fluid.density  = 1.0
 ic.cyclone.fluid.velocity = 0.0  0.0  0.0
-
 ic.cyclone.fluid.temperature = 1100
 
 ic.cyclone.fluid.species.CH4 = 0.0
@@ -506,7 +530,6 @@ ic.cyclone.solid0.density.constant  = 1000.0
 
 #---------------------------------------------------------------------//
 ic.redux.fluid.volfrac  = 1.0 
-ic.redux.fluid.density  = 1.0 
 ic.redux.fluid.velocity = 0.0  0.0  0.0
 ic.redux.fluid.temperature = 1100
 
@@ -518,27 +541,8 @@ ic.redux.fluid.species.O2  = 0.0
 ic.redux.fluid.species.N2  = 0.0 
 ic.redux.fluid.species.CO2 = 0.55
 
-ic.redux.solids = solid0
-ic.redux.packing = none
-
-ic.redux.solid0.volfrac  = 0.0 
-ic.redux.solid0.velocity = 0.0  0.0  0.0
-
-ic.redux.solid0.temperature = 1095
-
-ic.redux.solid0.species.Fe2O3 = 0.98
-ic.redux.solid0.species.FeO   = 0.02
-
-ic.redux.solid0.diameter = constant
-ic.redux.solid0.diameter.constant = 1250.0e-6
-
-ic.redux.solid0.density =  constant
-ic.redux.solid0.density.constant  = 1000.0
-
-
 #---------------------------------------------------------------------//
 ic.reox.fluid.volfrac  = 1.0
-ic.reox.fluid.density  = 1.0
 ic.reox.fluid.velocity = 0.0  0.0  0.0
 ic.reox.fluid.temperature = 1100
 
@@ -550,25 +554,6 @@ ic.reox.fluid.species.O2  = 0.22
 ic.reox.fluid.species.N2  = 0.78
 ic.reox.fluid.species.CO2 = 0.0
 
-ic.reox.solids = solid0
-ic.reox.packing = none
-
-ic.reox.solid0.volfrac  = 0.0
-ic.reox.solid0.velocity = 0.0  0.0  0.0
-
-ic.reox.solid0.temperature = 1105
-
-ic.reox.solid0.species.Fe2O3 = 0.96
-ic.reox.solid0.species.FeO   = 0.04
-
-ic.reox.solid0.diameter = constant
-ic.reox.solid0.diameter.constant = 1250.0e-6
-
-ic.reox.solid0.density =  constant
-ic.reox.solid0.density.constant  = 1000.0
-
-
-
 #_______________________________________________________________________
 # Boundary Conditions
 #
@@ -576,12 +561,11 @@ bc.regions = inflow  outflow
 
 bc.inflow = mi
 bc.inflow.fluid.volfrac  =  1.0
-bc.inflow.fluid.density  =  1.0
 bc.inflow.fluid.velocity =  0.0  0.0  0.0
 bc.inflow.fluid.temperature = 1100
 bc.inflow.fluid.species.CH4 = 0.0
 bc.inflow.fluid.species.CO = 0.0
-bc.inflow.fluid.species.H2O = 1.0
+bc.inflow.fluid.species.H2O = 0.0
 bc.inflow.fluid.species.H2 = 0.0
 bc.inflow.fluid.species.O2 = 0.22
 bc.inflow.fluid.species.N2 = 0.78
@@ -589,3 +573,5 @@ bc.inflow.fluid.species.CO2 = 0.0
 
 bc.outflow = po
 bc.outflow.fluid.pressure =  101325.0
+
+mfix.stop_for_unused_inputs = true

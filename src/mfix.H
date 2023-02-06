@@ -613,14 +613,11 @@ class mfix : public AmrCore
     void avgDown (int crse_lev, const MultiFab & S_fine, MultiFab & S_crse);
 
   private:
-    void make_eb_general ();
     void make_eb_box ();
     void make_eb_cylinder ();
     void make_eb_hopper ();
-    void make_eb_cyclone ();
-    void make_eb_air_reactor ();
-    void make_eb_proto_clr ();
     void make_eb_regular ();
+    void make_eb_generic ();
 
 #ifdef CSG_EB
   void make_eb_csg(std::string);
