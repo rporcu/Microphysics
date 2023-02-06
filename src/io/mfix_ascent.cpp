@@ -136,6 +136,9 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
       real_comp_names.push_back("temperature");
       real_comp_names.push_back("convection");
 
+      // Currently runtime particle variables are not supported
+      // by AMReX.
+#if 0
       if (solids.solve_species())
         for(auto species: solids.species_names())
           real_comp_names.push_back("X_"+species+"_s");
@@ -152,6 +155,7 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
 
       if (reactions.solve())
         real_comp_names.push_back("chem_h_txfr");
+#endif
 
       int_comp_names.push_back("phase");
       int_comp_names.push_back("state");
