@@ -37,9 +37,11 @@ MFIXFluidParms::MFIXFluidParms (const amrex::Real T_ref)
 
 
 MFIXFluidPhase::MFIXFluidPhase ()
-  : m_viscosity_model(ViscosityModel::Invalid)
+  : m_ntypes(0)
+  , m_viscosity_model(ViscosityModel::Invalid)
   , m_specific_heat_model(MFIXSpecies::SpecificHeatModel::Invalid)
   , m_thermal_conductivity_model(ThermalConductivityModel::Invalid)
+  , m_constraint_type(ConstraintType::Invalid)
   , m_names(0)
   , m_solve(0)
   , m_solve_density(0)

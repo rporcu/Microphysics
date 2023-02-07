@@ -23,7 +23,7 @@ class MFIXFluidPhase {
     struct ThermalConductivityModel { enum {Invalid=-1, Constant}; };
 
     // Projection constraint type
-    struct ConstraintType { enum {IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
+    struct ConstraintType { enum {Invalid=-1, IncompressibleFluid, IdealGasOpenSystem, IdealGasClosedSystem}; };
 
     // Ideal gas constant
     static constexpr amrex::Real R = 8.31446261815324;

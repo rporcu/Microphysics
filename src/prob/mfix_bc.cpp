@@ -652,8 +652,9 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     m_bc.push_back(new_bc);
   }
 
-  if (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IncompressibleFluid ||
-      fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem) {
+  if (fluid.solve() &&
+      (fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IncompressibleFluid ||
+       fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasOpenSystem)) {
 
     Vector<Real> bc_values(0);
 
