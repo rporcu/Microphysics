@@ -131,96 +131,100 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
 void MFIXParticleContainer::
 ReportParticleGenerationStats (int lev)
 {
+  const int ic_size = m_initial_conditions.ic().size();
 
-  // Store particle count totals by IC region
-  std::vector<long> total_np(m_initial_conditions.ic().size(), 0);
+  if (ic_size > 0) {
 
-  constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
+    // Store particle count totals by IC region
+    std::vector<long> total_np(ic_size, 0);
 
-  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
 
-    if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1.) > tolerance) {
+    for (int icv(0); icv < ic_size; icv++) {
 
-      const RealBox* ic_region = m_initial_conditions.ic(icv).region;
+      if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1.) > tolerance) {
 
-      // Reduce sum operation for np, Tp
-      ReduceOps<ReduceOpSum> reduce_op;
-      ReduceData<long> reduce_data(reduce_op);
-      using ReduceTuple = typename decltype(reduce_data)::Type;
+        const RealBox* ic_region = m_initial_conditions.ic(icv).region;
+
+        // Reduce sum operation for np, Tp
+        ReduceOps<ReduceOpSum> reduce_op;
+        ReduceData<long> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
-      for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
-        Box bx = pti.tilebox();
-        RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
+          Box bx = pti.tilebox();
+          RealBox tile_region(bx, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-        if (tile_region.intersects( *ic_region )) {
+          if (tile_region.intersects( *ic_region )) {
 
-          const int np         = NumberOfParticles(pti);
-          const AoS &particles = pti.GetArrayOfStructs();
-          const ParticleType* pstruct = particles().dataPtr();
+            const int np         = NumberOfParticles(pti);
+            const AoS &particles = pti.GetArrayOfStructs();
+            const ParticleType* pstruct = particles().dataPtr();
 
-          const RealBox ic_rbx(ic_region->lo(), ic_region->hi());
+            const RealBox ic_rbx(ic_region->lo(), ic_region->hi());
 
-          reduce_op.eval(np, reduce_data, [pstruct,ic_rbx]
-            AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
-          {
-            constexpr long l_0 = static_cast<long>(0);
-            constexpr long l_1 = static_cast<long>(1);
+            reduce_op.eval(np, reduce_data, [pstruct,ic_rbx]
+              AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
+            {
+              constexpr long l_0 = static_cast<long>(0);
+              constexpr long l_1 = static_cast<long>(1);
 
-            return {ic_rbx.contains(pstruct[p_id].pos()) ? l_1 : l_0 };
-          });
+              return {ic_rbx.contains(pstruct[p_id].pos()) ? l_1 : l_0 };
+            });
 
-        } // tile_region intersects ic_region
-      } // MFIXParIter loop
+          } // tile_region intersects ic_region
+        } // MFIXParIter loop
 
-      ReduceTuple host_tuple = reduce_data.value();
-      total_np[icv] += amrex::get<0>(host_tuple);
+        ReduceTuple host_tuple = reduce_data.value();
+        total_np[icv] += amrex::get<0>(host_tuple);
 
-    } // ep_g < 1
-  } // loop over ICs
+      } // ep_g < 1
+    } // loop over ICs
 
-  ParallelDescriptor::ReduceLongSum(total_np.data(), m_initial_conditions.ic().size());
+    ParallelDescriptor::ReduceLongSum(total_np.data(), ic_size);
 
-  amrex::ParmParse pp("ic");
+    amrex::ParmParse pp("ic");
 
-  std::vector<std::string> input_regions;
-  pp.queryarr("regions", input_regions);
+    std::vector<std::string> input_regions;
+    pp.queryarr("regions", input_regions);
 
 
-  amrex::Print() << "\n";
-  amrex::Print() << "  IC Region                Generated           Removed         Remaining\n";
-  amrex::Print() << "  ****************  ****************  ****************  ****************\n";
+    amrex::Print() << "\n";
+    amrex::Print() << "  IC Region                Generated           Removed         Remaining\n";
+    amrex::Print() << "  ****************  ****************  ****************  ****************\n";
 
-  long sum_np_gen(0);
-  long sum_np_dff(0);
-  long sum_np_tot(0);
+    long sum_np_gen(0);
+    long sum_np_dff(0);
+    long sum_np_tot(0);
 
-  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    for (int icv(0); icv < ic_size; icv++) {
 
-    const long np_gen = m_initial_conditions.get_particle_count(icv);
-    const long np_dff = np_gen - total_np[icv];
+      const long np_gen = m_initial_conditions.get_particle_count(icv);
+      const long np_dff = np_gen - total_np[icv];
 
-    sum_np_gen += np_gen;
-    sum_np_dff += np_dff;
-    sum_np_tot += total_np[icv];
+      sum_np_gen += np_gen;
+      sum_np_dff += np_dff;
+      sum_np_tot += total_np[icv];
 
-    amrex::Print() << "  " << std::left  << std::setw(16) << input_regions[icv]
-                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(np_gen)
-                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(np_dff)
-                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(total_np[icv])
+      amrex::Print() << "  " << std::left  << std::setw(16) << input_regions[icv]
+                     << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(np_gen)
+                     << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(np_dff)
+                     << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(total_np[icv])
+                     << "\n";
+    }
+    amrex::Print() << "  ----------------  ----------------  ----------------  ----------------\n";
+
+    amrex::Print() << "  " << std::left  << std::setw(16) << "Total"
+                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_gen)
+                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_dff)
+                   << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_tot)
                    << "\n";
+
+    amrex::Print() << "  ****************  ****************  ****************  ****************\n";
+
   }
-  amrex::Print() << "  ----------------  ----------------  ----------------  ----------------\n";
-
-  amrex::Print() << "  " << std::left  << std::setw(16) << "Total"
-                 << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_gen)
-                 << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_dff)
-                 << "  " << std::right << std::setw(16) << MfixIO::FormatWithCommas(sum_np_tot)
-                 << "\n";
-
-  amrex::Print() << "  ****************  ****************  ****************  ****************\n";
-
 }
