@@ -20,6 +20,7 @@ updated_pic_velocity (const amrex::RealVect& pos,         // parcel position
                       const amrex::Real density_p,        // particle density
                       const amrex::RealVect grad_tau_p,   // particle normal stress grad
                       const amrex::Real beta_p,           // drag coefficient (beta/density)
+                      const amrex::RealVect& mass_txfr_p, // particle normal stress grad
                       const amrex::RealVect& beta_vel_fp, // beta * vel_fp / density
                       amrex::Array4<amrex::Real const> const& u_s,
                       amrex::Array4<amrex::Real const> const& v_s,
@@ -46,9 +47,9 @@ updated_pic_velocity (const amrex::RealVect& pos,         // parcel position
   const amrex::Real scale = 1.0 / (1.0 + dt*beta_p);
 
   // updated parcel velocity devoid of the particle normal stress
-  RealVect vel = {scale*(vel_p_old[0] + dt*(beta_vel_fp[0] + gravity[0])),
-                  scale*(vel_p_old[1] + dt*(beta_vel_fp[1] + gravity[1])),
-                  scale*(vel_p_old[2] + dt*(beta_vel_fp[2] + gravity[2]))};
+  RealVect vel = {scale*(vel_p_old[0] + dt*(beta_vel_fp[0] + gravity[0] + mass_txfr_p[0])),
+                  scale*(vel_p_old[1] + dt*(beta_vel_fp[1] + gravity[1] + mass_txfr_p[1])),
+                  scale*(vel_p_old[2] + dt*(beta_vel_fp[2] + gravity[2] + mass_txfr_p[2]))};
 
   const amrex::Real inv_rops = 1.0 / (eps_p * density_p);
 

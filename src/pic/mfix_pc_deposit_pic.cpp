@@ -300,6 +300,9 @@ MFIXParticleContainer::PICHydroStep (int lev,
   const int z_lo_bc = m_boundary_conditions.domain_bc(4);
   const int z_hi_bc = m_boundary_conditions.domain_bc(5);
 
+  const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+
+  const int solve_reactions = reactions.solve();
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -312,6 +315,11 @@ MFIXParticleContainer::PICHydroStep (int lev,
     FArrayBox local_w_s_fab;
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
+      PairIndex index(pti.index(), pti.LocalTileIndex());
+
+      auto& plev  = GetParticles(lev);
+      auto& ptile = plev[index];
 
       auto& particles = pti.GetArrayOfStructs();
       ParticleType* pstruct = particles().dataPtr();
@@ -404,12 +412,15 @@ MFIXParticleContainer::PICHydroStep (int lev,
         }
 #endif
 
+        auto ptile_data = ptile.getParticleTileData();
+
         amrex::ParallelFor(nrp,
            [pstruct,p_realarray,p_hi,p_lo,dx,dxi,vfrac,volarr, u_so, v_so, w_so, en, ep_cp,
             reg_cell_vol,flagsarr, dt, gravity, has_walls,ls_refinement,phiarr,
             vel_ref_frame, three_sqrt_two, en_w, et_w, u_s, v_s, w_s, inv_ep_cp,
             apply_forces, update_parcels, use_taylor_approx, advance_vel_p,
-            x_lo_bc,x_hi_bc, y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc]
+            x_lo_bc,x_hi_bc, y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc, idx_vel_txfr,
+            solve_reactions, ptile_data]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             ParticleType& p = pstruct[ip];
@@ -434,6 +445,14 @@ MFIXParticleContainer::PICHydroStep (int lev,
               //        :=  drag coeff / density
               const Real beta_p = p_realarray[SoArealData::dragcoeff][ip] * inv_mass;
 
+              amrex::RealVect mass_txfr_p(0.);
+
+              if (solve_reactions) {
+                mass_txfr_p = {ptile_data.m_runtime_rdata[idx_vel_txfr+0][ip] * inv_mass,
+                               ptile_data.m_runtime_rdata[idx_vel_txfr+1][ip] * inv_mass,
+                               ptile_data.m_runtime_rdata[idx_vel_txfr+2][ip] * inv_mass};
+              }
+
               // beta_vel_g := ((drag coeff * volume) / mass ) * u_gp
               //            := (drag coeff / density) * u_gp
               const amrex::RealVect beta_vel_fp = {p_realarray[SoArealData::dragx][ip] * inv_mass,
@@ -452,8 +471,8 @@ MFIXParticleContainer::PICHydroStep (int lev,
 
               // Compute the updated PIC velocity
               vel_p = updated_pic_velocity(pos, vel_p_old, density_p,
-                 grad_tau_p, beta_p, beta_vel_fp, u_so, v_so, w_so, en, eps_p, ep_cp,
-                 vel_ref_frame, mfp_vel, dt, gravity, dxi, p_lo);
+                 grad_tau_p, beta_p, mass_txfr_p, beta_vel_fp, u_so, v_so, w_so,
+                 en, eps_p, ep_cp, vel_ref_frame, mfp_vel, dt, gravity, dxi, p_lo);
 
               // Update parcel positions
               pos[0] += dt * vel_p[0];

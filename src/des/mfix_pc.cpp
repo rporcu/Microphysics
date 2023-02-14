@@ -873,7 +873,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
             const int update_mass = solids.update_mass() && solids.solve_species() && reactions.solve();
             const int update_momentum = solids.update_momentum();
-            const int solve_enthalpy = solids.solve_enthalpy() && fluid.solve_enthalpy();
+            const int solve_enthalpy = solids.solve_enthalpy();
             const int solve_reactions = reactions.solve();
 
             const Real enthalpy_source = solids.enthalpy_source();
