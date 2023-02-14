@@ -68,6 +68,20 @@ class MFIXBoundaryConditions
                             BCList& bc_list,
                             MFIXEmbeddedBoundaries& embedded_boundaries);
 
+    class Parameters
+    {
+      public:
+        Parameters () {};
+
+        // Flags for DEM domain extent reinforcement.
+        amrex::GpuArray<int,6> domain_bc;
+
+        // EB wall temps/rbox
+        int bc_tw_count;
+        amrex::RealBox* p_bc_rbv;
+        amrex::Real*    p_bc_twv;
+    };
+
     void Initialize (amrex::Geometry& geom,
                      const MFIXRegions& regions,
                      MFIXFluidPhase& fluid,
@@ -175,8 +189,7 @@ class MFIXBoundaryConditions
     void set_delp (const int i, const amrex::Real val) { m_delp[i] = val; }
 
     // Flags for DEM domain extent reinforcement.
-    const std::array<int,6>& domain_bc () const { return m_domain_bc; }
-    int domain_bc (const int i) const { return m_domain_bc[i]; }
+    int domain_bc (const int i) const { return m_parameters.domain_bc[i]; }
 
     const std::bitset<6>& flow_plane () const { return m_flow_plane; }
 
@@ -258,6 +271,8 @@ class MFIXBoundaryConditions
     amrex::Real* bc_X_gk_ptr (const int n) { return m_bc_X_gk_ptr[n]; };
     amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; };
 
+    const Parameters& parameters () const { return m_parameters; };
+
   private:
     amrex::Vector<amrex::Geometry>& m_geom;
     BCList& m_bc_list;
@@ -310,9 +325,6 @@ class MFIXBoundaryConditions
     int m_delp_dir;
     amrex::RealVect m_delp;
 
-    // Flags for DEM domain extent reinforcement.
-    std::array<int,6> m_domain_bc;
-
     std::bitset<6> m_flow_plane;
 
     // Vectors storing EB planes for level-set creation
@@ -339,6 +351,14 @@ class MFIXBoundaryConditions
 
     // Data structure for BC data
     amrex::Vector<BC_t> m_bc;
+
+    // EB wall temps/rbox
+    amrex::Gpu::HostVector<amrex::RealBox>   h_bc_rbv;
+    amrex::Gpu::DeviceVector<amrex::RealBox> d_bc_rbv;
+    amrex::Gpu::HostVector<amrex::Real>      h_bc_twv;
+    amrex::Gpu::DeviceVector<amrex::Real>    d_bc_twv;
+
+    Parameters m_parameters;
 };
 
 

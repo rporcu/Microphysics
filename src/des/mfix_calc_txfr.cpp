@@ -318,10 +318,7 @@ mfix::mfix_calc_txfr_particle (Real time,
   const int nreactions = reactions.nreactions();
 
   // Particles SoA starting indexes for mass fractions and rate of formations
-  const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
-  const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
-  const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
-  const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
+  const SoAruntimerealData runtimedata_idxs = pc->m_runtimedata_idxs;
 
   const auto& fluid_parms = fluid.parameters();
   const auto& solids_parms = solids.parameters();
@@ -574,12 +571,11 @@ mfix::mfix_calc_txfr_particle (Real time,
           const Real pmult = m_dem.solve() ? 1.0 : 0.0;
 
           amrex::ParallelFor(np,
-              [pstruct,p_realarray,p_intarray, interp_array,gp0_dev,plo,dxi,pmult,dx,
+              [pstruct,p_realarray,p_intarray, interp_array,gp0_dev,plo,dxi,dx,
                solve_enthalpy,ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,
                flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
-               ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
-               idx_h_txfr,HeterogeneousRRates,reactions_parms,fluid_parms,
-               solids_parms,nreactions]
+               ptile_data,nspecies_s,nspecies_g,runtimedata_idxs,solids_parms,
+               HeterogeneousRRates,reactions_parms,fluid_parms,nreactions,pmult]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
@@ -590,14 +586,18 @@ mfix::mfix_calc_txfr_particle (Real time,
               // fluid-deposition quantities
 
               if (solve_reactions) {
-                for (int n_s(0); n_s < nspecies_s; ++n_s)
-                  ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = 0;
+                for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                  const int idx = runtimedata_idxs.chem_species_mass_txfr;
+                  ptile_data.m_runtime_rdata[idx+n_s][p_id] = 0;
+                }
 
-                ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0;
-                ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0;
-                ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0;
+                int idx = runtimedata_idxs.chem_vel_txfr;
+                ptile_data.m_runtime_rdata[idx+0][p_id] = 0;
+                ptile_data.m_runtime_rdata[idx+1][p_id] = 0;
+                ptile_data.m_runtime_rdata[idx+2][p_id] = 0;
 
-                ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0;
+                idx = runtimedata_idxs.chem_enthalpy_txfr;
+                ptile_data.m_runtime_rdata[idx][p_id] = 0;
               }
               return;
             }
@@ -631,15 +631,19 @@ mfix::mfix_calc_txfr_particle (Real time,
 
                 // chemical reaction txfr variables
                 if (solve_reactions) {
-                  for (int n_s(0); n_s < nspecies_s; n_s++)
-                    ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = 0.;
+                  for (int n_s(0); n_s < nspecies_s; n_s++) {
+                    const int idx = runtimedata_idxs.chem_species_mass_txfr;
+                    ptile_data.m_runtime_rdata[idx+n_s][p_id] = 0.;
+                  }
 
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0.;
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0.;
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0.;
+                  int idx = runtimedata_idxs.chem_vel_txfr;
+                  ptile_data.m_runtime_rdata[idx+0][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx+1][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx+2][p_id] = 0.;
 
                   // Write the result in the enthalpy transfer space
-                  ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0.;
+                  idx = runtimedata_idxs.chem_enthalpy_txfr;
+                  ptile_data.m_runtime_rdata[idx][p_id] = 0.;
                 }
 
                 return;
@@ -749,15 +753,17 @@ mfix::mfix_calc_txfr_particle (Real time,
 
               // Note: ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] currently
               // contains the particle mass txfr rate
-              const Real G_m_p_heterogeneous = ptile_data.m_runtime_rdata[idx_vel_txfr][p_id];
+              int idx = runtimedata_idxs.chem_vel_txfr;
+              const Real G_m_p_heterogeneous = ptile_data.m_runtime_rdata[idx][p_id];
               const Real coeff = amrex::max(0., G_m_p_heterogeneous);
 
-              ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = coeff*vel_g[0];
-              ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = coeff*vel_g[1];
-              ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = coeff*vel_g[2];
+              idx = runtimedata_idxs.chem_vel_txfr;
+              ptile_data.m_runtime_rdata[idx+0][p_id] = coeff*vel_g[0];
+              ptile_data.m_runtime_rdata[idx+1][p_id] = coeff*vel_g[1];
+              ptile_data.m_runtime_rdata[idx+2][p_id] = coeff*vel_g[2];
 
               // Note: enthalpy txfr due to heterogeneous chemical reactions is
-              // already stored in ptile_data.m_runtime_rdata[idx_h_txfr][p_id]
+              // already stored in runtime_rdata[chem_enthalpy_txfr_idx][p_id]
             }
 
           }); // particle loop

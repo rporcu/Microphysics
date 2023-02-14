@@ -128,10 +128,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   const int nreactions = reactions.nreactions();
 
   // Particles SoA starting indexes for mass fractions and rate of formations
-  const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
-  const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
-  const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
-  const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
+  const SoAruntimerealData runtimedata_idxs = pc->m_runtimedata_idxs;
 
   const auto& fluid_parms = fluid.parameters();
   const auto& solids_parms = solids.parameters();
@@ -356,13 +353,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
           const Real mu_g0 = fluid.mu_g();
 
           amrex::ParallelFor(np,
-              [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
+              [np,pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
                nspecies_g,interp_comp,local_cg_dem,ptile_data,nreactions,
-               nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
-               fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
-               grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
-               apz_fab,solve_reactions,aux_ptr,np]
+               nspecies_s,runtimedata_idxs,fluid_parms,solids_parms,aux_ptr,
+               reactions_parms,flags_array,mu_g0,grown_bx_is_regular,dx,
+               ccent_fab,bcent_fab,apx_fab,apy_fab,apz_fab,solve_reactions]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
@@ -397,12 +393,14 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                   for (int n_g(0); n_g < nspecies_g; n_g++)
                     aux_ptr[n_g*np + p_id] = 0.;
 
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][p_id] = 0.;
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][p_id] = 0.;
-                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][p_id] = 0.;
+                  int idx = runtimedata_idxs.chem_vel_txfr;
+                  ptile_data.m_runtime_rdata[idx+0][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx+1][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx+2][p_id] = 0.;
 
                   // Write the result in the enthalpy transfer space
-                  ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = 0.;
+                  idx = runtimedata_idxs.chem_enthalpy_txfr;
+                  ptile_data.m_runtime_rdata[idx][p_id] = 0.;
                 }
 
                 // Nothing else to do. Return
@@ -549,7 +547,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               X_sn.fill(0.);
 
               for (int n_s(0); n_s < nspecies_s; n_s++) {
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn + n_s][p_id];
+                const int idx = runtimedata_idxs.species_mass_fractions;
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx+n_s][p_id];
               }
 
               // Extract interpolated thermodynamic pressure
@@ -591,7 +590,8 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                   G_m_sn_heterogeneous += G_m_sn_q;
                 }
 
-                ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][p_id] = G_m_sn_heterogeneous;
+                const int idx = runtimedata_idxs.chem_species_mass_txfr;
+                ptile_data.m_runtime_rdata[idx+n_s][p_id] = G_m_sn_heterogeneous;
 
                 G_m_p_heterogeneous += G_m_sn_heterogeneous;
               }
@@ -636,10 +636,12 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
               //***************************************************************
               //
               //***************************************************************
-              ptile_data.m_runtime_rdata[idx_vel_txfr][p_id] = G_m_p_heterogeneous;
+              int idx = runtimedata_idxs.chem_vel_txfr;
+              ptile_data.m_runtime_rdata[idx][p_id] = G_m_p_heterogeneous;
 
               // Write the result in the enthalpy transfer space
-              ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -G_H_g_heterogeneous;
+              idx = runtimedata_idxs.chem_enthalpy_txfr;
+              ptile_data.m_runtime_rdata[idx][p_id] = -G_H_g_heterogeneous;
             }
 
           }); // pid

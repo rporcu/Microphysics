@@ -20,7 +20,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
     const int nspecies_s = solids.nspecies();
     const int nreactions = reactions.nreactions();
-    const int idx_count = m_runtimeRealData.count;
+    const int idx_count = m_runtimedata_idxs.count;
 
     for (int idim = 0; idim < 3; ++idim)
     {
@@ -36,7 +36,7 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
 
             // Add runtime-added components
             const int start = SoArealData::count;
-            for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+            for (int comp(0); comp < idx_count; ++comp)
               ptile.push_back_real(start+comp, np_replicated, 0.);
 
             auto& particles = ptile.GetArrayOfStructs();

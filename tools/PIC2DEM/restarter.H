@@ -27,7 +27,15 @@ struct Transfer {
 class MFIXPICDeposition : public MFIXDepositionOp
 {
   public:
-    MFIXPICDeposition () = default;
+    // Constructor
+    MFIXPICDeposition ()
+    {}
+
+    // Destructor
+    virtual ~MFIXPICDeposition ()
+    {
+      clear_eps();
+    }
 
     virtual void deposit (int lev,
                           const amrex::Geometry& geom,

@@ -12,10 +12,6 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
-
-using namespace Solvers;
-
-
 //
 // Compute predictor:
 //
@@ -694,11 +690,13 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
           const int solve_species = fluid.solve_species();
 
+          MFIXSolvers::Newton nonlinear_solver(newton_abstol, newton_reltol,
+              newton_maxiter, is_IOProc);
+
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,dhdt_o,
               l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,closed_system,
               fluid_parms,fluid_is_a_mixture,nspecies_g,div_hJ_o,flags_arr,
-              solve_species,is_IOProc,abstol=newton_abstol,reltol=newton_reltol,
-              maxiter=newton_maxiter]
+              solve_species,nonlinear_solver]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -732,7 +730,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               // temperature
 
               // Residual computation
-              auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+              auto R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
               {
                 Real hg_loc(0);
 
@@ -752,7 +750,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
               };
 
               // Partial derivative computation
-              auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+              auto partial_R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
               {
                 Real gradient(0);
 
@@ -774,7 +772,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
               Real Tg(T_g_o(i,j,k));
 
-              Newton::solve(Tg, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+              nonlinear_solver.solve(Tg, R, partial_R);
 
               T_g_n(i,j,k) = Tg;
             }

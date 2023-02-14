@@ -12,37 +12,40 @@
 #include <exception>
 #include <string>
 
+namespace MFIXSolvers {
 
-namespace Solvers {
-
-
-class Newton {
-
+class Newton
+{
   public:
-
     // Constructor
     AMREX_GPU_HOST_DEVICE
-    Newton () = default;
+    Newton (const amrex::Real abs_tol,
+            const amrex::Real rel_tol,
+            const int max_iterations,
+            const int is_IOProc)
+      : m_abs_tol(abs_tol)
+      , m_rel_tol(rel_tol)
+      , m_max_iterations(max_iterations)
+      , m_is_IOProc(is_IOProc)
+    {}
 
     // Solve for scalars
     template<typename ResidueFunc, typename GradientFunc>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    static
+#if defined(AMREX_USE_DPCPP)
+    SYCL_EXTERNAL
+#endif
     int solve (amrex::Real& solution,
                ResidueFunc& R,
-               GradientFunc& partial_R,
-               const int is_IOProc,
-               const amrex::Real /*abs_tol*/,
-               const amrex::Real rel_tol,
-               const int max_iterations)
+               GradientFunc& partial_R) const
     {
       amrex::Real gradient = partial_R(solution);
       amrex::Real residue  = R(solution);
       amrex::Real update(0.);
 
       int iter(0);
-      const amrex::Real update_rel_tol = rel_tol*std::abs(solution);
-      //const amrex::Real residue_rel_tol = rel_tol*std::abs(residue);
+      const amrex::Real update_tol = m_rel_tol*std::abs(solution) + m_abs_tol;
+      //const amrex::Real residue_tol = m_rel_tol*std::abs(residue) + m_abs_tol;
 
       // Do not do anything if we're already on the solution
       if (std::abs(residue) < 1.e-15) {
@@ -60,9 +63,9 @@ class Newton {
         gradient = partial_R(solution);
 
         ++iter;
-        if(iter > max_iterations) {
+        if(iter > m_max_iterations) {
 
-          if (is_IOProc) {
+          if (m_is_IOProc) {
 #ifdef AMREX_USE_GPU
             AMREX_DEVICE_PRINTF("Newton total iterations = %d\n", iter);
             AMREX_DEVICE_PRINTF("Newton update norm = %e\n", std::abs(update));
@@ -77,14 +80,20 @@ class Newton {
           amrex::Abort("Newton solver did not converge");
 
         }
-      } while(//(std::abs(residue) > residue_rel_tol) ||
-              (std::abs(update) > update_rel_tol));
+      } while(//(std::abs(residue) > residue_tol) ||
+              (std::abs(update) > update_tol));
 
       return iter;
     }
+
+  private:
+    const amrex::Real m_abs_tol;
+    const amrex::Real m_rel_tol;
+    const int m_max_iterations;
+    const int m_is_IOProc;
 };
 
-} // end namespace Solvers
+} // end namespace MFIXSolvers
 
 
 #endif

@@ -151,11 +151,11 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
   int plt_ccse_regtest = 0;
   pp.query("plt_regtest", plt_ccse_regtest);
 
-  const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
-                               reactions.nreactions()*reactions.solve());
+  const auto runtimedata_idxs = SoAruntimerealData(solids.nspecies(),
+                                                   reactions.nreactions());
 
   // Runtime-added variables
-  const int size = SoArealData::count + rtData.count;
+  const int size = SoArealData::count + runtimedata_idxs.count;
   write_real_comp_out.resize(size, 1);
 
   // All flags are true by default so we only need to turn off the
@@ -224,9 +224,9 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       input_value = 0;
       pp.query("plt_X_s", input_value);
 
-      const int start = gap + rtData.X_sn;
-      for(int n(0); n < solids.nspecies(); ++n)
-        write_real_comp_out[start+n] = input_value;
+      const int start = gap + runtimedata_idxs.species_mass_fractions;
+      for(int n_s(0); n_s < solids.nspecies(); ++n_s)
+        write_real_comp_out[start+n_s] = input_value;
     }
 
     if (reactions.solve())
@@ -234,9 +234,9 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       input_value = 0;
       pp.query("plt_vel_s_txfr", input_value);
 
-      const int start = gap + rtData.vel_txfr;
-      for(int n(0); n < 3; ++n)
-        write_real_comp_out[start+n] = input_value;
+      const int start = gap + runtimedata_idxs.chem_vel_txfr;
+      for(int dir(0); dir < AMREX_SPACEDIM; ++dir)
+        write_real_comp_out[start+dir] = input_value;
     }
 
     if (reactions.solve())
@@ -244,7 +244,7 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       input_value = 0;
       pp.query("plt_h_s_txfr", input_value);
 
-      const int start = gap + rtData.h_txfr;
+      const int start = gap + runtimedata_idxs.chem_enthalpy_txfr;
       write_real_comp_out[start] = input_value;
     }
 
@@ -253,9 +253,9 @@ MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
       input_value = 0;
       pp.query("plt_mass_sn_txfr", input_value);
 
-      const int start = gap + rtData.mass_txfr;
-      for(int n(0); n < solids.nspecies(); ++n)
-        write_real_comp_out[start+n] = input_value;
+      const int start = gap + runtimedata_idxs.chem_species_mass_txfr;
+      for(int n_s(0); n_s < solids.nspecies(); ++n_s)
+        write_real_comp_out[start+n_s] = input_value;
     }
 
     // Int data

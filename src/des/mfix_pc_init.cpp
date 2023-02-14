@@ -152,7 +152,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     // Add components for each of the runtime variables
     const int start = SoArealData::count;
-    for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+    for (int comp(0); comp < m_runtimedata_idxs.count; ++comp)
       particles.push_back_real(start+comp, np, 0.);
   }
 
@@ -237,7 +237,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
                 // Add components for each of the runtime variables
                 const int start = SoArealData::count;
-                for (int comp(0); comp < m_runtimeRealData.count; ++comp)
+                for (int comp(0); comp < m_runtimedata_idxs.count; ++comp)
                   particles.push_back_real(start+comp, pcount, 0.);
 
                 total_np[icv] += static_cast<long>(pcount);
@@ -572,12 +572,12 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
           Gpu::AsyncArray<Real> d_mass_fractions(h_mass_fractions.data(), h_mass_fractions.size());
           Real* p_mass_fractions = solve_species ? d_mass_fractions.data() : nullptr;
 
-          const int idx_X_sn = m_runtimeRealData.X_sn;
+          const int species_mass_fractions_idx = m_runtimedata_idxs.species_mass_fractions;
 
           amrex::ParallelFor(np,
             [particles_ptr,p_realarray,p_intarray,ptile_data,h_temperature_loc,
              p_mass_fractions,ic_realbox,nspecies_s,solid_is_a_mixture,adv_enthalpy,
-             solids_parms,solve_species,idx_X_sn,ic_phase]
+             solids_parms,solve_species,species_mass_fractions_idx,ic_phase]
             AMREX_GPU_DEVICE (int ip) noexcept
           {
             const auto& p = particles_ptr[ip];
@@ -614,7 +614,8 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
               if(solve_species) {
 
                 for (int n_s(0); n_s < nspecies_s; n_s++) {
-                  ptile_data.m_runtime_rdata[idx_X_sn+n_s][ip] = p_mass_fractions[n_s];
+                  const int idx = species_mass_fractions_idx;
+                  ptile_data.m_runtime_rdata[idx+n_s][ip] = p_mass_fractions[n_s];
                 }
 
               }

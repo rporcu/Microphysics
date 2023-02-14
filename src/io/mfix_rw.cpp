@@ -342,7 +342,6 @@ MfixRW::Initialize ()
           const std::string& solids_name = solids.names(j);
 
           if (name.compare(solids_name) == 0) {
-            // TODO TODO TODO check this
             plot_region.m_h_plot_types[i] = j+1;
             found = 1;
             break;

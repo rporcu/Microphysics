@@ -9,6 +9,7 @@
 
 #include <mfix_solids.H>
 
+
 class MFIXDEM
 {
   public:
@@ -28,7 +29,7 @@ class MFIXDEM
         typedef ARRAY_TYPE array_type;
 
         template <typename... Is>
-        AMREX_GPU_DEVICE AMREX_FORCE_INLINE
+        AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
         amrex::Real& operator() (Is... index) const noexcept {
             return (*a)(index...);
         }
@@ -69,6 +70,29 @@ class MFIXDEM
     using A2D = DeviceArray<amrex::Array2D<amrex::Real,0,NMAX-1,0,NMAX-1,amrex::Order::C> >;
     using A1D = DeviceArray<amrex::Array1D<amrex::Real,0,NMAX-1> >;
 
+    class Parameters
+    {
+      public:
+        // Constructor
+        AMREX_GPU_HOST_DEVICE
+        Parameters () {}
+
+        // normal component of spring constant
+        amrex::Real kn;
+        amrex::Real kn_w;
+
+        // friction coefficients for particle-particle and particle-wall collisions
+        amrex::Real mew;
+        amrex::Real mew_w;
+
+        // Hack to get fluid conductivity
+        amrex::Real k_g;
+
+        // normal and tangential components of the damping coefficients
+        A2D etan;
+        A1D etan_w;
+    };
+
     void Initialize ();
 
     int NPHASE () const { return m_NPHASE; };
@@ -86,23 +110,23 @@ class MFIXDEM
     amrex::Real kt_w () const { return m_kt_w; };
 
     // normal component of spring constant
-    amrex::Real kn () const { return m_kn; };
-    amrex::Real kn_w () const { return m_kn_w; };
+    amrex::Real kn () const { return m_parameters.kn; };
+    amrex::Real kn_w () const { return m_parameters.kn_w; };
 
     // friction coefficients for particle-particle and particle-wall collisions
-    amrex::Real mew () const { return m_mew; };
-    amrex::Real mew_w () const { return m_mew_w; };
+    amrex::Real mew () const { return m_parameters.mew; };
+    amrex::Real mew_w () const { return m_parameters.mew_w; };
 
     // assumed to be a constant factor relating these for linear spring-dashpot
     amrex::Real kt_fac () const { return m_kt_fac; };
     amrex::Real kt_w_fac () const { return m_kt_w_fac; };
 
     // Hack to get fluid conductivity
-    amrex::Real k_g_dem () const { return m_k_g_dem; };
+    amrex::Real k_g_dem () const { return m_parameters.k_g; };
 
     // normal and tangential components of the damping coefficients
-    A2D etan () const { return m_etan; };
-    A1D etan_w () const { return m_etan_w; };
+    A2D etan () const { return m_parameters.etan; };
+    A1D etan_w () const { return m_parameters.etan_w; };
 
     A2D etat () const { return m_etat; };
     A1D etat_w () const { return m_etat_w; };
@@ -143,6 +167,8 @@ class MFIXDEM
 
     int restart_from_PIC () const { return m_restart_from_PIC; };
 
+    const Parameters& parameters () const {return m_parameters; };
+
   private:
     int m_NPHASE;
 
@@ -156,20 +182,9 @@ class MFIXDEM
     amrex::Real m_kt;
     amrex::Real m_kt_w;
 
-    // normal component of spring constant
-    amrex::Real m_kn;
-    amrex::Real m_kn_w;
-
-    // friction coefficients for particle-particle and particle-wall collisions
-    amrex::Real m_mew;
-    amrex::Real m_mew_w;
-
     // assumed to be a constant factor relating these for linear spring-dashpot
     amrex::Real m_kt_fac;
     amrex::Real m_kt_w_fac;
-
-    // Hack to get fluid conductivity
-    amrex::Real m_k_g_dem;
 
     // normal and tangential components of the damping coefficients
     A2D m_etan;
@@ -205,7 +220,11 @@ class MFIXDEM
     // Coarse-grain DEM
     int m_cg_dem;
 
+    //
     int m_restart_from_PIC;
+
+    Parameters m_parameters;
 };
+
 
 #endif

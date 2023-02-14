@@ -141,11 +141,11 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
   // Set flag to keep particles from leaving unless periodic.
   for (int dir(0); dir<3; ++dir) {
     if (geom.isPeriodic(dir)) {
-      m_domain_bc[2*dir  ] = 0;
-      m_domain_bc[2*dir+1] = 0;
+      m_parameters.domain_bc[2*dir  ] = 0;
+      m_parameters.domain_bc[2*dir+1] = 0;
     } else {
-      m_domain_bc[2*dir  ] = 1;
-      m_domain_bc[2*dir+1] = 1;
+      m_parameters.domain_bc[2*dir  ] = 1;
+      m_parameters.domain_bc[2*dir+1] = 1;
     }
   }
 
@@ -355,7 +355,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
 
     // Enforce the boundary for pressure outflows if specified.
     if (new_bc.type == BCList::pout && po_noParOut == 0) {
-      m_domain_bc[dir_int] = 0;
+      m_parameters.domain_bc[dir_int] = 0;
     }
 
     // m_flow_planes are used to create 'walls' in the level-set so that
@@ -694,6 +694,41 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     }
   }
 
+  // set EB wall data
+  {
+    int bc_tw_count = 0;
+
+    for (int bcv(0); bcv < m_bc.size(); ++bcv) {
+      if (m_bc[bcv].type == BCList::eb) {
+        bc_tw_count++;
+      }
+    }
+
+    h_bc_rbv.resize(bc_tw_count);
+    h_bc_twv.resize(bc_tw_count);
+
+    if (bc_tw_count > 0) {
+      int lc0(0);
+      for (int bcv(0); bcv < m_bc.size(); ++bcv) {
+        if (m_bc[bcv].type == BCList::eb) {
+          h_bc_rbv[lc0] = *(m_bc[bcv].region);
+          h_bc_twv[lc0] =   m_bc[bcv].eb.temperature;
+          lc0++;
+        }
+      }
+
+      d_bc_rbv.resize(bc_tw_count);
+      Gpu::copyAsync(Gpu::hostToDevice, h_bc_rbv.begin(), h_bc_rbv.end(), d_bc_rbv.begin());
+
+      d_bc_twv.resize(bc_tw_count);
+      Gpu::copyAsync(Gpu::hostToDevice, h_bc_twv.begin(), h_bc_twv.end(), d_bc_twv.begin());
+    }
+
+    m_parameters.bc_tw_count = bc_tw_count;
+    m_parameters.p_bc_rbv = (bc_tw_count > 0) ?  d_bc_rbv.data() : nullptr;
+    m_parameters.p_bc_twv = (bc_tw_count > 0) ?  d_bc_twv.data() : nullptr;
+  }
+
 #if 0
   //Dump out what we read for debugging!
   for (int bcv(0); bcv<bc.size(); bcv++){
@@ -766,6 +801,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
 
   }  // END loop over BCs to print output
 #endif
+
 } // END Initialize
 
 

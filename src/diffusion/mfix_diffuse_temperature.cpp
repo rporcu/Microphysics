@@ -8,7 +8,7 @@
 #include <AMReX_EB_utils.H>
 
 using namespace amrex;
-using namespace Solvers;
+using namespace MFIXSolvers;
 
 //
 // Implicit solve for scalar diffusion
@@ -20,7 +20,7 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
                                        const Vector< MultiFab* >& X_gk,
                                        const Vector< MultiFab* >& T_g_on_eb,
                                        Real dt,
-                                       const Real /*abstol*/,
+                                       const Real abstol,
                                        const Real reltol,
                                        const int maxiter)
 {
@@ -92,8 +92,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   }
 
   int iter(0);
-  const amrex::Real update_rel_tol = reltol*norm0(T_g);
-  //const amrex::Real residue_rel_tol = reltol*norm0(residue);
+  const amrex::Real update_tol = reltol*norm0(T_g) + abstol;
+  //const amrex::Real residue_tol = reltol*norm0(residue) + abstol;
 
   Vector<MultiFab*> k_g_on_eb(finest_level+1, nullptr);
 
@@ -366,8 +366,8 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
       amrex::Abort("Newton solver did not converge");
     }
 
-  } while (//(norm0(residue) > residue_rel_tol) ||
-           (norm0(update) > update_rel_tol));
+  } while (//(norm0(residue) > residue_tol) ||
+           (norm0(update) > update_tol));
 
   for (int lev(0); lev <= finest_level; ++lev) {
     delete A[lev];

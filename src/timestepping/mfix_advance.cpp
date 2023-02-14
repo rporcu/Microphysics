@@ -14,10 +14,6 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
-
-using namespace Solvers;
-
-
 void
 mfix::mfix_project_velocity ()
 {
@@ -422,10 +418,12 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
       const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
       const int idx_convection_coeff_txfr = txfr_idxs.convection_coeff;
 
+      MFIXSolvers::Newton nonlinear_solver(newton_abstol, newton_reltol,
+          newton_maxiter, is_IOProc);
+
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          idx_gammaTp_txfr, idx_convection_coeff_txfr,
-          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,nonlinear_solver]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -447,7 +445,7 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
           // temperature
           // ************************************************************
           // Residual computation
-          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          auto R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
           {
             Real hg_loc(0);
 
@@ -468,7 +466,7 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
           };
 
           // Partial derivative computation
-          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          auto partial_R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
           {
             Real gradient(0);
 
@@ -490,7 +488,7 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+          nonlinear_solver.solve(Tg_new, R, partial_R);
 
           Tg_array(i,j,k) = Tg_new;
 
@@ -627,10 +625,12 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
       const int is_IOProc = int(ParallelDescriptor::IOProcessor());
 
+      MFIXSolvers::Newton nonlinear_solver(newton_abstol, newton_reltol,
+          newton_maxiter, is_IOProc);
+
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          idx_gammaTp_txfr, idx_convection_coeff_txfr,
-          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,nonlinear_solver]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -651,7 +651,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
           // temperature
           // ************************************************************
           // Residual computation
-          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          auto R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
           {
             Real hg_loc(0);
 
@@ -672,7 +672,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
           };
 
           // Partial derivative computation
-          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
+          auto partial_R = [=] AMREX_GPU_HOST_DEVICE (Real Tg_arg)
           {
             Real gradient(0);
 
@@ -696,7 +696,7 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+          nonlinear_solver.solve(Tg_new, R, partial_R);
 
           Tg_array(i,j,k) = Tg_new;
 

@@ -22,7 +22,7 @@ void MFIXParticleContainer::ComputeMassProduction (int const a_lev, Real const a
   const int nspecies_s = solids.nspecies();
   std::vector<Real> prod(nspecies_s, 0.); // Mass produced/consumed
 
-  const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
+  const int idx_mass_txfr = m_runtimedata_idxs.chem_species_mass_txfr;
 
   // Ideally, we would do this in one loop, but since the number of spcies
   // is unknown, we loop over each one.
@@ -85,7 +85,7 @@ void MFIXParticleContainer::ComputeMassAccum ( int const a_offset )
 
   for (int lev(0); lev < nlev; lev++) {
 
-    const int idx_X_sn = m_runtimeRealData.X_sn;
+    const int idx_X_sn = m_runtimedata_idxs.species_mass_fractions;
 
     // Ideally, we would do this in one loop, but since the number of spcies
     // is unknown, we loop over each one.
@@ -159,7 +159,7 @@ void MFIXParticleContainer::ComputeMassOutflow (int const a_lev)
   const auto p_lo = Geom(a_lev).ProbLoArray();
   const auto p_hi = Geom(a_lev).ProbHiArray();
 
-  const int idx_X_sn = m_runtimeRealData.X_sn;
+  const int idx_X_sn = m_runtimedata_idxs.species_mass_fractions;
 
   // Ideally, we would do this in one loop, but since the number of spcies
   // is unknown, we loop over each one.
