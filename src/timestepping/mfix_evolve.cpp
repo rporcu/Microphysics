@@ -120,7 +120,8 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
           BL_PROFILE_REGION("PIC PARTICLE SOLVE");
           //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
           EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
-                        particle_cost, knapsack_weight_type);
+                        particle_cost, knapsack_weight_type,
+                        mfixRW->report_mass_balance);
       }
 
       Real end_particles = ParallelDescriptor::second() - start_particles;

@@ -435,7 +435,8 @@ class mfix : public AmrCore
                         amrex::RealVect& gravity,
                         const int ls_refinement,
                         amrex::Vector< amrex::MultiFab* >& cost,
-                        std::string& knapsack_weight_type);
+                        std::string& knapsack_weight_type,
+                        int compute_mass_balance);
 
     void pic_iteration (const bool apply_forces,
                         const bool update_parcels,
