@@ -31,7 +31,7 @@ class Newton
 
     // Solve for scalars
     template<typename ResidueFunc, typename GradientFunc>
-    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    AMREX_GPU_HOST_DEVICE
 #if defined(AMREX_USE_DPCPP)
     SYCL_EXTERNAL
 #endif
