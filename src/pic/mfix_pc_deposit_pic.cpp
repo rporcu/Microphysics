@@ -300,7 +300,7 @@ MFIXParticleContainer::PICHydroStep (int lev,
   const int z_lo_bc = m_boundary_conditions.domain_bc(4);
   const int z_hi_bc = m_boundary_conditions.domain_bc(5);
 
-  const int idx_vel_txfr = m_runtimedata_idxs.chem_vel_txfr;
+  const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
 
   const int solve_reactions = reactions.solve();
 

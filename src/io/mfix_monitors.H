@@ -1005,8 +1005,8 @@ class BaseMonitor: public Monitor {
     class GetParticleValue {
       public:
         AMREX_GPU_HOST_DEVICE
-        GetParticleValue (const SoAruntimerealData& runtimedata_idxs)
-          : m_runtimedata_count(runtimedata_idxs.count)
+        GetParticleValue (const runtimeRealData& rrData)
+          : m_rrData_count(rrData.count)
         {}
 
         AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -1038,7 +1038,7 @@ class BaseMonitor: public Monitor {
             const int idx = index-(5+SoArealData::count);
             return particle.idata(idx);
 
-          } else if (index < (5+SoArealData::count+SoAintData::count+m_runtimedata_count)) {
+          } else if (index < (5+SoArealData::count+SoAintData::count+m_rrData_count)) {
 
             const int idx = index-(5+SoArealData::count+SoAintData::count);
             return ptile_data.m_runtime_rdata[idx][i];
@@ -1049,7 +1049,7 @@ class BaseMonitor: public Monitor {
         }
 
       private:
-        const int m_runtimedata_count;
+        const int m_rrData_count;
     };
 
   protected:

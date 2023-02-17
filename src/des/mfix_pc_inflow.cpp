@@ -49,11 +49,11 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
   const auto& solids_parms = solids.parameters();
 
   const auto  dx_array = Geom(lev).CellSizeArray();
-  const auto dxi_array = Geom(lev).InvCellSizeArray();
+  const auto idx_array = Geom(lev).InvCellSizeArray();
   const auto plo_array = Geom(lev).ProbLoArray();
 
   const RealVect  dx( dx_array[0],  dx_array[1],  dx_array[2]);
-  const RealVect dxi(dxi_array[0], dxi_array[1], dxi_array[2]);
+  const RealVect idx(idx_array[0], idx_array[1], idx_array[2]);
   const RealVect plo(plo_array[0], plo_array[1], plo_array[2]);
 
   const Real  dx2 = dx[0]*dx[0];
@@ -240,7 +240,7 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
               // Add components for each of the runtime variables
               const int start = SoArealData::count;
-              for (int comp(0); comp < m_runtimedata_idxs.count; ++comp)
+              for (int comp(0); comp < m_runtimeRealData.count; ++comp)
                 ptile.push_back_real(start+comp, pcount, 0.);
 
               auto& ptile_aos  = ptile.GetArrayOfStructs();
@@ -256,16 +256,19 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
 
               total_np += new_np;
 
-              const SoAruntimerealData runtimedata_idxs = m_runtimedata_idxs;
+              const int idx_X_sn = m_runtimeRealData.X_sn;
+              const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
+              const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+              const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
               amrex::ParallelForRNG(pcount, [pstruct, ptile_data, NextID, MyProc, old_np, bbx,
-                p_real,p_int, phase, plo, dx, dxi, rbbx,
+                p_real,p_int, phase, plo, dx, idx, rbbx,
                 has_normal, normal, norm_tol_lo, norm_tol_hi, flagsfab, bnorm, bcent,
                 rand_x, rand_y, rand_z, velmag,
                 mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
                 mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
-                adv_enthalpy, solve_species, p_bc_inputs, nspecies_s,
-                runtimedata_idxs, solve_reactions]
+                adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn,
+                idx_mass_txfr, idx_vel_txfr, idx_h_txfr, solve_reactions]
                 AMREX_GPU_DEVICE (int pid, amrex::RandomEngine const& engine) noexcept
               {
                 const int ip = pid + old_np;
@@ -288,9 +291,9 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                   p.pos(2) = rbbx.lo(2) + (rand_z ? rbbx.length(2)*amrex::Random(engine) : 0.);
 
                   // compute the cell index containing the particle center
-                  int i = static_cast<int>(amrex::Math::floor((p.pos(0) - plo[0])*dxi[0]));
-                  int j = static_cast<int>(amrex::Math::floor((p.pos(1) - plo[1])*dxi[1]));
-                  int k = static_cast<int>(amrex::Math::floor((p.pos(2) - plo[2])*dxi[2]));
+                  int i = static_cast<int>(amrex::Math::floor((p.pos(0) - plo[0])*idx[0]));
+                  int j = static_cast<int>(amrex::Math::floor((p.pos(1) - plo[1])*idx[1]));
+                  int k = static_cast<int>(amrex::Math::floor((p.pos(2) - plo[2])*idx[2]));
 
                   if ( bbx.contains(IntVect(i,j,k))) {
                     if(flagsfab(i,j,k).isSingleValued()) {
@@ -365,25 +368,20 @@ void MFIXParticleContainer::mfix_pc_inflow (int lev,
                 }
 
                 if(solve_species) {
-                  for (int n_s(0); n_s < nspecies_s; n_s++) {
-                    const int idx = runtimedata_idxs.species_mass_fractions;
-                    ptile_data.m_runtime_rdata[idx+n_s][ip] = p_bc_inputs[2+n_s];
+                  for (int n(0); n < nspecies_s; n++) {
+                    ptile_data.m_runtime_rdata[idx_X_sn+n][ip] = p_bc_inputs[2+n];
                   }
                 }
 
                 if (solve_reactions) {
-                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                    const int idx = runtimedata_idxs.chem_species_mass_txfr;
-                    ptile_data.m_runtime_rdata[idx+n_s][ip] = 0;
-                  }
+                  for (int n_s(0); n_s < nspecies_s; ++n_s)
+                    ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][ip] = 0;
 
-                  int idx = runtimedata_idxs.chem_vel_txfr;
-                  ptile_data.m_runtime_rdata[idx+0][ip] = 0;
-                  ptile_data.m_runtime_rdata[idx+1][ip] = 0;
-                  ptile_data.m_runtime_rdata[idx+2][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+0][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+1][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_vel_txfr+2][ip] = 0;
 
-                  idx = runtimedata_idxs.chem_enthalpy_txfr;
-                  ptile_data.m_runtime_rdata[idx][ip] = 0;
+                  ptile_data.m_runtime_rdata[idx_h_txfr][ip] = 0;
                 }
 
               });

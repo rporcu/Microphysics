@@ -48,7 +48,7 @@ MFIXDEM::Initialize ()
 
   // Fluid conductivity hack
   amrex::ParmParse ppKG("fluid");
-  ppKG.query("thermal_conductivity.constant", m_parameters.k_g);
+  ppKG.query("thermal_conductivity.constant", m_k_g_dem);
 
   amrex::ParmParse ppDEM("dem");
 
@@ -96,23 +96,23 @@ MFIXDEM::Initialize ()
     m_NPHASE = names.size();
 
     // Read MEW
-    ppDEM.get("friction_coeff.pp", m_parameters.mew);
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= m_parameters.mew && m_parameters.mew <= 1.0,
+    ppDEM.get("friction_coeff.pp", m_mew);
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= m_mew && m_mew <= 1.0,
          "Invalid value: dem.friction_coeff.pp must be in [0.0, 1.0]");
 
     // Read MEW_W
-    ppDEM.get("friction_coeff.pw", m_parameters.mew_w);
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= m_parameters.mew_w && m_parameters.mew_w <= 1.0,
+    ppDEM.get("friction_coeff.pw", m_mew_w);
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(0.0 <= m_mew_w && m_mew_w <= 1.0,
          "Invalid value: dem.friction_coeff.pw must be in [0.0, 1.0]");
 
     // Read KN
-    ppDEM.get("spring_const.pp", m_parameters.kn);
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_parameters.kn > 0.0,
+    ppDEM.get("spring_const.pp", m_kn);
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_kn > 0.0,
          "Invalid value: dem.spring_const.pp must be > 0.0");
 
     // Read KN_w
-    ppDEM.get("spring_const.pw", m_parameters.kn_w);
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_parameters.kn_w > 0.0,
+    ppDEM.get("spring_const.pw", m_kn_w);
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_kn_w > 0.0,
          "Invalid value: dem.spring_const.pw must be > 0.0");
 
      // Read KT_FAC
@@ -137,8 +137,8 @@ MFIXDEM::Initialize ()
 
 
     // Calculate the tangential spring stiffness
-    m_kt   = m_kt_fac   * m_parameters.kn;
-    m_kt_w = m_kt_w_fac * m_parameters.kn_w;
+    m_kt   = m_kt_fac   * m_kn;
+    m_kt_w = m_kt_w_fac * m_kn_w;
 
     //// We know that we should have an upper-triangular matrix worth
     //// of entries. (1-1, 1-2, 2-2, ...) for NPHASEs
@@ -255,10 +255,5 @@ MFIXDEM::Initialize ()
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(is_restarting,
           "Invalid attempt to restart from PIC from an empty chk file");
     }
-
-    // Copy here the Parameters A1D and A2D so their pointers point to the same
-    // memory area
-    m_parameters.etan = m_etan;
-    m_parameters.etan_w = m_etan_w;
   }
 }

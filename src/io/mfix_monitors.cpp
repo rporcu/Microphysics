@@ -2884,75 +2884,67 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("txfr_velocity") == 0) {
 
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
 
       {
         variables_names.push_back("txfr_vel_x");
-        int idx = 5+SoArealData::count+SoAintData::count;
-        idx += runtimedata_idxs.chem_vel_txfr;
-        m_components.push_back(idx+0);
+        const int idx = 5+SoArealData::count+SoAintData::count;
+        m_components.push_back(idx+rrData.vel_txfr+0);
       }
 
       {
         variables_names.push_back("txfr_vel_y");
-        int idx = 5+SoArealData::count+SoAintData::count;
-        idx += runtimedata_idxs.chem_vel_txfr;
-        m_components.push_back(idx+1);
+        const int idx = 5+SoArealData::count+SoAintData::count;
+        m_components.push_back(idx+rrData.vel_txfr+1);
       }
 
       {
         variables_names.push_back("txfr_vel_z");
-        int idx = 5+SoArealData::count+SoAintData::count;
-        idx += runtimedata_idxs.chem_vel_txfr;
-        m_components.push_back(idx+2);
+        const int idx = 5+SoArealData::count+SoAintData::count;
+        m_components.push_back(idx+rrData.vel_txfr+2);
       }
 
     } else if (var.compare("txfr_vel_x") == 0) {
 
       variables_names.push_back(var);
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
-      int idx = 5+SoArealData::count+SoAintData::count;
-      idx += runtimedata_idxs.chem_vel_txfr;
-      m_components.push_back(idx+0);
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.vel_txfr+0);
 
     } else if (var.compare("txfr_vel_y") == 0) {
 
       variables_names.push_back(var);
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
-      int idx = 5+SoArealData::count+SoAintData::count;
-      idx += runtimedata_idxs.chem_vel_txfr;
-      m_components.push_back(idx+1);
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.vel_txfr+1);
 
     } else if (var.compare("txfr_vel_z") == 0) {
 
       variables_names.push_back(var);
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
-      int idx = 5+SoArealData::count+SoAintData::count;
-      idx += runtimedata_idxs.chem_vel_txfr;
-      m_components.push_back(idx+2);
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.vel_txfr+2);
 
     } else if (var.compare("txfr_h") == 0) {
 
       variables_names.push_back(var);
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
-      int idx = 5+SoArealData::count+SoAintData::count;
-      idx += runtimedata_idxs.chem_enthalpy_txfr;
-      m_components.push_back(idx);
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.h_txfr);
 
     } else if (var.compare("txfr_X_sn") == 0) {
 
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
 
       for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
         variables_names.push_back("txfr_X_sn_"+m_solids.species_names(n_s));
-        int idx = 5+SoArealData::count+SoAintData::count;
-        idx += runtimedata_idxs.chem_species_mass_txfr;
-        m_components.push_back(idx+n_s);
+        const int idx = 5+SoArealData::count+SoAintData::count;
+        m_components.push_back(idx+rrData.mass_txfr+n_s);
       }
 
     } else if (var.substr(0,10).compare("txfr_X_sn_") == 0) {
 
-      const SoAruntimerealData& runtimedata_idxs = m_pc->m_runtimedata_idxs;
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
 
       const int var_name_size = var.size();
       const std::string var_species = var.substr(10,var_name_size-10);
@@ -2960,9 +2952,8 @@ BaseMonitor::setup_variables ()
       for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
         if (var_species.compare(m_solids.species_names(n_s)) == 0) {
           variables_names.push_back("txfr_X_sn_"+m_solids.species_names(n_s));
-          int idx = 5+SoArealData::count+SoAintData::count;
-          idx += runtimedata_idxs.chem_species_mass_txfr;
-          m_components.push_back(idx+n_s);
+          const int idx = 5+SoArealData::count+SoAintData::count;
+          m_components.push_back(idx+rrData.mass_txfr+n_s);
           break;
         }
       }
@@ -3031,7 +3022,7 @@ GeneralProperty::sum (const int lev,
 
     using ReduceTuple = typename decltype(reduce_data)::Type;
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3071,7 +3062,7 @@ GeneralProperty::min (const int lev,
 
     ReduceTuple default_value = {std::numeric_limits<Real>::max()};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3111,7 +3102,7 @@ GeneralProperty::max (const int lev,
 
     ReduceTuple default_value = {std::numeric_limits<Real>::min()};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3189,7 +3180,7 @@ AveragedProperty::average (const int lev,
 
     ReduceTuple default_value = {0., 0.};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3242,7 +3233,7 @@ AveragedProperty::stddev (const int lev,
 
     ReduceTuple default_value = {0., 0.};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     const Real d_avg = avg[var];
 
@@ -3297,7 +3288,7 @@ AveragedProperty::mass_weighted_average (const int lev,
 
     ReduceTuple default_value = {0., 0.};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3349,7 +3340,7 @@ AveragedProperty::volume_weighted_average (const int lev,
 
     ReduceTuple default_value = {0., 0.};
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                                            const int index,
@@ -3492,7 +3483,7 @@ FlowRate::flow_rate (const int lev,
 
     CrossesFlowPlane crossing_check;
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
@@ -3549,7 +3540,7 @@ FlowRate::mass_weighted_flow_rate (const int lev,
 
     CrossesFlowPlane crossing_check;
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
@@ -3607,7 +3598,7 @@ FlowRate::volume_weighted_flow_rate (const int lev,
 
     CrossesFlowPlane crossing_check;
 
-    GetParticleValue get_value(m_pc->m_runtimedata_idxs);
+    GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,

@@ -9,6 +9,11 @@
 #include <mfix_calc_cell.H>
 
 using namespace amrex;
+using namespace Solvers;
+
+
+int  MFIXParticleContainer::domain_bc[6] {0};
+
 
 MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               MFIXInitialConditions& initial_conditions,
@@ -19,7 +24,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               MFIXFluidPhase& fluid_in,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
-    , m_runtimedata_idxs(solids_in.nspecies()*solids_in.solve_species(),
+    , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
                         reactions_in.nreactions()*reactions_in.solve())
     , nlev (amr_core->maxLevel() + 1)
     , m_initial_conditions(initial_conditions)
@@ -46,7 +51,7 @@ MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
                                               MFIXFluidPhase& fluid_in,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
-    , m_runtimedata_idxs(solids_in.nspecies()*solids_in.solve_species(),
+    , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
                         reactions_in.nreactions()*reactions_in.solve())
     , nlev(nlevel)
     , m_initial_conditions(initial_conditions)
@@ -61,8 +66,7 @@ MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
 }
 
 
-void
-MFIXParticleContainer::define ()
+void MFIXParticleContainer::define ()
 {
     ReadStaticParameters();
     ReadParameters();
@@ -107,23 +111,19 @@ MFIXParticleContainer::define ()
 #endif
 
     // Add solids nspecies components
-    for (int n(0); n < m_runtimedata_idxs.count; ++n) {
+    for (int n(0); n < m_runtimeRealData.count; ++n) {
       AddRealComp(true); // Turn on comm for redistribute on ghosting
       setRealCommComp(21+n, false); // turn off for ghosting
     }
 }
 
-
-void
-MFIXParticleContainer::AllocData ()
+void MFIXParticleContainer::AllocData ()
 {
     reserveData();
     resizeData();
 }
 
-
-void
-MFIXParticleContainer::PrintParticleCounts ()
+void MFIXParticleContainer::PrintParticleCounts ()
 {
   const int lev = 0;
   amrex::AllPrintToFile("load_balance") << "Particles on each box: \n";
@@ -137,9 +137,7 @@ MFIXParticleContainer::PrintParticleCounts ()
   amrex::AllPrintToFile("load_balance") << "Total for this process: " << local_count << std::endl << std::endl;
 }
 
-
-void
-MFIXParticleContainer::ReadStaticParameters ()
+void MFIXParticleContainer::ReadStaticParameters ()
 {
     static bool initialized = false;
 
@@ -147,9 +145,7 @@ MFIXParticleContainer::ReadStaticParameters ()
         initialized = true;
 }
 
-
-void
-MFIXParticleContainer::ReadParameters ()
+void MFIXParticleContainer::ReadParameters ()
 {
     ParmParse pp("solids.newton_solver");
 
@@ -158,24 +154,24 @@ MFIXParticleContainer::ReadParameters ()
     pp.query("max_iterations", newton_maxiter);
 }
 
-
-void
-MFIXParticleContainer::EvolveParticles (int lev,
-                                        int nstep,
-                                        Real dt,
-                                        Real time,
-                                        RealVect& gravity,
-                                        EBFArrayBoxFactory* ebfactory,
-                                        EBFArrayBoxFactory* particle_ebfactory,
-                                        const MultiFab* ls_phi,
-                                        const int ls_refinement,
-                                        MultiFab* cost,
-                                        std::string& knapsack_weight_type,
-                                        int& nsubsteps,
-                                        int compute_mass_balance)
+void MFIXParticleContainer::EvolveParticles (int lev,
+                                             int nstep,
+                                             Real dt,
+                                             Real time,
+                                             RealVect& gravity,
+                                             EBFArrayBoxFactory* ebfactory,
+                                             EBFArrayBoxFactory* particle_ebfactory,
+                                             const MultiFab* ls_phi,
+                                             const int ls_refinement,
+                                             MultiFab* cost,
+                                             std::string& knapsack_weight_type,
+                                             int& nsubsteps,
+                                             int compute_mass_balance)
 {
     BL_PROFILE_REGION_START("mfix_dem::EvolveParticles()");
     BL_PROFILE("mfix_dem::EvolveParticles()");
+
+    Real constexpr eps = std::numeric_limits<Real>::epsilon();
 
     amrex::Print() << "Evolving particles on level: " << lev
                    << " ... with fluid dt " << dt << std::endl;
@@ -206,6 +202,34 @@ MFIXParticleContainer::EvolveParticles (int lev,
      * Get particle EB geometric info
      ***************************************************************************/
     const FabArray<EBCellFlagFab>* flags = &(particle_ebfactory->getMultiEBCellFlagFab());
+
+    /****************************************************************************
+     * Get EB wall temps/rbox in device array
+     ***************************************************************************/
+    int bc_tw_count(0);
+    for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+      if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
+        bc_tw_count++;
+      }
+    }
+
+    Gpu::HostVector<RealBox> h_bc_rbv(bc_tw_count);
+    Gpu::HostVector<Real>    h_bc_twv(bc_tw_count);
+    if (bc_tw_count > 0) {
+      int lc0(0);
+      for (int bcv(0); bcv < m_boundary_conditions.bc().size(); ++bcv) {
+        if (m_boundary_conditions.bc(bcv).type == BCList::eb) {
+          h_bc_rbv[lc0] = *(m_boundary_conditions.bc(bcv).region);
+          h_bc_twv[lc0] =   m_boundary_conditions.bc(bcv).eb.temperature;
+          lc0++;
+        }
+      }
+    }
+    Gpu::AsyncArray<RealBox> d_bc_rbv(h_bc_rbv.data(), h_bc_rbv.size());
+    Gpu::AsyncArray<Real>    d_bc_twv(h_bc_twv.data(), h_bc_twv.size());
+
+    RealBox* p_bc_rbv = (bc_tw_count > 0) ?  d_bc_rbv.data() : nullptr;
+    Real*    p_bc_twv = (bc_tw_count > 0) ?  d_bc_twv.data() : nullptr;
 
     /****************************************************************************
      * Init temporary storage:                                                  *
@@ -347,8 +371,11 @@ MFIXParticleContainer::EvolveParticles (int lev,
             const int  nlp = (m_dem.pneig_flag()) ? ntp : nrp;
 
             auto& soa = pti.GetStructOfArrays();
-            GpuArray<ParticleReal*, SoArealData::count> p_realarray = soa.realarray();
-            GpuArray<int*, SoAintData::count> p_intarray  = soa.intarray();
+            auto p_realarray = soa.realarray();
+            auto p_intarray  = soa.intarray();
+
+            // Number of particles including neighbor particles
+            int ntot = nrp;
 
             // Particle-particle (and particle-wall) forces and torques. We need
             // these to be zero every time we start a new batch (i.e tile and
@@ -356,9 +383,9 @@ MFIXParticleContainer::EvolveParticles (int lev,
             tow[index].clear();
             fc[index].clear();
             cond[index].clear();
-            tow[index].resize(3*nrp, 0.0);
-            fc[index].resize(3*nrp, 0.0);
-            cond[index].resize(nrp, 0.0);
+            tow[index].resize(3*ntot, 0.0);
+            fc[index].resize(3*ntot, 0.0);
+            cond[index].resize(ntot, 0.0);
 
             Real* fc_ptr   = fc[index].dataPtr();
             Real* tow_ptr  = tow[index].dataPtr();
@@ -370,15 +397,15 @@ MFIXParticleContainer::EvolveParticles (int lev,
               // particle-wall (wfor) forces
               pfor[index].clear();
               wfor[index].clear();
-              pfor[index].resize(3*nrp, 0.0);
-              wfor[index].resize(3*nrp, 0.0);
+              pfor[index].resize(3*ntot, 0.0);
+              wfor[index].resize(3*ntot, 0.0);
 
               // BL_PROFILE_VAR("calc_particle_collisions()", calc_particle_collisions);
 
-              const Geometry& geom = this->Geom(lev);
-              const GpuArray<Real,AMREX_SPACEDIM> dxi = geom.InvCellSizeArray();
-              const GpuArray<Real,AMREX_SPACEDIM> plo = geom.ProbLoArray();
-              const Array4<const Real>& phiarr = ls_phi->array(pti);
+              auto& geom = this->Geom(lev);
+              const auto dxi = geom.InvCellSizeArray();
+              const auto plo = geom.ProbLoArray();
+              const auto& phiarr = ls_phi->array(pti);
 
               const int walls_in_tile = tile_has_walls[index];
 
@@ -386,88 +413,430 @@ MFIXParticleContainer::EvolveParticles (int lev,
 
               constexpr Real small_number = 1.0e-15;
 
-              const auto& bc_parms = m_boundary_conditions.parameters();
               const auto& solids_parms = solids.parameters();
-              const auto& dem_parms = m_dem.parameters();
               const int solve_enthalpy = solids.solve_enthalpy();
-
-              ParticleInteractions particle_interactions(pstruct, p_realarray,
-                  p_intarray, bc_parms, solids_parms, dem_parms);
 
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nlp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,cond_ptr,nbor_data,
-                   subdt,walls_in_tile,ls_refinement,phiarr,plo,dxi,
-                   solve_enthalpy,particle_interactions]
+                   subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,dxi,solids_parms,
+                   solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,local_mew=m_dem.mew(),
+                   local_mew_w=m_dem.mew_w(),local_kn=m_dem.kn(),local_kn_w=m_dem.kn_w(),
+                   local_etan=m_dem.etan(),local_etan_w=m_dem.etan_w(),local_k_g=m_dem.k_g_dem()]
                 AMREX_GPU_DEVICE (int i) noexcept
-              {
-                RealVect total_force_i(0.);
-                RealVect total_tow_force_i(0.);
-                Real Q_dot_i(0.);
-
-                //**********************************************************
-                // Particle-wall collisions
-                //**********************************************************
-                if (walls_in_tile && (i < nrp)) {
-
-                  particle_interactions.particle_wall(i, solve_enthalpy,
-                      ls_refinement, phiarr, plo, dxi, small_number,
-                      subdt, total_force_i, total_tow_force_i, Q_dot_i);
-
-                } // tile has walls
-
-                //**********************************************************
-                // Particle-particle collisions
-                //**********************************************************
-                int has_collisions(0);
-
-                const auto neighbs = nbor_data.getNeighbors(i);
-
-                for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
                 {
-                  const int j = mit.index();
+                    auto particle = pstruct[i];
 
-                  RealVect total_force_j(0.);
-                  RealVect total_tow_force_j(0.);
-                  Real Q_dot_j(0.);
+                    RealVect pos1(particle.pos());
 
-                  particle_interactions.particle_particle(i, mit, solve_enthalpy,
-                      small_number, subdt, nrp, has_collisions,
-                      total_force_i, total_tow_force_i, Q_dot_i,
-                      total_force_j, total_tow_force_j, Q_dot_j);
+                    RealVect total_force(0.);
+                    RealVect total_tow_force(0.);
 
-                  if(j < nrp) {
+                    const int istate(p_intarray[SoAintData::state][i]);
 
-                    HostDevice::Atomic::Add(&fc_ptr[j      ], total_force_j[0]);
-                    HostDevice::Atomic::Add(&fc_ptr[j+nrp  ], total_force_j[1]);
-                    HostDevice::Atomic::Add(&fc_ptr[j+2*nrp], total_force_j[2]);
+                    //**********************************************************
+                    // Particle-wall collisions
+                    //**********************************************************
+                    if (walls_in_tile && (i < nrp)) {
 
-                    HostDevice::Atomic::Add(&tow_ptr[j      ], total_tow_force_j[0]);
-                    HostDevice::Atomic::Add(&tow_ptr[j+nrp  ], total_tow_force_j[1]);
-                    HostDevice::Atomic::Add(&tow_ptr[j+2*nrp], total_tow_force_j[2]);
+                      Real rp = p_realarray[SoArealData::radius][i];
 
-                    HostDevice::Atomic::Add(&cond_ptr[j], Q_dot_j);
-                  }
+                      RealVect pos(pos1);
 
-                } // end neighbor loop
+                      Real ls_value = interp_level_set(pos, ls_refinement, phiarr, plo, dxi);
 
-                if(i < nrp) {
+                      Real overlap_n = rp - ls_value;
 
-                  HostDevice::Atomic::Add(&fc_ptr[i      ], total_force_i[0]);
-                  HostDevice::Atomic::Add(&fc_ptr[i+nrp  ], total_force_i[1]);
-                  HostDevice::Atomic::Add(&fc_ptr[i+2*nrp], total_force_i[2]);
+                      // PFW conduction
+                      Real Tp1, Tp2;
+                      if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                        const Real FLPC = solids_parms.get_flpc<run_on>();
+                        Real Rlens      = (1.0 + FLPC)*rp;
+                        if (ls_value < Rlens) {
+                          const Real Rough = solids_parms.get_min_cond<run_on>();
+                          Tp1              = p_realarray[SoArealData::temperature][i];
 
-                  HostDevice::Atomic::Add(&tow_ptr[i      ], total_tow_force_i[0]);
-                  HostDevice::Atomic::Add(&tow_ptr[i+nrp  ], total_tow_force_i[1]);
-                  HostDevice::Atomic::Add(&tow_ptr[i+2*nrp], total_tow_force_i[2]);
+                          // Construct a point inside the wall (to machine precision)
+                          RealVect normal(0.);
+                          level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
+                          normal[0] *= -1;
+                          normal[1] *= -1;
+                          normal[2] *= -1;
+                          RealVect posw = normal*(ls_value + small_number) + pos1;
 
-                  HostDevice::Atomic::Add(&cond_ptr[i], Q_dot_i);
-                }
+                          // Find BC region this point lives in and get Twall
+                          Tp2 = Tp1;
+                          for (int bcv(0); bcv < bc_tw_count; ++bcv) {
+                            if (p_bc_rbv[bcv].contains(posw)) Tp2 = p_bc_twv[bcv];
+                          }
 
-                if(i < nrp) {
-                  if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
-                      p_intarray[SoAintData::state][i] = 1;
-                }
+                          Real Q_dot = 2.*des_pfp_conduction(ls_value,rp,Rlens,
+                                                             Rough,local_k_g,Tp1,Tp2);
+                          HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
+                        }
+                      }
+
+                      if (ls_value < rp) {
+
+                        // PP conduction (Tw already found from PFW conduction hit)
+                        if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                          const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
+                          const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
+                          Real Q_dot     = des_pp_conduction(ls_value+rp,rp,rp,
+                                                             kp1,kp2,Tp1,Tp2);
+                          HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
+                        }
+
+                        RealVect normal(0.);
+                        level_set_normal(pos, ls_refinement, normal, phiarr, plo, dxi);
+
+                        normal[0] *= -1;
+                        normal[1] *= -1;
+                        normal[2] *= -1;
+
+                        RealVect v_rot(0.);
+                        v_rot[0] = ls_value * p_realarray[SoArealData::omegax][i];
+                        v_rot[1] = ls_value * p_realarray[SoArealData::omegay][i];
+                        v_rot[2] = ls_value * p_realarray[SoArealData::omegaz][i];
+
+                        RealVect vreltrans(0.);
+                        RealVect cprod(0.);
+
+                        cross_product(v_rot, normal, cprod);
+                        vreltrans[0] = p_realarray[SoArealData::velx][i] + cprod[0];
+                        vreltrans[1] = p_realarray[SoArealData::vely][i] + cprod[1];
+                        vreltrans[2] = p_realarray[SoArealData::velz][i] + cprod[2];
+
+                        Real vreltrans_norm = dot_product(vreltrans, normal);
+
+                        RealVect vrel_t(0.);
+                        vrel_t[0] = vreltrans[0] - vreltrans_norm*normal[0];
+                        vrel_t[1] = vreltrans[1] - vreltrans_norm*normal[1];
+                        vrel_t[2] = vreltrans[2] - vreltrans_norm*normal[2];
+
+                        const int phase = p_intarray[SoAintData::phase][i];
+                        const int phase_idx = MFIXSolidsPhase::phase_to_index(phase);
+
+                        Real kn_des_w   = local_kn_w;
+                        Real etan_des_w = local_etan_w(phase_idx);
+
+                        // NOTE - we don't use the tangential components right now,
+                        // but we might in the future
+                        // Real kt_des_w = m_dem.kt_w;
+                        // Real etat_des_w = m_dem.etat_w()[phase_idx];
+
+                        RealVect local_fn(0.);
+                        RealVect local_ft(0.);
+                        RealVect overlap_t(0.);
+                        Real mag_overlap_t(0.);
+
+                        // calculate the normal contact force
+                        local_fn[0] = -(kn_des_w*overlap_n*normal[0]
+                                      + etan_des_w*vreltrans_norm*normal[0]);
+                        local_fn[1] = -(kn_des_w*overlap_n*normal[1]
+                                      + etan_des_w*vreltrans_norm*normal[1]);
+                        local_fn[2] = -(kn_des_w*overlap_n*normal[2]
+                                      + etan_des_w*vreltrans_norm*normal[2]);
+
+                        // calculate the tangential displacement
+                        overlap_t[0] = subdt*vrel_t[0];
+                        overlap_t[1] = subdt*vrel_t[1];
+                        overlap_t[2] = subdt*vrel_t[2];
+
+                        mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+
+                        if (mag_overlap_t > 0.0) {
+                            Real fnmd = local_mew_w * sqrt(dot_product(local_fn, local_fn));
+                            RealVect tangent(0.);
+                            tangent[0] = overlap_t[0]/mag_overlap_t;
+                            tangent[1] = overlap_t[1]/mag_overlap_t;
+                            tangent[2] = overlap_t[2]/mag_overlap_t;
+                            local_ft[0] = -fnmd * tangent[0];
+                            local_ft[1] = -fnmd * tangent[1];
+                            local_ft[2] = -fnmd * tangent[2];
+                        } else {
+                            local_ft[0] = 0.0;
+                            local_ft[1] = 0.0;
+                            local_ft[2] = 0.0;
+                        }
+
+                        if ( istate > 0 ) { // normal particles
+
+                          total_force[0] += local_fn[0] + local_ft[0];
+                          total_force[1] += local_fn[1] + local_ft[1];
+                          total_force[2] += local_fn[2] + local_ft[2];
+
+                          RealVect tow_force(0.);
+
+                          cross_product(normal, local_ft, tow_force);
+
+                          total_tow_force[0] += ls_value*tow_force[0];
+                          total_tow_force[1] += ls_value*tow_force[1];
+                          total_tow_force[2] += ls_value*tow_force[2];
+
+                        } else { // entering particles
+
+                          Real velx = p_realarray[SoArealData::velx][i];
+                          Real vely = p_realarray[SoArealData::vely][i];
+                          Real velz = p_realarray[SoArealData::velz][i];
+
+                          Real velmag = std::sqrt(velx*velx + vely*vely + velz*velz);
+
+                          Real dotprod = (normal[0] * velx +
+                                          normal[1] * vely +
+                                          normal[2] * velz)/velmag;
+
+                          // This is to catch particles that are not moving normal to
+                          // the levelset so that we can adjust their velocity and make sure
+                          // they fully enter the domain.
+                          if(Math::abs(1.0 + dotprod) > std::numeric_limits<Real>::epsilon()) {
+
+                            p_realarray[SoArealData::velx][i] = -velmag*normal[0];
+                            p_realarray[SoArealData::vely][i] = -velmag*normal[1];
+                            p_realarray[SoArealData::velz][i] = -velmag*normal[2];
+
+                          }
+
+                        }
+
+                      // An entering particle is no longer overlapping the wall.
+                      } else if(istate == 0) {
+                        //amrex::AllPrint() << "setting particle to normal\n";
+
+                        // Set the state to normal so it no longer ignores forces.
+                        p_intarray[SoAintData::state][i] = 1;
+                      }
+
+                    } // tile has walls
+
+                    //**********************************************************
+                    // Particle-particle collisions
+                    //**********************************************************
+                    int has_collisions(0);
+
+                    const auto neighbs = nbor_data.getNeighbors(i);
+
+                    for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
+                    {
+                        const auto p2 = *mit;
+                        const int j = mit.index();
+
+                        Real dist_x = p2.pos(0) - pos1[0];
+                        Real dist_y = p2.pos(1) - pos1[1];
+                        Real dist_z = p2.pos(2) - pos1[2];
+
+                        Real r2 = dist_x*dist_x +
+                                  dist_y*dist_y +
+                                  dist_z*dist_z;
+
+                        const Real p1radius = p_realarray[SoArealData::radius][i];
+                        const Real p2radius = p_realarray[SoArealData::radius][j];
+
+                        Real r_lm = p1radius + p2radius;
+
+                        AMREX_ASSERT_WITH_MESSAGE(
+                            !(particle.id() == p2.id() &&
+                              particle.cpu() == p2.cpu()),
+                          "A particle should not be its own neighbor!");
+
+                        // PFP conduction
+                        if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                          const Real FLPC = solids_parms.get_flpc<run_on>();
+                          Real Rp_eff     = 2.0*(p1radius*p2radius)/(p1radius + p2radius);
+                          Real Rlens_eff  = (1.0 + FLPC)*Rp_eff;
+                          Real lens_lm    = 2.0*Rlens_eff;
+                          if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
+                            const Real Rough  = solids_parms.get_min_cond<run_on>();
+                            const Real Tp1    = p_realarray[SoArealData::temperature][i];
+                            const Real Tp2    = p_realarray[SoArealData::temperature][j];
+                            Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
+                            Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
+                                                            Rough,local_k_g,Tp1,Tp2);
+                            if(i < nrp) HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                            if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
+                          }
+                        }
+
+                        if ( r2 <= (r_lm - small_number)*(r_lm - small_number) )
+                        {
+                            has_collisions = 1;
+
+                            const int jstate = p_intarray[SoAintData::state][j];
+
+                            Real dist_mag = sqrt(r2);
+
+                            AMREX_ASSERT(dist_mag >= eps);
+
+                            // PP conduction
+                            if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
+                              const Real Tp1 = p_realarray[SoArealData::temperature][i];
+                              const Real Tp2 = p_realarray[SoArealData::temperature][j];
+                              const Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
+                              const Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
+                              Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
+                                                             kp1,kp2,Tp1,Tp2);
+                              if(i < nrp) HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
+                              if(j < nrp) HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
+                            }
+
+                            Real dist_mag_inv = 1.e0/dist_mag;
+
+                            RealVect normal(0.);
+                            normal[0] = dist_x * dist_mag_inv;
+                            normal[1] = dist_y * dist_mag_inv;
+                            normal[2] = dist_z * dist_mag_inv;
+
+                            Real overlap_n(0.);
+
+                            if (istate == 10 || jstate == 10) {
+
+                              // most of overlaps (99.99%) are in the range [0, 2.5e-8] m
+                              // which means [0, 5.e-4] radiuses
+                              // we set max overlap to   2.5e-4*radius
+                              overlap_n = amrex::min(r_lm - dist_mag, 2.5e-4*p1radius);
+
+                            } else {
+                              overlap_n = r_lm - dist_mag;
+                            }
+
+
+                            Real vrel_trans_norm;
+                            RealVect vrel_t(0.);
+
+                            RealVect p1vel(p_realarray[SoArealData::velx][i],
+                                           p_realarray[SoArealData::vely][i],
+                                           p_realarray[SoArealData::velz][i]);
+
+                            RealVect p2vel(p_realarray[SoArealData::velx][j],
+                                           p_realarray[SoArealData::vely][j],
+                                           p_realarray[SoArealData::velz][j]);
+
+                            RealVect p1omega(p_realarray[SoArealData::omegax][i],
+                                             p_realarray[SoArealData::omegay][i],
+                                             p_realarray[SoArealData::omegaz][i]);
+
+                            RealVect p2omega(p_realarray[SoArealData::omegax][j],
+                                             p_realarray[SoArealData::omegay][j],
+                                             p_realarray[SoArealData::omegaz][j]);
+
+                            cfrelvel(p1vel, p2vel, p1radius, p2radius, p1omega,
+                                p2omega, vrel_trans_norm, vrel_t, normal, dist_mag);
+
+                            const int phase1 = p_intarray[SoAintData::phase][i];
+                            const int phase2 = p_intarray[SoAintData::phase][j];
+
+                            const int phase1_idx = MFIXSolidsPhase::phase_to_index(phase1);
+                            const int phase2_idx = MFIXSolidsPhase::phase_to_index(phase2);
+
+                            Real kn_des   = local_kn;
+                            Real etan_des = local_etan(phase1_idx, phase2_idx);
+
+                            // NOTE - we don't use the tangential components right now,
+                            // but we might in the future
+                            // Real kt_des = m_dem.kt;
+                            // Real etat_des = m_dem.etat[phase1_idx][phase2_idx];
+
+                            RealVect local_fn(0.);
+                            RealVect local_ft(0.);
+                            RealVect overlap_t(0.);
+                            Real mag_overlap_t(0.);
+
+                            // calculate the normal contact force
+                            local_fn[0] = -(kn_des*overlap_n*normal[0]
+                                          + etan_des*vrel_trans_norm*normal[0]);
+                            local_fn[1] = -(kn_des*overlap_n*normal[1]
+                                          + etan_des*vrel_trans_norm*normal[1]);
+                            local_fn[2] = -(kn_des*overlap_n*normal[2]
+                                          + etan_des*vrel_trans_norm*normal[2]);
+
+                            // calculate the tangential overlap
+                            overlap_t[0] = subdt*vrel_t[0];
+                            overlap_t[1] = subdt*vrel_t[1];
+                            overlap_t[2] = subdt*vrel_t[2];
+                            mag_overlap_t = sqrt(dot_product(overlap_t, overlap_t));
+
+                            if (mag_overlap_t > 0.0) {
+                                Real fnmd = local_mew * sqrt(dot_product(local_fn, local_fn));
+                                RealVect tangent(0.);
+                                tangent[0] = overlap_t[0]/mag_overlap_t;
+                                tangent[1] = overlap_t[1]/mag_overlap_t;
+                                tangent[2] = overlap_t[2]/mag_overlap_t;
+                                local_ft[0] = -fnmd * tangent[0];
+                                local_ft[1] = -fnmd * tangent[1];
+                                local_ft[2] = -fnmd * tangent[2];
+
+                            } else {
+                                local_ft[0] = 0.0;
+                                local_ft[1] = 0.0;
+                                local_ft[2] = 0.0;
+                            }
+
+                            Real dist_cl1 = 0.5 * (dist_mag + (p1radius*p1radius - p2radius*p2radius) * dist_mag_inv);
+                            dist_cl1 = dist_mag - dist_cl1;
+
+                            Real dist_cl2 = 0.5 * (dist_mag + (p2radius*p2radius - p1radius*p1radius) * dist_mag_inv);
+                            dist_cl2 = dist_mag - dist_cl2;
+
+                            RealVect local_tow_force(0.);
+                            cross_product(normal, local_ft, local_tow_force);
+
+                            if ( istate > 0 ) {
+                              total_force[0] += local_fn[0] + local_ft[0];
+                              total_force[1] += local_fn[1] + local_ft[1];
+                              total_force[2] += local_fn[2] + local_ft[2];
+
+                              total_tow_force[0] += dist_cl1*local_tow_force[0];
+                              total_tow_force[1] += dist_cl1*local_tow_force[1];
+                              total_tow_force[2] += dist_cl1*local_tow_force[2];
+                            }
+
+                            if (j < nrp && jstate != 0) {
+                              HostDevice::Atomic::Add(&fc_ptr[j         ], -(local_fn[0] + local_ft[0]));
+                              HostDevice::Atomic::Add(&fc_ptr[j + ntot  ], -(local_fn[1] + local_ft[1]));
+                              HostDevice::Atomic::Add(&fc_ptr[j + 2*ntot], -(local_fn[2] + local_ft[2]));
+
+                              HostDevice::Atomic::Add(&tow_ptr[j         ], dist_cl2*local_tow_force[0]);
+                              HostDevice::Atomic::Add(&tow_ptr[j + ntot  ], dist_cl2*local_tow_force[1]);
+                              HostDevice::Atomic::Add(&tow_ptr[j + 2*ntot], dist_cl2*local_tow_force[2]);
+                            }
+                            // Special case of two entering particles having an overlap
+                            if (istate == 0 && jstate == 0) {
+
+                              const Real shift = 1.0001*overlap_n;
+                              const RealVect sumvel(p1vel + p2vel);
+                              const int imove = (( sumvel[0]*normal[0]
+                                                 + sumvel[1]*normal[1]
+                                                 + sumvel[2]*normal[2]) > 0.) ? 1 : 0;
+
+                              if (imove) {
+                                total_force[0] -= shift * normal[0];
+                                total_force[1] -= shift * normal[1];
+                                total_force[2] -= shift * normal[2];
+
+                              } else if (j < nrp) {
+                                {
+                                  HostDevice::Atomic::Add(&fc_ptr[j         ], shift * normal[0]);
+                                  HostDevice::Atomic::Add(&fc_ptr[j +   ntot], shift * normal[1]);
+                                  HostDevice::Atomic::Add(&fc_ptr[j + 2*ntot], shift * normal[2]);
+                                }
+                              }
+                            } // end overlap between entering particles
+
+                        } // end overlap
+                    } // end neighbor loop
+
+                    if(i < nrp) {
+                        HostDevice::Atomic::Add(&fc_ptr[i         ], total_force[0]);
+                        HostDevice::Atomic::Add(&fc_ptr[i + ntot  ], total_force[1]);
+                        HostDevice::Atomic::Add(&fc_ptr[i + 2*ntot], total_force[2]);
+
+                        HostDevice::Atomic::Add(&tow_ptr[i         ], total_tow_force[0]);
+                        HostDevice::Atomic::Add(&tow_ptr[i + ntot  ], total_tow_force[1]);
+                        HostDevice::Atomic::Add(&tow_ptr[i + 2*ntot], total_tow_force[2]);
+
+                        if ((p_intarray[SoAintData::state][i] == 10) && (!has_collisions))
+                            p_intarray[SoAintData::state][i] = 1;
+                    }
               });
 
               Gpu::Device::synchronize();
@@ -475,21 +844,32 @@ MFIXParticleContainer::EvolveParticles (int lev,
               // BL_PROFILE_VAR_STOP(calc_particle_collisions);
 
               // BL_PROFILE_VAR("des::solve_particle_velocity_and_position()", des_time_march);
+
             }
 
             /********************************************************************
              * Move particles based on collision forces and torques             *
              *******************************************************************/
 
-            const GpuArray<Real,AMREX_SPACEDIM> p_lo = Geom(lev).ProbLoArray();
-            const GpuArray<Real,AMREX_SPACEDIM> p_hi = Geom(lev).ProbHiArray();
+            const auto p_lo = Geom(lev).ProbLoArray();
+            const auto p_hi = Geom(lev).ProbHiArray();
+
+            int x_lo_bc = m_boundary_conditions.domain_bc(0);
+            int x_hi_bc = m_boundary_conditions.domain_bc(1);
+            int y_lo_bc = m_boundary_conditions.domain_bc(2);
+            int y_hi_bc = m_boundary_conditions.domain_bc(3);
+            int z_lo_bc = m_boundary_conditions.domain_bc(4);
+            int z_hi_bc = m_boundary_conditions.domain_bc(5);
 
             //Access to added variables
             auto ptile_data = ptile.getParticleTileData();
 
             const int nspecies_s = solids.nspecies();
 
-            const auto runtimedata_idxs = m_runtimedata_idxs;
+            const int idx_X_sn = m_runtimeRealData.X_sn;
+            const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
+            const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
+            const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
             const int update_mass = solids.update_mass() && solids.solve_species() && reactions.solve();
             const int update_momentum = solids.update_momentum();
@@ -500,32 +880,57 @@ MFIXParticleContainer::EvolveParticles (int lev,
 
             const int solid_is_a_mixture = solids.isMixture();
 
-            const auto& bc_parms = m_boundary_conditions.parameters();
             const auto& solids_parms = solids.parameters();
 
-            MFIXSolvers::Newton nonlinear_solver(abstol, reltol, maxiter, is_IOProc);
-
-            ParticleUpdates particle_updates(pstruct, p_realarray, p_intarray,
-                ptile_data, bc_parms, solids_parms);
-
             amrex::ParallelFor(nrp,
-               [nrp,p_realarray,subdt,particle_updates,ptile_data,nspecies_s,
-                runtimedata_idxs,update_mass,fc_ptr,cond_ptr,gravity,tow_ptr,
-                p_hi,p_lo,enthalpy_source,update_momentum,solve_reactions,
-                time,solid_is_a_mixture,solve_enthalpy,nonlinear_solver]
+               [pstruct,p_realarray,p_intarray,subdt,
+                ptile_data,nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
+                idx_h_txfr,update_mass,fc_ptr,cond_ptr,ntot,gravity,tow_ptr,eps,
+                p_hi,p_lo,x_lo_bc,x_hi_bc,y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc,
+                enthalpy_source,update_momentum,solve_reactions,time,
+                solid_is_a_mixture,solids_parms,solve_enthalpy,
+                is_IOProc,abstol,reltol,maxiter]
               AMREX_GPU_DEVICE (int i) noexcept
             {
+              ParticleType& p = pstruct[i];
+
               GpuArray<Real, MFIXSpecies::NMAX> X_sn;
               X_sn.fill(0.);
 
               // Get current particle's species mass fractions
               for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                const int idx = runtimedata_idxs.species_mass_fractions;
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx+n_s][i];
+                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
+              }
+
+              Real p_enthalpy_old(0);
+
+              if (solve_enthalpy) {
+                const Real Tp = p_realarray[SoArealData::temperature][i];
+
+                if (solid_is_a_mixture) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                    p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
+                  }
+                } else {
+
+                  p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp);
+                }
               }
 
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
+              Real p_mass_new(p_mass_old);
+
+              // Get current particle's density
+              const Real p_density_old = p_realarray[SoArealData::density][i];
+              Real p_density_new(p_density_old);
+
+              // Get current particle's oneOverI
+              const Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][i];
+              Real p_oneOverI_new(p_oneOverI_old);
+
+              // Get current particle's volume
+              const Real p_vol = p_realarray[SoArealData::volume][i];
 
               // Flag to stop computing particle's quantities if mass_new < 0,
               // i.e. the particle disappears because of chemical reactions
@@ -536,26 +941,155 @@ MFIXParticleContainer::EvolveParticles (int lev,
               //***************************************************************
               if (update_mass) {
 
-                const int solve_dem = 1;
+                // Total particle density exchange rate
+                Real total_mass_rate(0);
 
-                particle_updates.update_mass(i, nspecies_s, X_sn, subdt,
-                    runtimedata_idxs, proceed, solve_dem);
+                for (int n_s(0); n_s < nspecies_s; ++n_s) {
 
+                  // Get the current reaction rate for species n_s
+                  const Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][i];
+
+                  X_sn[n_s] = X_sn[n_s]*p_mass_old + subdt*mass_sn_rate;
+
+                  // Update the total mass exchange rate
+                  total_mass_rate += mass_sn_rate;
+                }
+
+                // Update the total mass of the particle
+                p_mass_new = p_mass_old + subdt * total_mass_rate;
+
+                if (p_mass_new > 0) {
+
+                  Real total_X(0.);
+
+                  // Normalize species mass fractions
+                  for (int n_s(0); n_s < nspecies_s; n_s++) {
+                    Real X_sn_new = X_sn[n_s] / p_mass_new;
+
+                    if (X_sn_new < 0) X_sn_new = 0;
+                    if (X_sn_new > 1) X_sn_new = 1;
+
+                    total_X += X_sn_new;
+                    X_sn[n_s] = X_sn_new;
+                  }
+
+                  for (int n_s(0); n_s < nspecies_s; n_s++) {
+                    // Divide updated species mass fractions by total_X
+                    X_sn[n_s] /= total_X;
+                    ptile_data.m_runtime_rdata[idx_X_sn+n_s][i] = X_sn[n_s];
+                  }
+
+                  // Write out to global memory particle's mass and density
+                  p_realarray[SoArealData::mass][i] = p_mass_new;
+                  p_density_new = p_mass_new / p_vol;
+                  p_realarray[SoArealData::density][i] = p_density_new;
+
+                  // Write out to global memory particle's moment of inertia
+                  p_oneOverI_new = (p_density_old/p_density_new)*p_oneOverI_old;
+                  p_realarray[SoArealData::oneOverI][i] = p_oneOverI_new;
+
+                } else {
+                  p.id() = -1;
+                  proceed = 0;
+                }
               }
 
               if (proceed) {
-
-                const Real p_mass_new = p_realarray[SoArealData::mass][i];
-                const Real mass_coeff = update_mass ? p_mass_old/p_mass_new : 1.;
-
                 //***************************************************************
                 // Second step: update particles' positions and velocities
                 //***************************************************************
                 if (update_momentum) {
+                  const Real p_velx_old = p_realarray[SoArealData::velx][i];
+                  const Real p_vely_old = p_realarray[SoArealData::vely][i];
+                  const Real p_velz_old = p_realarray[SoArealData::velz][i];
 
-                  particle_updates.update_momentum(i, solve_reactions, mass_coeff,
-                      fc_ptr, tow_ptr, nrp, subdt, runtimedata_idxs, gravity,
-                      p_lo, p_hi);
+                  const Real vel_coeff = update_mass ? p_mass_old/p_mass_new : 1.;
+
+                  Real p_velx_new = vel_coeff*p_velx_old +
+                    subdt*((p_realarray[SoArealData::dragx][i]+fc_ptr[i]) / p_mass_new + vel_coeff*gravity[0]);
+                  Real p_vely_new = vel_coeff*p_vely_old +
+                    subdt*((p_realarray[SoArealData::dragy][i]+fc_ptr[i+ntot]) / p_mass_new + vel_coeff*gravity[1]);
+                  Real p_velz_new = vel_coeff*p_velz_old +
+                    subdt*((p_realarray[SoArealData::dragz][i]+fc_ptr[i+2*ntot]) / p_mass_new + vel_coeff*gravity[2]);
+
+                  if (solve_reactions) {
+                    p_velx_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+0][i] / p_mass_new);
+                    p_vely_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+1][i] / p_mass_new);
+                    p_velz_new += subdt*(ptile_data.m_runtime_rdata[idx_vel_txfr+2][i] / p_mass_new);
+                  }
+
+                  const Real p_omegax_old = p_realarray[SoArealData::omegax][i];
+                  const Real p_omegay_old = p_realarray[SoArealData::omegay][i];
+                  const Real p_omegaz_old = p_realarray[SoArealData::omegaz][i];
+
+                  const Real omega_coeff = update_mass ? p_oneOverI_new/p_oneOverI_old : 1.;
+
+                  Real p_omegax_new = omega_coeff*p_omegax_old + subdt * p_oneOverI_new * tow_ptr[i];
+                  Real p_omegay_new = omega_coeff*p_omegay_old + subdt * p_oneOverI_new * tow_ptr[i+ntot];
+                  Real p_omegaz_new = omega_coeff*p_omegaz_old + subdt * p_oneOverI_new * tow_ptr[i+2*ntot];
+
+                  const Real p_posx_old = p.pos(0);
+                  const Real p_posy_old = p.pos(1);
+                  const Real p_posz_old = p.pos(2);
+
+                  Real p_posx_new = p_posx_old + subdt * p_velx_new;
+                  Real p_posy_new = p_posy_old + subdt * p_vely_new;
+                  Real p_posz_new = p_posz_old + subdt * p_velz_new;
+
+                  if (x_lo_bc && p_posx_new < p_lo[0])
+                  {
+                      p_posx_new = p_lo[0] + eps;
+                      p_velx_new = -p_velx_new;
+                  }
+                  if (x_hi_bc && p_posx_new > p_hi[0])
+                  {
+                      p_posx_new = p_hi[0] - eps;
+                      p_velx_new = -p_velx_new;
+                  }
+                  if (y_lo_bc && p_posy_new < p_lo[1])
+                  {
+                      p_posy_new = p_lo[1] + eps;
+                      p_vely_new = -p_vely_new;
+                  }
+                  if (y_hi_bc && p_posy_new > p_hi[1])
+                  {
+                      p_posy_new = p_hi[1] - eps;
+                      p_vely_new = -p_vely_new;
+                  }
+                  if (z_lo_bc && p_posz_new < p_lo[2])
+                  {
+                      p_posz_new = p_lo[2] + eps;
+                      p_velz_new = -p_velz_new;
+                  }
+                  if (z_hi_bc && p_posz_new > p_hi[2])
+                  {
+                      p_posz_new = p_hi[2] - eps;
+                      p_velz_new = -p_velz_new;
+                  }
+
+                  if (p_intarray[SoAintData::state][i] != 0) {
+
+                    // Update positions
+                    p.pos(0) = p_posx_new;
+                    p.pos(1) = p_posy_new;
+                    p.pos(2) = p_posz_new;
+
+                    // Update velocities
+                    p_realarray[SoArealData::velx][i] = p_velx_new;
+                    p_realarray[SoArealData::vely][i] = p_vely_new;
+                    p_realarray[SoArealData::velz][i] = p_velz_new;
+
+                    // Update angular velocities
+                    p_realarray[SoArealData::omegax][i] = p_omegax_new;
+                    p_realarray[SoArealData::omegay][i] = p_omegay_new;
+                    p_realarray[SoArealData::omegaz][i] = p_omegaz_new;
+
+                  } else {
+
+                    p.pos(0) += subdt * p_velx_old + fc_ptr[i         ];
+                    p.pos(1) += subdt * p_vely_old + fc_ptr[i +   ntot];
+                    p.pos(2) += subdt * p_velz_old + fc_ptr[i + 2*ntot];
+                  }
 
                 }
 
@@ -564,10 +1098,75 @@ MFIXParticleContainer::EvolveParticles (int lev,
                 //***************************************************************
                 if (solve_enthalpy) {
 
-                  particle_updates.update_enthalpy(i, nspecies_s, X_sn,
-                      solve_reactions, solid_is_a_mixture, mass_coeff,
-                      cond_ptr, subdt, runtimedata_idxs, enthalpy_source,
-                      nonlinear_solver);
+                  const Real coeff = update_mass ? (p_mass_old/p_mass_new) : 1.;
+
+                  Real p_enthalpy_new = coeff*p_enthalpy_old +
+                    subdt*((p_realarray[SoArealData::convection][i]+cond_ptr[i]+enthalpy_source) / p_mass_new);
+
+                  if (solve_reactions) {
+                    p_enthalpy_new += subdt*(ptile_data.m_runtime_rdata[idx_h_txfr][i] / p_mass_new);
+                  }
+
+                  // ************************************************************
+                  // Newton-Raphson solver for solving implicit equation for
+                  // temperature
+                  // ************************************************************
+                  // Residual computation
+                  auto R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
+                  {
+                    Real hp_loc(0);
+
+                    if (!solid_is_a_mixture) {
+
+                      hp_loc = solids_parms.calc_h_s<run_on>(Tp_arg);
+                    } else {
+
+                      for (int n_s(0); n_s < nspecies_s; ++n_s)
+                        hp_loc += X_sn[n_s]*solids_parms.calc_h_sn<run_on>(Tp_arg,n_s);
+                    }
+
+                    return hp_loc - p_enthalpy_new;
+                  };
+
+                  // Partial derivative computation
+                  auto partial_R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
+                  {
+                    Real gradient(0);
+
+                    if (!solid_is_a_mixture) {
+
+                      gradient = solids_parms.calc_partial_h_s<run_on>(Tp_arg);
+                    } else {
+
+                      for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                        gradient += X_sn[n_s]*solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n_s);
+                      }
+                    }
+
+                    return gradient;
+                  };
+
+                  //const Real Tp_old = p_realarray[SoArealData::temperature][i];
+                  //Real Tp_new(Tp_old);
+                  Real Tp_new(p_realarray[SoArealData::temperature][i]);
+
+                  Newton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+
+                  p_realarray[SoArealData::temperature][i] = Tp_new;
+
+                  // Update cp_s
+                  Real cp_s_new(0);
+
+                  if (solid_is_a_mixture) {
+                    for (int n_s(0); n_s < nspecies_s; ++n_s)
+                      cp_s_new += X_sn[n_s]*solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
+
+                  } else {
+                    cp_s_new = solids_parms.calc_cp_s<run_on>(Tp_new);
+                  }
+
+                  AMREX_ASSERT(cp_s_new > 0.);
+                  p_realarray[SoArealData::cp_s][i] = cp_s_new;
                 }
               }
             });

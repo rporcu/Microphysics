@@ -6,8 +6,6 @@ target_sources( mfixcore
    PRIVATE
    mfix_particle_generator.H
    mfix_particle_generator.cpp
-   mfix_particle_interactions.cpp
-   mfix_particle_updates.cpp
    mfix_des_drag_K.H
    mfix_des_rrates_K.H
    mfix_des_parts_gen_K.H

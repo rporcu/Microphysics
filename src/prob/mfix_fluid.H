@@ -13,8 +13,8 @@
 class MFIXFluidParms;
 
 
-class MFIXFluidPhase
-{
+class MFIXFluidPhase {
+
   public:
     // 
     struct ViscosityModel { enum {Invalid=-1, Constant, Sutherland}; };
@@ -159,8 +159,8 @@ class MFIXFluidPhase
 }; // class MFIXFluidPhase
 
 
-class MFIXFluidParms
-{
+class MFIXFluidParms {
+
   public:
     AMREX_GPU_HOST_DEVICE
     MFIXFluidParms (const amrex::Real T_ref);

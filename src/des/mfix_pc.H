@@ -54,23 +54,23 @@ struct SoArealData
 
 
 // Particle real data stored at runtime in a SoA style
-class SoAruntimerealData
+class runtimeRealData
 {
   public:
     AMREX_GPU_HOST_DEVICE
-    SoAruntimerealData (const int nspecies_s,
-                        const int nreactions)
-      : species_mass_fractions(0) // nb of components = nspecies_s
-      , chem_vel_txfr(species_mass_fractions + nspecies_s) // nb of components = 3
-      , chem_enthalpy_txfr(chem_vel_txfr + 3*(nreactions>0)) // nb of components = 1
-      , chem_species_mass_txfr(chem_enthalpy_txfr + 1*(nreactions>0)) // nb of components = nspecies_s
-      , count(chem_species_mass_txfr + nspecies_s*(nreactions>0))
+    runtimeRealData (const int nspecies_s,
+                     const int nreactions)
+      : X_sn(0)                              // nb of components = nspecies_s
+      , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
+      , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
+      , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = nspecies_s
+      , count(mass_txfr + nspecies_s*(nreactions>0))
     {}
 
-    const int species_mass_fractions;
-    const int chem_vel_txfr;
-    const int chem_enthalpy_txfr;
-    const int chem_species_mass_txfr;
+    const int X_sn;
+    const int vel_txfr;
+    const int h_txfr;
+    const int mass_txfr;
     const int count;
 };
 
@@ -257,139 +257,6 @@ class MFIXParticleContainer final
                           int & nsubsteps,
                           int compute_mass_balance);
 
-    class ParticleInteractions {
-      public:
-        AMREX_GPU_HOST_DEVICE
-        ParticleInteractions (ParticleType* pstruct,
-                              amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
-                              amrex::GpuArray<int*, SoAintData::count>& p_intarray,
-                              const MFIXBoundaryConditions::Parameters& bc_parms,
-                              const MFIXSolidsParms& solids_parms,
-                              const MFIXDEM::Parameters& dem_parms)
-          : m_pstruct(pstruct)
-          , m_p_realarray(p_realarray)
-          , m_p_intarray(p_intarray)
-          , m_bc_parms(bc_parms)
-          , m_solids_parms(solids_parms)
-          , m_dem_parms(dem_parms)
-        {}
-
-        AMREX_GPU_HOST_DEVICE
-#if defined(AMREX_USE_DPCPP)
-        SYCL_EXTERNAL
-#endif
-        void particle_wall (const int i,
-                            const int solve_enthalpy,
-                            const int ls_refinement,
-                            const amrex::Array4<const amrex::Real>& phiarr,
-                            const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>& plo,
-                            const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>& dxi,
-                            const amrex::Real small_number,
-                            const amrex::Real dt,
-                            amrex::RealVect& total_force,
-                            amrex::RealVect& total_tow_force,
-                            amrex::Real& Q_dot) const;
-
-        AMREX_GPU_HOST_DEVICE
-#if defined(AMREX_USE_DPCPP)
-        SYCL_EXTERNAL
-#endif
-        void particle_particle (const int i,
-                                amrex::Neighbors<ParticleType>::const_iterator mit,
-                                const int solve_enthalpy,
-                                const amrex::Real small_number,
-                                const amrex::Real dt,
-                                const int nrp,
-                                int& has_collisions,
-                                amrex::RealVect& total_force,
-                                amrex::RealVect& total_tow_force,
-                                amrex::Real& Q_dot,
-                                amrex::RealVect& total_force_j,
-                                amrex::RealVect& total_tow_force_j,
-                                amrex::Real& Q_dot_j) const;
-
-      private:
-        ParticleType* m_pstruct;
-        amrex::GpuArray<amrex::ParticleReal*, SoArealData::count> m_p_realarray;
-        amrex::GpuArray<int*, SoAintData::count> m_p_intarray;
-
-      public:
-        const MFIXBoundaryConditions::Parameters m_bc_parms;
-        const MFIXSolidsParms m_solids_parms;
-        const MFIXDEM::Parameters m_dem_parms;
-    };
-
-    class ParticleUpdates {
-      public:
-        AMREX_GPU_HOST_DEVICE
-        ParticleUpdates (ParticleType* pstruct,
-                         amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
-                         amrex::GpuArray<int*, SoAintData::count>& p_intarray,
-                         amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count>& ptile_data,
-                         const MFIXBoundaryConditions::Parameters& bc_parms,
-                         const MFIXSolidsParms& solids_parms)
-          : m_pstruct(pstruct)
-          , m_p_realarray(p_realarray)
-          , m_p_intarray(p_intarray)
-          , m_ptile_data(ptile_data)
-          , m_bc_parms(bc_parms)
-          , m_solids_parms(solids_parms)
-        {}
-
-        AMREX_GPU_HOST_DEVICE
-#if defined(AMREX_USE_DPCPP)
-        SYCL_EXTERNAL
-#endif
-        void update_mass (const int i,
-                          const int nspecies_s,
-                          amrex::GpuArray<amrex::Real, MFIXSpecies::NMAX>& X_sn,
-                          const amrex::Real dt,
-                          const SoAruntimerealData& runtimedata_idxs,
-                          int& proceed,
-                          const int solve_dem) const;
-
-        AMREX_GPU_HOST_DEVICE
-#if defined(AMREX_USE_DPCPP)
-        SYCL_EXTERNAL
-#endif
-        void update_momentum (const int i,
-                              const int solve_reactions,
-                              const amrex::Real mass_coeff,
-                              amrex::Real* fc_ptr,
-                              amrex::Real* tow_ptr,
-                              const int ntot,
-                              const amrex::Real dt,
-                              const SoAruntimerealData& runtimedata_idxs,
-                              const amrex::RealVect& gravity,
-                              const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>& p_lo,
-                              const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM>& p_hi) const;
-
-        template<class S>
-        AMREX_GPU_HOST_DEVICE
-#if defined(AMREX_USE_DPCPP)
-        SYCL_EXTERNAL
-#endif
-        void update_enthalpy (const int i,
-                              const int nspecies_s,
-                              amrex::GpuArray<amrex::Real, MFIXSpecies::NMAX>& X_sn,
-                              const int solve_reactions,
-                              const int solid_is_a_mixture,
-                              const amrex::Real mass_coeff,
-                              amrex::Real* cond_ptr,
-                              const amrex::Real dt,
-                              const SoAruntimerealData& runtimedata_idxs,
-                              const amrex::Real enthalpy_source,
-                              S nonlinear_solver) const;
-
-      private:
-        ParticleType* m_pstruct;
-        amrex::GpuArray<amrex::ParticleReal*, SoArealData::count> m_p_realarray;
-        amrex::GpuArray<int*, SoAintData::count> m_p_intarray;
-        amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count> m_ptile_data;
-        MFIXBoundaryConditions::Parameters m_bc_parms;
-        MFIXSolidsParms m_solids_parms;
-    };
-
     void mfix_pc_inflow (int lev,
                          amrex::Real dt,
                          amrex::Real time,
@@ -490,7 +357,7 @@ class MFIXParticleContainer final
                                  amrex::Vector< amrex::MultiFab*> & cost,
                                  std::string& knapsack_weight_type);
 
-    const SoAruntimerealData m_runtimedata_idxs;
+    const runtimeRealData m_runtimeRealData;
 
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin; }
 
@@ -562,7 +429,7 @@ class MFIXParticleContainer final
     bool reduceGhostParticles = false;
 #endif
 
-    amrex::Real newton_abstol = 1.e-12;
+    amrex::Real newton_abstol = 1.e-6;
     amrex::Real newton_reltol = 1.e-6;
     int newton_maxiter = 100;
 
@@ -573,6 +440,8 @@ class MFIXParticleContainer final
     int  greedy_dir           = 0;
     bool greedy_3d            = false;
     int  greedy_min_grid_size = 2;
+
+    static int domain_bc[6];
 
     long m_total_numparticle = 0;
 

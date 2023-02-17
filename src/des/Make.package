@@ -3,8 +3,6 @@ CEXE_headers += mfix_pc.H
 
 CEXE_headers += mfix_particle_generator.H
 CEXE_sources += mfix_particle_generator.cpp
-CEXE_sources += mfix_particle_interactions.cpp
-CEXE_sources += mfix_particle_updates.cpp
 CEXE_headers += mfix_des_drag_K.H
 CEXE_headers += mfix_des_rrates_K.H
 CEXE_headers += mfix_des_parts_gen_K.H

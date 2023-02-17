@@ -915,7 +915,7 @@ class mfix : public AmrCore
 
     // Tolerances and max iterations for Newton solver
     amrex::Real newton_reltol = 1.e-8;
-    amrex::Real newton_abstol = 1.e-12;
+    amrex::Real newton_abstol = 1.e-8;
     int newton_maxiter = 500;
 
     // If using Godunov, default to PLM (not PPM)

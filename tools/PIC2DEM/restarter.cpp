@@ -406,6 +406,8 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
 
   mfix_coarse->mfix_deposit_particles(m_PIC_deposition, avgdPIC, time);
 
+  Vector< MultiFab* > const& tmp_eps = m_PIC_deposition->get_eps();
+
   // Divide
   for (int lev = 0; lev < nlev; lev++) {
 
@@ -550,7 +552,7 @@ MFIXPICDeposition::deposit (F WeightFunc,
   const int idx_temp    = txfr_idxs.idx_temp;
   const int idx_species = txfr_idxs.idx_species;
 
-  const int idx_X_sn = pc->m_runtimedata_idxs.species_mass_fractions;
+  const int idx_X_sn = pc->m_runtimeRealData.X_sn;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -631,6 +633,8 @@ MFIXPICDeposition::deposit (F WeightFunc,
           int i; int j; int k;
 
           const Real pradius = p_realarray[SoArealData::radius][ip];
+          const Real pdensity = p_realarray[SoArealData::density][ip];
+
           const Real statwt  = p_realarray[SoArealData::statwt][ip];
 
           GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
@@ -929,7 +933,7 @@ MFIXRestarter::init_particles (const mfix* mfix_coarse,
 
       // Add components for each of the runtime variables
       const int start = SoArealData::count;
-      for (int comp(0); comp < pc_fine->m_runtimedata_idxs.count; ++comp)
+      for (int comp(0); comp < pc_fine->m_runtimeRealData.count; ++comp)
         particles.push_back_real(start+comp, local_np, 0.);
 
       total_np += local_np;
@@ -1038,7 +1042,7 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
   const int solve_enthalpy = solids.solve_enthalpy();
 
   const int nspecies_s = solids.nspecies();
-  const int idx_species = pc_fine->m_runtimedata_idxs.species_mass_fractions;
+  const int idx_species = pc_fine->m_runtimeRealData.X_sn;
 
   const Real pdiameter = m_inputs_pdiameter;
   const Real pdensity = m_inputs_pdensity;
