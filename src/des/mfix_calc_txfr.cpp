@@ -398,8 +398,7 @@ mfix::mfix_calc_txfr_particle (Real time,
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 6 +  // 3 vel_g + 3 gp
-                            1*int(fluid.solve_enthalpy()) +  // 1 T_g
-                            (3+fluid.nspecies())*int(reactions.solve()); // ep_g + ro_g + X_gk + pressure_g
+                            1*int(fluid.solve_enthalpy());  // 1 T_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
     pressure_cc.setVal(0.);
@@ -439,24 +438,6 @@ mfix::mfix_calc_txfr_particle (Real time,
         components_count += 1;
       }
 
-      if (reactions.solve()) {
-        // Copy volume fraction
-        MultiFab::Copy(*interp_ptr, *ep_g_in[lev],  0, components_count, 1, interp_ng);
-        components_count += 1;
-
-        // Copy fluid density
-        MultiFab::Copy(*interp_ptr, *ro_g_in[lev],  0, components_count, 1, interp_ng);
-        components_count += 1;
-
-        // Copy species mass fractions
-        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng);
-        components_count += fluid.nspecies();
-
-        // Copy thermodynamic pressure
-        MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
-        components_count += 1;
-      }
-
       AMREX_ALWAYS_ASSERT(interp_comp == components_count);
 
     } else {
@@ -480,24 +461,6 @@ mfix::mfix_calc_txfr_particle (Real time,
       // Copy fluid temperature
       if (fluid.solve_enthalpy()) {
         interp_ptr->ParallelCopy(*T_g_in[lev], 0, components_count, 1, interp_ng, interp_ng);
-        components_count += 1;
-      }
-
-      if (reactions.solve()) {
-        // Copy volume fraction
-        interp_ptr->ParallelCopy(*ep_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
-        components_count += 1;
-
-        // Copy fluid density
-        interp_ptr->ParallelCopy(*ro_g_in[lev],  0, components_count, 1, interp_ng, interp_ng);
-        components_count += 1;
-
-        // Copy species mass fractions
-        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng, interp_ng);
-        components_count += fluid.nspecies();
-
-        // Copy thermodynamic pressure
-        interp_ptr->ParallelCopy(pressure_cc,  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
       }
 
@@ -584,7 +547,7 @@ mfix::mfix_calc_txfr_particle (Real time,
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            if ( p_intarray[SoAintData::state][p_id] == 0 ) {
+            if (p_intarray[SoAintData::state][p_id] == 0) {
 
               // Zero out all reactions terms where we might have stored
               // fluid-deposition quantities
@@ -603,12 +566,12 @@ mfix::mfix_calc_txfr_particle (Real time,
             }
 
             // Local array storing interpolated values
-            GpuArray<Real, 10+MFIXSpecies::NMAX> interp_loc;
+            GpuArray<Real, 7> interp_loc;
             interp_loc.fill(0.);
 
             if (grown_bx_is_regular) {
 
-              trilinear_interp(particle.pos(), &interp_loc[0],
+              trilinear_interp(particle.pos(), interp_loc.data(),
                                interp_array, plo, dxi, interp_comp);
 
             } else { // FAB not all regular
@@ -665,7 +628,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                     flags_array(i-1,j  ,k  ).isRegular() &&
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
-                  trilinear_interp(particle.pos(), &interp_loc[0],
+                  trilinear_interp(particle.pos(), interp_loc.data(),
                                    interp_array, plo, dxi, interp_comp);
 
                 // At least one of the cells in the stencil is cut or covered
@@ -740,7 +703,6 @@ mfix::mfix_calc_txfr_particle (Real time,
               p_realarray[SoArealData::convection][p_id] =
                 pgamma * (T_g - p_realarray[SoArealData::temperature][p_id]);
             }
-
 
             if (solve_reactions) {
 
