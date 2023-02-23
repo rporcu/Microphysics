@@ -11,7 +11,7 @@ set(FJOIN_PAR ${CMAKE_CURRENT_BINARY_DIR}/fjoin_par CACHE INTERNAL "")
 
 
 add_executable( pic2dem EXCLUDE_FROM_ALL PIC2DEM/main.cpp  )
-target_link_libraries( pic2dem mfixcore AMReX::amrex  )
+target_link_libraries( pic2dem mfixcore )
 
 add_subdirectory(PIC2DEM)
 
