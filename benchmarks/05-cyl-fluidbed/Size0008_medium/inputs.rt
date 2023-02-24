@@ -52,9 +52,9 @@ amr.max_grid_size_y = 10
 amr.max_grid_size_z = 10
 
 # Particles 
-particles.max_grid_size_x = 40
-particles.max_grid_size_y = 40
-particles.max_grid_size_z = 40
+#particles.max_grid_size_x = 40
+#particles.max_grid_size_y = 40
+#particles.max_grid_size_z = 40
 
 #! Tiles
 #!-----------------------------------------------------------//

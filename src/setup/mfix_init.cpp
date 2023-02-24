@@ -21,7 +21,8 @@ using PairIndex = MFIXParticleContainer::PairIndex;
 void
 mfix::InitParams ()
 {
-  if (ooo_debug) amrex::Print() << "InitParams" << std::endl;
+  if (ooo_debug)
+    amrex::Print() << "InitParams" << std::endl;
 
   regions.Initialize();
 
@@ -195,7 +196,6 @@ mfix::InitParams ()
         m_redistribution_type != "StateRedist")
       amrex::Abort("redistribution type must be FluxRedist, NoRedist or StateRedist");
 
-
     // Default to Godunov
     if(amrex::toLower(l_advection_type).compare("mol") == 0) {
       m_advection_type = AdvectionType::MOL;
@@ -326,9 +326,22 @@ mfix::InitParams ()
   {
     ParmParse pp("particles");
 
-    pp.query("max_grid_size_x", particle_max_grid_size_x);
-    pp.query("max_grid_size_y", particle_max_grid_size_y);
-    pp.query("max_grid_size_z", particle_max_grid_size_z);
+    const int contains_size_x = pp.query("max_grid_size_x", particle_max_grid_size_x);
+    const int contains_size_y = pp.query("max_grid_size_y", particle_max_grid_size_y);
+    const int contains_size_z = pp.query("max_grid_size_z", particle_max_grid_size_z);
+
+    if (contains_size_x && contains_size_y && contains_size_z) {
+
+      particle_max_grid_size = IntVect(particle_max_grid_size_x,
+                                       particle_max_grid_size_y,
+                                       particle_max_grid_size_z);
+    } else {
+
+      AMREX_ALWAYS_ASSERT(!contains_size_x && !contains_size_y && !contains_size_z);
+
+      // set the particles grid equal to the fluid grid
+      particle_max_grid_size = max_grid_size[0];
+    }
 
     // Keep particles that are initially touching the wall. Used by DEM tests.
     pp.query("removeOutOfRange", removeOutOfRange);
@@ -471,7 +484,11 @@ mfix::InitParams ()
 
 //! Tag using each EB level's volfrac. This requires that the `eb_levels` have
 //! already been build.
-void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
+void
+mfix::ErrorEst (int lev,
+                TagBoxArray & tags,
+                Real /*time*/,
+                int /*ngrow*/)
 {
     if (ooo_debug) amrex::Print() << "ErrorEst" << std::endl;
     //___________________________________________________________________________
@@ -483,8 +500,9 @@ void mfix::ErrorEst (int lev, TagBoxArray & tags, Real /*time*/, int /*ngrow*/)
 }
 
 
-void mfix::Init (Real time,
-                 const bool init_fluid_grids)
+void
+mfix::Init (Real time,
+            const bool init_fluid_grids)
 {
   if (ooo_debug) amrex::Print() << "Init" << std::endl;
   mfixRW->InitIOChkData();
@@ -493,6 +511,7 @@ void mfix::Init (Real time,
   // Note that finest_level = last level
   finest_level = nlev-1;
 
+  // Fluid phase grids
   if (init_fluid_grids) {
 
     /****************************************************************************
@@ -516,15 +535,16 @@ void mfix::Init (Real time,
      ***************************************************************************/
 
     // Define coarse level BoxArray and DistributionMap
-    const BoxArray& ba = MakeBaseGrids();
+    const BoxArray& ba = MakeBaseGrids(geom[0].Domain(), max_grid_size[0]);
+
     DistributionMapping dm;
+
     if (pmap.empty())
       dm.define(ba, ParallelDescriptor::NProcs());
     else
       dm.define(pmap);
-    // DistributionMapping dm(ba, ParallelDescriptor::NProcs());
-    MakeNewLevelFromScratch(0, time, ba, dm);
 
+    MakeNewLevelFromScratch(0, time, ba, dm);
 
     for (int lev = 1; lev <= finest_level; lev++)
     {
@@ -536,32 +556,51 @@ void mfix::Init (Real time,
     }
   }
 
-  {
-    const BoxArray& ba = boxArray(0);
-    const DistributionMapping& dm = DistributionMap(0);
+  // Solids phase grids
+  if (m_dem.solve() || m_pic.solve()) {
 
-    /****************************************************************************
-     *                                                                          *
-     * Create particle container using mfix::ParGDB                             *
-     *                                                                          *
-     ***************************************************************************/
+    BoxList             pbl;
+    BoxArray            pba;
+    DistributionMapping pdm;
+    Vector<int>         pboxmap;  // map each particle box to its parent fluid box
 
-    if (m_dem.solve() || m_pic.solve()) {
-      BoxList             pbl{ba.boxList()};
-      BoxArray            pba{ba};
-      DistributionMapping pdm(dm.ProcessorMap());
-      Vector<int>         pboxmap;  // map each particle box to its parent fluid box
+    if (!dual_grid) {
+
+      pbl = boxArray(0).boxList();
+      pba = boxArray(0);
+      pdm = DistributionMap(0);
+
+    } else { // dual_grid is enabled
+
+      // Define coarse level BoxArray and DistributionMap
+      const BoxArray& ba = MakeBaseGrids(geom[0].Domain(), particle_max_grid_size);
+
+      DistributionMapping dm;
+
+      if (pmap.empty())
+        dm.define(ba, ParallelDescriptor::NProcs());
+      else
+        dm.define(pmap);
+
+      pbl = ba.boxList();
+      pba = ba;
+      pdm = dm;
 
       // chop grids to use all the gpus for particle generation
-      if (dual_grid && ba.size() < ParallelDescriptor::NProcs()) {
-        IntVect reduced_size = max_grid_size[0];
+      if (ba.size() < ParallelDescriptor::NProcs()) {
+
+        IntVect reduced_size = particle_max_grid_size;
+
         while (pbl.size() < ParallelDescriptor::NProcs()) {
+
           pbl.clear();
           pboxmap.clear();
 
           int maxdir = reduced_size.maxDir(false);
           reduced_size[maxdir] /= 2;
+
           for (auto i=0; i<pba.size(); i++) {
+
             BoxArray tmpba{pba[i]};
             tmpba.maxSize(reduced_size);
             pbl.join(tmpba.boxList());
@@ -572,22 +611,22 @@ void mfix::Init (Real time,
         pba.define(pbl);
         pdm.define(pba, ParallelDescriptor::NProcs());
       }
-
-      pc = new MFIXParticleContainer(geom[0], pdm, pba, this->maxLevel()+1,
-                                     m_initial_conditions, m_boundary_conditions,
-                                     solids, m_dem, m_pic, fluid, reactions);
-
-      pc->setSortingBinSizes(IntVect(particle_sorting_bin));
-
-      if (load_balance_type.compare("Greedy") == 0)
-        pc->setGreedyRegrid(greedy_dir, greedy_3d, greedy_min_grid_size);
-
-      if (!pboxmap.empty())
-        pc->setParticleFluidGridMap(pboxmap);
-
-      // Updating mfixRW pc pointer is needed since mfix pc has changed
-      mfixRW->set_pc(pc);
     }
+
+    pc = new MFIXParticleContainer(geom[0], pdm, pba, this->maxLevel()+1,
+                                   m_initial_conditions, m_boundary_conditions,
+                                   solids, m_dem, m_pic, fluid, reactions);
+
+    pc->setSortingBinSizes(IntVect(particle_sorting_bin));
+
+    if (load_balance_type.compare("Greedy") == 0)
+      pc->setGreedyRegrid(greedy_dir, greedy_3d, greedy_min_grid_size);
+
+    if (!pboxmap.empty())
+      pc->setParticleFluidGridMap(pboxmap);
+
+    // Updating mfixRW pc pointer is needed since mfix pc has changed
+    mfixRW->set_pc(pc);
   }
 
   /****************************************************************************
@@ -604,7 +643,9 @@ void mfix::Init (Real time,
       mfix_set_bc_type(lev,nghost_state());
 }
 
-void mfix::PruneBaseGrids(BoxArray &ba) const
+
+void
+mfix::PruneBaseGrids (BoxArray &ba) const
 {
     // Use 1 ghost layer
     EBDataCollection ebdc(*eb_levels[0], geom[0],
@@ -626,12 +667,17 @@ void mfix::PruneBaseGrids(BoxArray &ba) const
     ba = BoxArray(BoxList(std::move(uncovered)));
 }
 
-BoxArray mfix::MakeBaseGrids () const
-{
-    if (ooo_debug) amrex::Print() << "MakeBaseGrids" << std::endl;
-    BoxArray ba(geom[0].Domain());
 
-    ba.maxSize(max_grid_size[0]);
+BoxArray
+mfix::MakeBaseGrids (const Box& domain,
+                     const IntVect& grid_sizes) const
+{
+    if (ooo_debug)
+      amrex::Print() << "MakeBaseGrids" << std::endl;
+
+    BoxArray ba(domain);
+
+    ba.maxSize(grid_sizes);
 
     if (m_grid_pruning) {
        PruneBaseGrids(ba);
@@ -640,9 +686,8 @@ BoxArray mfix::MakeBaseGrids () const
     // We only call ChopGrids if dividing up the grid using max_grid_size didn't
     //    create enough grids to have at least one grid per processor.
     // This option is controlled by "refine_grid_layout" which defaults to true.
-    if ( refine_grid_layout &&
-         ba.size() < ParallelDescriptor::NProcs() )
-           ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
+    if (refine_grid_layout && ba.size() < ParallelDescriptor::NProcs())
+        ChopGrids(geom[0].Domain(), ba, ParallelDescriptor::NProcs());
 
     if (ba == grids[0]) {
         ba = grids[0];  // to avoid duplicates
@@ -653,7 +698,10 @@ BoxArray mfix::MakeBaseGrids () const
 }
 
 
-void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
+void
+mfix::ChopGrids (const Box& domain,
+                 BoxArray& ba,
+                 int target_size) const
 {
     if (ooo_debug) amrex::Print() << "ChopGrids" << std::endl;
     if ( ParallelDescriptor::IOProcessor() )
@@ -697,16 +745,20 @@ void mfix::ChopGrids (const Box& domain, BoxArray& ba, int target_size) const
         }
 
         // Test if we now have enough grids
-        if (ba.size() >= target_size) return;
+        if (ba.size() >= target_size)
+          return;
     }
 }
 
 
-void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
-                                    const BoxArray& new_grids,
-                                    const DistributionMapping& new_dmap)
+void
+mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
+                               const BoxArray& new_grids,
+                               const DistributionMapping& new_dmap)
 {
-    if (ooo_debug) amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
+    if (ooo_debug)
+      amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
+
     if (m_verbose > 0)
     {
         std::cout << "MAKING NEW LEVEL " << lev << std::endl;
@@ -734,9 +786,10 @@ void mfix::MakeNewLevelFromScratch (int lev, Real /*time*/,
 }
 
 
-void mfix::ReMakeNewLevelFromScratch (int lev,
-                                      const BoxArray & new_grids,
-                                      const DistributionMapping & new_dmap)
+void
+mfix::ReMakeNewLevelFromScratch (int lev,
+                                 const BoxArray & new_grids,
+                                 const DistributionMapping & new_dmap)
 {
     if (ooo_debug) amrex::Print() << "ReMakeNewLevelFromScratch" << std::endl;
     SetBoxArray(lev, new_grids);
@@ -751,7 +804,8 @@ void mfix::ReMakeNewLevelFromScratch (int lev,
 
 
 
-void mfix::InitLevelData (Real /*time*/)
+void
+mfix::InitLevelData (Real /*time*/)
 {
     if (ooo_debug) amrex::Print() << "InitLevelData" << std::endl;
     // Allocate the fluid data, NOTE: this depends on the ebfactories.
@@ -762,7 +816,6 @@ void mfix::InitLevelData (Real /*time*/)
     if (mfixRW->only_print_grid_report) {
        return;
     }
-
 
     // Allocate the particle data
     if (m_dem.solve() || m_pic.solve())
@@ -839,8 +892,12 @@ void mfix::InitLevelData (Real /*time*/)
     }
 }
 
+
 void
-mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
+mfix::PostInit (Real& dt,
+                Real /*time*/,
+                int is_restarting,
+                Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "PostInit" << std::endl;
 
@@ -920,7 +977,9 @@ mfix::PostInit (Real& dt, Real /*time*/, int is_restarting, Real stop_time)
 
 
 void
-mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
+mfix::mfix_init_fluid (int is_restarting,
+                       Real dt,
+                       Real stop_time)
 {
     if (ooo_debug) amrex::Print() << "mfix_init_fluid" << std::endl;
 
@@ -958,7 +1017,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
                        test_tracer_conservation, m_initial_conditions, fluid);
           }
        }
-
     }
 
     mfix_set_p0();
@@ -992,7 +1050,6 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
          *(ld.thermodynamic_p_go) = *(ld.thermodynamic_p_g);
        }
     }
-
 
     if (is_restarting == 0)
     {
@@ -1071,6 +1128,7 @@ mfix::mfix_init_fluid (int is_restarting, Real dt, Real stop_time)
     }
 }
 
+
 void
 mfix::mfix_set_bc0 ()
 {
@@ -1091,6 +1149,7 @@ mfix::mfix_set_bc0 ()
 
    m_boundary_conditions.set_velocity_bcs(time, get_vel_g(), extrap_dir_bcs);
 }
+
 
 void
 mfix::mfix_set_p0 ()
@@ -1131,7 +1190,9 @@ mfix::mfix_set_p0 ()
    }
 }
 
-void mfix::mfix_set_ls_near_inflow ()
+
+void
+mfix::mfix_set_ls_near_inflow ()
 {
     if (ooo_debug) amrex::Print() << "mfix_ls_near_inflow" << std::endl;
     // This function is a bit Wonky... TODO: figure out why we need + nghost

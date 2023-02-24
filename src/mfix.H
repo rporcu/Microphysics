@@ -768,7 +768,8 @@ class mfix : public AmrCore
 
   private:
     // Make a level 0 grids covering the whole domain.  It does NOT install the new grids.
-    BoxArray MakeBaseGrids () const;
+    BoxArray MakeBaseGrids (const Box& domain,
+                            const IntVect& grid_sizes) const;
 
     void PruneBaseGrids(BoxArray &ba) const;
 
@@ -1028,6 +1029,7 @@ class mfix : public AmrCore
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;
     int particle_max_grid_size_z = -1;
+    IntVect particle_max_grid_size;
 
     int agg_grid_size = -1; // agglomeration for GMG
 
