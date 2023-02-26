@@ -4,6 +4,8 @@
 #include <AMReX_REAL.H>
 #include <AMReX_RealBox.H>
 #include <AMReX_Geometry.H>
+#include <AMReX_EBFabFactory.H>
+#include <AMReX_EBFArrayBox.H>
 
 #include <AMReX_Vector.H>
 #include <AMReX_IArrayBox.H>
@@ -150,6 +152,20 @@ class MFIXBoundaryConditions
                       amrex::FArrayBox& vec_fab,
                       const amrex::Box& domain);
 
+    void calc_bc_areas (int const lev,
+                        amrex::BoxArray            const& a_grids,
+                        amrex::DistributionMapping const& a_dmap,
+                        amrex::EBFArrayBoxFactory* factory);
+
+
+    amrex::Real calc_bc_area(int             const       a_lev,
+                             int             const       a_dir,
+                             amrex::Box      const&      a_bx,
+                             BC_t            const&      a_bc,
+                             amrex::MultiFab const&      a_MF,
+                             amrex::EBFArrayBoxFactory*  a_factory);
+
+
     void calc_eb_bc_areas (MFIXEmbeddedBoundaries& embedded_boundaries,
                            amrex::Vector< amrex::MultiFab* > const& eb_mf);
 
@@ -171,7 +187,7 @@ class MFIXBoundaryConditions
     int delp_dir () const { return m_delp_dir; }
     const amrex::RealVect& delp () const { return m_delp; }
     amrex::Real delp (const int i) const { return m_delp[i]; }
-    
+
     void set_delp (const int i, const amrex::Real val) { m_delp[i] = val; }
 
     // Flags for DEM domain extent reinforcement.
@@ -258,8 +274,11 @@ class MFIXBoundaryConditions
     amrex::Real* bc_X_gk_ptr (const int n) { return m_bc_X_gk_ptr[n]; };
     amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; };
 
+    amrex::Real& get_bc_area (const int bcv) { return m_area[bcv]; };
+
   private:
     amrex::Vector<amrex::Geometry>& m_geom;
+
     BCList& m_bc_list;
 
     // BC types for each different variable
@@ -336,6 +355,8 @@ class MFIXBoundaryConditions
     std::array<amrex::LinOpBCType,3> m_diff_species_hibc;
 
     MFIXEmbeddedBoundaries& m_embedded_boundaries;
+
+    amrex::Vector<amrex::Real> m_area;
 
     // Data structure for BC data
     amrex::Vector<BC_t> m_bc;

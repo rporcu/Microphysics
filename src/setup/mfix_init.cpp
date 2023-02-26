@@ -968,8 +968,14 @@ mfix::PostInit (Real& dt,
       }
     }
 
-    if (fluid.solve())
+    if (fluid.solve()) {
         mfix_init_fluid(is_restarting, dt, stop_time);
+    }
+
+    for (int lev = 0; lev < nlev; lev++) {
+        m_boundary_conditions.calc_bc_areas(lev,
+            grids[lev], dmap[lev], ebfactory[lev].get());
+    }
 
     // Call user-defined subroutine to set constants, check data, etc.
     if (call_udf) mfix_usr0();

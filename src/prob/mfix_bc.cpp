@@ -231,6 +231,9 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     std::string bc_type;
     pp.get(input_regions[bcv].c_str(), bc_type);
 
+    // Initialize area to zero
+    m_area.push_back(0.);
+
     // Convert the input string into the integers
     if( bc_type == "mi") {
       new_bc.type = BCList::minf;
