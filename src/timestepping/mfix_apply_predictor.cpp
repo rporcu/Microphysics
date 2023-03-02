@@ -94,6 +94,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // Local flag for explicit diffusion
     bool l_explicit_diff = (predictor_diff_type() == DiffusionType::Explicit);
 
+    m_boundary_conditions.set_density_bcs(time, get_ro_g_old());
+
     // *************************************************************************************
     // Allocate space for the forcing terms
     // *************************************************************************************
@@ -196,6 +198,12 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = (fluid.solve_tracer() &&  l_explicit_diff);
       const bool update_flux = (fluid.solve_species() && (l_explicit_diff || constraint));
 
+      if (fluid.solve_enthalpy())
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+
+      if (fluid.solve_species())
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
+
       compute_laps(update_lapT, update_lapS, update_flux, lap_T_old, lap_trac_old,
                    J_gk, get_T_g_old(), get_trac_old(), get_X_gk_old(), get_ep_g_const(),
                    get_ro_g_old_const());
@@ -244,13 +252,28 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     }
 
     if (fluid.solve_enthalpy()) {
+
+      if (fluid.solve_species())
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
+
+      m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
           get_X_gk_old(), get_T_g_old_const(), get_txfr_const());
+
+      if (fluid.solve_species())
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
+
+      m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
     }
 
     // Species
     if (fluid.solve_species()) {
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
+
       mfix_species_X_rhs(species_RHS_old, get_txfr_const());
+
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
     }
 
     // Linear momentum
@@ -320,6 +343,14 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       }
     }
 
+    m_boundary_conditions.set_density_bcs(time, get_ro_g_old());
+
+    if (fluid.solve_enthalpy())
+      m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+
+    if (fluid.solve_species())
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
+
 
     // *************************************************************************************
     // Compute the explicit advective terms
@@ -330,6 +361,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         GetVecOfPtrs(ep_u_mac), GetVecOfPtrs(ep_v_mac), GetVecOfPtrs(ep_w_mac),
         get_ep_g_const(), get_ro_g_old_const(), get_txfr_const(), GetVecOfConstPtrs(eb_flow_vel),
         GetVecOfPtrs(vel_forces), GetVecOfConstPtrs(rhs_mac));
+
+    if (fluid.solve_species())
+      m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
 
     mfix_compute_convective_term(conv_u_old, conv_s_old, conv_X_old,
         GetVecOfPtrs(vel_forces), GetVecOfPtrs(tra_forces), get_vel_g_old_const(),
@@ -566,6 +600,11 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
             });
           }
         }
+
+        // Note we need to call the bc routines again to enforce the ext_dir
+        // condition on the faces (the diffusion operator moved those to ghost
+        // cell centers)
+        m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
       }
 
       // Update ghost cells
@@ -739,6 +778,8 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       if (!l_explicit_diff) {
 
+        m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+
         // Diffuse temperature
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
                                           get_h_g(), get_X_gk(), get_T_g_on_eb(), l_dt,
@@ -814,6 +855,9 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           for (int lev = 0; lev <= finest_level; lev++)
             MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                                0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
+
+          // Diffuse tracer
+          m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
           diffusion_op->diffuse_scalar(get_trac(), get_ep_g(), mu_s, get_tracer_bcrec(), l_dt);
 
@@ -922,17 +966,19 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
     // *************************************************************************************
     if (!l_explicit_diff) {
 
+      m_boundary_conditions.set_density_bcs(time, get_ro_g());
+
       // Convert "ep_g" into (rho * ep_g)
       for (int lev = 0; lev <= finest_level; lev++)
         MultiFab::Multiply(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,
                            0, 0, 1, m_leveldata[lev]->ep_g->nGrow());
 
+      // Set velocity boundary conditions
+      m_boundary_conditions.set_velocity_bcs(new_time, get_vel_g(), 0);
+
       // Diffuse velocity
       diffusion_op->diffuse_velocity(get_vel_g(), get_ep_g(), get_T_g(), l_dt, GetVecOfConstPtrs(eb_flow_vel));
 
-      // Set velocity boundary conditions
-      m_boundary_conditions.set_velocity_bcs(new_time, get_vel_g(), 0);
-      
       // Convert (rho * ep_g) back into ep_g
       for (int lev = 0; lev <= finest_level; lev++)
           MultiFab::Divide(*m_leveldata[lev]->ep_g, *m_leveldata[lev]->ro_g,

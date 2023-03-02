@@ -86,10 +86,8 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   m_boundary_conditions.set_density_bcs(time, get_ro_g());
   m_boundary_conditions.set_tracer_bcs(time, fluid, get_trac());
 
-  if (fluid.solve_enthalpy()) {
+  if (fluid.solve_enthalpy())
     m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
-//    m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
-  }
 
   if (fluid.solve_enthalpy() && m_embedded_boundaries.fix_temperature())
     m_boundary_conditions.set_eb_temperature_bcs(get_T_g_on_eb());
@@ -259,9 +257,6 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
     if (fluid.solve_enthalpy())
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
-
-//    if (fluid.solve_enthalpy())
-//      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
 
     if (fluid.solve_species())
       m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());

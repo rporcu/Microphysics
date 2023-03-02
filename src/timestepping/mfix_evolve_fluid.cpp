@@ -51,7 +51,6 @@ mfix::EvolveFluid (int nstep,
 
     if (fluid.solve_enthalpy()) {
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
-//      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
 
       if (m_embedded_boundaries.fix_temperature()) {
         m_boundary_conditions.set_eb_temperature_bcs(get_T_g_on_eb());
