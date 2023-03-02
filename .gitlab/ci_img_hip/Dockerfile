@@ -53,7 +53,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
     cmake==3.* \
-    conan>=1.51.3 \
+    conan==1.* \
     ninja==1.*
 
 # install csg dependency cgal, since it doesn't install properly with conan for HIP
