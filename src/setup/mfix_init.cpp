@@ -895,7 +895,7 @@ mfix::InitLevelData (Real /*time*/)
 
 void
 mfix::PostInit (Real& dt,
-                Real /*time*/,
+                const Real time,
                 int is_restarting,
                 Real stop_time)
 {
@@ -969,7 +969,7 @@ mfix::PostInit (Real& dt,
     }
 
     if (fluid.solve()) {
-        mfix_init_fluid(is_restarting, dt, stop_time);
+        mfix_init_fluid(is_restarting, time, dt, stop_time);
     }
 
     for (int lev = 0; lev < nlev; lev++) {
@@ -984,6 +984,7 @@ mfix::PostInit (Real& dt,
 
 void
 mfix::mfix_init_fluid (int is_restarting,
+                       const Real time,
                        Real dt,
                        Real stop_time)
 {
@@ -1073,13 +1074,10 @@ mfix::mfix_init_fluid (int is_restarting,
       Real domain_vol = sum_vol_orig;
 
       // Now initialize the volume fraction ep_g before the first projection
-      mfix_calc_volume_fraction(sum_vol_orig);
+      mfix_calc_volume_fraction(time, sum_vol_orig);
       Print() << "Setting original sum_vol to " << cell_volume * sum_vol_orig << std::endl;
 
       Print() << "Difference is   " << cell_volume * (domain_vol - sum_vol_orig) << std::endl;
-
-      // This sets bcs for ep_g
-      Real time = 0.0;
 
       m_boundary_conditions.set_density_bcs(time, get_ro_g());
       m_boundary_conditions.set_density_bcs(time, get_ro_g_old());
@@ -1090,11 +1088,6 @@ mfix::mfix_init_fluid (int is_restarting,
       if (fluid.solve_enthalpy()) {
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
-      }
-
-      if (fluid.solve_enthalpy()) {
-        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
-        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g_old());
       }
 
       if (fluid.solve_species()) {
@@ -1119,7 +1112,7 @@ mfix::mfix_init_fluid (int is_restarting,
     else
     {
       const int dir_bc = 1;
-      m_boundary_conditions.set_epg_bcs(get_ep_g(), dir_bc);
+      m_boundary_conditions.set_epg_bcs(time, get_ep_g(), dir_bc);
 
       const Real* dx = geom[0].CellSize();
       const Real cell_volume = dx[0] * dx[1] * dx[2];
@@ -1144,7 +1137,7 @@ mfix::mfix_set_bc0 ()
 
     if (fluid.solve_enthalpy()) {
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
-      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+//      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
     }
 
     if (fluid.solve_species())

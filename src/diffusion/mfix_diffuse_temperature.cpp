@@ -318,9 +318,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
 
     solver.solve(GetVecOfPtrs(phi), GetVecOfConstPtrs(rhs), mg_rtol, mg_atol);
 
-    // TODO
-    // Here compute update = phi - T_g
-
     for(int lev = 0; lev <= finest_level; lev++) {
       phi[lev]->FillBoundary(geom[lev].periodicity());
     }
@@ -385,7 +382,6 @@ void DiffusionOp::diffuse_temperature (const Vector< MultiFab* >& T_g,
   // **************************************************************************
   // **************************************************************************
 
-  // TODO: update this during the Newton iterations
   for(int lev = 0; lev <= finest_level; lev++) {
 
 #ifdef _OPENMP

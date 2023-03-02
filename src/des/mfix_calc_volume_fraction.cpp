@@ -11,7 +11,8 @@
 #include <AMReX_FillPatchUtil.H>
 
 
-void mfix::mfix_calc_volume_fraction (Real& sum_vol)
+void mfix::mfix_calc_volume_fraction (const Real time,
+                                      Real& sum_vol)
 {
   BL_PROFILE("mfix::mfix_calc_volume_fraction()");
 
@@ -176,7 +177,6 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
 
         BndryFuncArray bfunc(mfix_aux::filcc);
 
-        Real time = 0.0;
         for (int lev = 1; lev < nlev; lev++)
         {
             PhysBCFunct<BndryFuncArray> cphysbc(Geom(lev-1), bcs, bfunc);
@@ -226,7 +226,7 @@ void mfix::mfix_calc_volume_fraction (Real& sum_vol)
   }
 
   const int dir_bc = 1;
-  m_boundary_conditions.set_epg_bcs(get_ep_g(), dir_bc);
+  m_boundary_conditions.set_epg_bcs(time, get_ep_g(), dir_bc);
 
   // Sum up all the values of ep_g[lev], weighted by each cell's EB volfrac
   // Note ep_g = 1 - particle_volume / this_cell_volume where

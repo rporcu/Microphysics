@@ -93,7 +93,8 @@ class MFIXBoundaryConditions
                           const amrex::Vector<std::string> species,
                           FLUID_t* fluid);
 
-    void set_epg_bcs (const amrex::Vector< amrex::MultiFab* >& ep_g,
+    void set_epg_bcs (amrex::Real time,
+                      const amrex::Vector< amrex::MultiFab* >& ep_g,
                       const int dir_bc);
 
     void set_density_bc_values (amrex::Real time_in);
@@ -148,15 +149,13 @@ class MFIXBoundaryConditions
                         amrex::FArrayBox& gp_fab,
                         amrex::Box& domain);
 
-    void set_vec_bcs (const int lev,
-                      amrex::FArrayBox& vec_fab,
-                      const amrex::Box& domain);
+    void set_vec_bcs (amrex::Real time,
+                      amrex::Vector< amrex::MultiFab* > const& mf_in);
 
     void calc_bc_areas (int const lev,
                         amrex::BoxArray            const& a_grids,
                         amrex::DistributionMapping const& a_dmap,
                         amrex::EBFArrayBoxFactory* factory);
-
 
     amrex::Real calc_bc_area(int             const       a_lev,
                              int             const       a_dir,
@@ -165,9 +164,224 @@ class MFIXBoundaryConditions
                              amrex::MultiFab const&      a_MF,
                              amrex::EBFArrayBoxFactory*  a_factory);
 
-
     void calc_eb_bc_areas (MFIXEmbeddedBoundaries& embedded_boundaries,
                            amrex::Vector< amrex::MultiFab* > const& eb_mf);
+
+    template <typename F1>
+    AMREX_FORCE_INLINE
+    void set_bcs (amrex::Real /*time*/,
+                  F1 bcs_function,
+                  amrex::Vector< amrex::MultiFab* > const& mf_in)
+    {
+      const int nlev = mf_in.size();
+
+      for (int lev = 0; lev < nlev; lev++) {
+
+        const int ncomp = mf_in[lev]->nComp();
+
+        using BctArr = amrex::Array4<const int>;
+
+        BctArr const& bct_ilo = m_bc_list.bc_ilo[lev]->const_array();
+        BctArr const& bct_jlo = m_bc_list.bc_jlo[lev]->const_array();
+        BctArr const& bct_klo = m_bc_list.bc_klo[lev]->const_array();
+
+        amrex::Array<BctArr const*, 3> bct_lo_arr = {&bct_ilo, &bct_jlo, &bct_klo};
+
+        BctArr const& bct_ihi = m_bc_list.bc_ihi[lev]->const_array();
+        BctArr const& bct_jhi = m_bc_list.bc_jhi[lev]->const_array();
+        BctArr const& bct_khi = m_bc_list.bc_khi[lev]->const_array();
+
+        amrex::Array<BctArr const*, 3> bct_hi_arr = {&bct_ihi, &bct_jhi, &bct_khi};
+
+        amrex::Array<amrex::Array<BctArr const*, 3>*, 2> bct_vect = {&bct_lo_arr, &bct_hi_arr};
+
+        amrex::Box domain(m_geom[lev].Domain());
+
+        amrex::IntVect dom_lo(domain.loVect());
+        amrex::IntVect dom_hi(domain.hiVect());
+
+        amrex::Array<amrex::IntVect*, 2> dom_vect = {&dom_lo, &dom_hi};
+
+#ifdef _OPENMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+        for (amrex::MFIter mfi(*mf_in[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+          amrex::FArrayBox& mf_fab = (*mf_in[lev])[mfi];
+
+          const amrex::EBFArrayBox& mf_EB_fab = static_cast<amrex::EBFArrayBox const&>(mf_fab);
+          const amrex::EBCellFlagFab& flags_fab = mf_EB_fab.getEBCellFlagFab();
+
+          amrex::IntVect mf_lo(mf_fab.loVect());
+          amrex::IntVect mf_hi(mf_fab.hiVect());
+
+          amrex::Array<amrex::IntVect*, 2> mf_vect = {&mf_lo, &mf_hi};
+
+          amrex::Array4<amrex::Real> const& mf_arr = mf_fab.array();
+          amrex::Array4<const amrex::EBCellFlag> const& flags_arr = flags_fab.const_array();
+
+          for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+
+            amrex::IntVect bx_lo_hi(mf_hi);
+            amrex::IntVect bx_hi_lo(mf_lo);
+
+            bx_lo_hi[dir] = dom_lo[dir]-1;
+            bx_hi_lo[dir] = dom_hi[dir]+1;
+
+            amrex::Box bx_lo(mf_lo, bx_lo_hi);
+            amrex::Box bx_hi(bx_hi_lo, mf_hi);
+
+            amrex::Array<amrex::Box*, 2> bx_vect = {&bx_lo, &bx_hi};
+
+            for (int face(-1); face <= 1; face += 2) {
+
+              const int face_idx = (face+1) / 2;
+
+              const int face_flag = amrex::max(0,
+                  face*((*(mf_vect[face_idx]))[dir]-((*(dom_vect[face_idx]))[dir])));
+
+              if (face_flag > 0) {
+
+                amrex::Box bx = *(bx_vect[face_idx]);
+
+                amrex::Array4<const int> const& bct_arr = *((*(bct_vect[face_idx]))[dir]);
+                amrex::IntVect dom = *(dom_vect[face_idx]);
+
+                amrex::ParallelFor(bx, ncomp, [bct_arr,dom,mf_arr,flags_arr,
+                    bcs_function,dir,face]
+                  AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+                {
+                  amrex::GpuArray<int, AMREX_SPACEDIM> ijk = {i,j,k};
+                  amrex::IntVect dom_ijk(ijk.data());
+                  dom_ijk[dir] = dom[dir]+face;
+
+                  const int bct = bct_arr(dom_ijk,0);
+                  const int bcv = bct_arr(dom_ijk,1);
+
+                  dom_ijk[dir] = dom[dir];
+
+                  bcs_function(bct, bcv, {i,j,k}, dom_ijk, n, mf_arr, flags_arr, dir);
+                });
+              }
+            }
+          }
+
+        } // end MFIter loop
+
+        mf_in[lev]->FillBoundary(m_geom[lev].periodicity());
+
+        amrex::EB_set_covered(*mf_in[lev], 0, mf_in[lev]->nComp(), mf_in[lev]->nGrow(),
+            m_covered_val);
+      }
+    }
+
+    template <typename F1>
+    AMREX_FORCE_INLINE
+    void set_bcs_2D (amrex::Real /*time*/,
+                     F1 bcs_function,
+                     amrex::Vector< amrex::MultiFab* > const& mf_in)
+    {
+      const int nlev = mf_in.size();
+
+      for (int lev = 0; lev < nlev; lev++) {
+
+        const int ncomp = mf_in[lev]->nComp();
+
+        using BctArr = amrex::Array4<const int>;
+
+        BctArr const& bct_ilo = m_bc_list.bc_ilo[lev]->const_array();
+        BctArr const& bct_jlo = m_bc_list.bc_jlo[lev]->const_array();
+        BctArr const& bct_klo = m_bc_list.bc_klo[lev]->const_array();
+
+        amrex::Array<BctArr const*, 3> bct_lo_arr = {&bct_ilo, &bct_jlo, &bct_klo};
+
+        BctArr const& bct_ihi = m_bc_list.bc_ihi[lev]->const_array();
+        BctArr const& bct_jhi = m_bc_list.bc_jhi[lev]->const_array();
+        BctArr const& bct_khi = m_bc_list.bc_khi[lev]->const_array();
+
+        amrex::Array<BctArr const*, 3> bct_hi_arr = {&bct_ihi, &bct_jhi, &bct_khi};
+
+        amrex::Array<amrex::Array<BctArr const*, 3>*, 2> bct_vect = {&bct_lo_arr, &bct_hi_arr};
+
+        amrex::Box domain(m_geom[lev].Domain());
+
+        amrex::IntVect dom_lo(domain.loVect());
+        amrex::IntVect dom_hi(domain.hiVect());
+
+        amrex::Array<amrex::IntVect*, 2> dom_vect = {&dom_lo, &dom_hi};
+
+#ifdef _OPENMP
+#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
+#endif
+        for (amrex::MFIter mfi(*mf_in[lev], amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+          amrex::FArrayBox& mf_fab = (*mf_in[lev])[mfi];
+
+          amrex::IntVect mf_lo(mf_fab.loVect());
+          amrex::IntVect mf_hi(mf_fab.hiVect());
+
+          amrex::Array<amrex::IntVect*, 2> mf_vect = {&mf_lo, &mf_hi};
+
+          amrex::Array4<amrex::Real> const& mf_arr = mf_fab.array();
+
+          for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
+
+            amrex::IntVect bx_lo_lo(mf_lo), bx_lo_hi(mf_hi);
+            amrex::IntVect bx_hi_lo(mf_lo), bx_hi_hi(mf_hi);
+
+            bx_lo_lo[dir] = dom_lo[dir]-1;
+            bx_lo_hi[dir] = dom_lo[dir]-1;
+            bx_hi_lo[dir] = dom_hi[dir]+1;
+            bx_hi_hi[dir] = dom_hi[dir]+1;
+
+            amrex::Box bx_lo(bx_lo_lo, bx_lo_hi);
+            amrex::Box bx_hi(bx_hi_lo, bx_hi_hi);
+
+            amrex::Array<amrex::Box*, 2> bx_vect = {&bx_lo, &bx_hi};
+
+            for (int face(-1); face <= 1; face += 2) {
+
+              const int face_idx = (face+1) / 2;
+
+              const int face_flag = amrex::max(0,
+                  face*((*(mf_vect[face_idx]))[dir] - (*(dom_vect[face_idx]))[dir]));
+
+              if (face_flag > 0)
+              {
+                amrex::Box bx = *(bx_vect[face_idx]);
+
+                amrex::Array4<const int> const& bct_arr = *((*(bct_vect[face_idx]))[dir]);
+                amrex::IntVect dom = *(dom_vect[face_idx]);
+
+                amrex::ParallelFor(bx, ncomp, [bct_arr,dom,mf_arr,dir,face,
+                    bcs_function]
+                  AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
+                {
+                  amrex::GpuArray<int, AMREX_SPACEDIM> ijk = {i,j,k};
+                  amrex::IntVect dom_ijk(ijk.data());
+                  dom_ijk[dir] = dom[dir]+face;
+
+                  const int bct = bct_arr(dom_ijk,0);
+
+                  dom_ijk[dir] = dom[dir];
+
+                  amrex::IntVect near_ijk(ijk.data());
+                  near_ijk[dir] -= face;
+
+                  bcs_function(bct, {i,j,k}, dom_ijk, near_ijk, n, mf_arr);
+                });
+              }
+            }
+          }
+
+        } // end MFIter loop
+
+        mf_in[lev]->FillBoundary(m_geom[lev].periodicity());
+
+        amrex::EB_set_covered(*mf_in[lev], 0, mf_in[lev]->nComp(), mf_in[lev]->nGrow(),
+            m_covered_val);
+      }
+    }
 
     const amrex::Vector<int>& bc_xlo () const { return m_bc_lo[0]; }
     const amrex::Vector<int>& bc_xhi () const { return m_bc_hi[0]; }
@@ -360,6 +574,8 @@ class MFIXBoundaryConditions
 
     // Data structure for BC data
     amrex::Vector<BC_t> m_bc;
+
+    const amrex::Real m_covered_val = 1.e+40;
 };
 
 

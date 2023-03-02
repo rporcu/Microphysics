@@ -58,7 +58,7 @@ HeterogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
 //  }
 //
 }
@@ -90,7 +90,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
 //  }
 //
 }
@@ -122,7 +122,7 @@ HomogeneousRatesUser::operator() (Real* /*R_q*/,
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? TODO -- reaction rate;
+//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
 //  }
 //
 }

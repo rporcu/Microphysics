@@ -124,11 +124,11 @@ class DiffusionOp
                       const amrex::Vector< amrex::MultiFab const*>& ro_g_in,
                       const amrex::Vector< amrex::MultiFab const*>& ep_g_in);
 
-    // TODO description
+    // Computes the divergence of the species mass flux
     void ComputeDivJ (const amrex::Vector< amrex::MultiFab*      >& divJ_out,
                       const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk);
 
-    // TODO description
+    // Computes the divergence of tenthalpy flux due to species mass flux
     void ComputeDivhJ (const amrex::Vector< amrex::MultiFab*      >& divhJ_out,
                              amrex::Vector< amrex::Array< amrex::MultiFab, AMREX_SPACEDIM> >& h_gk_fc,
                        const amrex::Vector< amrex::Array< amrex::MultiFab*, AMREX_SPACEDIM> >& J_gk,

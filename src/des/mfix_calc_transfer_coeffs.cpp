@@ -8,7 +8,8 @@
 #include <mfix_mf_helpers.H>
 #include <mfix_algorithm.H>
 
-void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+void mfix::mfix_calc_transfer_coeffs (const Real time,
+                                      Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
@@ -20,15 +21,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   const amrex::Real eps = m_dem.eps();
 
   if (m_drag_type == DragType::WenYu) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragWenYu(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::Gidaspow) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragGidaspow(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::BVK2) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragBVK2(small_num, large_num, eps));
   }
   else if (m_drag_type == DragType::SyamOBrien) {
@@ -36,11 +37,11 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     const amrex::Real c1 = m_SyamOBrien_coeff_c1;
     const amrex::Real d1 = m_SyamOBrien_coeff_d1;
 
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragSyamOBrien1988(small_num, large_num, eps, c1, d1));
   }
   else if (m_drag_type == DragType::UserDrag) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               ComputeDragUser(small_num, large_num, eps));
   }
   else {
@@ -48,8 +49,10 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   }
 }
 
+
 template <typename F1>
-void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+void mfix::mfix_calc_transfer_coeffs (const Real time,
+                                      Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
@@ -60,15 +63,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   if (fluid.solve_enthalpy())
   {
     if (m_convection_type == ConvectionType::RanzMarshall) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
+      mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvRanzMarshall(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::Gunn) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
+      mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 ComputeConvGunn(m_dem.small_number(),m_dem.large_number(),m_dem.eps()));
     }
     else if (m_convection_type == ConvectionType::NullConvection) {
-      mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
+      mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                                 NullConvectionCoeff());
     }
     else {
@@ -76,13 +79,15 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
     }
   }
   else {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in, DragFunc,
                               NullConvectionCoeff());
   }
 }
 
+
 template <typename F1, typename F2>
-void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+void mfix::mfix_calc_transfer_coeffs (const Real time,
+                                      Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
@@ -92,15 +97,17 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
                                       F2 ConvectionCoeff)
 {
   if (m_reaction_rates_type == ReactionRatesType::RRatesUser) {
-    mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
+    mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in, pressure_g_in,
                               DragFunc, ConvectionCoeff, HeterogeneousRatesUser());
   } else {
     amrex::Abort("Invalid Reaction Rates Type.");
   }
 }
 
+
 template <typename F1, typename F2, typename F3>
-void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
+void mfix::mfix_calc_transfer_coeffs (const Real time,
+                                      Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
                                       Vector< MultiFab* > const& vel_g_in,
                                       Vector< MultiFab* > const& T_g_in,
@@ -144,7 +151,7 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // We copy the value inside the domain to the outside to avoid
   // unphysical volume fractions.
   const int dir_bc_in = 2;
-  m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_in);
+  m_boundary_conditions.set_epg_bcs(time, ep_g_in, dir_bc_in);
 
   auto& aux = m_interphase_txfr_deposition->get_aux();
   aux.clear();
@@ -653,5 +660,5 @@ void mfix::mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
   // Reset the volume fractions back to the correct values at
   // inflow faces.
   const int dir_bc_out = 1;
-  m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_out);
+  m_boundary_conditions.set_epg_bcs(time, ep_g_in, dir_bc_out);
 }

@@ -29,7 +29,7 @@ mfix::mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
 
   const Real strttime = ParallelDescriptor::second();
 
-  mfix_calc_transfer_coeffs(ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in,
+  mfix_calc_transfer_coeffs(time, ep_g_in, ro_g_in, vel_g_in, T_g_in, X_gk_in,
       pressure_g_in);
 
   mfix_deposit_particles(m_interphase_txfr_deposition, txfr_out, time);
@@ -343,7 +343,7 @@ mfix::mfix_calc_txfr_particle (Real time,
   if (reactions.solve()) {
 
     const int dir_bc_in = 2;
-    m_boundary_conditions.set_epg_bcs(ep_g_in, dir_bc_in);
+    m_boundary_conditions.set_epg_bcs(time, ep_g_in, dir_bc_in);
 
     m_boundary_conditions.set_density_bcs(time, ro_g_in);
 

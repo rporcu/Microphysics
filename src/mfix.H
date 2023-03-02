@@ -124,7 +124,10 @@ class mfix : public AmrCore
 
     void mfix_setup_solvers ();
 
-    void PostInit (Real& dt, Real time, int restart_flag, Real stop_time);
+    void PostInit (amrex::Real& dt,
+                   const amrex::Real time,
+                   int restart_flag,
+                   amrex::Real stop_time);
 
     void ResizeArrays ();
 
@@ -156,7 +159,11 @@ class mfix : public AmrCore
 
     void Regrid ();
 
-    void Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time);
+    void Evolve (int nstep,
+                 amrex::Real & dt,
+                 amrex::Real & prev_dt,
+                 const amrex::Real time,
+                 amrex::Real stop_time);
 
     void mfix_usr0 () const;
     static void mfix_usr1 (Real time);
@@ -327,36 +334,40 @@ class mfix : public AmrCore
     static amrex::Real m_max_solids_volume_fraction;
 
     template <typename F1>
-    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
-                                    Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in,
+    void mfix_calc_transfer_coeffs (const amrex::Real time,
+                                    amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& vel_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                    amrex::Vector< amrex::Real* > const& pressure_g_in,
                                     F1 DragFunc);
 
     template <typename F1, typename F2>
-    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
-                                    Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in,
+    void mfix_calc_transfer_coeffs (const amrex::Real time,
+                                    amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& vel_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                    amrex::Vector< amrex::Real* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff);
 
     template <typename F1, typename F2, typename F3>
-    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
-                                    Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in,
+    void mfix_calc_transfer_coeffs (const amrex::Real time,
+                                    amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& vel_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                    amrex::Vector< amrex::Real* > const& pressure_g_in,
                                     F1 DragFunc,
                                     F2 ConvectionCoeff,
                                     F3 HeterogeneousRRates);
 
-    void mfix_calc_volume_fraction (Real & sum_vol);
+    void mfix_calc_volume_fraction (const amrex::Real time,
+                                    amrex::Real & sum_vol);
 
     void mfix_deposition_bcs (int lev,
                               amrex::MultiFab & filled_mf) const;
@@ -491,7 +502,10 @@ class mfix : public AmrCore
     virtual void ClearLevel (int /*lev*/) override
     { amrex::Abort("ClearLevel: To be implemented"); }
 
-    void mfix_init_fluid (int is_restarting, Real dt, Real stop_time);
+    void mfix_init_fluid (int is_restarting,
+                          const amrex::Real time,
+                          amrex::Real dt,
+                          amrex::Real stop_time);
 
     void mfix_set_bc0 ();
 
@@ -583,12 +597,13 @@ class mfix : public AmrCore
 
     void fillpatch_force (amrex::Real time, amrex::Vector<amrex::MultiFab*> const& force, int ng);
 
-    void mfix_calc_transfer_coeffs (Vector< MultiFab* > const& ep_g_in,
-                                    Vector< MultiFab* > const& ro_g_in,
-                                    Vector< MultiFab* > const& vel_g_in,
-                                    Vector< MultiFab* > const& T_g_in,
-                                    Vector< MultiFab* > const& X_gk_in,
-                                    Vector< Real* > const& pressure_g_in);
+    void mfix_calc_transfer_coeffs (const amrex::Real time,
+                                    amrex::Vector< amrex::MultiFab* > const& ep_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& ro_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& vel_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& T_g_in,
+                                    amrex::Vector< amrex::MultiFab* > const& X_gk_in,
+                                    amrex::Vector< amrex::Real* > const& pressure_g_in);
 
     void mfix_calc_txfr_fluid (Vector< MultiFab* > const& txfr_out,
                                Vector< MultiFab* > const& ep_g_in,
@@ -630,10 +645,14 @@ class mfix : public AmrCore
     void ReMakeNewLevelFromScratch (int lev, const BoxArray & new_grids,
                                     const DistributionMapping & new_dmap);
 
-    void EvolveFluid (int nstep, Real & dt, Real & time, Real & prev_dt, Real stop_time, Real & drag_timing);
+    void EvolveFluid (int nstep,
+                      amrex::Real & dt,
+                      amrex::Real & prev_dt,
+                      const amrex::Real time,
+                      amrex::Real stop_time,
+                      amrex::Real & drag_timing);
 
     void check_for_nans (int lev);
-
 
     void fillpatch_all (Vector< MultiFab* > const& vel_in,
                         Vector< MultiFab* > const& ro_g_in,

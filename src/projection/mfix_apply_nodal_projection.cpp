@@ -143,8 +143,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //
     Vector< MultiFab* > epu(nlev);
 
-    for (int lev(0); lev < nlev; ++lev)
-    {
+    for (int lev(0); lev < nlev; ++lev) {
         // We only need one ghost cell here -- so no need to make it bigger
         epu[lev] = new MultiFab(grids[lev], dmap[lev], 3, 1, MFInfo(), *ebfactory[lev]);
 
@@ -154,21 +153,19 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
+    }
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
-        //  no-slip walls are treated exactly like slip walls --
-        // Note that this routine is essential to impose the correct inflow bc's on
-        //  the product ep  * vel
-        for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
-        {
-            // Why are we using this instead of simply multiplying vel and ep with their BCs in place
-            // already?
-            m_boundary_conditions.set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
-        }
+    // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
+    //  no-slip walls are treated exactly like slip walls --
+    // Note that this routine is essential to impose the correct inflow bc's on
+    //  the product ep  * vel
+    //
+    //  TODO
+    // Why are we using this instead of simply multiplying vel and ep with their BCs in place
+    // already?
+    m_boundary_conditions.set_vec_bcs(a_time, epu);
 
+    for (int lev(0); lev < nlev; ++lev) {
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);
@@ -276,29 +273,26 @@ mfix::PostProjectionDiagnostics(Real a_time,
     //
     m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
-    for (int lev(0); lev < nlev; ++lev)
-    {
+    for (int lev(0); lev < nlev; ++lev) {
         epu[lev]->setVal(1.e200);
 
         MultiFab::Copy(*epu[lev], *vel_g_in[lev], 0, 0, 3, epu[lev]->nGrow());
 
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
+    }
 
-#ifdef _OPENMP
-#pragma omp parallel if (Gpu::notInLaunchRegion())
-#endif
-        // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
-        //  no-slip walls are treated exactly like slip walls --
-        // Note that this routine is essential to impose the correct inflow bc's on
-        //  the product ep  * vel
-        for (MFIter mfi(*epu[lev], false); mfi.isValid(); ++mfi)
-        {
-            // Why are we using this instead of simply multiplying vel and ep with their BCs in place
-            // already?
-            m_boundary_conditions.set_vec_bcs(lev, (*epu[lev])[mfi], geom[lev].Domain());
-        }
+    // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
+    //  no-slip walls are treated exactly like slip walls --
+    // Note that this routine is essential to impose the correct inflow bc's on
+    //  the product ep  * vel
+    //
+    // TODO
+    // Why are we using this instead of simply multiplying vel and ep with their BCs in place
+    // already?
+    m_boundary_conditions.set_vec_bcs(a_time, epu);
 
+    for (int lev(0); lev < nlev; ++lev) {
         // We set these to zero because if the values in the covered cells are undefined,
         //   even though they are multiplied by zero in the divu computation, we can still get NaNs
         EB_set_covered(*epu[lev], 0, epu[lev]->nComp(), 1, 0.0);

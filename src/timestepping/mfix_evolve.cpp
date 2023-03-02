@@ -6,7 +6,11 @@
 
 // This subroutine is the driver for the whole time stepping (fluid + particles )
 void
-mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
+mfix::Evolve (int nstep,
+              Real & dt,
+              Real & prev_dt,
+              const Real time,
+              Real stop_time)
 {
     BL_PROFILE_REGION_START("mfix::Evolve");
 
@@ -19,7 +23,7 @@ mfix::Evolve (int nstep, Real & dt, Real & prev_dt, Real time, Real stop_time)
       //BL_PROFILE_REGION("CALC VOLUME FRACTION");
 
       Real start_coupling = ParallelDescriptor::second();
-      mfix_calc_volume_fraction(sum_vol);
+      mfix_calc_volume_fraction(time, sum_vol);
       //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
 
       coupling_timing = ParallelDescriptor::second() - start_coupling;

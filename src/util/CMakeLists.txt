@@ -16,17 +16,11 @@ target_sources( mfixcore
    mfix_regrid.cpp
    mfix_fillpatch_bc.H
    mfix_fillpatch.cpp
+   mfix_set_bcs.cpp
    mfix_set_gradp_bcs.cpp
-   mfix_set_velocity_bcs.cpp
-   mfix_set_epg_bcs.cpp
-   mfix_set_enthalpy_bcs.cpp
-   mfix_set_temperature_bcs.cpp
    mfix_set_eb_temperature_bcs.cpp
    mfix_set_eb_velocity_bcs.cpp
    mfix_set_eb_scalar_bcs.cpp
-   mfix_set_density_bcs.cpp
-   mfix_set_species_bcs.cpp
-   mfix_set_tracer_bcs.cpp
    mfix_mf_helpers.H
    mfix_mf_helpers.cpp
    mfix_mlmg_options.H

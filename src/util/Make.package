@@ -1,12 +1,7 @@
 CEXE_sources += mfix_set_gradp_bcs.cpp
-CEXE_sources += mfix_set_velocity_bcs.cpp
-CEXE_sources += mfix_set_enthalpy_bcs.cpp
-CEXE_sources += mfix_set_temperature_bcs.cpp
+CEXE_sources += mfix_set_bcs.cpp
 CEXE_sources += mfix_set_eb_temperature_bcs.cpp
 CEXE_sources += mfix_set_eb_velocity_bcs.cpp
-CEXE_sources += mfix_set_density_bcs.cpp
-CEXE_sources += mfix_set_species_bcs.cpp
-CEXE_sources += mfix_set_tracer_bcs.cpp
 CEXE_sources += mfix_calc_bc_areas.cpp
 CEXE_sources += mfix_calc_eb_bc_areas.cpp
 CEXE_sources += mfix_set_eb_scalar_bcs.cpp
@@ -27,8 +22,6 @@ CEXE_headers += mfix_fillpatch_bc.H
 CEXE_headers += mfix_run_on.H
 CEXE_headers += mfix_algorithm.H
 CEXE_headers += mfix_solvers.H
-
-CEXE_sources += mfix_set_epg_bcs.cpp
 
 CEXE_headers += mfix_mlmg_options.H
 CEXE_sources += mfix_mlmg_options.cpp

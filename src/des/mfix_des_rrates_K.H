@@ -21,8 +21,6 @@ class HeterogeneousRatesUser
 
     /**
      *  \brief Returns: the calculated heterogeneous chemical reactions rates
-     *
-     *  Inputs: // TODO
      */
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE
@@ -56,8 +54,6 @@ class HomogeneousRatesUser
     /**
      *  \brief Returns: the calculated homogeneous solids-phase chemical
      *  reaction rates
-     *
-     *  Inputs: // TODO
      */
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE
@@ -74,8 +70,6 @@ class HomogeneousRatesUser
     /**
      *  \brief Returns: the calculated homogeneous fluid-phase chemical
      *  reaction rates
-     *
-     *  Inputs: // TODO
      */
     template <amrex::RunOn run_on>
     AMREX_GPU_HOST_DEVICE

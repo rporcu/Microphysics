@@ -314,7 +314,8 @@ class BaseMonitor: public Monitor {
       return result;
     }
 
-    // Description: TODO
+    // Description: Class that handles different situations when it is needed to
+    // determine if a cell is covered or not
     class isCovered {
 
       public:
