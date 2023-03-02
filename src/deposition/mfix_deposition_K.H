@@ -144,7 +144,7 @@ struct TrilinearDPVMSquareDeposition
     amrex::GpuArray<amrex::Real,2> wy;
     amrex::GpuArray<amrex::Real,2> wz;
 
-    amrex::Real rp  = amrex::max(dx[0], radius * deposition_scale_factor);
+    amrex::Real rp  = amrex::min(0.5*dx[0], radius * deposition_scale_factor);
 
     amrex::Real i4rp3 = 1./(4.*rp*rp*rp);
 
@@ -240,6 +240,8 @@ struct TrueDPVMDeposition
                    amrex::GpuArray<amrex::GpuArray<amrex::GpuArray<amrex::Real,2>,2>,2>& weights,
                    const amrex::Real deposition_scale_factor) const
   {
+    constexpr amrex::Real tolerance = std::numeric_limits<amrex::Real>::epsilon();
+
     amrex::Real x = (pos[0] - plo[0]) * dxi[0] + 0.5;
     amrex::Real y = (pos[1] - plo[1]) * dxi[1] + 0.5;
     amrex::Real z = (pos[2] - plo[2]) * dxi[2] + 0.5;
@@ -252,7 +254,7 @@ struct TrueDPVMDeposition
     amrex::GpuArray<amrex::Real,2> wy;
     amrex::GpuArray<amrex::Real,2> wz;
 
-    amrex::Real rp  = amrex::max(dx[0], radius * deposition_scale_factor);
+    amrex::Real rp  = amrex::min(0.5*dx[0], radius * deposition_scale_factor);
 
     // This gives us the i,j,k of the cell containing the centriod
     // of the particle.
@@ -267,7 +269,7 @@ struct TrueDPVMDeposition
       // particle sits on low side of i index
       overlap[0] = amrex::max(0.0, (i*dx[0]) - pos[0] + rp);
 
-      wx[0] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
+      wx[0] = (overlap[0] < tolerance) ? 0.0 : fface(overlap[0], rp);
       wx[1] = 1.0 - wx[0];
 
     } else {
@@ -275,7 +277,7 @@ struct TrueDPVMDeposition
       // particle sits on high side of i-1 index
       overlap[0] = amrex::max(0.0, pos[0] + rp - (i*dx[0]));
 
-      wx[1] = (overlap[0] == 0.0) ? 0.0 : fface(overlap[0], rp);
+      wx[1] = (overlap[0] < tolerance) ? 0.0 : fface(overlap[0], rp);
       wx[0] = 1.0 - wx[1];
 
     }
@@ -285,7 +287,7 @@ struct TrueDPVMDeposition
       // particle sits on low side of j index
       overlap[1] = amrex::max(0.0, (j*dx[1]) - pos[1] + rp);
 
-      wy[0] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
+      wy[0] = (overlap[1] < tolerance) ? 0.0 : fface(overlap[1], rp);
       wy[1] = 1.0 - wy[0];
 
     } else {
@@ -293,7 +295,7 @@ struct TrueDPVMDeposition
       // particle sits on high side of j-1 index
       overlap[1] = amrex::max(0.0, pos[1] + rp - (j*dx[1]));
 
-      wy[1] = (overlap[1] == 0.0) ? 0.0 : fface(overlap[1], rp);
+      wy[1] = (overlap[1] < tolerance) ? 0.0 : fface(overlap[1], rp);
       wy[0] = 1.0 - wy[1];
 
     }
@@ -319,7 +321,7 @@ struct TrueDPVMDeposition
 
     int cuts = 0;
     for ( int ii=0; ii<=2; ++ii) {
-      if( overlap[ii] != 0. ) cuts += 1;
+      if( overlap[ii] > tolerance ) cuts += 1;
     }
 
     const int i0 = i-ip;
