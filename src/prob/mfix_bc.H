@@ -484,7 +484,9 @@ class MFIXBoundaryConditions
     amrex::Real* bc_X_gk_ptr (const int n) { return m_bc_X_gk_ptr[n]; };
     amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; };
 
-    amrex::Real& get_bc_area (const int bcv) { return m_area[bcv]; };
+    amrex::Real& get_bc_area (const int bcv);
+
+    int& get_dir (const int bcv) { return m_dir[bcv]; }
 
   private:
     amrex::Vector<amrex::Geometry>& m_geom;
@@ -534,6 +536,11 @@ class MFIXBoundaryConditions
     // Lists of BCs applied to the domain extent
     std::array<amrex::Vector<int>,3> m_bc_lo;
     std::array<amrex::Vector<int>,3> m_bc_hi;
+
+    // Domain face of BC
+    // lo x/y/z: 0, 2, 4
+    // hi x/y/z: 1: 3, 5
+    amrex::Vector<int> m_dir;
 
     // Flag to solve fluid equations
     int m_delp_dir;

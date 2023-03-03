@@ -257,9 +257,10 @@ class MFIXParticleContainer final
                           int & nsubsteps,
                           int compute_mass_balance);
 
-    void mfix_pc_inflow (int lev,
+    void mfix_pc_inflow (int const lev,
+                         int const is_dem,
+                         int const is_pic,
                          amrex::Real dt,
-                         amrex::Real time,
                          const int advect_enthalpy,
                          amrex::EBFArrayBoxFactory* factory);
 

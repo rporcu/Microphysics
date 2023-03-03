@@ -102,6 +102,11 @@ void mfix::EvolveParcels (Real dt,
     const bool use_taylor_approx( m_pic.initial_step() == MFIXPIC::InitialStepType::taylor_approx);
     const Real advance_vel_p(0.0);
 
+    {
+      int const lev(0);
+      pc->mfix_pc_inflow(lev, 0, 1, dt, solids.solve_enthalpy(), particle_ebfactory[lev].get());
+    }
+
     mfix::pic_iteration(apply_forces, update_parcels, use_taylor_approx,
              advance_vel_p, dt, gravity_in, vel_s, ep_s,
              particle_ebfactory[0].get(), ls_refinement, ls_data);

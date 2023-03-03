@@ -296,9 +296,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
 
     // Particle inflow
-    if (ebfactory != NULL)
-      mfix_pc_inflow(lev, dt, time, solids.solve_enthalpy(), ebfactory);
-
+    if (ebfactory != NULL) {
+      mfix_pc_inflow(lev, 1, 0, dt, solids.solve_enthalpy(), ebfactory);
+    }
 
     // sort particles by cell, this can significantly improve the locality
     if (sort_int > 0 && nstep % sort_int == 0) {

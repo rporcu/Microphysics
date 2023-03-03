@@ -57,3 +57,32 @@ const amrex::Box calc_ic_box(const Geometry& geom, const RealBox* region)
   return amrex::Box(ic_lo, ic_hi);
 
 }
+
+const amrex::Box calc_bc_box(Geometry const& a_geom,
+                             RealBox  const* a_region,
+                             int const       a_face)
+{
+  Box ic_box = calc_ic_box(a_geom, a_region);
+  if (a_face == -1) {
+    return ic_box;
+  }
+
+  Box domain(a_geom.Domain());
+
+  // face: 0:x-lo, 1:x-hi, 2:y-lo, 3:y-hi, 4:z-lo, 5:z-hi
+  int const dir((a_face - (a_face%2))/((int)2)); // dir=0,1,2 (x,y,z)
+
+  IntVect lo(domain.smallEnd());
+  IntVect hi(domain.bigEnd());
+
+  if ( a_face%2==0 ) {
+    hi.setVal(dir,lo[dir]);
+  } else {
+    lo.setVal(dir,hi[dir]);
+  }
+
+  Box bc_box(lo, hi);
+  bc_box.minBox(ic_box);
+
+  return bc_box;
+}

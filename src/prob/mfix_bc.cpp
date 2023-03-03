@@ -356,6 +356,8 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
       m_bc_hi[2].push_back(bcv);
     }
 
+    m_dir.push_back(dir_int);
+
     // Enforce the boundary for pressure outflows if specified.
     if (new_bc.type == BCList::pout && po_noParOut == 0) {
       m_domain_bc[dir_int] = 0;
@@ -546,16 +548,22 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
         ppSolid.get("volfrac", new_solid.volfrac);
         volfrac_total += new_bc.fluid.volfrac;
 
+        bool const is_mi(new_bc.type == BCList::minf);
+        bool const is_eb(new_bc.type == BCList::eb);
+
         if (new_solid.volfrac > tolerance) {
 
-          if (new_bc.type == BCList::minf) {
+          if (is_mi && dem.solve()) {
 
-            amrex::Print() << "Mass inflows for solids has not bee implemented yet!\n";
-            amrex::Abort("Mass inflows for solids has not bee implemented yet!");
+            amrex::Print() << "Mass inflows for DEM solids has not bee implemented yet!\n";
+            amrex::Abort("Mass inflows for DEM solids has not bee implemented yet!");
 
-          } else if (new_bc.type == BCList::eb) {
+          } else if (is_eb || (is_mi && pic.solve()) ) {
 
-            m_embedded_boundaries.set_compute_area(1);
+            if (is_eb) { m_embedded_boundaries.set_compute_area(1); }
+
+             new_solid.statwt = 1.0;
+             ppSolid.query("statwt", new_solid.statwt);
 
             if (ppSolid.contains("velocity")) {
 
@@ -572,6 +580,10 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
 
               } else if (rcomps == 1) {
                 new_solid.velmag = amrex::Math::abs(vel_in[0]);
+
+                new_solid.velocity.push_back( (dir_int == 0 ? vel_in[0] : 0.) );
+                new_solid.velocity.push_back( (dir_int == 1 ? vel_in[0] : 0.) );
+                new_solid.velocity.push_back( (dir_int == 2 ? vel_in[0] : 0.) );
 
               } else {
                 std::string message = " Error: BC region " + input_regions[bcv]
@@ -1144,3 +1156,17 @@ MFIXBoundaryConditions::read_bc_species (amrex::ParmParse pp,
   }
 
 } // end read_bc_species
+
+
+
+amrex::Real& MFIXBoundaryConditions::
+get_bc_area (const int bcv)
+{
+  AMREX_ASSERT( m_bc[bcv].type == BCList::pinf ||
+                m_bc[bcv].type == BCList::pout ||
+                m_bc[bcv].type == BCList::minf ||
+                m_bc[bcv].type == BCList::eb );
+
+  if ( m_bc[bcv].type == BCList::eb ) { return m_bc[bcv].eb.area; }
+  else  { return m_area[bcv]; }
+}

@@ -23,5 +23,8 @@ void calc_cell_ic(const amrex::Real dx,
 
 const amrex::Box calc_ic_box(const amrex::Geometry& geom, const amrex::RealBox* region);
 
+const amrex::Box calc_bc_box(amrex::Geometry const& a_geom,
+                             amrex::RealBox  const* a_region,
+                             int             const  a_dir=-1);
 
 #endif
