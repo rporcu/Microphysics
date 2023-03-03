@@ -202,7 +202,10 @@ public:
    int mass_balance_report_int = -1;
    int last_mb_report  = -1;
    amrex::Real mass_balance_report_per_approx = -1;
-   amrex::Real mass_balance_report_time = 0;
+   amrex::Real mass_balance_report_time;
+
+   void setReportTime (amrex::Real const a_time)
+   { mass_balance_report_time = a_time; }
 
 #ifdef MFIX_CATALYST
    std::string catalyst_script {""};

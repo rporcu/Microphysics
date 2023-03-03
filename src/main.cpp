@@ -129,7 +129,7 @@ int main (int argc, char* argv[])
     // Write out EB sruface
     mfixRW.writeEBSurface();
 
-    if (mfixRW.only_print_grid_report) 
+    if (mfixRW.only_print_grid_report)
     {
         mfix.InitLevelData(time);
         mfixRW.reportGridStats();
@@ -169,6 +169,8 @@ int main (int argc, char* argv[])
            IntVect Nrep(mfixRW.repl_x, mfixRW.repl_y, mfixRW.repl_z);
            mfix.Restart(mfixRW.restart_file, &nstep, &dt, &time, Nrep);
        }
+
+       mfixRW.setReportTime(time);
 
        if (mfix.fluid.solve()){
          mfix.init_advection();
