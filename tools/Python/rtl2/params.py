@@ -254,7 +254,7 @@ def load_params(args):
             mysuite.log.warn("restart-test {} needs a restartFileNum".format(sec))
             invalid = 1
 
-        if mytest.selfTest and mytest.stSuccessString == "":
+        if mytest.stSuccessString == "":
             mysuite.log.warn("self-test {} needs a stSuccessString".format(sec))
             invalid = 1
 
@@ -264,10 +264,6 @@ def load_params(args):
 
         if mytest.useOMP and mytest.numthreads == -1:
             mysuite.log.warn("OpenMP parallel test {} needs numthreads".format(sec))
-            invalid = 1
-
-        if mytest.doVis and mytest.visVar == "":
-            mysuite.log.warn("test {} has visualization, needs visVar".format(sec))
             invalid = 1
 
         # add the current test object to the master list

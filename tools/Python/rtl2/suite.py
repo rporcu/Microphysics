@@ -87,19 +87,12 @@ class Test:
         self.useOMP = 0
         self.numthreads = -1
 
-        self.doVis = 0
-        self.visVar = ""
-
-        self._doComparison = True
         self._tolerance = None
-        self._particle_tolerance = None
 
         self.analysisRoutine = ""
         self.analysisMainArgs = ""
         self.analysisOutputImage = ""
 
-        self.outputFile = ""
-        self.compareFile = ""
         self.output_dir = Path()
 
         self.compare_file_used = ""
@@ -140,9 +133,6 @@ class Test:
         self.analysis_successful = False  # filled automatically
 
         self.customRunCmd: Optional[List[str]] = None
-
-        self.compareParticles = False
-        self.particleTypes = ""
 
         self._check_performance = 0
         self._performance_threshold = 1.2
@@ -293,7 +283,7 @@ class Test:
         if self.compileTest or not self.post_successful:
             return self.post_successful
 
-        compare = not self.doComparison or self.compare_successful
+        compare = self.compare_successful
         analysis = self.analysisRoutine == "" or self.analysis_successful
         return compare and analysis
 
@@ -326,7 +316,7 @@ class Test:
     def record_runtime(self, suite):
 
         test = self.passed and not self.compileTest
-        suite = not suite.args.do_temp_run and not suite.args.make_benchmarks
+        suite = not suite.args.do_temp_run
         return test and suite
 
     def set_compile_test(self, value):
@@ -341,18 +331,6 @@ class Test:
 
         return self._compileTest or Test.compile_only
 
-    def set_do_comparison(self, value):
-        """Sets whether this test is compile-only"""
-
-        self._doComparison = value
-
-    def get_do_comparison(self):
-        """Returns True if the global --compile_only flag was set or
-        this test is compile-only, False otherwise
-        """
-
-        return self._doComparison and not Test.skip_comparison
-
     def get_tolerance(self):
         """Returns the global tolerance if one was set,
         and the test-specific one otherwise.
@@ -366,20 +344,6 @@ class Test:
         """Sets the test-specific tolerance to the specified value."""
 
         self._tolerance = value
-
-    def get_particle_tolerance(self):
-        """Returns the global particle tolerance if one was set,
-        and the test-specific one otherwise.
-        """
-
-        if Test.global_particle_tolerance is None:
-            return self._particle_tolerance
-        return Test.global_particle_tolerance
-
-    def set_particle_tolerance(self, value):
-        """Sets the test-specific particle tolerance to the specified value."""
-
-        self._particle_tolerance = value
 
     def get_check_performance(self):
         """Returns whether to check performance for this test."""
@@ -421,17 +385,13 @@ class Test:
 
     # Static member variables, set explicitly in apply_args in Suite class
     compile_only = False
-    skip_comparison = False
     global_tolerance = None
-    global_particle_tolerance = None
     performance_params: List[str] = []
 
     # Properties - allow for direct access as an attribute
     # (e.g. test.compileTest) while still utilizing getters and setters
     compileTest = property(get_compile_test, set_compile_test)
-    doComparison = property(get_do_comparison, set_do_comparison)
     tolerance = property(get_tolerance, set_tolerance)
-    particle_tolerance = property(get_particle_tolerance, set_particle_tolerance)
     check_performance = property(get_check_performance, set_check_performance)
     performance_threshold = property(get_performance_threshold, set_performance_threshold)
     runs_to_average = property(get_runs_to_average, set_runs_to_average)
@@ -518,7 +478,7 @@ class Suite:
         # default branch -- we use this only for display purposes --
         # if the test was run on a branch other than the default, then
         # an asterisk will appear next to the date in the main page
-        self.default_branch = "master"
+        self.default_branch = "develop"
 
     @property
     def buildDir(self) -> Path:
@@ -587,7 +547,7 @@ class Suite:
 
         # if we only want to run the tests that failed previously,
         # remove the others
-        if self.args.redo_failed or not self.args.copy_benchmarks is None:
+        if self.args.redo_failed:
             last_run = self.get_last_run()
             failed = self.get_test_failures(last_run)
 
@@ -996,9 +956,7 @@ class Suite:
         args = self.args
 
         Test.compile_only = args.compile_only
-        Test.skip_comparison = args.skip_comparison
         Test.global_tolerance = args.tolerance
-        Test.global_particle_tolerance = args.particle_tolerance
         Test.performance_params = args.check_performance
 
     #######################################################

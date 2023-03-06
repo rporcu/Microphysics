@@ -125,81 +125,6 @@ def find_build_dirs(tests):
     return build_dirs
 
 
-def copy_benchmarks(old_full_test_dir, full_web_dir, test_list, bench_dir, log):
-    """copy the last plotfile output from each test in test_list
-    into the benchmark directory.  Also copy the diffDir, if
-    it exists"""
-    td = os.getcwd()
-
-    for t in test_list:
-        wd = "{}/{}".format(old_full_test_dir, t.name)
-        os.chdir(wd)
-
-        if t.compareFile == "" and t.outputFile == "":
-            p = t.get_compare_file(output_dir=wd)
-        elif not t.outputFile == "":
-            if not os.path.exists(t.outputFile):
-                p = test_util.get_recent_filename(wd, t.outputFile, ".tgz")
-            else:
-                p = t.outputFile
-        else:
-            if not os.path.exists(t.compareFile):
-                p = test_util.get_recent_filename(wd, t.compareFile, ".tgz")
-            else:
-                p = t.compareFile
-
-        if p:
-            if p.endswith(".tgz"):
-                try:
-                    with tarfile.open(name=p, mode="r:gz") as tg:
-                        tg.extractall()
-                except:
-                    log.fail("ERROR extracting tarfile")
-                idx = p.rfind(".tgz")
-                p = p[:idx]
-
-            store_file = p
-            if not t.outputFile == "":
-                store_file = "{}_{}".format(t.name, p)
-
-            try:
-                shutil.rmtree("{}/{}".format(bench_dir, store_file))
-            except:
-                pass
-            shutil.copytree(p, "{}/{}".format(bench_dir, store_file))
-
-            with open("{}/{}.status".format(full_web_dir, t.name), "w") as cf:
-                cf.write("benchmarks updated.  New file:  {}\n".format(store_file))
-
-        else:  # no benchmark exists
-            with open("{}/{}.status".format(full_web_dir, t.name), "w") as cf:
-                cf.write("benchmarks update failed")
-
-        # is there a diffDir to copy too?
-        if not t.diffDir == "":
-            diff_dir_bench = "{}/{}_{}".format(bench_dir, t.name, t.diffDir)
-            if os.path.isdir(diff_dir_bench):
-                shutil.rmtree(diff_dir_bench)
-                shutil.copytree(t.diffDir, diff_dir_bench)
-            else:
-                if os.path.isdir(t.diffDir):
-                    try:
-                        shutil.copytree(t.diffDir, diff_dir_bench)
-                    except IOError:
-                        log.warn("file {} not found".format(t.diffDir))
-                    else:
-                        log.log("new diffDir: {}_{}".format(t.name, t.diffDir))
-                else:
-                    try:
-                        shutil.copy(t.diffDir, diff_dir_bench)
-                    except IOError:
-                        log.warn("file {} not found".format(t.diffDir))
-                    else:
-                        log.log("new diffDir: {}_{}".format(t.name, t.diffDir))
-
-        os.chdir(td)
-
-
 def get_variable_names(suite, plotfile):
     """uses fvarnames to extract the names of variables
     stored in a plotfile"""
@@ -215,30 +140,6 @@ def get_variable_names(suite, plotfile):
     tvars = re.split(r"\s+", sout)[2:-1:2]
 
     return set(tvars)
-
-
-def process_comparison_results(stdout, tvars, test):
-    """checks the output of fcompare (passed in as stdout)
-    to determine whether all relative errors fall within
-    the test's tolerance"""
-
-    # Alternative solution - just split on whitespace
-    # and iterate through resulting list, attempting
-    # to convert the next two items to floats. Assume
-    # the current item is a variable if successful.
-
-    # Split on whitespace
-    regex = r"\s+"
-    words = re.split(regex, stdout)
-
-    indices = filter(lambda i: words[i] in tvars, range(len(words)))
-
-    for i in indices:
-        _, _, rel_err = words[i : i + 3]
-        if abs(test.tolerance) <= abs(float(rel_err)):
-            return False
-
-    return True
 
 
 def determine_coverage(suite):
@@ -295,23 +196,17 @@ def setup(argv):
         # find all the tests that completed in that web directory
         tests = []
         test_file = ""
-        was_benchmark_run = 0
         for sfile in os.listdir(suite.full_web_dir):
             if os.path.isfile(sfile) and sfile.endswith(".status"):
                 index = sfile.rfind(".status")
                 tests.append(sfile[:index])
-
-                with open(suite.full_web_dir + sfile, "r") as f:
-                    for line in f:
-                        if line.find("benchmarks updated") > 0:
-                            was_benchmark_run = 1
 
             if os.path.isfile(sfile) and sfile.endswith(".ini"):
                 test_file = sfile
 
         # create the report for this test run
         _num_failed = report.report_this_test_run(
-            suite, was_benchmark_run, "recreated report after crash of suite", "", tests, test_file
+            suite, "recreated report after crash of suite", "", tests, test_file
         )
 
         # create the suite report
@@ -331,12 +226,6 @@ def create_dirs(args, test_list, suite):
     # --------------------------------------------------------------------------
     all_compile = all(t.compileTest == 1 for t in test_list)
 
-    if not all_compile:
-        bench_dir = suite.get_bench_dir()
-
-    if args.copy_benchmarks is not None:
-        last_run = suite.get_last_run()
-
     suite.make_test_dirs()
 
     # Make sure the web dir is valid
@@ -344,23 +233,6 @@ def create_dirs(args, test_list, suite):
         suite.webTopDir.mkdir(exist_ok=True)
     except OSError:
         suite.log.fail(f"ERROR: unable to create the web directory: {suite.webTopDir}\n")
-
-    if args.copy_benchmarks is not None:
-        old_full_test_dir = suite.testTopDir + suite.suiteName + "-tests/" + last_run
-        copy_benchmarks(old_full_test_dir, suite.full_web_dir, test_list, bench_dir, suite.log)
-
-        # here, args.copy_benchmarks plays the role of make_benchmarks
-        _num_failed = report.report_this_test_run(
-            suite,
-            args.copy_benchmarks,
-            "copy_benchmarks used -- no new tests run",
-            "",
-            test_list,
-            args.input_file[0],
-        )
-        report.report_all_runs(suite, _active_test_list(test_list))
-
-        sys.exit("done")
 
 
 def setup_repos(args, suite):
@@ -372,8 +244,6 @@ def setup_repos(args, suite):
     update_time = time.strftime("%Y-%m-%d %H:%M:%S %Z", now)
 
     no_update = args.no_update.lower()
-    if args.copy_benchmarks is not None:
-        no_update = "all"
 
     # the default is to update everything, unless we specified a hash
     # when constructing the Repo object
@@ -705,12 +575,6 @@ class TestRunner:
         except IOError:
             suite.log.warn("no output file found")
 
-        with open(test.comparison_outfile, "w") as cf:
-            if test.compare_successful:
-                cf.write("SELF TEST SUCCESSFUL\n")
-            else:
-                cf.write("SELF TEST FAILED\n")
-
         # ----------------------------------------------------------------------
         # if the test ran and passed, add its runtime to the dictionary
         # ----------------------------------------------------------------------
@@ -737,8 +601,6 @@ class TestRunner:
             (suite.full_web_dir / test.errfile).unlink(missing_ok=True)
             (suite.full_web_dir / test.errfile).symlink_to(test.errfile)
             test.has_stderr = True
-        if test.doComparison:
-            shutil.copy(test.comparison_outfile, suite.full_web_dir)
         analysis = Path(f"{test.name}.analysis.out")
         if analysis.is_file():
             shutil.copy(analysis, suite.full_web_dir)
@@ -810,9 +672,8 @@ class TestRunner:
         # ----------------------------------------------------------------------
         # write the report for this test
         # ----------------------------------------------------------------------
-        if args.make_benchmarks is None:
-            suite.log.log("creating problem test report ...")
-            report.report_single_test(suite, test, test_list)
+        suite.log.log("creating problem test report ...")
+        report.report_single_test(suite, test, test_list)
 
 
 def finish(args, test_list, suite, update_time, runtimes):
@@ -837,7 +698,7 @@ def finish(args, test_list, suite, update_time, runtimes):
     suite.log.skip()
     suite.log.bold("creating new test report...")
     num_failed = report.report_this_test_run(
-        suite, args.make_benchmarks, args.note, update_time, test_list, args.input_file[0]
+        suite, args.note, update_time, test_list, args.input_file[0]
     )
 
     # make sure that all of the files in the web directory are world readable

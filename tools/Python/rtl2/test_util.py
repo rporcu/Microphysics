@@ -41,6 +41,13 @@ The "main" block specifies the global test suite parameters:
 
   partition = < queue/partition to submit SLURM job; ignored if job_manager is not "slurm" >
 
+  slurm_command = <srun: submit to SLURM using srun (preferred for CPU tests);
+                   salloc: submit to SLURM using salloc (required for GPU tests) >
+
+  ntasks_per_node = < when the slurm_command is "salloc" this value must be set >
+
+  ntasks_per_socket = < when the slurm_command is "salloc" this value must be set >
+
   MPIcommand = < MPI run command, with holders for host, # of proc, command >
 
      This should look something like:
@@ -87,11 +94,7 @@ Each test is given its own block, with the general form:
 
   compileTest = < 0 for normal run, 1 if we just test compilation >
 
-  selfTest = < 0 for normal run, 1 if test self-diagnoses if it succeeded >
-  stSuccessString = < string to find in self-test output to determine success >
-
-  doVis = < 0 for no visualization, 1 if we do visualization >
-  visVar = < string of the variable to visualize >
+  stSuccessString = < string to find in output to determine success >
 
   analysisRoutine = < name of the script to run on the output >
 
@@ -104,17 +107,8 @@ Each test is given its own block, with the general form:
 
   analysisOutputImage = < name on analysis result image to show on web page >
 
-  compareFile = < explicit output file to do the comparison with -- this is
-                  assumed to be prefixed with the test name when output by
-                  the code at runtime, e.g. test_plt00100 >
-
-  doComparison = < 1: compare to benchmark file, 0: skip comparison >
   tolerance = < floating point number representing the largest relative error
-                permitted between the run output and the benchmark for mesh data,
-                default is 0.0 >
-  particle_tolerance = < same as the above, for particle comparisons
-  outputFile = < explicit output file to compare with -- exactly as it will
-                 be written.  No prefix of the test name will be done >
+                permitted >
 
   diffDir = < directory/file to do a plain text diff on (recursive, if dir) >
 
@@ -130,13 +124,7 @@ Each test is given its own block, with the general form:
 Getting started:
 
 To set up a test suite, it is probably easiest to write the
-testfile.ini as described above and then run the test routine with the
---make_benchmarks option to create the benchmark directory.
-Subsequent runs can be done as usual, and will compare to the newly
-created benchmarks.  If differences arise in the comparisons due to
-(desired) code changes, the benchmarks can be updated using
---make_benchmarks to reflect the new ``correct'' solution.
-
+testfile.ini as described above and then run the test routine.
 """
 
 
@@ -311,25 +299,6 @@ def get_args(arg_string=None):
         help="what github pull request number to use for the amrex repo",
     )
 
-    bench_group = parser.add_argument_group(
-        "benchmark options", "options that control benchmark creation"
-    )
-    bench_group.add_argument(
-        "--make_benchmarks",
-        type=str,
-        default=None,
-        metavar="comment",
-        help="make new benchmarks? (must provide a comment)",
-    )
-    bench_group.add_argument(
-        "--copy_benchmarks",
-        type=str,
-        default=None,
-        metavar="comment",
-        help="use plotfiles from failed tests of the last run as new benchmarks."
-        + " No git pull is done and no new runs are performed (must provide a comment)",
-    )
-
     run_group = parser.add_argument_group(
         "test running options", "options that control how the tests are run"
     )
@@ -400,24 +369,13 @@ def get_args(arg_string=None):
         "comparison options", "options that control how the comparisons are done"
     )
     comp_options.add_argument(
-        "--skip_comparison",
-        action="store_true",
-        help="run analysis for each test without comparison to benchmarks",
-    )
-    comp_options.add_argument(
         "--tolerance",
         type=float,
         default=None,
         metavar="value",
-        help="largest relative error permitted during mesh comparison",
+        help="largest relative error permitted",
     )
-    comp_options.add_argument(
-        "--particle_tolerance",
-        type=float,
-        default=None,
-        metavar="value",
-        help="largest relative error permitted during particle comparison",
-    )
+
     parser.add_argument(
         "input_file",
         metavar="input-file",

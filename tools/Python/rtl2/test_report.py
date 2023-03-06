@@ -42,13 +42,6 @@ a.crashed:link {color: yellow; text-decoration: none;}
 a.crashed:visited {color: yellow; text-decoration: none;}
 a.crashed:hover {color: #00ffff; text-decoration: underline;}
 
-h3.benchmade {text-decoration: none; display: inline;
-              color: black; background-color: orange; padding: 2px;}
-
-a.benchmade:link {color: black; text-decoration: none;}
-a.benchmade:visited {color: black; text-decoration: none;}
-a.benchmade:hover {color: #00ffff; text-decoration: underline;}
-
 span.nobreak {white-space: nowrap;}
 span.mild-success {color: green;}
 span.mild-failure {color: red;}
@@ -67,7 +60,6 @@ td.passed-slowly {background-color: yellow; opacity: 0.8;}
 td.failed {background-color: red; color: yellow; opacity: 0.8;}
 td.postcrashed {background-color: purple; color: yellow; opacity: 0.8;}
 td.crashed {background-color: black; color: yellow; opacity: 0.8;}
-td.benchmade {background-color: orange; opacity: 0.8;}
 td.date {background-color: #666666; color: white; opacity: 0.8; font-weight: bold;}
 
 .maintable tr:hover {background-color: blue;}
@@ -124,7 +116,6 @@ div.verticaltext {text-align: center;
 #summary td.passed {background-color: lime; }
 #summary td.passed-slowly {background-color: yellow; }
 #summary td.failed {background-color: red; color: yellow;}
-#summary td.benchmade {background-color: orange;}
 #summary td.postcrashed {background-color: purple; color: yellow;}
 #summary td.crashed {background-color: black; color: yellow;}
 
@@ -371,7 +362,10 @@ def report_single_test(suite, test, tests, failure_msg=None):
                 suite.log.testfail(f"{test.name} CRASHED (backtraces produced)")
             else:
                 sf.write("FAILED\n")
-                suite.log.testfail(f"{test.name} FAILED.  For details see {test.outfile}")
+                if not compare_successful:
+                   suite.log.testfail(f"{test.name} FAILED.  Average values not within tolerance")
+                else:
+                   suite.log.testfail(f"{test.name} FAILED.  For details see {test.outfile}")
 
     else:
         # we came in already admitting we failed...
@@ -582,7 +576,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
 
     ll.write_list()
 
-    if (not test.compileTest) and test.doComparison and failure_msg is None:
+    if (not test.compileTest) and failure_msg is None:
 
         # parse the compare output and make an HTML table
         ht = HTMLTable(hf, columns=3, divs=["summary", "compare"])
@@ -591,7 +585,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
         box_error = False
         grid_error = False
         variables_error = False
-        no_bench_error = False
         particle_counts_differ_error = False
 
         if in_diff_region:
@@ -604,9 +597,6 @@ def report_single_test(suite, test, tests, failure_msg=None):
 
         if grid_error:
             hf.write("<p>grids do not match</p>\n")
-
-        if no_bench_error:
-            hf.write("<p>no corresponding benchmark found</p>\n")
 
         if variables_error:
             hf.write("<p>variables differ in files</p>\n")
@@ -630,7 +620,7 @@ def report_single_test(suite, test, tests, failure_msg=None):
     os.chdir(current_dir)
 
 
-def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, test_file):
+def report_this_test_run(suite, note, _update_time, test_list, test_file):
     """generate the master page for a single run of the test suite"""
 
     # get the current directory
@@ -678,13 +668,6 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
     if not note == "":
         hf.write('<p><b>Test run note:</b><br><font color="gray">%s</font>\n' % (note))
 
-    if make_benchmarks is not None:
-        hf.write(
-            '<p><b>Benchmarks updated</b><br>comment: <font color="gray">{}</font>\n'.format(
-                make_benchmarks
-            )
-        )
-
     hf.write('<p><b>test input parameter file:</b> <A HREF="%s">%s</A>\n' % (test_file, test_file))
 
     if build_time > 0:
@@ -723,154 +706,116 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
     hf.write("<p>&nbsp;\n")
 
     # summary table
-    if make_benchmarks is None:
-        special_cols = []
-        cols = (
-            [
-                "test name",
-                "dim",
-                "compare plotfile",
-                "# levels",
-                "MPI procs",
-                "OMP threads",
-                "OpenACC",
-                "debug",
-                "compile",
-                "restart",
-            ]
-            + special_cols
-            + ["build time", "wall time", "result"]
-        )
-        ht = HTMLTable(hf, columns=len(cols), divs=["summary"])
-        ht.start_table()
-        ht.header(cols)
-
-    else:
-        ht = HTMLTable(hf, columns=3, divs=["summary"])
-        ht.start_table()
-        ht.header(["test name", "result", "comment"])
+    special_cols = []
+    cols = (
+        [
+            "test name",
+            "dim",
+            "compare plotfile",
+            "# levels",
+            "MPI procs",
+            "OMP threads",
+            "OpenACC",
+            "debug",
+            "compile",
+            "restart",
+        ]
+        + special_cols
+        + ["build time", "wall time", "result"]
+    )
+    ht = HTMLTable(hf, columns=len(cols), divs=["summary"])
+    ht.start_table()
+    ht.header(cols)
 
     # loop over the tests and add a line for each
     for test in test_list:
-        if make_benchmarks is None:
-            status_file = Path("%s.status" % (test.name)).resolve()
-            if not status_file.is_file():
-                suite.log.fail(f"Unable to find {status_file.as_posix()}")
-            status = None
-            with open(status_file, "r") as sf:
-                for line in sf:
-                    if line.find("PASSED") >= 0:
-                        status = "passed"
-                        td_class = "passed-slowly" if "SLOWLY" in line else "passed"
-                        num_passed += 1
-                    elif line.find("POST CRASHED") >= 0:
-                        status = "post fail"
-                        td_class = "postcrashed"
-                        num_failed += 1
-                    elif line.find("CRASHED") >= 0:
-                        status = "crashed"
-                        td_class = "crashed"
-                        num_failed += 1
-                    elif line.find("FAILED") >= 0:
-                        status = "failed"
-                        td_class = "failed"
-                        num_failed += 1
+        status_file = Path("%s.status" % (test.name)).resolve()
+        if not status_file.is_file():
+            suite.log.fail(f"Unable to find {status_file.as_posix()}")
+        status = None
+        with open(status_file, "r") as sf:
+            for line in sf:
+                if line.find("PASSED") >= 0:
+                    status = "passed"
+                    td_class = "passed-slowly" if "SLOWLY" in line else "passed"
+                    num_passed += 1
+                elif line.find("POST CRASHED") >= 0:
+                    status = "post fail"
+                    td_class = "postcrashed"
+                    num_failed += 1
+                elif line.find("CRASHED") >= 0:
+                    status = "crashed"
+                    td_class = "crashed"
+                    num_failed += 1
+                elif line.find("FAILED") >= 0:
+                    status = "failed"
+                    td_class = "failed"
+                    num_failed += 1
 
-                    if status is not None:
-                        break
+                if status is not None:
+                    break
 
-            row_info = []
-            row_info.append('<a href="{}.html">{}</a>'.format(test.name, test.name))
-            row_info.append(test.dim)
-            row_info.append("<div class='small'>{}</div>".format(test.compare_file_used))
+        row_info = []
+        row_info.append('<a href="{}.html">{}</a>'.format(test.name, test.name))
+        row_info.append(test.dim)
+        row_info.append("<div class='small'>{}</div>".format(test.compare_file_used))
 
-            if test.nlevels is not None:
-                row_info.append(test.nlevels)
-            else:
-                row_info.append("")
-
-            if test.useMPI:
-                row_info.append("&check; ({})".format(test.numprocs))
-            else:
-                row_info.append("")
-
-            # OMP ?
-            if test.useOMP:
-                row_info.append("&check; ({})".format(test.numthreads))
-            else:
-                row_info.append("")
-
-            # OpenACC ?
-            if test.acc:
-                row_info.append("&check;")
-            else:
-                row_info.append("")
-
-            # debug ?
-            if test.debug:
-                row_info.append("&check;")
-            else:
-                row_info.append("")
-
-            # compile ?
-            if test.compileTest:
-                row_info.append("&check;")
-            else:
-                row_info.append("")
-
-            # restart ?
-            if test.restartTest:
-                row_info.append("&check;")
-            else:
-                row_info.append("")
-
-            # build time
-            row_info.append("{:.3f}&nbsp;s".format(test.build_time))
-
-            # wallclock time
-            row_info.append("{:.3f}&nbsp;s".format(test.wall_time))
-
-            # result
-            row_info.append((status.upper(), "class='{}'".format(td_class)))
-
-            ht.print_row(row_info)
-
-            hf.write(
-                "<tr><td colspan='100%'>"
-                f"<img src='{test.name}.png' alt='Comparison vs historical results'/>"
-                "</td></tr>"
-            )
-
+        if test.nlevels is not None:
+            row_info.append(test.nlevels)
         else:
-            if test.restartTest:
-                continue
-            if test.compileTest:
-                continue
-            if test.selfTest:
-                continue
+            row_info.append("")
 
-            # the benchmark was updated -- find the name of the new benchmark file
-            benchStatusFile = "%s.status" % (test.name)
+        if test.useMPI:
+            row_info.append("&check; ({})".format(test.numprocs))
+        else:
+            row_info.append("")
 
-            bench_file = "none"
+        # OMP ?
+        if test.useOMP:
+            row_info.append("&check; ({})".format(test.numthreads))
+        else:
+            row_info.append("")
 
-            with open(benchStatusFile, "r") as bf:
-                for line in bf:
-                    index = line.find("file:")
-                    if index >= 0:
-                        bench_file = line[index + 5 :]
-                        break
+        # OpenACC ?
+        if test.acc:
+            row_info.append("&check;")
+        else:
+            row_info.append("")
 
-            row_info = []
-            row_info.append("{}".format(test.name))
-            if bench_file != "none":
-                row_info.append(("BENCHMARK UPDATED", "class='benchmade'"))
-                row_info.append("new benchmark file is {}".format(bench_file))
-            else:
-                row_info.append(("BENCHMARK NOT UPDATED", "class='failed'"))
-                row_info.append("compilation or execution failed")
+        # debug ?
+        if test.debug:
+            row_info.append("&check;")
+        else:
+            row_info.append("")
 
-            ht.print_row(row_info)
+        # compile ?
+        if test.compileTest:
+            row_info.append("&check;")
+        else:
+            row_info.append("")
+
+        # restart ?
+        if test.restartTest:
+            row_info.append("&check;")
+        else:
+            row_info.append("")
+
+        # build time
+        row_info.append("{:.3f}&nbsp;s".format(test.build_time))
+
+        # wallclock time
+        row_info.append("{:.3f}&nbsp;s".format(test.wall_time))
+
+        # result
+        row_info.append((status.upper(), "class='{}'".format(td_class)))
+
+        ht.print_row(row_info)
+
+        hf.write(
+            "<tr><td colspan='100%'>"
+            f"<img src='{test.name}.png' alt='Comparison vs historical results'/>"
+            "</td></tr>"
+        )
 
     ht.end_table()
 
@@ -890,16 +835,12 @@ def report_this_test_run(suite, make_benchmarks, note, _update_time, test_list, 
     status_file = suite.full_test_dir.with_suffix(".status")
     with open(status_file, "w") as sf:
 
-        if make_benchmarks is None:
-            if num_failed == 0:
-                sf.write("ALL PASSED\n")
-            elif num_failed > 0 and num_passed > 0:
-                sf.write("SOME FAILED\n")
-            else:
-                sf.write("ALL FAILED\n")
-
+        if num_failed == 0:
+            sf.write("ALL PASSED\n")
+        elif num_failed > 0 and num_passed > 0:
+            sf.write("SOME FAILED\n")
         else:
-            sf.write("BENCHMARKS UPDATED\n")
+            sf.write("ALL FAILED\n")
 
     # switch back to the original directory
     os.chdir(current_dir)
@@ -1035,12 +976,6 @@ def report_all_runs(suite, active_test_list, max_per_page=50):
                 # write out this test's status
                 if status is None:
                     hf.write("<td>&nbsp;</td>\n")
-                elif status == "benchmade":
-                    hf.write(
-                        '<td align=center title="{}" class="{}"><h3>U</h3></td>\n'.format(
-                            test, status
-                        )
-                    )
                 else:
                     hf.write(
                         f'<td align=center title="{test}" class="{status}">'
@@ -1084,7 +1019,5 @@ def get_line_result(line: str) -> Tuple[Optional[str], str]:
         if "CRASHED" in line
         else ("failed", "!&nbsp;")
         if "FAILED" in line
-        else ("benchmade", "U")
-        if "benchmarks updated" in line
         else (None, "!&nbsp;")
     )
