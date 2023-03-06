@@ -658,7 +658,7 @@ void mfix::build_eb_levels_from_chkpt_file () {
       }
       else {
          Geometry geom_ls = amrex::refine(geom[0],levelset_refinement);
-         EB2::BuildFromChkptFile(mfixRW->geom_refined_chk_file, geom_ls, 0, 100);
+         EB2::BuildFromChkptFile(mfixRW->geom_levelset_chk_file, geom_ls, 0, 100);
          eb_levels[1] = &(EB2::IndexSpace::top().getLevel(geom_ls));
          particle_eb_levels[1] = eb_levels[1];
       }

@@ -50,6 +50,15 @@ MFIXRestarter::MFIXRestarter (const int nlev_in)
   pp.query("eps_tolerance", m_eps_tolerance);
   pp.query("eps_overflow", m_eps_overflow);
 
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_refinement_ratio > 0,
+      "Error: refinement ratio must be a positive integer");
+
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_eps_tolerance > 0.,
+      "Error: eps tolerance must be a positive real number");
+
+  AMREX_ALWAYS_ASSERT_WITH_MESSAGE(m_eps_overflow > 0,
+      "Error: eps overflow must be a positive real number");
+
   m_PIC_deposition = new MFIXPICDeposition;
 }
 
@@ -101,81 +110,71 @@ MFIXRestarter::allocate_fine_arrays (const mfix* mfix_fine)
 void
 MFIXRestarter::change_inputs_table () const
 {
+  ParmParse pp_amr("amr");
   ParmParse pp_eb2("eb2");
+  ParmParse pp_mfix("mfix");
+  ParmParse pp_pic2dem("pic2dem");
 
   // Small volfrac
-  Real refined_small_volfrac(0.);
-  int contains_refined_small_volfrac = pp_eb2.query("refined_small_volfrac", refined_small_volfrac);
+  {
+    Real small_volfrac(0.);
+    int contains_small_volfrac = pp_pic2dem.query("small_volfrac", small_volfrac);
 
-  if (contains_refined_small_volfrac) {
-    if (pp_eb2.contains("small_volfrac"))
-      pp_eb2.remove("small_volfrac");
+    if (contains_small_volfrac) {
+      if (pp_eb2.contains("small_volfrac"))
+        pp_eb2.remove("small_volfrac");
 
-    pp_eb2.add("small_volfrac", refined_small_volfrac);
+      pp_eb2.add("small_volfrac", small_volfrac);
+    }
   }
-
-  ParmParse pp_amr("amr");
 
   // Geom chk file
-  std::string refined_geom_chk_file("");
-  int contains_refined_geom_chk_file = pp_amr.query("refined_geom_chk_file", refined_geom_chk_file);
-
-  if (contains_refined_geom_chk_file) {
-    if (pp_amr.contains("geom_chk_file")) {
+  {
+    if (pp_amr.contains("geom_chk_file"))
       pp_amr.remove("geom_chk_file");
-    }
 
-//      AMREX_ALWAYS_ASSERT(!pp_amr.contains("geom_chk_file"));
-
-    pp_amr.add("geom_chk_file", refined_geom_chk_file);
-    AMREX_ALWAYS_ASSERT(pp_amr.contains("geom_chk_file"));
+    std::string geom_chk_file("");
+    if (pp_pic2dem.query("geom_chk_file", geom_chk_file))
+      pp_amr.add("geom_chk_file", geom_chk_file);
   }
 
-  // Geom chk refined file
-  std::string refined_geom_chk_refined_file("");
-  int contains_refined_geom_chk_refined_file =
-    pp_amr.query("refined_geom_chk_refined_file", refined_geom_chk_refined_file);
+  // Geom levelset chk file
+  {
+    if (pp_amr.contains("geom_levelset_chk_file"))
+      pp_amr.remove("geom_levelset_chk_file");
 
-  if (contains_refined_geom_chk_refined_file) {
-    if (pp_amr.contains("geom_chk_refined_file"))
-      pp_amr.remove("geom_chk_refined_file");
-
-    pp_amr.add("geom_chk_refined_file", refined_geom_chk_refined_file);
+    std::string geom_levelset_chk_file("");
+    if (pp_pic2dem.query("geom_levelset_chk_file", geom_levelset_chk_file))
+      pp_amr.add("geom_levelset_chk_file", geom_levelset_chk_file);
   }
 
   // Geom chk write
-  bool refined_geom_chk_write(0);
-  int contains_refined_geom_chk_write = pp_amr.query("refined_geom_chk_write", refined_geom_chk_write);
-
-  if (contains_refined_geom_chk_write) {
+  {
     if (pp_amr.contains("geom_chk_write"))
       pp_amr.remove("geom_chk_write");
 
-    pp_amr.add("geom_chk_write", refined_geom_chk_write);
+    bool geom_chk_write(0);
+    if (pp_pic2dem.query("geom_chk_write", geom_chk_write))
+      pp_amr.add("geom_chk_write", geom_chk_write);
   }
 
   // Geom chk read
-  bool refined_geom_chk_read(0);
-  int contains_refined_geom_chk_read = pp_amr.query("refined_geom_chk_read", refined_geom_chk_read);
-
-  if (contains_refined_geom_chk_read) {
+  {
     if (pp_amr.contains("geom_chk_read"))
       pp_amr.remove("geom_chk_read");
 
-    pp_amr.add("geom_chk_read", refined_geom_chk_read);
+    bool geom_chk_read(0);
+    if (pp_pic2dem.query("geom_chk_read", geom_chk_read))
+      pp_amr.add("geom_chk_read", geom_chk_read);
   }
 
   // Geometry filename
-  if (!refined_geom_chk_read) {
-
-    ParmParse pp_pic2dem("pic2dem");
-    ParmParse pp_mfix("mfix");
+  if (!pp_amr.contains("geom_chk_read")) {
 
     std::string geometry_filename("");
-    int contains_pic2dem_geometry_filename = pp_pic2dem.query("geometry_filename", geometry_filename);
-    int contains_mfix_geometry_filename = pp_mfix.contains("geometry_filename");
 
-    if (contains_pic2dem_geometry_filename && !contains_mfix_geometry_filename) {
+    if (pp_pic2dem.query("geometry_filename", geometry_filename) &&
+        !pp_mfix.contains("geometry_filename")) {
 
       pp_pic2dem.remove("geometry_filename");
 
@@ -183,17 +182,17 @@ MFIXRestarter::change_inputs_table () const
 
       if (pp_amr.contains("geom_chk_read"))
         pp_amr.remove("geom_chk_read");
+    
+    } else {
+
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(pp_mfix.contains("geometry_filename"),
+          "Error: missing CSG file input");
     }
-  } else {
 
-    ParmParse pp_mfix("mfix");
+  } else if (pp_mfix.contains("geometry_filename")) {
 
-    int contains_mfix_geometry_filename = pp_mfix.contains("geometry_filename");
+    pp_mfix.remove("geometry_filename");
 
-    if (contains_mfix_geometry_filename) {
-
-      pp_mfix.remove("geometry_filename");
-    }
   }
 }
 

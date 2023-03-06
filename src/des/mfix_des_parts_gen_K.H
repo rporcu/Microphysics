@@ -15,7 +15,7 @@
 // any particles that are "on the edge"
 #define small_number 10.*std::numeric_limits<amrex::Real>::epsilon()
 
-#define tolerance std::numeric_limits<amrex::Real>::epsilon()
+#define loc_tolerance std::numeric_limits<amrex::Real>::epsilon()
 
 #define sqrt6x2o3 std::sqrt(6.0)*(2.0/3.0)
 #define sqrt3o3 std::sqrt(3.0)/3.0
@@ -428,7 +428,7 @@ class Hex_ClosePack
     {
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
       int i(start_i);
-      while ( tolerance < xend - (1.0 + 2.0*static_cast<amrex::Real>(i) + offset)*rad ) {
+      while ( loc_tolerance < xend - (1.0 + 2.0*static_cast<amrex::Real>(i) + offset)*rad ) {
         i++;
       }
       return i;
@@ -442,7 +442,7 @@ class Hex_ClosePack
     {
       const amrex::Real offset = static_cast<amrex::Real>(offset_int);
       int j(start_j);
-      while ( tolerance < yend - (1.0 + sqrt3o3 * (3.0 * static_cast<amrex::Real>(j) + offset))*rad ) {
+      while ( loc_tolerance < yend - (1.0 + sqrt3o3 * (3.0 * static_cast<amrex::Real>(j) + offset))*rad ) {
         j++;
       }
       return j;
@@ -455,7 +455,7 @@ class Hex_ClosePack
                int start_k = 0) const
     {
       int k(start_k);
-      while ( tolerance < zend - (1.0 + sqrt6x2o3*static_cast<amrex::Real>(k))*rad ) {
+      while ( loc_tolerance < zend - (1.0 + sqrt6x2o3*static_cast<amrex::Real>(k))*rad ) {
         k++;
       }
       return k;

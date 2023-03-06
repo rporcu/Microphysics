@@ -101,7 +101,7 @@ void MfixRW::readParameters ()
      pp.query("check_int", check_int);
 
      pp.query("geom_chk_file", geom_chk_file);
-     pp.query("geom_refined_chk_file", geom_refined_chk_file);
+     pp.query("geom_levelset_chk_file", geom_levelset_chk_file);
      pp.query("geom_chk_write", geom_chk_write);
      pp.query("geom_chk_read", geom_chk_read);
      pp.query("geom_chk_ccse_regtest", geom_chk_ccse_regtest);

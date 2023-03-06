@@ -193,7 +193,7 @@ public:
 
    // Geometry checkpoint file handling inputs
    std::string geom_chk_file {"geom_chk"};
-   std::string geom_refined_chk_file {"geom_refined_chk"};
+   std::string geom_levelset_chk_file {"geom_levelset_chk"};
    bool geom_chk_write = false;
    bool geom_chk_read = false;
    bool geom_chk_ccse_regtest = false; // Used when running CCSE test for EB checkpoint files

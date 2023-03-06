@@ -60,9 +60,9 @@ void mfix::make_eb_geometry ()
        }
 
        if (levelset_refinement != 1) {
-          std::ifstream refined_chkptfile(mfixRW->geom_refined_chk_file);
+          std::ifstream refined_chkptfile(mfixRW->geom_levelset_chk_file);
           if (refined_chkptfile.fail()) {
-             amrex::Abort("No amr.geom_refined_chk_file found.");
+             amrex::Abort("No amr.geom_levelset_chk_file found.");
           }
        }
     } else {
@@ -141,7 +141,7 @@ void mfix::make_eb_geometry ()
 
        if (nlev == 1) {
           if (levelset_refinement != 1) {
-             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_refined_chk_file, 
+             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_levelset_chk_file, 
                    amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
           }
        }
