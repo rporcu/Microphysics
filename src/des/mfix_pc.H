@@ -362,6 +362,12 @@ class MFIXParticleContainer final
 
     void setSortingBinSizes (amrex::IntVect sorting_bin) { m_sorting_bin = sorting_bin; }
 
+    amrex::IntVect const& getSortingBinSizes () const noexcept
+    { return m_sorting_bin; }
+
+    bool sortNow (int const a_nstep) const noexcept
+    { return ((sort_int > 0) && (a_nstep % sort_int == 0)) ? true : false; }
+
     void partitionParticleGrids(int lev,
                                 const amrex::BoxArray& fba,
                                 const amrex::DistributionMapping& fdmap,

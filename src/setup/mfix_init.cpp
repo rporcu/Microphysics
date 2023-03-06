@@ -951,20 +951,17 @@ mfix::PostInit (Real& dt,
 
       if (m_dem.solve() || m_pic.solve()) {
 
+        pc->setSortInt(sort_particle_int);
         if (m_dem.solve()) {
             pc->MFIX_PC_InitCollisionParams();
-            pc->setSortInt(sort_particle_int);
             pc->setReduceGhostParticles(reduceGhostParticles);
         }
 
-        if (dual_grid)
-          Regrid();
+        if (dual_grid) { Regrid(); }
 
-        if (!is_restarting)
-          pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy());
+        if (!is_restarting) { pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy()); }
 
-        if (!fluid.solve())
-            dt = fixed_dt;
+        if (!fluid.solve()) { dt = fixed_dt; }
       }
     }
 

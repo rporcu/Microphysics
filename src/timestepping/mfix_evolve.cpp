@@ -18,15 +18,23 @@ mfix::Evolve (int nstep,
     Real drag_timing(0.);
     Real sum_vol;
 
-    if ((m_dem.solve() || m_pic.solve()) && fluid.solve()) {
+    if (m_dem.solve() || m_pic.solve()) {
 
-      //BL_PROFILE_REGION("CALC VOLUME FRACTION");
+      // sort particles by cell, this can significantly improve the locality
+      if (pc->sortNow(nstep)) {
+        Print() << "   Sorting particles at step " << nstep << "\n";
+        pc->SortParticlesByBin(pc->getSortingBinSizes());
+      }
 
-      Real start_coupling = ParallelDescriptor::second();
-      mfix_calc_volume_fraction(time, sum_vol);
-      //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
+      if ( fluid.solve() ) {
+        //BL_PROFILE_REGION("CALC VOLUME FRACTION");
 
-      coupling_timing = ParallelDescriptor::second() - start_coupling;
+        Real start_coupling = ParallelDescriptor::second();
+        mfix_calc_volume_fraction(time, sum_vol);
+        //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
+
+        coupling_timing = ParallelDescriptor::second() - start_coupling;
+      }
     }
 
     Real start_fluid = ParallelDescriptor::second();

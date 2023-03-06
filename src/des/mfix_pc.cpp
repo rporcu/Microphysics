@@ -155,7 +155,7 @@ void MFIXParticleContainer::ReadParameters ()
 }
 
 void MFIXParticleContainer::EvolveParticles (int lev,
-                                             int nstep,
+                                             int /*nstep*/,
                                              Real dt,
                                              Real time,
                                              RealVect& gravity,
@@ -298,12 +298,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
     // Particle inflow
     if (ebfactory != NULL) {
       mfix_pc_inflow(lev, 1, 0, dt, solids.solve_enthalpy(), ebfactory);
-    }
-
-    // sort particles by cell, this can significantly improve the locality
-    if (sort_int > 0 && nstep % sort_int == 0) {
-      SortParticlesByBin(m_sorting_bin);
-      Print() << "   Sort particles at step " << nstep+1 << "\n";
     }
 
     const int is_IOProc = int(ParallelDescriptor::IOProcessor());
