@@ -35,14 +35,14 @@ void calc_cell_ic(const Real dx,
 }
 
 
-const amrex::Box calc_ic_box(const Geometry& geom, const RealBox* region)
+const amrex::Box calc_ic_box(const Geometry& a_geom, const RealBox* a_region)
 {
 
-  const GpuArray<Real,3> dxi = geom.InvCellSizeArray();
-  const GpuArray<Real,3> plo = geom.ProbLoArray();
+  const GpuArray<Real,3> dxi = a_geom.InvCellSizeArray();
+  const GpuArray<Real,3> plo = a_geom.ProbLoArray();
 
-  const Real* lo = region->lo();
-  const Real* hi = region->hi();
+  const Real* lo = a_region->lo();
+  const Real* hi = a_region->hi();
 
   const amrex::IntVect ic_lo(AMREX_D_DECL(
       static_cast<int>(amrex::Math::floor((lo[0]-plo[0])*dxi[0] + .5)),
@@ -54,7 +54,14 @@ const amrex::Box calc_ic_box(const Geometry& geom, const RealBox* region)
       static_cast<int>(amrex::Math::floor((hi[1]-plo[1])*dxi[1] + .5)) - 1,
       static_cast<int>(amrex::Math::floor((hi[2]-plo[2])*dxi[2] + .5)) - 1));
 
-  return amrex::Box(ic_lo, ic_hi);
+  Box box(ic_lo, ic_hi);
+
+  // The IC box starts as the full domain, then we take the min
+  // with the box we computed to make sure we stay inside the domain.
+  Box ic_box(a_geom.Domain());
+  ic_box.minBox(box);
+
+  return ic_box;
 
 }
 
@@ -81,6 +88,8 @@ const amrex::Box calc_bc_box(Geometry const& a_geom,
     lo.setVal(dir,hi[dir]);
   }
 
+  // The bc box starts as the whole side of the domain, then
+  // we take the min with the box we computed earlier.
   Box bc_box(lo, hi);
   bc_box.minBox(ic_box);
 
