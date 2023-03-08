@@ -182,11 +182,6 @@ MFIXRestarter::change_inputs_table () const
 
       if (pp_amr.contains("geom_chk_read"))
         pp_amr.remove("geom_chk_read");
-    
-    } else {
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(pp_mfix.contains("geometry_filename"),
-          "Error: missing CSG file input");
     }
 
   } else if (pp_mfix.contains("geometry_filename")) {
