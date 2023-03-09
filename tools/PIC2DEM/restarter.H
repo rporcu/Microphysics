@@ -10,13 +10,15 @@ struct Transfer {
 
   Transfer (const MFIXSolidsPhase& solids)
     : idx_eps(0)
-    , idx_vel(1)
-    , idx_temp(4)
+    , idx_density(1)
+    , idx_vel(2)
+    , idx_temp(5)
     , idx_species(idx_temp + solids.solve_enthalpy())
     , count(idx_species + solids.nspecies()*solids.solve_species())
   {}
 
   const int idx_eps;
+  const int idx_density;
   const int idx_vel;
   const int idx_temp;
   const int idx_species;
@@ -46,20 +48,6 @@ class MFIXPICDeposition : public MFIXDepositionOp
                   const amrex::FabArray<amrex::EBCellFlagFab>* flags,
                   amrex::MultiFab* txfr_mf,
                   amrex::MultiFab* eps_mf);
-
-    void set_eps_size (const int nlev) { m_eps.resize(nlev, nullptr); }
-
-    Vector< MultiFab* > const& get_eps () const { return m_eps; }
-
-    void clear_eps ()
-    {
-      for (int lev(0); lev < m_eps.size(); ++lev)
-        if (m_eps[lev] != nullptr)
-          delete m_eps[lev];
-    }
-
-  private:
-    Vector< MultiFab* > m_eps;
 };
 
 
@@ -86,7 +74,7 @@ class MFIXRestarter
     void txfr_fluid_data (const mfix* mfix_coarse,
                           mfix* mfix_fine) const;
 
-    void get_particles_radius_and_density (const mfix* mfix_ptr);
+    void get_particles_radius (const mfix* mfix_ptr);
 
     void generate_particles (const mfix* mfix_coarse,
                              mfix* mfix_fine) const;
