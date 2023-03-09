@@ -58,16 +58,16 @@ particles.tile_size = 1024 1024 1024
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.plot_int   = -1
-amr.plot_file  = DEM07_plt
+mfix.plot_int   = -1
+mfix.plot_file  = DEM07_plt
 
-amr.check_int  = -1
-amr.check_file = DEM07_chk
+mfix.check_int  = -1
+mfix.check_file = DEM07_chk
 
-amr.par_ascii_int  = 1
-amr.par_ascii_file = DEM07_par
+mfix.par_ascii_int  = 1
+mfix.par_ascii_file = DEM07_par
 
-amr.plt_regtest = 1
+mfix.plt_regtest = 1
 
 
 #_______________________________________________________________________

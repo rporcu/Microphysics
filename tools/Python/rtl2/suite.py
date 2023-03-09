@@ -258,10 +258,10 @@ class Test:
         if self.restartTest:
             if suite.check_file_name != "none":
                 base_cmd.extend(
-                    ["amr.checkpoint_files_output=1", f"amr.check_int={self.restartFileNum}"]
+                    ["mfix.checkpoint_files_output=1", f"mfix.check_int={self.restartFileNum}"]
                 )
         else:
-            base_cmd.append("amr.checkpoint_files_output=0")
+            base_cmd.append("mfix.checkpoint_files_output=0")
 
         base_cmd.extend(
             [str(suite.globalAddToExecString.strip()), str(self.runtime_params.strip())]
@@ -459,8 +459,8 @@ class Suite:
 
         self.post_only = None
 
-        self.plot_file_name = "amr.plot_file"
-        self.check_file_name = "amr.check_file"
+        self.plot_file_name = "mfix.plot_file"
+        self.check_file_name = "mfix.check_file"
 
         self.globalAddToExecString = ""
 

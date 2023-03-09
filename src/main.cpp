@@ -24,7 +24,8 @@
 // add them if they are not already specified in the inputs file.
 void add_par () {
 
-   {// Set the extend domain flag by default
+   {
+      // Set the extend domain flag by default
       ParmParse pp("eb2");
       if(!pp.contains("extend_domain_face")) {
          pp.add("extend_domain_face",true);
@@ -39,13 +40,148 @@ void add_par () {
    }
 }
 
+template <class T>
+void fix_input (ParmParse& ppA,
+                ParmParse& ppB,
+                const char* input_string,
+                bool deprecated = false)
+{
+  if (ppA.contains(input_string)) {
+
+    if (deprecated) {
+      std::string message = "amr." + std::string(input_string) +
+        " is deprecated and support will be removed in the future. Use mfix." +
+        std::string(input_string);
+      amrex::Warning(message.c_str());
+    }
+
+    T input_value;
+    ppA.get(input_string, input_value);
+
+    if(ppB.contains(input_string))
+      ppB.remove(input_string);
+
+    ppB.add(input_string, input_value);
+  }
+}
+
+template <class T>
+void fix_input_arr (ParmParse& ppA,
+                    ParmParse& ppB,
+                    const char* input_string,
+                    bool deprecated = false)
+{
+  if (ppA.contains(input_string)) {
+
+    if (deprecated) {
+      std::string message = "amr." + std::string(input_string) +
+        " is deprecated and support will be removed in the future. Use mfix." +
+        std::string(input_string);
+      amrex::Warning(message.c_str());
+    }
+
+    T input_value;
+    ppA.getarr(input_string, input_value);
+
+    if(ppB.contains(input_string))
+      ppB.remove(input_string);
+
+    ppB.addarr(input_string, input_value);
+  }
+}
+
+void fix_par ()
+{
+  ParmParse pp_amr("amr");
+  ParmParse pp_mfix("mfix");
+
+  fix_input<int>(pp_amr, pp_mfix, "plt_regtest");
+  fix_input<bool>(pp_amr, pp_mfix, "checkpoint_files_output");
+  fix_input<std::string>(pp_amr, pp_mfix, "check_file");
+  fix_input<int>(pp_amr, pp_mfix, "check_int");
+  fix_input<std::string>(pp_amr, pp_mfix, "plot_file");
+  fix_input<int>(pp_amr, pp_mfix, "plot_int");
+  fix_input<std::string>(pp_amr, pp_mfix, "restart");
+}
+
+void fix_par_for_backward_compatibility ()
+{
+  ParmParse pp_amr("amr");
+  ParmParse pp_mfix("mfix");
+
+  fix_input<Real>(pp_amr, pp_mfix, "repl_x", true);
+  fix_input<Real>(pp_amr, pp_mfix, "repl_y", true);
+  fix_input<Real>(pp_amr, pp_mfix, "repl_z", true);
+  fix_input<bool>(pp_amr, pp_mfix, "plotfile_on_restart", true);
+  fix_input<bool>(pp_amr, pp_mfix, "dual_grid", true);
+  fix_input<int>(pp_amr, pp_mfix, "regrid_int", true);
+  fix_input<int>(pp_amr, pp_mfix, "par_ascii_int", true);
+  fix_input<std::string>(pp_amr, pp_mfix, "par_ascii_file", true);
+  fix_input<int>(pp_amr, pp_mfix, "avg_int", true);
+  fix_input<std::string>(pp_amr, pp_mfix, "avg_file", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_vel_p", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_p_g", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_ep_g", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_vel_g", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_x_w", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_x_e", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_y_s", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_y_n", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_z_b", true);
+  fix_input_arr<Vector<Real>>(pp_amr, pp_mfix, "avg_region_z_t", true);
+  fix_input<int>(pp_amr, pp_mfix, "ascent_int", true);
+  fix_input<Real>(pp_amr, pp_mfix, "ascent_per_approx", true);
+  fix_input_arr<Vector<std::string>>(pp_amr, pp_mfix, "regions", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_vel_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_ep_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_p_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_ro_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_MW_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_h_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_T_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_trac", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_cp_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_k_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_mu_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_diveu", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_vort", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_volfrac", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_gradp_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_X_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_D_g", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_cp_gk", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_h_gk", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_txfr", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_chem_txfr", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_proc", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_proc_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_cost_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_radius", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_volume", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_mass", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_ro_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_omoi", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_vel_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_omega_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_statwt", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_drag_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_cp_s", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_T_p", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_convection", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_X_s", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_vel_s_txfr", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_h_s_txfr", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_mass_sn_txfr", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_phase", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_state", true);
+  fix_input<int>(pp_amr, pp_mfix, "plt_ptype", true);
+}
+
 const char* HypreVersion ();
 void writeBuildInfo ();
 
 int main (int argc, char* argv[])
 {
-
-
     // check to see if it contains --describe
     if (argc >= 2) {
         for (auto i = 1; i < argc; i++) {
@@ -82,6 +218,10 @@ int main (int argc, char* argv[])
 
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
+
+    // Call parameters fixing
+    fix_par();
+    fix_par_for_backward_compatibility();
 
     Real strt_time = ParallelDescriptor::second();
 

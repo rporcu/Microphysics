@@ -24,7 +24,6 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::Vector<amrex::DistributionMapping>& dmap_in,
                 bool ooo_debug_in,
                 amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-                const amrex::Vector<amrex::BoxArray>& box_array_in,
                 int levelset_refinement_in,
                 int levelset_pad_in,
                 int levelset_eb_refinement_in,
@@ -36,13 +35,7 @@ MfixRW::MfixRW (int nlev_in,
                 amrex::Vector<amrex::MultiFab*>& particle_cost_in,
                 amrex::Vector<amrex::MultiFab*>& particle_proc_in,
                 amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
-                amrex::Real covered_val_in,
                 const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-                amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
-                int nghost_eb_basic_in,
-                int nghost_eb_volume_in,
-                int nghost_eb_full_in,
-                amrex::EBSupport& m_eb_support_level_in,
                 std::string load_balance_type_in,
                 BCList& bc_list_in,
                 Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
@@ -58,7 +51,6 @@ MfixRW::MfixRW (int nlev_in,
   , dmap(dmap_in)
   , ooo_debug(ooo_debug_in)
   , level_sets(level_sets_in)
-  , box_array(box_array_in)
   , levelset_refinement(levelset_refinement_in)
   , levelset_pad(levelset_pad_in)
   , levelset_eb_refinement(levelset_eb_refinement_in)
@@ -70,20 +62,13 @@ MfixRW::MfixRW (int nlev_in,
   , particle_cost(particle_cost_in)
   , particle_proc(particle_proc_in)
   , fluid_proc(fluid_proc_in)
-  , covered_val(covered_val_in)
   , ref_ratio(ref_ratio_in)
-  , eb_levels(eb_levels_in)
-  , nghost_eb_basic(nghost_eb_basic_in)
-  , nghost_eb_volume(nghost_eb_volume_in)
-  , nghost_eb_full(nghost_eb_full_in)
-  , m_eb_support_level(m_eb_support_level_in)
   , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
   , regions(regions_in)
   , m_ascent_actions_yaml("")
 {
-
   m_start_time = ParallelDescriptor::second();
   readParameters();
 }
@@ -92,8 +77,9 @@ MfixRW::MfixRW (int nlev_in,
 void MfixRW::readParameters ()
 {
   {
-     const std::string PProot = "amr";
-     ParmParse pp(PProot.c_str());
+     const std::string pp_root = "mfix";
+
+     ParmParse pp(pp_root.c_str());
 
      // Checkpoint output control
      pp.query("checkpoint_files_output", checkpoint_files_output);
@@ -125,8 +111,8 @@ void MfixRW::readParameters ()
      // Plot output control
      pp.query("plot_file", plot_file);
      pp.query("plotfile_on_restart", plotfile_on_restart);
-
      pp.query("plot_int", plot_int);
+
      //pp.query("plot_per_exact", plot_per_exact);
      pp.query("plot_per_approx", plot_per_approx);
 
@@ -135,48 +121,47 @@ void MfixRW::readParameters ()
          (plot_per_exact > 0 && plot_per_approx > 0) */ )
        amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
 
+     // Plot solids only in specific regions
+     {
+       const std::string solids_pp_root = pp_root + ".solids";
+       ParmParse ppSolids(solids_pp_root.c_str());
 
-      // Plot solids only in specific regions
-      {
-        const std::string solidsPProot = PProot + ".solids";
-        ParmParse ppSolids(solidsPProot.c_str());
+       std::vector<std::string> solids_regions;
+       ppSolids.queryarr("regions", solids_regions);
 
-        std::vector<std::string> solids_regions;
-        ppSolids.queryarr("regions", solids_regions);
+       if (solids_regions.size() > 0 &&
+           amrex::toLower(solids_regions[0]).compare("none") != 0) {
 
-        if (solids_regions.size() > 0 &&
-            amrex::toLower(solids_regions[0]).compare("none") != 0) {
+         m_solids_plot_regions.resize(solids_regions.size());
 
-          m_solids_plot_regions.resize(solids_regions.size());
+         // Loop over input plot regions
+         for (size_t n(0); n < solids_regions.size(); n++) {
 
-          // Loop over input plot regions
-          for (size_t n(0); n < solids_regions.size(); n++) {
+           auto& plot_region = m_solids_plot_regions[n];
 
-            auto& plot_region = m_solids_plot_regions[n];
+           const std::string& region_name = solids_regions[n];
+           plot_region.m_region_name = region_name;
 
-            const std::string& region_name = solids_regions[n];
-            plot_region.m_region_name = region_name;
+           ppSolids.queryarr(region_name.c_str(), plot_region.m_plot_names);
 
-            ppSolids.queryarr(region_name.c_str(), plot_region.m_plot_names);
+           const std::string region_pp_root = solids_pp_root + "." + region_name;
+           ParmParse ppSolidsRegion(region_pp_root.c_str());
 
-            const std::string regionPProot = solidsPProot + "." + region_name;
-            ParmParse ppSolidsRegion(regionPProot.c_str());
+           plot_region.m_pp_string = region_pp_root;
 
-            plot_region.m_pp_string = regionPProot;
+           int ppint = ppSolidsRegion.query("plot_int", plot_region.m_plot_int);
+           int ppapprox = ppSolidsRegion.query("plot_per_approx", plot_region.m_plot_per_approx);
 
-            int ppint = ppSolidsRegion.query("plot_int", plot_region.m_plot_int);
-            int ppapprox = ppSolidsRegion.query("plot_per_approx", plot_region.m_plot_per_approx);
+           AMREX_ALWAYS_ASSERT(ppint || ppapprox);
 
-            AMREX_ALWAYS_ASSERT(ppint || ppapprox);
+           ppSolidsRegion.queryarr("plt_fluid_vars", plot_region.m_plot_fluid_vars);
+         }
+       }
+     }
 
-            ppSolidsRegion.queryarr("plt_fluid_vars", plot_region.m_plot_fluid_vars);
-          }
-        }
-      }
-
-      // Monitors
-      m_monitors.initialize(PProot, regions, m_leveldata, ebfactory, fluid,
-          pc, particle_ebfactory, solids);
+     // Monitors
+     m_monitors.initialize(pp_root, regions, m_leveldata, ebfactory, fluid,
+         pc, particle_ebfactory, solids);
 
      // Ascent output control
      pp.query("ascent_on_restart", ascent_on_restart);
@@ -194,8 +179,9 @@ void MfixRW::readParameters ()
      pp.query("par_ascii_int", par_ascii_int);
      pp.query("par_ascii_per_approx", par_ascii_per_approx);
 
-     if (!pp.query("restart", restart_file))
-       ParmParse("pic2dem").query("convert", restart_file);
+     pp.query("restart", restart_file);
+       
+     ParmParse("pic2dem").query("convert", restart_file);
 
      pp.query("repl_x", repl_x);
      pp.query("repl_y", repl_y);
@@ -362,7 +348,7 @@ MfixRW::Initialize ()
     plot_region.m_region_extents = *region_extents;
 
     ParmParse pp(plot_region.m_pp_string.c_str());
-    GetSolidsIOPltFlags(pp, plot_region.m_write_real_comp, plot_region.m_write_int_comp);
+    GetSolidsIOPltFlags(plot_region.m_write_real_comp, plot_region.m_write_int_comp);
   }
 }
 

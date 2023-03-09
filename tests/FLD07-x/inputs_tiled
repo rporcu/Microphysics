@@ -57,18 +57,18 @@ fabarray.mfiter_tile_size = 16  16  8
 #                          IO / Checkpointing                         #
 #######################################################################
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int=1
-amr.plot_file=FLD07
+mfix.plot_int=1
+mfix.plot_file=FLD07
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
 mfix.write_eb_surface = false
 
-#amr.plt_regtest = 1
+#mfix.plt_regtest = 1
 
 
 #######################################################################

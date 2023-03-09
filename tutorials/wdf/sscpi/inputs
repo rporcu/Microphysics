@@ -78,8 +78,8 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+mfix.dual_grid          =  0
+mfix.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -91,35 +91,35 @@ amr.regrid_int         = -1
 
 #______________________________________________________________________
 ## user data processing
-amr.avg_int = 5
-amr.avg_file = "uio"
+mfix.avg_int = 5
+mfix.avg_file = "uio"
 
-amr.avg_vel_p =        0       0       0       0       1        1        1        1        1
-amr.avg_p_g   =        1       1       1       1       0        0        0        0        0
-amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0
-amr.avg_vel_g =        0       0       0       0       0        0        0        0        0
-amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
-amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
-amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
-amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
-amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
-amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
+mfix.avg_vel_p =        0       0       0       0       1        1        1        1        1
+mfix.avg_p_g   =        1       1       1       1       0        0        0        0        0
+mfix.avg_ep_g  =        0       0       0       0       0        0        0        0        0
+mfix.avg_vel_g =        0       0       0       0       0        0        0        0        0
+mfix.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
+mfix.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
+mfix.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
+mfix.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
+mfix.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
+mfix.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
 
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = 10000
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = 10000
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 10000
-amr.plot_file      ="plt"
+mfix.plot_int       = 10000
+mfix.plot_file      ="plt"
 
-amr.check_int      = 10000
-amr.check_file     ="chk"
+mfix.check_int      = 10000
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+#mfix.restart   ="chk00100"
 
 
 #_______________________________________________________________________

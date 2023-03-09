@@ -47,34 +47,34 @@ geometry.prob_hi     = 0.256   0.256  0.008   # hi corner of physical domain
 # none
 
 # user data processing
-amr.avg_int = 100
-amr.avg_file = "uio"
+mfix.avg_int = 100
+mfix.avg_file = "uio"
 
-amr.avg_vel_p =        1
-amr.avg_p_g   =        0
-amr.avg_ep_g  =        0
-amr.avg_vel_g =        0
+mfix.avg_vel_p =        1
+mfix.avg_p_g   =        0
+mfix.avg_ep_g  =        0
+mfix.avg_vel_g =        0
 
-amr.avg_region_x_w =   0.000
-amr.avg_region_x_e =   0.256
-amr.avg_region_y_s =   0.000
-amr.avg_region_y_n =   0.256
-amr.avg_region_z_b =   0.000
-amr.avg_region_z_t =   0.008
+mfix.avg_region_x_w =   0.000
+mfix.avg_region_x_e =   0.256
+mfix.avg_region_y_s =   0.000
+mfix.avg_region_y_n =   0.256
+mfix.avg_region_z_b =   0.000
+mfix.avg_region_z_t =   0.008
 
 
 #_______________________________________________________________________
 ## IO / Checkpointing
 
-amr.par_ascii_int  = 5000
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = 5000
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 5000
-amr.plot_file      ="plt"
-amr.plt_regtest    = 0
+mfix.plot_int       = 5000
+mfix.plot_file      ="plt"
+mfix.plt_regtest    = 0
 
-amr.check_int      = 5000
-amr.check_file     ="chk"
+mfix.check_int      = 5000
+mfix.check_file     ="chk"
 
 
 

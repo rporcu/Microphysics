@@ -126,7 +126,7 @@ MfixRW::WriteCheckHeader (const std::string& name,
       // BoxArray
       for (int lev = 0; lev < nlevels; ++lev)
       {
-          box_array[lev].writeOn(HeaderFile);
+          grids[lev].writeOn(HeaderFile);
           HeaderFile << '\n';
       }
     }

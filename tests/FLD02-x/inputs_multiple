@@ -50,21 +50,21 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int=1
-amr.plot_file=FLD02
+mfix.plot_int=1
+mfix.plot_file=FLD02
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="restart-file"
+#mfix.restart   ="restart-file"
 
-amr.plt_vel_g = 1
-amr.plt_p_g = 1
+mfix.plt_vel_g = 1
+mfix.plt_p_g = 1
 
 
 #_______________________________________________________________________

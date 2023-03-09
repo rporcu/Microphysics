@@ -1,0 +1,248 @@
+#_______________________________________________________________________
+# Solver settings
+
+amrex.fpe_trap_invalid = 1
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+
+
+#mfix.stop_time = 21.0
+mfix.max_step = 1000
+mfix.dt_min = 1.0e-8
+mfix.dt_max = 2.5e-4
+mfix.cfl = 0.5
+mfix.tcoll_ratio = 20.
+
+mfix.gravity = -9.81  0.0  0.0
+
+mfix.particle_init_type = "Auto"
+
+mfix.drag_type = "WenYu"
+
+amr.blocking_factor = 2
+
+nodal_proj.maxiter = 2000
+nodal_proj.bottom_maxiter = 2000
+nodal_proj.mg_max_coarsening_level = 2
+nodal_proj.verbose         = 1
+nodal_proj.bottom_verbose  = 0
+
+mac_proj.maxiter = 2000
+mac_proj.bottom_maxiter = 2000
+mac_proj.mg_max_coarsening_level = 2
+mac_proj.verbose          = 1
+mac_proj.bottom_verbose       = 0
+
+diffusion.maxiter = 2000
+diffusion.bottom_maxiter = 2000
+diffusion.mg_max_coarsening_level = 2
+diffusion.verbose         = 0
+diffusion.bottom_verbose      = 0
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                               # 0: Cartesian
+geometry.is_periodic = 0          0          0         # Is periodic in each direction?
+geometry.prob_lo     = 0.         0.         0.        # lo corner of physical domain
+geometry.prob_hi     = 1.440768   0.112560   0.112560  # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  512   40   40 
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x =   32
+amr.max_grid_size_y =   40
+amr.max_grid_size_z =   40
+
+# Particles (not with KDTree)
+particles.max_grid_size_x =   32
+particles.max_grid_size_y =   20
+particles.max_grid_size_z =   20
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle title size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+# Level-set refinement and padding
+mfix.levelset__refinement    = 1 # levelset resolution
+mfix.write_eb_surface = false    # Needed to output eb-surfaces
+
+#_______________________________________________________________________
+# Particle load balancing
+
+#mfix.load_balance_type = "KnapSack"
+
+mfix.dual_grid          = 1
+mfix.regrid_int         = 50
+
+#! KnapSack settings
+#!-----------------------------------------------------------//
+#default is "RunTimeCosts"; options include RunTimeCosts or NumParticles
+#this option is only relevant if load_balance_type = KnapSack
+
+#mfix.knapsack_weight_type = "NumParticles"
+mfix.knapsack_weight_type = "RunTimeCosts"
+
+#______________________________________________________________________
+# user data processing
+mfix.avg_int = 40
+mfix.avg_file = "uio"
+
+mfix.avg_vel_p =        1         0         0
+mfix.avg_p_g   =        0         1         1
+mfix.avg_ep_g  =        0         0         0
+mfix.avg_vel_g =        0         0         0
+
+mfix.avg_region_x_w =   0.000     0.0014    0.0042
+mfix.avg_region_x_e =   1.440768  0.0014    0.0042
+mfix.avg_region_y_s =   0.000     0.000     0.000
+mfix.avg_region_y_n =   0.112560  0.112560  0.112560
+mfix.avg_region_z_b =   0.000     0.000     0.000
+mfix.avg_region_z_t =   0.112560  0.112560  0.112560
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+mfix.par_ascii_int  = 4000
+mfix.par_ascii_file ="vis"
+#amr.async_out      = 1
+#amrex.async_out=1
+
+mfix.plot_int       = 4
+mfix.plot_file      ="plt"
+
+mfix.check_int      = 2000
+mfix.check_file     ="chk"
+
+#! Restart from checkpoint
+#!-----------------------------------------------------------//
+#mfix.restart   ="chk52000"
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.density            = constant
+fluid.density.constant   = 1.2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.8e-5
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = hdpe
+
+dem.friction_coeff.pp     =     0.30
+dem.friction_coeff.pw     =     0.30
+
+dem.spring_const.pp       =   589.4
+dem.spring_const.pw       =   589.4
+
+dem.restitution_coeff.hdpe.hdpe  =     0.70
+dem.restitution_coeff.hdpe.wall    =     0.70
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+#! EB geometry
+#!-----------------------------------------------------------//
+mfix.geometry = "cylinder"
+
+cylinder.internal_flow = true
+
+cylinder.radius = 0.05045
+cylinder.height = -1.0
+
+cylinder.direction = 0
+cylinder.center    =  0.7  0.054873  0.054873
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+
+mfix.regions = bkg  bed  uin  pout
+
+regions.bkg.lo  = 0.0       0.0       0.0
+regions.bkg.hi  = 1.440768  0.112560  0.112560
+
+regions.bed.lo  = 0.03      0.0       0.0
+regions.bed.hi  = 0.63      0.112560  0.112560
+
+regions.uin.lo  = 0.0       0.0       0.0
+regions.uin.hi  = 0.0       0.112560  0.112560
+
+regions.pout.lo = 1.440768  0.0       0.0
+regions.pout.hi = 1.440768  0.112560  0.112560
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+
+ic.regions = bkg  bed
+
+
+# Background IC covering the full domain with gas.
+#---------------------------------------------------------------------//
+ic.bkg.fluid.volfrac   = 1.0
+
+ic.bkg.fluid.pressure  = 0.0
+
+ic.bkg.fluid.velocity  = 0.21  0.0  0.0
+
+
+# Define the initial bed of solids
+#---------------------------------------------------------------------//
+ic.bed.fluid.volfrac   =  0.7
+
+ic.bed.fluid.pressure  = 0.0
+
+ic.bed.fluid.velocity  =  0.3  0.0  0.0
+
+ic.bed.solids  = hdpe
+ic.bed.packing = hcp
+
+ic.bed.hdpe.volfrac  =  0.3
+
+ic.bed.hdpe.velocity =  0.00  0.00  0.00
+
+ic.bed.hdpe.diameter = constant
+ic.bed.hdpe.density  = constant
+
+ic.bed.hdpe.diameter.constant = 870.0e-6
+ic.bed.hdpe.density.constant  = 855.0
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = uin  pout
+
+bc.uin = mi
+bc.uin.fluid.volfrac  =  1.0
+bc.uin.fluid.velocity =  0.21  0.0  0.0
+
+bc.pout = po
+bc.pout.fluid.pressure =  0.0

@@ -283,8 +283,7 @@ mfix::InitParams ()
     AMREX_ALWAYS_ASSERT(knapsack_weight_type.compare("RunTimeCosts") == 0 ||
                         knapsack_weight_type.compare("NumParticles") == 0);
 
-    ParmParse amr_pp("amr");
-    amr_pp.query("dual_grid", dual_grid);
+    pp.query("dual_grid", dual_grid);
 
     if (load_balance_type.compare("KnapSack") == 0)
       pp.query("knapsack_nmax", knapsack_nmax);

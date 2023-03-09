@@ -117,20 +117,20 @@ mfix.constraint_type = IdealGasOpenSystem
 
 mfix.max_solids_volume_fraction = 0.73
 
-amr.plt_regtest = 0
+mfix.plt_regtest = 0
 
-amr.plt_volfrac = 1
-amr.plt_T_g = 1
-amr.plt_X_g = 1
-amr.plt_vel_g = 1
-amr.plt_ep_g = 1
-amr.plt_p_g = 1
-amr.plt_ro_g = 1
+mfix.plt_volfrac = 1
+mfix.plt_T_g = 1
+mfix.plt_X_g = 1
+mfix.plt_vel_g = 1
+mfix.plt_ep_g = 1
+mfix.plt_p_g = 1
+mfix.plt_ro_g = 1
 
-amr.plt_T_p = 1
-amr.plt_vel_p = 1
-amr.plt_ro_p = 1
-amr.plt_mass = 1
+mfix.plt_T_p = 1
+mfix.plt_vel_p = 1
+mfix.plt_ro_p = 1
+mfix.plt_mass = 1
 
 #_______________________________________________________________________
 # Geometry / grids / tiles
@@ -194,8 +194,8 @@ eb2.small_volfrac = 1.e-6
 
 #mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+mfix.dual_grid          =  0
+mfix.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -208,18 +208,18 @@ amr.regrid_int         = -1
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       =  5
-amr.plot_file      ="plt"
+mfix.plot_int       =  5
+mfix.plot_file      ="plt"
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+#mfix.restart   ="chk00100"
 
 
 #_______________________________________________________________________

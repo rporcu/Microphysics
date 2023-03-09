@@ -76,8 +76,8 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+mfix.dual_grid          =  0
+mfix.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -91,18 +91,18 @@ amr.regrid_int         = -1
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = -1
-amr.plot_file      ="plt"
+mfix.plot_int       = -1
+mfix.plot_file      ="plt"
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+#mfix.restart   ="chk00100"
 
 
 #_______________________________________________________________________

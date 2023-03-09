@@ -71,8 +71,8 @@ mfix.write_eb_surface     = false  # Needed to output eb-surfaces
 # Particle load balancing
 #mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          = 0
-amr.regrid_int         = -1
+mfix.dual_grid          = 0
+mfix.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -84,36 +84,36 @@ amr.regrid_int         = -1
 
 #_______________________________________________________________________
 # user data processing
-amr.avg_int = 10
-amr.avg_file = "uio"
+mfix.avg_int = 10
+mfix.avg_file = "uio"
 
-amr.avg_vel_p =        1 
-amr.avg_p_g   =        0 
-amr.avg_ep_g  =        0 
-amr.avg_vel_g =        0 
+mfix.avg_vel_p =        1 
+mfix.avg_p_g   =        0 
+mfix.avg_ep_g  =        0 
+mfix.avg_vel_g =        0 
 
-amr.avg_region_x_w =   0.000 
-amr.avg_region_x_e =   0.008 
-amr.avg_region_y_s =   0.000 
-amr.avg_region_y_n =   0.002 
-amr.avg_region_z_b =   0.000 
-amr.avg_region_z_t =   0.002 
+mfix.avg_region_x_w =   0.000 
+mfix.avg_region_x_e =   0.008 
+mfix.avg_region_y_s =   0.000 
+mfix.avg_region_y_n =   0.002 
+mfix.avg_region_z_b =   0.000 
+mfix.avg_region_z_t =   0.002 
 
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = -1
-amr.plot_file      ="plt"
+mfix.plot_int       = -1
+mfix.plot_file      ="plt"
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+#mfix.restart   ="chk00100"
 
 
 #_______________________________________________________________________

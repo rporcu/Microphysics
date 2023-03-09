@@ -235,7 +235,6 @@ MFIXDEM::Initialize ()
 #endif
     }
 
-
     // Read coarse-grain DEM
     ppDEM.query("coarse_grain", m_cg_dem);
 
@@ -244,15 +243,10 @@ MFIXDEM::Initialize ()
 
     if (m_restart_from_PIC) {
 
-      amrex::ParmParse ppAMR("amr");
       std::string restart_file {""};
+      ParmParse("mfix").query("restart", restart_file);
 
-      if (!ppAMR.query("restart", restart_file))
-        ParmParse("pic2dem").query("convert", restart_file);
-
-      const int is_restarting = !(restart_file.empty());
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(is_restarting,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!restart_file.empty(),
           "Invalid attempt to restart from PIC from an empty chk file");
     }
   }

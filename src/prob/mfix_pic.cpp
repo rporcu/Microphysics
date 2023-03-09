@@ -120,14 +120,10 @@ MFIXPIC::Initialize ()
 
     if (m_restart_refinement > 1) {
 
-      amrex::ParmParse ppAMR("amr");
       std::string restart_file {""};
+      ParmParse("mfix").query("restart", restart_file);
 
-      ppAMR.get("restart", restart_file);
-
-      const int is_restarting = !(restart_file.empty());
-
-      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(is_restarting,
+      AMREX_ALWAYS_ASSERT_WITH_MESSAGE(!restart_file.empty(),
           "Invalid attempt to set a PIC restart refinement without actually restarting from a chk file");
     }
   }

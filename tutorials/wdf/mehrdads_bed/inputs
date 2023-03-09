@@ -100,9 +100,9 @@ zhi.type = "nsw"
 #_______________________________________________________________________
 # Particle load balancing
 
-amr.dual_grid          = 0
+mfix.dual_grid          = 0
 #!mfix.load_balance_type = "KnapSack"
-#!amr.regrid_int         = 1000
+#!mfix.regrid_int         = 1000
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -114,36 +114,36 @@ amr.dual_grid          = 0
 
 #______________________________________________________________________
 # user data processing
-amr.avg_int = 10
-amr.avg_file = "uio"
+mfix.avg_int = 10
+mfix.avg_file = "uio"
 
-amr.avg_vel_p =        0        0
-amr.avg_p_g   =        1        1
-amr.avg_ep_g  =        0        0
-amr.avg_vel_g =        0        0
+mfix.avg_vel_p =        0        0
+mfix.avg_p_g   =        1        1
+mfix.avg_ep_g  =        0        0
+mfix.avg_vel_g =        0        0
 
-amr.avg_region_x_w =   0.0001   0.001
-amr.avg_region_x_e =   0.0001   0.001
-amr.avg_region_y_s =   0.000    0.000
-amr.avg_region_y_n =   0.050    0.050
-amr.avg_region_z_b =   0.000    0.000
-amr.avg_region_z_t =   0.160    0.160
+mfix.avg_region_x_w =   0.0001   0.001
+mfix.avg_region_x_e =   0.0001   0.001
+mfix.avg_region_y_s =   0.000    0.000
+mfix.avg_region_y_n =   0.050    0.050
+mfix.avg_region_z_b =   0.000    0.000
+mfix.avg_region_z_t =   0.160    0.160
 
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = 1000
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = 1000
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 1000
-amr.plot_file      ="plt"
+mfix.plot_int       = 1000
+mfix.plot_file      ="plt"
 
-amr.check_int      = 1000
-amr.check_file     ="chk"
+mfix.check_int      = 1000
+mfix.check_file     ="chk"
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-##amr.restart   = "chk100730"
+##mfix.restart   = "chk100730"
 
 
 #_______________________________________________________________________

@@ -4,6 +4,7 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_EBFArrayBox.H>
 
+#include <mfix.H>
 #include <mfix_rw.H>
 #include <mfix_pc.H>
 #include <mfix_fluid.H>
@@ -29,7 +30,10 @@ MfixRW::InitIOPltData ()
 
   pltVarCount = 0;
 
-  ParmParse pp("amr");
+  ParmParse pp("mfix");
+
+  int plt_ccse_regtest = 0;
+  pp.query("plt_regtest", plt_ccse_regtest);
 
   if (fluid.solve()) {
 
@@ -60,9 +64,6 @@ MfixRW::InitIOPltData ()
 
       // Special test for CCSE regression test. Override all individual
       // flags and save all data to plot file.
-
-      int plt_ccse_regtest = 0;
-      pp.query("plt_regtest", plt_ccse_regtest);
 
       if (plt_ccse_regtest != 0) {
         plt_vel_g     = 1;
@@ -137,17 +138,18 @@ MfixRW::InitIOPltData ()
 
     if (m_dem.solve() || m_pic.solve()) {
 
-      GetSolidsIOPltFlags(pp, write_real_comp, write_int_comp);
+      GetSolidsIOPltFlags(write_real_comp, write_int_comp);
 
     }
 }
 
 
 void
-MfixRW::GetSolidsIOPltFlags (ParmParse& pp,
-                             Vector<int>& write_real_comp_out,
+MfixRW::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
                              Vector<int>& write_int_comp_out)
 {
+  ParmParse pp("mfix");
+
   int plt_ccse_regtest = 0;
   pp.query("plt_regtest", plt_ccse_regtest);
 
@@ -505,7 +507,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(MW_g, 0, MW_g.nComp(), MW_g.nGrow(), covered_val);
+          EB_set_covered(MW_g, 0, MW_g.nComp(), MW_g.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], MW_g, 0, lc, 1, 0);
 
@@ -580,7 +582,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(cp_g, 0, cp_g.nComp(), cp_g.nGrow(), covered_val);
+          EB_set_covered(cp_g, 0, cp_g.nComp(), cp_g.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], cp_g, 0, lc, 1, 0);
           lc += 1;
@@ -613,7 +615,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(k_g, 0, k_g.nComp(), k_g.nGrow(), covered_val);
+          EB_set_covered(k_g, 0, k_g.nComp(), k_g.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], k_g, 0, lc, 1, 0);
           lc += 1;
@@ -653,7 +655,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), covered_val);
+          EB_set_covered(mu_g, 0, mu_g.nComp(), mu_g.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], mu_g, 0, lc, 1, 0);
           lc += 1;
@@ -734,7 +736,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(D_gk, 0, D_gk.nComp(), D_gk.nGrow(), covered_val);
+          EB_set_covered(D_gk, 0, D_gk.nComp(), D_gk.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], D_gk, 0, lc, D_gk.nComp(), 0);
 
@@ -774,7 +776,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(cp_gk, 0, cp_gk.nComp(), cp_gk.nGrow(), covered_val);
+          EB_set_covered(cp_gk, 0, cp_gk.nComp(), cp_gk.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], cp_gk, 0, lc, nspecies_g, 0);
 
@@ -824,7 +826,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
             });
           }
 
-          EB_set_covered(h_gk, 0, h_gk.nComp(), h_gk.nGrow(), covered_val);
+          EB_set_covered(h_gk, 0, h_gk.nComp(), h_gk.nGrow(), mfix::covered_val);
 
           MultiFab::Copy(*mf[lev], h_gk, 0, lc, nspecies_g, 0);
 

@@ -135,9 +135,9 @@ mfix::mfix ()
     }
 
     {
-      ParmParse pp_amr("amr");
+      ParmParse pp("mfix");
 
-      if (pp_amr.contains("restart"))
+      if (pp.contains("restart"))
         m_run_type = RunType::Restart;
       else if (ParmParse("pic2dem").contains("convert"))
         m_run_type = RunType::PIC2DEM;
@@ -146,13 +146,11 @@ mfix::mfix ()
     }
 
     mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
-                                ebfactory, dmap, ooo_debug, level_sets, boxArray(),
+                                ebfactory, dmap, ooo_debug, level_sets,
                                 levelset_refinement, levelset_pad,
                                 levelset_eb_refinement, levelset_eb_pad, solids,
                                 m_dem, m_pic, reactions, particle_cost,
-                                particle_proc, fluid_proc, covered_val, refRatio(),
-                                eb_levels, nghost_eb_basic(), nghost_eb_volume(),
-                                nghost_eb_full(), m_eb_support_level,
+                                particle_proc, fluid_proc, refRatio(),
                                 load_balance_type, bc_list, particle_ebfactory,
                                 regions);
 

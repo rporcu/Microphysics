@@ -21,10 +21,10 @@ particles.tile_size = 1024 1024 1024
 # Maximum level in hierarchy (for now must be 0, i.e., one level in total)
 amr.max_level = 0
 
-amr.plot_int  =   -1
-amr.check_int  = 500
+mfix.plot_int  =   -1
+mfix.check_int  = 500
 
-#amr.restart = chk00100
+#mfix.restart = chk00100
 
 # Geometry
 geometry.coord_sys   = 0                         # 0: Cartesian

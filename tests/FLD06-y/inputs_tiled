@@ -57,16 +57,16 @@ fabarray.mfiter_tile_size = 16  16  16
 #_______________________________________________________________________
 # IO / Checkpointing
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 100
-amr.plot_file      ="FLD06"
+mfix.plot_int       = 100
+mfix.plot_file      ="FLD06"
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
-amr.plt_p_g = 1
+mfix.plt_p_g = 1
 
 #_______________________________________________________________________
 # Fluid model settings

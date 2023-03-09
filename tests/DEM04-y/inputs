@@ -30,15 +30,15 @@ geometry.prob_hi     = 1.0   1.0   1.0      # hi corner of physical domain
 
 mfix.geometry = box
 
-amr.plot_int   = -1
-amr.plot_file  = DEM03_plt
+mfix.plot_int   = -1
+mfix.plot_file  = DEM03_plt
 
-amr.check_int  = -1
-amr.check_file = DEM03_chk
+mfix.check_int  = -1
+mfix.check_file = DEM03_chk
 
-amr.par_ascii_int  = 1
-amr.par_ascii_file = DEM04_par
-amr.plt_regtest = 1
+mfix.par_ascii_int  = 1
+mfix.par_ascii_file = DEM04_par
+mfix.plt_regtest = 1
 
 
 #_______________________________________________________________________

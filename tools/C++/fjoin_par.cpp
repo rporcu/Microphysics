@@ -304,7 +304,7 @@ void help ()
         << "\n        [--var INTEGER] [--dt REAL] [--verbose]"
         << "\n "
         << "\nargs --file, -f  : The base name used to generate ASCII particle output"
-        << "\n                   files. This is the same as `amr.par_ascii_file` in"
+        << "\n                   files. This is the same as `mfix.par_ascii_file` in"
         << "\n                   the input deck."
         << "\n     --join, -j  : File name of output file"
         << "\n     --verbose   : Output format, Number of sig-figs to write {10 (default)} "

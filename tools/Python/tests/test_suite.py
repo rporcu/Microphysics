@@ -4,12 +4,12 @@ from unittest.mock import patch
 from rtl2 import regtest
 
 EXAMPLE_SH = """
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_cyl/fluidbed_cyl.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_cyl/inputs amr.plot_file=fluidbed_cyl_plt amr.check_file=fluidbed_cyl_chk amr.checkpoint_files_output=0  mfix.max_step=3
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_periodic/fluidbed_periodic.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_periodic/inputs amr.plot_file=fluidbed_periodic_plt amr.check_file=fluidbed_periodic_chk amr.checkpoint_files_output=0  mfix.max_step=3
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_sq/fluidbed_sq.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_sq/inputs amr.plot_file=fluidbed_sq_plt amr.check_file=fluidbed_sq_chk amr.checkpoint_files_output=0  mfix.max_step=3
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/hopper/hopper.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/hopper/inputs amr.plot_file=hopper_plt amr.check_file=hopper_chk amr.checkpoint_files_output=0  mfix.max_step=3
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/riser_cyl/riser_cyl.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/riser_cyl/inputs amr.plot_file=riser_cyl_plt amr.check_file=riser_cyl_chk amr.checkpoint_files_output=0  mfix.max_step=3
-mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/riser_sq/riser_sq.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/riser_sq/inputs amr.plot_file=riser_sq_plt amr.check_file=riser_sq_chk amr.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_cyl/fluidbed_cyl.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_cyl/inputs mfix.plot_file=fluidbed_cyl_plt mfix.check_file=fluidbed_cyl_chk mfix.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_periodic/fluidbed_periodic.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_periodic/inputs mfix.plot_file=fluidbed_periodic_plt mfix.check_file=fluidbed_periodic_chk mfix.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/fluidbed_sq/fluidbed_sq.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/fluidbed_sq/inputs mfix.plot_file=fluidbed_sq_plt mfix.check_file=fluidbed_sq_chk mfix.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/hopper/hopper.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/hopper/inputs mfix.plot_file=hopper_plt mfix.check_file=hopper_chk mfix.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/riser_cyl/riser_cyl.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/riser_cyl/inputs mfix.plot_file=riser_cyl_plt mfix.check_file=riser_cyl_chk mfix.checkpoint_files_output=0  mfix.max_step=3
+mpiexec --mca opal_warn_on_missing_libcuda 0 -n 4 BASE_DIR/rt-MFIX-Exa/build/benchmarks/rtl2/riser_sq/riser_sq.ex BASE_DIR/subprojects/mfix/benchmarks/rtl2/riser_sq/inputs mfix.plot_file=riser_sq_plt mfix.check_file=riser_sq_chk mfix.checkpoint_files_output=0  mfix.max_step=3
 """
 
 

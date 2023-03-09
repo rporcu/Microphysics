@@ -93,17 +93,17 @@ fabarray.mfiter_tile_size = 1024 16 16
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 50
-amr.plot_file      ="FLD08"
+mfix.plot_int       = 50
+mfix.plot_file      ="FLD08"
 
-amr.check_int      = -1
-amr.check_file     ="chk"
+mfix.check_int      = -1
+mfix.check_file     ="chk"
 
-amr.plt_p_g     = 1
-amr.plt_volfrac = 1
+mfix.plt_p_g     = 1
+mfix.plt_volfrac = 1
 
 #_______________________________________________________________________
 # Fluid model settings

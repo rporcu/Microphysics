@@ -7,7 +7,7 @@ amrex.fpe_trap_overflow=0
 #----------------------------------------------------------------------
 
 # Restart from checkpoint
-#amr.restart   ="chk20197"
+#mfix.restart   ="chk20197"
 
 #mfix.max_step   = 1
 mfix.stop_time = 55.001
@@ -17,7 +17,7 @@ mfix.stop_time = 55.001
 # Model settings
 #----------------------------------------------------------------------
 # Restart from checkpoint
-#amr.restart   ="chk20197"
+#mfix.restart   ="chk20197"
 
 mfix.fixed_dt = 0
 mfix.cfl      = 0.9
@@ -170,8 +170,8 @@ fabarray.mfiter_tile_size = 1024 1024 1024
 
 # Particle load balancing
 #mfix.load_balance_type = "KnapSack"
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+mfix.dual_grid          =  0
+mfix.regrid_int         = -1
 
 #mfix.knapsack_weight_type = "NumParticles"
 #mfix.knapsack_weight_type = "RunTimeCosts"
@@ -179,23 +179,23 @@ amr.regrid_int         = -1
 #----------------------------------------------------------------------
 # IO / Checkpointing
 #----------------------------------------------------------------------
-amr.check_int      = 50000
-amr.check_file     = "chk"
+mfix.check_int      = 50000
+mfix.check_file     = "chk"
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file = "vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file = "vis"
 
-#amr.plot_int        = 100
-amr.plot_per_approx = 0.0625
-amr.plot_file       = "plt"
+#mfix.plot_int        = 100
+mfix.plot_per_approx = 0.0625
+mfix.plot_file       = "plt"
 
-amr.plt_regtest = 0
-amr.plt_vel_g   = 1
+mfix.plt_regtest = 0
+mfix.plt_vel_g   = 1
 
-amr.plt_vel_p = 1
+mfix.plt_vel_p = 1
 
-##amr.ascent_int        = 2
-amr.ascent_per_approx = 0.015625
+##mfix.ascent_int        = 2
+mfix.ascent_per_approx = 0.015625
 
 ascent.fluid_actions    = "ascent_actions_fluid.yaml"
 ascent.particle_actions = "ascent_actions_particles.yaml"
@@ -205,19 +205,19 @@ ascent.particle_actions = "ascent_actions_particles.yaml"
 # User in situ data collection
 #----------------------------------------------------------------------
 # user data processing
-amr.avg_int = 10
-amr.avg_file = "/nfs/home/2/jmusser/projects/sscpi/dem/2Umf/0812/a/uio/uio"
+mfix.avg_int = 10
+mfix.avg_file = "/nfs/home/2/jmusser/projects/sscpi/dem/2Umf/0812/a/uio/uio"
 
-amr.avg_vel_p =        0       0       0       0       1        1        1        1        1
-amr.avg_p_g   =        1       1       1       1       0        0        0        0        0
-amr.avg_ep_g  =        0       0       0       0       0        0        0        0        0
-amr.avg_vel_g =        0       0       0       0       0        0        0        0        0
-amr.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
-amr.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
-amr.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
-amr.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
-amr.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
-amr.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
+mfix.avg_vel_p =        0       0       0       0       1        1        1        1        1
+mfix.avg_p_g   =        1       1       1       1       0        0        0        0        0
+mfix.avg_ep_g  =        0       0       0       0       0        0        0        0        0
+mfix.avg_vel_g =        0       0       0       0       0        0        0        0        0
+mfix.avg_region_x_w =   0.044   0.045   0.348   0.350   0.05334  0.05334  0.05334  0.05334  0.05334
+mfix.avg_region_x_e =   0.044   0.045   0.348   0.350   0.09906  0.09906  0.09906  0.09906  0.09906
+mfix.avg_region_y_s =   0.0     0.0     0.0     0.0     0.0      0.04572  0.09144  0.13716  0.18288
+mfix.avg_region_y_n =   0.2286  0.2286  0.2286  0.2286  0.04572  0.09144  0.13716  0.18288  0.22860
+mfix.avg_region_z_b =   0.0     0.0     0.0     0.0     0.0      0.0      0.0      0.0      0.0
+mfix.avg_region_z_t =   0.0762  0.0762  0.0762  0.0762  0.003    0.003    0.003    0.003    0.003
 
 
 #----------------------------------------------------------------------

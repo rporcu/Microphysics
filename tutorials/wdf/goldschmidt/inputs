@@ -83,8 +83,8 @@ mfix.levelset__refinement    = 4 # levelset resolution
 
 #mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =  0
-amr.regrid_int         = -1
+mfix.dual_grid          =  0
+mfix.regrid_int         = -1
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -96,30 +96,30 @@ amr.regrid_int         = -1
 
 #______________________________________________________________________
 # user data processing
-amr.avg_int = 200
-amr.avg_file = "uio"
+mfix.avg_int = 200
+mfix.avg_file = "uio"
 
-amr.avg_vel_p =        1
-amr.avg_p_g   =        0
-amr.avg_ep_g  =        0
-amr.avg_vel_g =        0
-amr.avg_region_x_w =   0.013
-amr.avg_region_x_e =   0.800
-amr.avg_region_y_s =   0.0
-amr.avg_region_y_n =   0.160
-amr.avg_region_z_b =   0.0
-amr.avg_region_z_t =   0.00625 #! 1.5dp + zlo.location
+mfix.avg_vel_p =        1
+mfix.avg_p_g   =        0
+mfix.avg_ep_g  =        0
+mfix.avg_vel_g =        0
+mfix.avg_region_x_w =   0.013
+mfix.avg_region_x_e =   0.800
+mfix.avg_region_y_s =   0.0
+mfix.avg_region_y_n =   0.160
+mfix.avg_region_z_b =   0.0
+mfix.avg_region_z_t =   0.00625 #! 1.5dp + zlo.location
 
 #_______________________________________________________________________
 # IO / Checkpointing
-amr.par_ascii_int  = 10000
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = 10000
+mfix.par_ascii_file ="vis"
 
-amr.plot_int       = 10000
-amr.plot_file      ="plt"
+mfix.plot_int       = 10000
+mfix.plot_file      ="plt"
 
-amr.check_int      = 10000
-amr.check_file     ="chk"
+mfix.check_int      = 10000
+mfix.check_file     ="chk"
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -159,7 +159,7 @@ dem.damping_tang_fac.pw   =     0.5
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-#amr.restart   ="chk00100"
+#mfix.restart   ="chk00100"
 
 #_______________________________________________________________________
 # Regions for defining ICs and BCs

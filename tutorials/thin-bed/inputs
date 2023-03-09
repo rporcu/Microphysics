@@ -123,8 +123,8 @@ particles.tile_size = 1024 1024 1024
 
 mfix.load_balance_type = "KnapSack"
 
-amr.dual_grid          =    1
-amr.regrid_int         = 1000
+mfix.dual_grid          =    1
+mfix.regrid_int         = 1000
 
 #! KnapSack settings
 #!-----------------------------------------------------------//
@@ -140,20 +140,20 @@ amr.regrid_int         = 1000
 mfix.write_eb_surface = false  # Needed to output eb-surfaces
 mfix.write_ls         = false  # Needed to output level set
 
-amr.par_ascii_int  = -1
-amr.par_ascii_file ="vis"
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
 
-amr.check_int      = 2000
-amr.check_file     ="chk"
+mfix.check_int      = 2000
+mfix.check_file     ="chk"
 
-#amr.plot_int         = -1
-amr.plot_per_approx  = 0.015625
-amr.plot_file        ="plt"
+#mfix.plot_int         = -1
+mfix.plot_per_approx  = 0.015625
+mfix.plot_file        ="plt"
 
 
 #! Restart from checkpoint
 #!-----------------------------------------------------------//
-amr.restart   ="chk40000"
+mfix.restart   ="chk40000"
 
 
 #----------------------------------------------------------------------

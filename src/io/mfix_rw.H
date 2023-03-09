@@ -29,7 +29,6 @@ public:
            amrex::Vector<amrex::DistributionMapping>& dmap_in,
            bool ooo_debug_in,
            amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-           const amrex::Vector<amrex::BoxArray>& box_array_in,
            int levelset_refinement_in,
            int levelset_pad_in,
            int levelset_eb_refinement_in,
@@ -41,13 +40,7 @@ public:
            amrex::Vector<amrex::MultiFab*>& particle_cost_in,
            amrex::Vector<amrex::MultiFab*>& particle_proc_in,
            amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
-           amrex::Real covered_val_in,
            const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-           amrex::Vector<const amrex::EB2::Level*>& eb_levels_in,
-           int nghost_eb_basic_in,
-           int nghost_eb_volume_in,
-           int nghost_eb_full_in,
-           amrex::EBSupport& m_eb_support_level_in,
            std::string load_balance_type_in,
            BCList& bc_list_in,
            amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
@@ -234,7 +227,6 @@ private:
    int finest_level;
    int nlev;
 
-
    amrex::Vector<amrex::BoxArray>& grids;
 
    amrex::Vector<amrex::Geometry>& geom;
@@ -268,8 +260,6 @@ private:
 
    amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets;
 
-   const amrex::Vector<amrex::BoxArray>& box_array;
-
    int levelset_refinement;
    int levelset_pad;
    int levelset_eb_refinement;
@@ -287,17 +277,7 @@ private:
    amrex::Vector<amrex::MultiFab*>& particle_proc;
    amrex::Vector<amrex::MultiFab*>& fluid_proc;
 
-   amrex::Real covered_val;
-
    const amrex::Vector<amrex::IntVect>& ref_ratio;
-
-   //! EB levels representing fluid boundary conditions
-   amrex::Vector<const amrex::EB2::Level*> eb_levels;
-
-   int nghost_eb_basic;
-   int nghost_eb_volume;
-   int nghost_eb_full;
-   amrex::EBSupport& m_eb_support_level;
 
    std::string load_balance_type;
 
@@ -312,14 +292,11 @@ private:
    amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_outflow = {0.};
    amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_prod    = {0.};
 
-
    void readParameters ();
 
    int test_per_approx(const amrex::Real time,
                        const amrex::Real dt,
                        const amrex::Real per_approx);
-
-
 
    bool write_eb_surface = false;
 
@@ -330,7 +307,6 @@ private:
    // Flag for writing static EB geometry data in plot file
    bool plt_geom = false;
    std::string static_plt_file_geom {"plt_eb_geom"};
-
 
    // Checkpoint file controls
    bool checkpoint_files_output = true;
@@ -351,13 +327,11 @@ private:
    amrex::Real plot_per_approx = -1.;
    amrex::Real plot_per_exact  = -1.;
 
-
    // Ascent controls
    bool ascent_on_restart = false;
 
    int ascent_int = -1;
    amrex::Real ascent_per_approx = -1.;
-
 
    // Particle ASCII output files (debug only)
    int par_ascii_int = -1;
@@ -365,12 +339,10 @@ private:
    std::string par_ascii_file {"par"};
    amrex::Real par_ascii_per_approx = -1;
 
-
    // Averaging regions
    int avg_int = -1;
    int last_avg = -1;
    std::string avg_file {"avg_region"};
-
 
    // Last step at which we wrote a plotfile
    int last_plt = -1;
@@ -424,8 +396,7 @@ private:
 
    amrex::Vector<SolidsPlotRegion> m_solids_plot_regions;
 
-   void GetSolidsIOPltFlags (amrex::ParmParse& pp,
-                             amrex::Vector<int>& write_real_comp_out,
+   void GetSolidsIOPltFlags (amrex::Vector<int>& write_real_comp_out,
                              amrex::Vector<int>& write_int_comp_out);
 
    void WriteCheckHeader (const std::string& name,
