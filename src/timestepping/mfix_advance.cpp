@@ -14,9 +14,122 @@
 #include <AMReX_MemProfiler.H>
 #endif
 
+namespace EnthalpyImplicitUpdate {
 
+struct Residue
+{
+  AMREX_GPU_HOST_DEVICE
+  Residue (const int& i,
+           const int& j,
+           const int& k,
+           const int& fluid_is_a_mixture,
+           const int& nspecies_g,
+           const MFIXFluidParms& fluid_parms,
+           const Array4<const Real>& Xgk_array,
+           const Real& hg,
+           const Real& ep_ro_g,
+           const Real& gamma,
+           const Real& gammaTp,
+           const Real& dt)
+    : m_i(i)
+    , m_j(j)
+    , m_k(k)
+    , m_fluid_is_a_mixture(fluid_is_a_mixture)
+    , m_nspecies_g(nspecies_g)
+    , m_fluid_parms(fluid_parms)
+    , m_Xgk_array(Xgk_array)
+    , m_hg(hg)
+    , m_ep_ro_g(ep_ro_g)
+    , m_gamma(gamma)
+    , m_gammaTp(gammaTp)
+    , m_dt(dt)
+  {}
+
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  Real operator() (const Real& Tg_arg)
+  {
+    Real hg_loc(0);
+
+    if (!m_fluid_is_a_mixture) {
+      hg_loc = m_fluid_parms.calc_h_g<run_on>(Tg_arg);
+    } else {
+      for (int n_g(0); n_g < m_nspecies_g; ++n_g) {
+        const Real h_gk = m_fluid_parms.calc_h_gk<run_on>(Tg_arg, n_g);
+        hg_loc += m_Xgk_array(m_i,m_j,m_k,n_g)*h_gk;
+      }
+    }
+
+    return m_ep_ro_g*(hg_loc - m_hg) + m_dt*m_gamma*Tg_arg - m_dt*m_gammaTp;
+  }
+
+  const int& m_i; const int& m_j; const int& m_k;
+  const int& m_fluid_is_a_mixture;
+  const int& m_nspecies_g;
+  const MFIXFluidParms& m_fluid_parms;
+  const Array4<const Real>& m_Xgk_array;
+  const Real& m_hg;
+  const Real& m_ep_ro_g;
+  const Real& m_gamma;
+  const Real& m_gammaTp;
+  const Real& m_dt;
+};
+
+struct Gradient
+{
+  AMREX_GPU_HOST_DEVICE
+  Gradient (const int& i,
+            const int& j,
+            const int& k,
+            const int& fluid_is_a_mixture,
+            const int& nspecies_g,
+            const MFIXFluidParms& fluid_parms,
+            const Array4<const Real>& Xgk_array,
+            const Real& ep_ro_g,
+            const Real& gamma,
+            const Real& dt)
+    : m_i(i)
+    , m_j(j)
+    , m_k(k)
+    , m_fluid_is_a_mixture(fluid_is_a_mixture)
+    , m_nspecies_g(nspecies_g)
+    , m_fluid_parms(fluid_parms)
+    , m_Xgk_array(Xgk_array)
+    , m_ep_ro_g(ep_ro_g)
+    , m_gamma(gamma)
+    , m_dt(dt)
+  {}
+
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  Real operator() (const Real& Tg_arg)
+  {
+    Real gradient(0);
+
+    if (!m_fluid_is_a_mixture) {
+      gradient = m_fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
+    } else {
+      for (int n_g(0); n_g < m_nspecies_g; ++n_g) {
+        const Real h_gk = m_fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n_g);
+        gradient += m_Xgk_array(m_i,m_j,m_k,n_g)*h_gk;
+      }
+    }
+
+    return m_ep_ro_g*gradient + m_dt*m_gamma;
+  }
+
+  const int& m_i; const int& m_j; const int& m_k;
+  const int& m_fluid_is_a_mixture;
+  const int& m_nspecies_g;
+  const MFIXFluidParms& m_fluid_parms;
+  const Array4<const Real>& m_Xgk_array;
+  const Real& m_ep_ro_g;
+  const Real& m_gamma;
+  const Real& m_dt;
+};
+
+} // end namespace EnthalpyImplicitUpdate
+
+using namespace EnthalpyImplicitUpdate;
 using namespace Solvers;
-
 
 void
 mfix::mfix_project_velocity ()
@@ -438,51 +551,15 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
           // Newton-Raphson solver for solving implicit equation for
           // temperature
           // ************************************************************
-          // Residual computation
-          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-          {
-            Real hg_loc(0);
+          Newton::FluidEnthalpy::Residue residue(i, j, k, fluid_is_a_mixture,
+              cell_is_covered, nspecies_g, fluid_parms, Xgk_array, hg);
 
-            if (!fluid_is_a_mixture) {
-
-              hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg);
-
-            } else {
-
-              for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n);
-
-                hg_loc += Xgk_array(i,j,k,n)*h_gk;
-              }
-            }
-
-            return hg_loc - hg;
-          };
-
-          // Partial derivative computation
-          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-          {
-            Real gradient(0);
-
-            if (!fluid_is_a_mixture) {
-
-              gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
-
-            } else {
-
-              for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
-
-                gradient += Xgk_array(i,j,k,n)*h_gk;
-              }
-            }
-
-            return gradient;
-          };
+          Newton::FluidEnthalpy::Gradient gradient(i, j, k, fluid_is_a_mixture,
+              nspecies_g, fluid_parms, Xgk_array);
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+          Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
 
           Tg_array(i,j,k) = Tg_new;
 
@@ -642,53 +719,17 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
           // Newton-Raphson solver for solving implicit equation for
           // temperature
           // ************************************************************
-          // Residual computation
-          auto R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-          {
-            Real hg_loc(0);
-
-            if (!fluid_is_a_mixture) {
-
-              hg_loc = fluid_parms.calc_h_g<run_on>(Tg_arg);
-
-            } else {
-
-              for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = fluid_parms.calc_h_gk<run_on>(Tg_arg, n);
-
-                hg_loc += Xgk_array(i,j,k,n)*h_gk;
-              }
-            }
-
-            return ep_ro_g*(hg_loc - hg) + dt*gamma*Tg_arg - dt*gammaTp;
-          };
-
-          // Partial derivative computation
-          auto partial_R = [&] AMREX_GPU_DEVICE (Real Tg_arg)
-          {
-            Real gradient(0);
-
-            if (!fluid_is_a_mixture) {
-
-              gradient = fluid_parms.calc_partial_h_g<run_on>(Tg_arg);
-
-            } else {
-
-              for (int n(0); n < nspecies_g; ++n) {
-                const Real h_gk = fluid_parms.calc_partial_h_gk<run_on>(Tg_arg,n);
-
-                gradient += Xgk_array(i,j,k,n)*h_gk;
-              }
-            }
-
-            return ep_ro_g*gradient + dt*gamma;
-          };
+          Residue residue(i, j, k, fluid_is_a_mixture, nspecies_g, fluid_parms,
+              Xgk_array, hg, ep_ro_g, gamma, gammaTp, dt);
+          
+          Gradient gradient(i, j, k, fluid_is_a_mixture, nspecies_g, fluid_parms,
+              Xgk_array, ep_ro_g, gamma, dt);
 
           Real Tg_old = Tg_array(i,j,k);
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+          Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
 
           Tg_array(i,j,k) = Tg_new;
 

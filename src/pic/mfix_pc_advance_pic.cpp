@@ -190,50 +190,15 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             // Newton-Raphson solver for solving implicit equation for
             // temperature
             // ************************************************************
-            // Residual computation
-            auto R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
-            {
-              Real hp_loc(0);
+            Newton::SolidsEnthalpy::Residue residue(solid_is_a_mixture,
+                nspecies_s, solids_parms, X_sn.data(), p_enthalpy_new);
 
-              if (!solid_is_a_mixture) {
-
-                hp_loc = solids_parms.calc_h_s<run_on>(Tp_arg);
-              } else {
-
-                for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = solids_parms.calc_h_sn<run_on>(Tp_arg,n);
-
-                  hp_loc += X_sn[n]*h_sn;
-                }
-              }
-
-              return hp_loc - p_enthalpy_new;
-            };
-
-            // Partial derivative computation
-            auto partial_R = [&] AMREX_GPU_DEVICE (Real Tp_arg)
-            {
-              Real gradient(0);
-
-              if (!solid_is_a_mixture) {
-
-                gradient = solids_parms.calc_partial_h_s<run_on>(Tp_arg);
-
-              } else {
-
-                for (int n(0); n < nspecies_s; ++n) {
-                  const Real h_sn = solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n);
-
-                  gradient += X_sn[n]*h_sn;
-                }
-              }
-
-              return gradient;
-            };
+            Newton::SolidsEnthalpy::Gradient gradient(solid_is_a_mixture,
+                nspecies_s, solids_parms, X_sn.data());
 
             Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
-            Newton::solve(Tp_new, R, partial_R, is_IOProc, abstol, reltol, maxiter);
+            Newton::solve(Tp_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
 
             p_realarray[SoArealData::temperature][i] = Tp_new;
 
