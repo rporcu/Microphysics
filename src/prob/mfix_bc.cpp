@@ -231,9 +231,6 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     std::string bc_type;
     pp.get(input_regions[bcv].c_str(), bc_type);
 
-    // Initialize area to zero
-    m_area.push_back(0.);
-
     // Convert the input string into the integers
     if( bc_type == "mi") {
       new_bc.type = BCList::minf;
@@ -442,7 +439,6 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
           volfrac_total += new_bc.fluid.volfrac;
 
           m_embedded_boundaries.set_has_flow(1);
-          m_embedded_boundaries.set_compute_area(m_embedded_boundaries.compute_area() || new_bc.fluid.eb_has_volflow);
         }
       }
 
@@ -559,8 +555,6 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
             amrex::Abort("Mass inflows for DEM solids has not bee implemented yet!");
 
           } else if (is_eb || (is_mi && pic.solve()) ) {
-
-            if (is_eb) { m_embedded_boundaries.set_compute_area(1); }
 
              new_solid.statwt = 1.0;
              ppSolid.query("statwt", new_solid.statwt);
@@ -1160,13 +1154,28 @@ MFIXBoundaryConditions::read_bc_species (amrex::ParmParse pp,
 
 
 amrex::Real& MFIXBoundaryConditions::
-get_bc_area (const int bcv)
+get_bc_area (const int a_bcv)
 {
-  AMREX_ASSERT( m_bc[bcv].type == BCList::pinf ||
-                m_bc[bcv].type == BCList::pout ||
-                m_bc[bcv].type == BCList::minf ||
-                m_bc[bcv].type == BCList::eb );
+  AMREX_ASSERT( a_bcv < m_bc.size() );
+  AMREX_ASSERT( m_bc[a_bcv].type == BCList::pinf ||
+                m_bc[a_bcv].type == BCList::pout ||
+                m_bc[a_bcv].type == BCList::minf ||
+                m_bc[a_bcv].type == BCList::eb );
 
-  if ( m_bc[bcv].type == BCList::eb ) { return m_bc[bcv].eb.area; }
-  else  { return m_area[bcv]; }
+  if ( m_bc[a_bcv].type == BCList::eb ) { return m_bc[a_bcv].eb.area; }
+  else  { return m_area[a_bcv]; }
+}
+
+amrex::Real& MFIXBoundaryConditions::
+get_bc_fab_area (const int a_bcv, std::pair<int,int> a_index)
+{
+  AMREX_ASSERT( a_bcv < m_bc.size() );
+  AMREX_ASSERT( m_bc[a_bcv].type == BCList::pinf ||
+                m_bc[a_bcv].type == BCList::pout ||
+                m_bc[a_bcv].type == BCList::minf ||
+                m_bc[a_bcv].type == BCList::eb );
+
+  //if ( m_bc[bcv].type == BCList::eb ) { return m_bc[bcv].eb.area; }
+  //else  { return m_area[bcv]; }
+  return m_fab_area[a_bcv][a_index];
 }

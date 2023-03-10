@@ -233,5 +233,17 @@ mfix::Regrid ()
   if (fluid.solve())
     mfix_setup_solvers();
 
+  // Recompute fab areas after regrid. We only recompute the areas
+  // if solving particles because the fluid doesn't use the individual
+  // "fab bc areas," and the total bc area will not change.
+  if (m_dem.solve() || m_pic.solve()) {
+    for (int lev(0); lev < nlev; lev++) {
+      m_boundary_conditions.calc_bc_areas(lev,
+         pc->ParticleBoxArray(lev),
+         pc->ParticleDistributionMap(lev),
+         particle_ebfactory[lev].get());
+    }
+  }
+
   BL_PROFILE_REGION_STOP("mfix::Regrid()");
 }

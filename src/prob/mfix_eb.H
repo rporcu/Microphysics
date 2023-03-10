@@ -18,7 +18,6 @@ class MFIXEmbeddedBoundaries
     MFIXEmbeddedBoundaries ()
       : m_fix_temperature(0)
       , m_has_flow(0)
-      , m_compute_area(0)
     {}
 
     int fix_temperature () const { return m_fix_temperature; };
@@ -27,18 +26,12 @@ class MFIXEmbeddedBoundaries
     int has_flow () const { return m_has_flow; };
     void set_has_flow (const int val) { m_has_flow = val; };
 
-    int compute_area () const { return m_compute_area; };
-    void set_compute_area (const int val) { m_compute_area = val; };
-
   private:
     // Flag to specify if we have Dirichlet BCs on the EB
     int m_fix_temperature;
 
     // Flag to specify that we have Dirichlet flow though EB face
     int m_has_flow;
-
-    // Flag to compute the area of the EB region
-    int m_compute_area;
 };
 
 

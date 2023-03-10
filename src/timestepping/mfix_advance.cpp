@@ -45,8 +45,7 @@ mfix::mfix_project_velocity ()
 
     if (m_embedded_boundaries.has_flow()) {
 
-       m_boundary_conditions.set_eb_velocity_bcs(time, m_embedded_boundaries,
-           eb_flow_vel);
+       m_boundary_conditions.set_eb_velocity_bcs(time, eb_flow_vel);
     }
 
     mfix_apply_nodal_projection(depdt, time, dummy_dt, dummy_dt, proj_2,
@@ -195,11 +194,9 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
 
   if (m_embedded_boundaries.has_flow()) {
 
-     m_boundary_conditions.set_eb_velocity_bcs(time, m_embedded_boundaries,
-         eb_flow_vel);
+     m_boundary_conditions.set_eb_velocity_bcs(time, eb_flow_vel);
 
-     m_boundary_conditions.set_eb_scalar_bcs(fluid, m_embedded_boundaries,
-         eb_flow_scalars, eb_flow_species);
+     m_boundary_conditions.set_eb_scalar_bcs(fluid, eb_flow_scalars, eb_flow_species);
   }
 
   for (int iter = 0; iter < initial_iterations; ++iter)

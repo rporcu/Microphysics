@@ -1,6 +1,7 @@
 #include <AMReX_EBFabFactory.H>
 #include <AMReX_EBFArrayBox.H>
 
+#include <mfix_calc_cell.H>
 #include <mfix_bc.H>
 
 using namespace amrex;
@@ -11,12 +12,20 @@ calc_bc_areas (int const lev,
                DistributionMapping const& a_dmap,
                EBFArrayBoxFactory*        a_factory)
 {
-  // Nothing to do for fully periodic systems!
-  if ( m_geom[lev].isAllPeriodic() ) { return; }
+  BL_PROFILE("MFIXBoundaryConditions::calc_bc_areas()");
 
-  MultiFab tmpMF(a_grids, a_dmap, 1, 0, MFInfo(), *a_factory);
+  if (m_fab_area.size() > 0) { this->m_fab_area.clear(); }
 
   int const num_bcs(m_bc.size());
+
+  // Create a temp MultiFab to use in MFIter loops.
+  // We want to 'save' the individual fab areas if PIC or DEM are
+  // enabled because we can use that information to compute the
+  // actual particle volumetric flow rate.
+  MultiFab tmpMF(a_grids, a_dmap, 1, 0, MFInfo().SetAlloc(false), *a_factory);
+
+  this->m_area.resize(num_bcs);
+  this->m_fab_area.resize(num_bcs);
 
   std::vector<Real> bc_areas(num_bcs, 0.);
 
@@ -36,7 +45,7 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_xlo(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_ilo, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_ilo, bc, tmpMF, a_factory);
       } // loop over bc_xlo
 
     } // end x-lo side of the domain
@@ -50,7 +59,7 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_xhi(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_ihi, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_ihi, bc, tmpMF, a_factory);
       }
     } // end x-hi side of the domain
   } // end x-direction
@@ -70,7 +79,7 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_ylo(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_jlo, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_jlo, bc, tmpMF, a_factory);
       }
 
     }// end y-lo side of the domain
@@ -85,7 +94,7 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_yhi(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_jhi, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_jhi, bc, tmpMF, a_factory);
       }
 
     } // end y-hi side of the domain
@@ -105,7 +114,7 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_zlo(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_klo, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_klo, bc, tmpMF, a_factory);
       }
 
 
@@ -122,11 +131,24 @@ calc_bc_areas (int const lev,
         const int bcv  = this->bc_zhi(lc);
         const BC_t& bc = this->bc(bcv);
 
-        bc_areas[bcv] = calc_bc_area(lev, dir, box_khi, bc, tmpMF, a_factory);
+        bc_areas[bcv] = calc_bc_area(lev, dir, bcv, box_khi, bc, tmpMF, a_factory);
       }
 
     } // end z-hi side of the domain
   }// end z-direction
+
+
+  for (int bcv(0); bcv<num_bcs; bcv++) {
+
+    BC_t const& bc = this->bc(bcv);
+
+    if (bc.type == BCList::eb) {
+      //bc_areas[bcv] = calc_eb_bc_area();
+    }
+  }
+
+
+
 
   // Do a global reduce sum and store in data container
 
@@ -143,19 +165,19 @@ Real
 MFIXBoundaryConditions::
 calc_bc_area( int      const       a_lev,
               int      const       a_dir,
+              int      const       a_bcv,
               Box      const&      a_bx,
               BC_t     const&      a_bc,
               MultiFab const&      a_MF,
               EBFArrayBoxFactory*  a_factory)
 {
+  Real dx = m_geom[a_lev].CellSize(0);
+  Real dy = m_geom[a_lev].CellSize(1);
+  Real dz = m_geom[a_lev].CellSize(2);
 
- Real dx = m_geom[a_lev].CellSize(0);
- Real dy = m_geom[a_lev].CellSize(1);
- Real dz = m_geom[a_lev].CellSize(2);
-
- // This should be caught elsewhere but just in case...
- AMREX_ASSERT(dx == dy && dy == dz);
- Real const da( dx*dx );
+  // This should be caught elsewhere but just in case...
+  AMREX_ASSERT(dx == dy && dy == dz);
+  Real const da( dx*dx );
 
   const GpuArray<Real, 3> plo = m_geom[a_lev].ProbLoArray();
 
@@ -177,16 +199,15 @@ calc_bc_area( int      const       a_lev,
 
   const Box bc_bx(bx_lo, bx_hi);
 
-  Real regCellArea(0.);
-
-  ReduceOps<ReduceOpSum> reduce_op;
-  ReduceData<Real> reduce_data(reduce_op);
-  using ReduceTuple = typename decltype(reduce_data)::Type;
+  Real totalArea(0.);
 
   // No tiling
   for (MFIter mfi(a_MF, false); mfi.isValid(); ++mfi) {
 
     const Box& bx = mfi.growntilebox(IntVect::TheDimensionVector(a_dir));
+
+    std::pair<int,int> index(mfi.index(), mfi.LocalTileIndex());
+    this->m_fab_area[a_bcv][index] = 0.;
 
     // Ensure lo_box intersects bx
     if (bc_bx.intersects(bx)) {
@@ -198,24 +219,127 @@ calc_bc_area( int      const       a_lev,
 
       if (t == FabType::regular ) {
 
-        regCellArea += static_cast<Real>(bx_int.numPts());
+        this->m_fab_area[a_bcv][index] = da*static_cast<Real>(bx_int.numPts());
 
       } else if (t == FabType::singlevalued ) {
 
         Array4<Real const> const& afrac = (a_factory->getAreaFrac()[a_dir])->const_array(mfi);
 
+        ReduceOps<ReduceOpSum> reduce_op;
+        ReduceData<Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+
         reduce_op.eval(bx_int, reduce_data, [afrac]
         AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
         { return afrac(i,j,k); });
+
+        ReduceTuple host_tuple = reduce_data.value(reduce_op);
+        this->m_fab_area[a_bcv][index] = da*amrex::get<0>(host_tuple);
+
       }
     } // a_bx and the MFIter box intersect
+
+    totalArea += this->m_fab_area[a_bcv][index];
   } // MFIter loop
 
-  ReduceTuple host_tuple = reduce_data.value(reduce_op);
-  Real const cutCellArea = amrex::get<0>(host_tuple);
+  return totalArea;
+}
 
-  Real totalArea = da*(regCellArea + cutCellArea);
+#if 1
+Real
+MFIXBoundaryConditions::
+calc_eb_bc_area( int      const       a_lev,
+                 int      const       a_bcv,
+                 BC_t     const&      a_bc,
+                 MultiFab const&      a_MF,
+                 EBFArrayBoxFactory*  a_factory)
+{
+  BL_PROFILE("MFIXBoundaryConditions::calc_eb_bc_areas()");
+
+  Real dx = m_geom[a_lev].CellSize(0);
+  Real dy = m_geom[a_lev].CellSize(1);
+  Real dz = m_geom[a_lev].CellSize(2);
+
+  // This should be caught elsewhere but just in case...
+  AMREX_ASSERT(dx == dy && dy == dz);
+  Real const da( dx*dx );
+
+  const int  has_normal = a_bc.eb.has_normal;
+
+  amrex::GpuArray<amrex::Real,3> normal{0.};
+  if (has_normal) {
+     normal[0] = a_bc.eb.normal[0];
+     normal[1] = a_bc.eb.normal[1];
+     normal[2] = a_bc.eb.normal[2];
+  }
+
+  const Real pad = std::numeric_limits<float>::epsilon();
+  const Real normal_tol = a_bc.eb.normal_tol;
+
+  const Real norm_tol_lo = Real(-1.) - (normal_tol + pad);
+  const Real norm_tol_hi = Real(-1.) + (normal_tol + pad);
+
+  const Box ic_bx = calc_ic_box(m_geom[a_lev], a_bc.region);
+
+  Real totalArea(0.);
+
+  for (MFIter mfi(a_MF, false); mfi.isValid(); ++mfi) {
+
+    std::pair<int,int> index(mfi.index(), mfi.LocalTileIndex());
+    this->m_fab_area[a_bcv][index] = 0.;
+
+    const Box& bx = mfi.tilebox();
+
+    // Ensure lo_box intersects bx
+    if (ic_bx.intersects(bx)) {
+
+      EBCellFlagFab const& flagfab = a_factory->getMultiEBCellFlagFab()[mfi];
+      FabType t = flagfab.getType(bx);
+
+      if (t == FabType::singlevalued) {
+
+        // EB boundary area and normal
+        Array4<Real const> const& eb_area = (a_factory->getBndryArea()).const_array(mfi);
+        Array4<Real const> const& eb_norm = (a_factory->getBndryNormal()).const_array(mfi);
+        Array4<EBCellFlag const> const& flags = flagfab.const_array();
+
+        const Box bx_int = bx&(ic_bx);
+
+        ReduceOps<ReduceOpSum> reduce_op;
+        ReduceData<Real> reduce_data(reduce_op);
+        using ReduceTuple = typename decltype(reduce_data)::Type;
+
+        reduce_op.eval(bx_int, reduce_data, [flags, has_normal, normal,
+          norm_tol_lo, norm_tol_hi, eb_area, eb_norm]
+        AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
+        {
+          Real area(0.0);
+
+          if(flags(i,j,k).isSingleValued()) {
+
+            area = eb_area(i,j,k);
+
+            if(has_normal) {
+
+                const Real dotprod = eb_norm(i,j,k,0)*normal[0]
+                                   + eb_norm(i,j,k,1)*normal[1]
+                                   + eb_norm(i,j,k,2)*normal[2];
+
+                area *= (norm_tol_lo <= dotprod) ? Real(1.0) : Real(0.0);
+                area *= (dotprod <= norm_tol_hi) ? Real(1.0) : Real(0.0);
+            }
+          }
+          return {area};
+        });
+
+        ReduceTuple host_tuple = reduce_data.value(reduce_op);
+        this->m_fab_area[a_bcv][index] = da*amrex::get<0>(host_tuple);
+
+      } // single valued
+    } // box intersects
+  } // loop over MFIter
 
   return totalArea;
 
 }
+#endif

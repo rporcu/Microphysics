@@ -969,8 +969,19 @@ mfix::PostInit (Real& dt,
     }
 
     for (int lev = 0; lev < nlev; lev++) {
+
+      if(m_dem.solve() || m_pic.solve()) {
+
+        m_boundary_conditions.calc_bc_areas(lev,
+           pc->ParticleBoxArray(lev),
+           pc->ParticleDistributionMap(lev),
+           particle_ebfactory[lev].get());
+
+      } else {
+
         m_boundary_conditions.calc_bc_areas(lev,
             grids[lev], dmap[lev], ebfactory[lev].get());
+      }
     }
 
     // Call user-defined subroutine to set constants, check data, etc.

@@ -10,14 +10,9 @@ using namespace amrex;
 
 void
 MFIXBoundaryConditions::set_eb_velocity_bcs (Real time_in,
-                                             MFIXEmbeddedBoundaries& embedded_boundaries,
                                              Vector< MultiFab* > const& eb_vel_g)
 {
   BL_PROFILE("MFIXBoundaryConditions::set_eb_velocity_bcs()");
-
-  if(embedded_boundaries.compute_area()) {
-    calc_eb_bc_areas(embedded_boundaries, eb_vel_g);
-  }
 
   const int nlev = eb_vel_g.size();
 

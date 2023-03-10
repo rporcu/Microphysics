@@ -109,7 +109,6 @@ class MFIXBoundaryConditions
                            int extrap_dir_bcs);
 
     void set_eb_velocity_bcs (amrex::Real time,
-                              MFIXEmbeddedBoundaries& embedded_boundaries,
                               amrex::Vector< amrex::MultiFab* > const& vel_g_on_EB);
 
     void set_tracer_bc_values (amrex::Real time_in,
@@ -136,7 +135,6 @@ class MFIXBoundaryConditions
                           amrex::Vector< amrex::MultiFab* > const& X_gk);
 
     void set_eb_scalar_bcs (MFIXFluidPhase& fluid,
-                            MFIXEmbeddedBoundaries& embedded_boundaries,
                             amrex::Vector< amrex::MultiFab* > const& scalars_on_EB,
                             amrex::Vector< amrex::MultiFab* > const& species_on_EB);
 
@@ -153,15 +151,19 @@ class MFIXBoundaryConditions
                         amrex::DistributionMapping const& a_dmap,
                         amrex::EBFArrayBoxFactory* factory);
 
-    amrex::Real calc_bc_area(int             const       a_lev,
-                             int             const       a_dir,
-                             amrex::Box      const&      a_bx,
-                             BC_t            const&      a_bc,
-                             amrex::MultiFab const&      a_MF,
-                             amrex::EBFArrayBoxFactory*  a_factory);
+    amrex::Real calc_bc_area (int             const       a_lev,
+                              int             const       a_dir,
+                              int             const       a_bcv,
+                              amrex::Box      const&      a_bx,
+                              BC_t            const&      a_bc,
+                              amrex::MultiFab const&      a_MF,
+                              amrex::EBFArrayBoxFactory*  a_factory);
 
-    void calc_eb_bc_areas (MFIXEmbeddedBoundaries& embedded_boundaries,
-                           amrex::Vector< amrex::MultiFab* > const& eb_mf);
+    amrex::Real calc_eb_bc_area (int             const       a_lev,
+                                 int             const       a_bcv,
+                                 BC_t            const&      a_bc,
+                                 amrex::MultiFab const&      a_MF,
+                                 amrex::EBFArrayBoxFactory*  a_factory);
 
     template <typename F1>
     AMREX_FORCE_INLINE
@@ -486,6 +488,8 @@ class MFIXBoundaryConditions
 
     amrex::Real& get_bc_area (const int bcv);
 
+    amrex::Real& get_bc_fab_area (const int a_bcv, std::pair<int,int> a_index);
+
     int& get_dir (const int bcv) { return m_dir[bcv]; }
 
   private:
@@ -574,6 +578,8 @@ class MFIXBoundaryConditions
     MFIXEmbeddedBoundaries& m_embedded_boundaries;
 
     amrex::Vector<amrex::Real> m_area;
+
+    amrex::Vector<std::map<std::pair<int,int>, amrex::Real>> m_fab_area;
 
     // Data structure for BC data
     amrex::Vector<BC_t> m_bc;

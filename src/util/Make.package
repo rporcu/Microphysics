@@ -3,7 +3,6 @@ CEXE_sources += mfix_set_bcs.cpp
 CEXE_sources += mfix_set_eb_temperature_bcs.cpp
 CEXE_sources += mfix_set_eb_velocity_bcs.cpp
 CEXE_sources += mfix_calc_bc_areas.cpp
-CEXE_sources += mfix_calc_eb_bc_areas.cpp
 CEXE_sources += mfix_set_eb_scalar_bcs.cpp
 
 CEXE_sources += mfix_fillpatch.cpp

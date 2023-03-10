@@ -8,15 +8,10 @@ using namespace amrex;
 
 void
 MFIXBoundaryConditions::set_eb_scalar_bcs (MFIXFluidPhase& fluid,
-                                           MFIXEmbeddedBoundaries& embedded_boundaries,
                                            Vector< MultiFab* > const& eb_scalars,
                                            Vector< MultiFab* > const& eb_species)
 {
   BL_PROFILE("MFIXBoundaryConditions::set_eb_scalar_bcs()");
-
-  if(embedded_boundaries.compute_area()) {
-    calc_eb_bc_areas(embedded_boundaries, eb_scalars);
-  }
 
   const int nlev = eb_scalars.size();
 

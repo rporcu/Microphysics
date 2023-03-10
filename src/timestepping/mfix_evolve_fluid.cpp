@@ -153,11 +153,9 @@ mfix::EvolveFluid (int nstep,
     // We do this call after the bc values have been set
     if (m_embedded_boundaries.has_flow()) {
 
-      m_boundary_conditions.set_eb_velocity_bcs(time, m_embedded_boundaries,
-          eb_flow_vel);
+      m_boundary_conditions.set_eb_velocity_bcs(time, eb_flow_vel);
 
-      m_boundary_conditions.set_eb_scalar_bcs(fluid, m_embedded_boundaries,
-          eb_flow_scalars, eb_flow_species);
+      m_boundary_conditions.set_eb_scalar_bcs(fluid, eb_flow_scalars, eb_flow_species);
     }
 
     do
