@@ -209,13 +209,13 @@ mfix::InitParams ()
     if (advection_type() == AdvectionType::MOL) m_godunov_include_diff_in_forcing = false;
 
     // MOL: Explicit predictor / Crank_Nicolson corrector
-    // Godunov: Crank_Nicolson
+    // Godunov: Implicit predictor / No corrector
     if (advection_type() == AdvectionType::MOL) {
       m_predictor_diff_type = DiffusionType::Explicit;
       m_corrector_diff_type = DiffusionType::Crank_Nicolson;
     } else {
-      m_predictor_diff_type = DiffusionType::Crank_Nicolson;
-      m_corrector_diff_type = DiffusionType::Crank_Nicolson;
+      m_predictor_diff_type = DiffusionType::Implicit;
+      m_corrector_diff_type = DiffusionType::Invalid;
     }
 
     // Default is true; should we use tensor solve instead of separate solves for each component?
