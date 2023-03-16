@@ -111,9 +111,9 @@ public:
    void reportGridStats () const;
 
    void WriteCheckPointFile (std::string& check_file_name,
-                             int nstep = 0,
-                             amrex::Real dt = 0.0,
-                             amrex::Real time = 0.0);
+                             int nstep,
+                             amrex::Real dt,
+                             amrex::Real time);
 
    void WritePlotFile (std::string& plot_file_name,
                        int nstep = 0,

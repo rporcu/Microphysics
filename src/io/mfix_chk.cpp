@@ -80,8 +80,6 @@ MfixRW::WriteCheckHeader (const std::string& name,
                           Real dt,
                           Real time) const
 {
-   bool is_checkpoint = 1;
-
     if (ParallelDescriptor::IOProcessor())
     {
       std::string HeaderFileName(name + "/Header");
@@ -99,10 +97,7 @@ MfixRW::WriteCheckHeader (const std::string& name,
 
       HeaderFile.precision(17);
 
-      if (is_checkpoint)
-         HeaderFile << "Checkpoint version: 1\n";
-      else
-         HeaderFile << "HyperCLaw-V1.1\n";
+      HeaderFile << "Checkpoint version: 1.1\n";
 
       const int nlevels = finest_level+1;
       HeaderFile << nlevels << "\n";
@@ -112,22 +107,21 @@ MfixRW::WriteCheckHeader (const std::string& name,
       HeaderFile << dt << "\n";
       HeaderFile << time << "\n";
 
-      Geometry geometry;
-
       // Geometry
-      for (int i = 0; i < BL_SPACEDIM; ++i)
-            HeaderFile << geometry.ProbLo(i) << ' ';
-      HeaderFile << '\n';
+      HeaderFile << RealVect(geom[0].ProbLo()) << "\n";
+      HeaderFile << RealVect(geom[0].ProbHi()) << "\n";
+      HeaderFile << geom[0].Domain().size() << "\n";
 
-      for (int i = 0; i < BL_SPACEDIM; ++i)
-         HeaderFile << geometry.ProbHi(i) << ' ';
-      HeaderFile << '\n';
+      Real small_volfrac(0.);
+      ParmParse pp("eb2");
+      pp.query("small_volfrac", small_volfrac);
+      HeaderFile << small_volfrac << "\n";
 
       // BoxArray
       for (int lev = 0; lev < nlevels; ++lev)
       {
           grids[lev].writeOn(HeaderFile);
-          HeaderFile << '\n';
+          HeaderFile << "\n";
       }
     }
 }

@@ -307,7 +307,7 @@ int main (int argc, char* argv[])
            // NOTE: during replication 1) this also re-builds ebfactories and
            // level-set 2) this can change the grids
            IntVect Nrep(mfixRW.repl_x, mfixRW.repl_y, mfixRW.repl_z);
-           mfix.Restart(mfixRW.restart_file, &nstep, &dt, &time, Nrep);
+           mfix.Restart(mfixRW.restart_file, nstep, dt, time, Nrep);
        }
 
        mfixRW.setReportTime(time);

@@ -152,10 +152,10 @@ class mfix : public AmrCore
 #endif
 
     void Restart (std::string& restart_chkfile,
-                  int* nstep,
-                  Real* dt,
-                  Real* time,
-                  IntVect& Nrep);
+                  int& nstep,
+                  amrex::Real& dt,
+                  amrex::Real& time,
+                  amrex::IntVect& Nrep);
 
     void Regrid ();
 

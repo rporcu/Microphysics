@@ -120,7 +120,7 @@ int main (int argc, char* argv[])
     // NOTE: during replication 1) this also re-builds ebfactories and
     // level-set 2) this can change the grids
     amrex::IntVect Nrep(1,1,1);
-    mfix_coarse.Restart(rw_coarse.restart_file, &nstep, &dt, &time, Nrep);
+    mfix_coarse.Restart(rw_coarse.restart_file, nstep, dt, time, Nrep);
 
 //    // This checks if we want to regrid
 //    if (rw_coarse.regrid_int > -1)
@@ -200,7 +200,7 @@ int main (int argc, char* argv[])
 
     int restart_flag(1);
 
-    mfix_fine.Restart(rw_fine.restart_file, &nstep, &dt, &time, Nrep);
+    mfix_fine.Restart(rw_fine.restart_file, nstep, dt, time, Nrep);
 
     if (mfix_fine.fluid.solve()) {
       mfix_fine.init_advection();

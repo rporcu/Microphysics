@@ -13,28 +13,21 @@
 #include <mfix_pic.H>
 
 
-namespace restart_aux
-{
-    const std::string level_prefix {"Level_"};
-}
-
-using namespace restart_aux;
-
-
 void
 mfix::Restart (std::string& restart_file,
-               int *nstep,
-               Real *dt,
-               Real *time,
+               int& nstep,
+               Real& dt,
+               Real& time,
                IntVect& Nrep)
 {
+  const std::string level_prefix("Level_");
+
   if (!restart_file.empty()) {
 
     if (ooo_debug) amrex::Print() << "Restart" << std::endl;
     BL_PROFILE("mfix::Restart()");
 
     amrex::Print() << "  Restarting from checkpoint " << restart_file << std::endl;
-
 
     if (Nrep != IntVect::TheUnitVector()) {
         amrex::Print() << "  Replication " << Nrep << std::endl;
@@ -47,9 +40,9 @@ mfix::Restart (std::string& restart_file,
                        << std::endl;
     }
 
-    Real prob_lo[BL_SPACEDIM];
-    Real prob_hi[BL_SPACEDIM];
-
+    RealVect prob_lo;
+    RealVect prob_hi;
+    IntVect n_cell;
 
     /***************************************************************************
      * Load header: set up problem domain (including BoxArray)                 *
@@ -67,62 +60,110 @@ mfix::Restart (std::string& restart_file,
       std::string fileCharPtrString(fileCharPtr.dataPtr());
       std::istringstream is(fileCharPtrString, std::istringstream::in);
 
+      // Auxiliary strings
       std::string line, word;
 
+      // Version information
+      std::string version;
+
+      is >> version; AMREX_ALWAYS_ASSERT(version == "Checkpoint");
+      is >> version; AMREX_ALWAYS_ASSERT(version == "version:");
+      is >> version;
+
+      if (version == "1" && ParallelDescriptor::IOProcessor()) {
+        Warning("Can't check whether inputs match Checkpoint file or not. Use Checkpoint file version > 1");
+      }
+
+      // Multi-level control
       std::getline(is, line);
-
-      int  nlevs;
-      int  int_tmp;
-      Real real_tmp;
-
-      is >> nlevs;
-      mfixRW->GotoNextLine(is);
-      finest_level = nlevs-1;
+      int loc_nlev;
+      is >> loc_nlev;
+      finest_level = loc_nlev-1;
 
       // Time stepping controls
-      is >> int_tmp;
-      *nstep = int_tmp;
       mfixRW->GotoNextLine(is);
+      is >> nstep;
 
-      is >> real_tmp;
-      *dt = real_tmp;
       mfixRW->GotoNextLine(is);
+      is >> dt;
 
-      is >> real_tmp;
-      *time = real_tmp;
       mfixRW->GotoNextLine(is);
+      is >> time;
 
-      std::getline(is, line);
-      {
+      // Geometry controls
+      if (version == "1.1") {
+        mfixRW->GotoNextLine(is);
+        is >> prob_lo;
+
+        mfixRW->GotoNextLine(is);
+        is >> prob_hi;
+
+        mfixRW->GotoNextLine(is);
+        is >> n_cell;
+
+        // Check that inputs geometry matches checkpoint geometry
+        RealVect inputs_prob_lo(Geom(0).ProbLo());
+        RealVect inputs_prob_hi(Geom(0).ProbHi());
+        IntVect inputs_n_cell(Geom(0).Domain().size());
+
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(prob_lo == inputs_prob_lo, "Fix inputs: ProbLo mismatch");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(prob_hi == inputs_prob_hi, "Fix inputs: ProbHi mismatch");
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(n_cell == inputs_n_cell, "Fix inputs: n_cell mismatch");
+
+      } else if (version == "1") {
+
+        mfixRW->GotoNextLine(is);
+        std::getline(is, line);
+        {
           std::istringstream lis(line);
           int i = 0;
           while (lis >> word) {
-             prob_lo[i++] = std::stod(word);
+            prob_lo[i++] = std::stod(word);
           }
-      }
+        }
 
-      std::getline(is, line);
-      {
+        std::getline(is, line);
+        {
           std::istringstream lis(line);
           int i = 0;
           while (lis >> word) {
-             prob_hi[i++] = std::stod(word);
+            prob_hi[i++] = std::stod(word);
           }
+        }
+
+      } else {
+        amrex::Abort("Unknown CheckPoint file version");
       }
 
+      // Replicate
+      if (Nrep != IntVect::TheUnitVector()) {
+         for (int dir(0); dir < AMREX_SPACEDIM; dir++) {
+            prob_lo[dir] *= Nrep[dir];
+            prob_hi[dir] *= Nrep[dir];
 
-      if (Nrep != IntVect::TheUnitVector())
-      {
-         for (int d = 0; d < BL_SPACEDIM; d++)
-         {
-            prob_lo[d] = Nrep[d]*prob_lo[d];
-            prob_hi[d] = Nrep[d]*prob_hi[d];
+            if (version == "1.1")
+              n_cell[dir] *= Nrep[dir];
          }
       }
 
-      for (int lev = 0; lev < nlevs; ++lev) {
+      if (version == "1.1") {
+        mfixRW->GotoNextLine(is);
+        Real small_volfrac(0.);
+        is >> small_volfrac;
 
-          BoxArray orig_ba,ba;
+        Real inputs_small_volfrac(0.);
+        ParmParse pp("eb2");
+        pp.query("small_volfrac", inputs_small_volfrac);
+
+        Real error = Math::abs(small_volfrac - inputs_small_volfrac);
+        Real tolerance = std::numeric_limits<Real>::epsilon();
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(error < tolerance, "Fix inputs: small_volfrac mismatch");
+      }
+
+      // BoxArray controls
+      for (int lev = 0; lev < loc_nlev; ++lev) {
+
+          BoxArray orig_ba, ba;
           orig_ba.readFrom(is);
           mfixRW->GotoNextLine(is);
 
@@ -153,7 +194,7 @@ mfix::Restart (std::string& restart_file,
 
           if (Nrep != IntVect::TheUnitVector())
           {
-             RealBox rb(prob_lo,prob_hi);
+             RealBox rb(prob_lo.begin(), prob_hi.begin());
              Geom(lev).ProbDomain(rb);
              Geom(lev).ResetDefaultProbDomain(rb);
 
@@ -203,7 +244,7 @@ mfix::Restart (std::string& restart_file,
     if (fluid.solve())
     {
       // Load the field data
-      for (int lev = 0, nlevs=finestLevel()+1; lev < nlevs; ++lev)
+      for (int lev = 0, loc_nlev=finestLevel()+1; lev < loc_nlev; ++lev)
       {
         auto replicate_data = [] (MultiFab& dst, MultiFab& src) -> void
         {
