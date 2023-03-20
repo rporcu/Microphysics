@@ -47,13 +47,38 @@ RUN apt-get -qq update\
     && pip3 install --no-cache-dir \
     cmake==3.* \
     codespell==2.2.1 \
-    conan==1.* \
     ninja==1.* \
     && curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz -- \
     | tar xz \
     && cp sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/local/bin/sccache \
     && rm -rf sccache-v0.2.15-x86_64-unknown-linux-musl/ \
     && chmod +x /usr/local/bin/sccache
+
+# install csg dependencies
+RUN apt-get -qq update\
+    && apt-get -qq -y install --no-install-recommends \
+    libgmp-dev \
+    libmpfr-dev \
+    libboost-all-dev
+
+RUN git clone --depth 1 --branch v2.13.7 https://github.com/catchorg/Catch2
+WORKDIR /Catch2
+RUN cmake -S . -B build -DCATCH_BUILD_TESTING=OFF
+RUN cmake --build build --target install
+WORKDIR /
+
+RUN git clone --depth 1 --branch v5.3 https://github.com/CGAL/cgal
+WORKDIR /cgal
+RUN cmake -S . -B build
+RUN cmake --build build --target install
+WORKDIR /
+
+RUN git clone --branch 3.2.2 https://github.com/taocpp/PEGTL
+WORKDIR /PEGTL
+RUN cmake -S . -B build -DPEGTL_BUILD_TESTS=OFF -DPEGTL_BUILD_EXAMPLES=OFF
+RUN cmake --build build --target install
+WORKDIR /
+    
 
 ENV PATH="/usr/local/cuda-11.3/bin:${PATH}"
 

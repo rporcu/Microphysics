@@ -53,15 +53,34 @@ RUN apt-get install -y --no-install-recommends \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir \
     cmake==3.* \
-    conan==1.* \
     ninja==1.*
 
-# install csg dependency cgal, since it doesn't install properly with conan for HIP
+# install csg dependencies
 RUN apt-get -qq update\
     && apt-get -qq -y install --no-install-recommends \
-    libcgal-dev
+    libgmp-dev \
+    libmpfr-dev \
+    libboost-all-dev
 
+RUN git clone --depth 1 --branch v2.13.7 https://github.com/catchorg/Catch2
+WORKDIR /Catch2
+RUN cmake -S . -B build -DCATCH_BUILD_TESTING=OFF
+RUN cmake --build build --target install
+WORKDIR /
 
+RUN git clone --depth 1 --branch v5.3 https://github.com/CGAL/cgal
+WORKDIR /cgal
+RUN cmake -S . -B build
+RUN cmake --build build --target install
+WORKDIR /
+
+RUN git clone --branch 3.2.2 https://github.com/taocpp/PEGTL
+WORKDIR /PEGTL
+RUN cmake -S . -B build -DPEGTL_BUILD_TESTS=OFF -DPEGTL_BUILD_EXAMPLES=OFF
+RUN cmake --build build --target install
+WORKDIR /
+
+    
 # add rocm to path
 ENV PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/rocm/profiler/bin:/opt/rocm/opencl/bin:${PATH}"
 
