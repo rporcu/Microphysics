@@ -1,3 +1,4 @@
+#include <mfix_pc.H>
 #include <mfix_des_K.H>
 #include <mfix_solids.H>
 #include <mfix_reactions.H>

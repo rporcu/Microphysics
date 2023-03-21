@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-#include <mfix_pc.H>
+//#include <mfix_pc.H>
 #include <mfix_fluid.H>
 #include <mfix_solids.H>
 #include <mfix_reactions.H>

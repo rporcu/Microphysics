@@ -448,8 +448,6 @@ class MFIXParticleContainer final
     bool greedy_3d            = false;
     int  greedy_min_grid_size = 2;
 
-    static int domain_bc[6];
-
     long m_total_numparticle = 0;
 
     amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> m_p_mass_accum   = {0.};

@@ -1,7 +1,10 @@
 #ifndef MFIX_DES_K_H_
 #define MFIX_DES_K_H_
 
-#include "mfix_pc.H"
+#include <AMReX_REAL.H>
+#include <AMReX_Gpu.H>
+#include <AMReX_RealVect.H>
+#include <AMReX_Array.H>
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void cross_product (const amrex::RealVect& a,
@@ -18,52 +21,6 @@ amrex::Real dot_product (const amrex::RealVect& a,
                          const amrex::RealVect& b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
-
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void cfrelvel (const amrex::RealVect& vel1, 
-               const amrex::RealVect& vel2,
-               const amrex::Real& radius1,
-               const amrex::Real& radius2,
-               const amrex::RealVect& omega1,
-               const amrex::RealVect& omega2,
-               amrex::Real& vrn, 
-               amrex::RealVect& vslip,
-               const amrex::RealVect& normal, 
-               const amrex::Real dist_mag)
-{
-    // translational relative velocity
-    amrex::RealVect vreltrans(0.);
-    vreltrans[0] =  vel1[0] - vel2[0];
-    vreltrans[1] =  vel1[1] - vel2[1];
-    vreltrans[2] =  vel1[2] - vel2[2];
-
-    // distance from the contact point to the particle centers
-    amrex::Real dist_c1 = (dist_mag*dist_mag 
-                          + radius1*radius1 - radius2*radius2) / (2.0*dist_mag);
-
-    amrex::Real dist_c2 = dist_mag - dist_c1;
-
-    amrex::RealVect omega_sum(0.);
-    omega_sum[0] = omega1[0] * dist_c1 + omega2[0] * dist_c2;
-    omega_sum[1] = omega1[1] * dist_c1 + omega2[1] * dist_c2;
-    omega_sum[2] = omega1[2] * dist_c1 + omega2[2] * dist_c2;
-
-    // the rotational relative velocity
-    amrex::RealVect v_rot(0.);
-    cross_product(omega_sum, normal, v_rot);
-
-    // total relative velocity
-    vreltrans[0] += v_rot[0];
-    vreltrans[1] += v_rot[1];
-    vreltrans[2] += v_rot[2];
-
-    // normal component of relative velocity
-    vrn = dot_product(vreltrans, normal);
-
-    vslip[0] = vreltrans[0] - vrn*normal[0];
-    vslip[1] = vreltrans[1] - vrn*normal[1];
-    vslip[2] = vreltrans[2] - vrn*normal[2];    
 }
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
@@ -172,80 +129,5 @@ void level_set_normal (const amrex::RealVect& pos,
     normal[1] *= inv_norm;
     normal[2] *= inv_norm;
 }
-
-// Particle-Particle conduction calculation
-//   REF: Batchelor & O'Brien 1977
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real des_pp_conduction(amrex::Real dist_mag,
-                              const amrex::Real p1radius,
-                              const amrex::Real p2radius,
-                              const amrex::Real kp1,
-                              const amrex::Real kp2,
-                              const amrex::Real Tp1,
-                              const amrex::Real Tp2)
-{ 
-  amrex::Real kp_eff = 2.0*(kp1*kp2)/(kp1 + kp2);
-  amrex::Real Olap   = p1radius + p2radius - dist_mag;
-  amrex::Real Q_dot  = 0.0;
-
-  /*
-  // To-do: Area correction
-  amrex::Real Hertz_act = 1.0;
-  amrex::Real Hertz_sim = 1.0;
-  amrex::Real Kn_sim    = 1.0;
-  if (false) // do correction?
-  {
-    if (false) // is this Hertzian?
-    {
-      Olap = pow(Hertz_sim/Hertz_act,2.0/3.0)*Olap;
-    }
-    else // it's LSD
-    {
-      Olap = pow(Kn_sim*Olap/Hertz_act,2.0/3.0);
-    }
-  }
-  */
-    
-  amrex::Real Rp_min = std::min(p1radius,p2radius);
-  amrex::Real y      = Rp_min - Olap;
-  amrex::Real lRad   = sqrt(Rp_min*Rp_min - y*y); // Contact radius -> base of triangle
-  Q_dot = 2.0 * kp_eff * lRad * (Tp2 - Tp1); // Heat rate from 1 -> 2
-
-  return Q_dot;  
-}
-
-// Particle-Fluid-Particle conduction calculation
-//   REF: Rong & Horio 1999
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
-amrex::Real des_pfp_conduction(const amrex::Real dist_mag_eff,
-                               const amrex::Real Rp_eff,
-                               const amrex::Real Rlens_eff,
-                               const amrex::Real Rough,
-                               const amrex::Real kf,
-                               const amrex::Real Tp1,
-                               const amrex::Real Tp2)
-{
-  amrex::Real delta  = dist_mag_eff - Rp_eff;  
-  amrex::Real r1_tmp = sqrt(Rlens_eff*Rlens_eff - dist_mag_eff*dist_mag_eff);
-  amrex::Real r0     = 0.0;
-  amrex::Real Q_dot  = 0.0;
-  
-  // Limit lower bound to surface roughness
-  if ( delta < Rough)
-    r0 = sqrt(Rp_eff*Rp_eff - (Rough - dist_mag_eff)*(Rough - dist_mag_eff));
-  // Limit upper bound to Rp_eff
-  amrex::Real r1 = std::min(r1_tmp,Rp_eff);
-
-  // Components of the solution
-  amrex::Real C1 = sqrt(Rp_eff*Rp_eff - r1*r1);
-  amrex::Real C0 = sqrt(Rp_eff*Rp_eff - r0*r0);
-  amrex::Real A1 = std::abs(dist_mag_eff-C1);
-  amrex::Real A0 = std::abs(dist_mag_eff-C0);  
-  Q_dot = M_PI * kf * ( dist_mag_eff*log(A1/A0)
-			          + C1 - C0 )*(Tp2 - Tp1); // Heat rate from 1 -> 2
-  
-  return Q_dot;  
-}
-
 
 #endif
