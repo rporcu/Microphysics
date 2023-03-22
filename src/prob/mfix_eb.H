@@ -39,7 +39,6 @@ struct EB_t {
 
   EB_t ()
     : temperature(0.)
-    , area(-1.)
     , has_normal(0)
     , normal(0.)
     , normal_tol(0.)
@@ -49,9 +48,6 @@ struct EB_t {
   // e.g., it can be used to set inhomogeneous Dirichlet BCs for fluid
   // temperature solver
   amrex::Real temperature;
-
-  // BC area -- used to convert volumetric flows to velocites
-  amrex::Real area;
 
   // Normal to exclude EB faces. By default all faces within a specified
   // region will

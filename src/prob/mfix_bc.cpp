@@ -1162,8 +1162,7 @@ get_bc_area (const int a_bcv)
                 m_bc[a_bcv].type == BCList::minf ||
                 m_bc[a_bcv].type == BCList::eb );
 
-  if ( m_bc[a_bcv].type == BCList::eb ) { return m_bc[a_bcv].eb.area; }
-  else  { return m_area[a_bcv]; }
+  return m_area[a_bcv];
 }
 
 amrex::Real& MFIXBoundaryConditions::
@@ -1175,7 +1174,5 @@ get_bc_fab_area (const int a_bcv, std::pair<int,int> a_index)
                 m_bc[a_bcv].type == BCList::minf ||
                 m_bc[a_bcv].type == BCList::eb );
 
-  //if ( m_bc[bcv].type == BCList::eb ) { return m_bc[bcv].eb.area; }
-  //else  { return m_area[bcv]; }
   return m_fab_area[a_bcv][a_index];
 }

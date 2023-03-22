@@ -143,11 +143,9 @@ calc_bc_areas (int const lev,
     BC_t const& bc = this->bc(bcv);
 
     if (bc.type == BCList::eb) {
-      //bc_areas[bcv] = calc_eb_bc_area();
+      bc_areas[bcv] = calc_eb_bc_area(lev, bcv, bc, tmpMF, a_factory);
     }
   }
-
-
 
 
   // Do a global reduce sum and store in data container
@@ -155,6 +153,7 @@ calc_bc_areas (int const lev,
   ParallelDescriptor::ReduceRealSum(bc_areas.data(), bc_areas.size());
 
   for(int bcv(0); bcv < num_bcs; bcv++) {
+    amrex::Print() << "BC: " << bcv << "  area: " << bc_areas[bcv] << "\n";
     this->m_area[bcv] = bc_areas[bcv];
   }
 
@@ -337,6 +336,7 @@ calc_eb_bc_area( int      const       a_lev,
 
       } // single valued
     } // box intersects
+    totalArea += this->m_fab_area[a_bcv][index];
   } // loop over MFIter
 
   return totalArea;
