@@ -37,8 +37,6 @@ geometry.prob_hi     = 0.0015   0.0015  0.0015   # hi corner of physical domain
 
 mfix.gravity   =  0.0  -9.80665  0.0
 
-mfix.advect_enthalpy = 1
-
 
 #_______________________________________________________________________
 # Fluid model settings
@@ -50,9 +48,6 @@ fluid.solve = None
 # Solids properties
 #
 solids.types = solid0
-
-solids.specific_heat = constant
-solids.specific_heat.constant = 385 ## Copper
 
 
 #_______________________________________________________________________
@@ -85,23 +80,5 @@ box.Lo = 0.0      0.0     0.0
 box.Hi = 0.0015   0.0015  0.0015
 
 box.offset = 1.0e-15
-
-
-#_______________________________________________________________________
-# Regions for defining ICs and BCs
-#
-mfix.regions = full-domain
-
-regions.full-domain.lo  = 0.0000  0.0000  0.0000
-regions.full-domain.hi  = 0.0015  0.0015  0.0015
-
-
-#_______________________________________________________________________
-# Initial Conditions
-#
-ic.regions = full-domain
-
-ic.full-domain.solids = solid0
-ic.full-domain.solid0.temperature = 400
 
 mfix.stop_for_unused_inputs = true
