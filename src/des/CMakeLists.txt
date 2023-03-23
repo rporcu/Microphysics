@@ -12,6 +12,8 @@ target_sources( mfixcore
    mfix_des_rrates_K.H
    mfix_des_parts_gen_K.H
    mfix_des_K.H
+   mfix_des_conv_coeff_K.H
+   mfix_pc_updates_K.H
    mfix_pc.cpp
    mfix_pc.H
    mfix_pc_init.cpp
@@ -27,6 +29,7 @@ target_sources( mfixcore
    dem/mfix_des_cond_K.H
    dem/mfix_evolve_particles.cpp
    dem/mfix_pc_init_collision_params.cpp
+   dem/mfix_pc_interactions_K.H
    # deposition ---------------------------------------------------------------
    deposition/mfix_deposition_K.H
    deposition/mfix_deposition_bcs.cpp

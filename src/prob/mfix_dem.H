@@ -28,7 +28,7 @@ class MFIXDEM
         typedef ARRAY_TYPE array_type;
 
         template <typename... Is>
-        AMREX_GPU_DEVICE AMREX_FORCE_INLINE
+        AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
         amrex::Real& operator() (Is... index) const noexcept {
             return (*a)(index...);
         }
