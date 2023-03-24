@@ -149,8 +149,8 @@ calc_bc_areas (int const lev,
 
 
   // Do a global reduce sum and store in data container
-
-  ParallelDescriptor::ReduceRealSum(bc_areas.data(), bc_areas.size());
+  if (num_bcs > 0)
+    ParallelDescriptor::ReduceRealSum(bc_areas.data(), bc_areas.size());
 
   for(int bcv(0); bcv < num_bcs; bcv++) {
     amrex::Print() << "BC: " << bcv << "  area: " << bc_areas[bcv] << "\n";
