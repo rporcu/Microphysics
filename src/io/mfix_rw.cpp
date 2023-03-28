@@ -822,7 +822,7 @@ MfixRW::mfix_print_min_epg ()
 {
 
   ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
-  ReduceData<Real, int, int, int> reduce_data(reduce_op);
+  ReduceData<int, int, int, int> reduce_data(reduce_op);
   using ReduceTuple = typename decltype(reduce_data)::Type;
 
   for (int lev = 0; lev <= finest_level; lev++) {

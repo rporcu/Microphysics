@@ -21,7 +21,7 @@ void
 MfixRW::WriteMassBalanceReport (const Real new_time)
 {
 
-  if (not report_mass_balance) {
+  if (!report_mass_balance) {
     return;
   }
 
@@ -139,7 +139,7 @@ MfixRW::ComputeMassAccum (const int offset)
 {
   BL_PROFILE("mfix::ComputeMassAccum()");
 
-  if (not report_mass_balance) {
+  if (!report_mass_balance) {
     return;
   }
 

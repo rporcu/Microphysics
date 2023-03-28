@@ -156,7 +156,7 @@ mfix::Evolve (int nstep,
       }
 
 
-      if (mfixRW->report_mass_balance and reactions.solve()) {
+      if (mfixRW->report_mass_balance && reactions.solve()) {
         mfixRW->ComputeMassProduction(dt, get_txfr_const());
       }
     }

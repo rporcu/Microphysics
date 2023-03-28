@@ -853,7 +853,7 @@ void MFIXParticleContainer::partitionParticleGrids(int lev,
       if (o_pair.second < o_toler_np || u_pair.second > avg_np)  break;
 
       int o_boxid = overload_fboxid[o_pair.first];
-      int chop_np = min(o_pair.second - avg_np, avg_np - u_pair.second);
+      int chop_np = static_cast<int>(min(o_pair.second - avg_np, avg_np - u_pair.second));
 
       // Append a placeholder for the cutoff, shape will be set later
       fbl_vec.push_back(Box(IntVect{std::numeric_limits<int>::min()},
