@@ -456,7 +456,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
       int monitor_test = 0;
 
       if ( first || (nstep == 0) ) {
-        if ( (plot_int > 0 || plot_per_approx > 0) )
+        if ( (monitor.plot_int() > 0 || monitor.plot_per_approx() > 0) )
           monitor_test = 1;
       }
 
