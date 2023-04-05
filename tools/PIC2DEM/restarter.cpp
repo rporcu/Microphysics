@@ -706,7 +706,48 @@ MFIXRestarter::get_particles_radius (const mfix* mfix_ptr)
 
 
 void
-MFIXRestarter::generate_particles (const mfix* mfix_coarse,
+MFIXRestarter::get_eps_coarse (const mfix* mfix_coarse)
+{
+  int lev = 0;
+
+  const auto& solids = mfix_coarse->solids;
+
+  Transfer txfr_idxs(solids);
+  const int idx_eps = txfr_idxs.idx_eps;
+
+  const auto& geom_coarse = mfix_coarse->Geom(lev);
+
+  const auto& f_ba = mfix_coarse->boxArray(lev);
+  const auto& f_dmap = mfix_coarse->DistributionMap(lev);
+
+  const BoxArray& p_ba = mfix_coarse->ParticleEBFactory(lev).boxArray();
+  const DistributionMapping& p_dmap = mfix_coarse->ParticleEBFactory(lev).DistributionMap();
+
+  const EBFArrayBoxFactory& f_ebfactory = mfix_coarse->EBFactory(lev);
+  const EBFArrayBoxFactory& p_ebfactory = mfix_coarse->ParticleEBFactory(lev);
+
+  bool OnSameGrids = ((f_dmap == p_dmap) && (f_ba.CellEqual(p_ba)));
+
+  if (OnSameGrids) {
+
+    avgd_eps_coarse = new MultiFab(f_ba, f_dmap, 1, 0, MFInfo(), f_ebfactory);
+    avgd_eps_coarse->setVal(0.);
+    MultiFab::Copy(*avgd_eps_coarse, *avgdPIC_coarse[lev], idx_eps, 0, 1, 0);
+
+  } else {
+
+    avgd_eps_coarse = new MultiFab(p_ba, p_dmap, 1, 0, MFInfo(), p_ebfactory);
+    avgd_eps_coarse->setVal(0.);
+    avgd_eps_coarse->ParallelCopy(*avgdPIC_coarse[lev], idx_eps, 0, 1, 0, 0);
+  }
+
+  avgd_eps_coarse->FillBoundary(geom_coarse.periodicity());
+  EB_set_covered(*avgd_eps_coarse, mfix::covered_val);
+}
+
+
+void
+MFIXRestarter::generate_particles (const Geometry& geom_coarse,
                                    mfix* mfix_fine) const
 {
   // Allocate the particle data
@@ -720,7 +761,141 @@ MFIXRestarter::generate_particles (const mfix* mfix_coarse,
 
     amrex::Print() << "Auto generating particles ..." << std::endl;
 
-    init_particles(mfix_coarse, pc_fine);
+    {
+      int lev = 0;
+
+      const auto& solids = mfix_fine->solids;
+
+      Transfer txfr_idxs(solids);
+
+      const RealVect dx(geom_coarse.CellSize());
+      const RealVect plo(geom_coarse.ProbLo());
+
+      Long total_np = 0;
+
+      const Real pdiameter = m_inputs_pdiameter;
+
+      for (MFIter mfi = pc_fine->MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
+
+        // Now that we know pcount, go ahead and create a particle container for this
+        // grid and add the particles to it
+        auto& particles = pc_fine->DefineAndReturnParticleTile(lev, mfi);
+
+        // Get the fine box and coarsen it
+        Box bx = mfi.tilebox();
+        bx.coarsen(m_refinement_ratio);
+
+        Gpu::DeviceVector<Hex_ClosePack> hcp_vector;
+        Gpu::DeviceVector<Long> gen_indexes;
+        Gpu::DeviceVector<Long> gen_number;
+
+        const IntVect bx_smallEnd = bx.smallEnd();
+        const IntVect bx_size = bx.size();
+        const int bx_numPts = bx.numPts();
+
+        AMREX_ALWAYS_ASSERT(bx_numPts == (bx_size[0]*bx_size[1]*bx_size[2]));
+
+        hcp_vector.clear();
+        gen_indexes.clear();
+        gen_number.clear();
+        hcp_vector.resize(bx_numPts, Hex_ClosePack());
+        gen_indexes.resize(bx_numPts, 0);
+        gen_number.resize(bx_numPts, 0);
+
+        Hex_ClosePack* hcp_vector_ptr = hcp_vector.dataPtr();
+        Long* gen_number_ptr = gen_number.dataPtr();
+        Long* gen_indexes_ptr = gen_indexes.dataPtr();
+
+        Array4<const Real> const& eps_arr = avgd_eps_coarse->const_array(mfi);
+
+        const auto& eps_fab = static_cast<EBFArrayBox const&>((*avgd_eps_coarse)[mfi]);
+        const auto& flags = eps_fab.getEBCellFlagFab();
+        Array4<EBCellFlag const> const& flags_arr = flags.const_array();
+
+        const amrex::Real eps_tolerance = m_eps_tolerance;
+        const amrex::Real eps_overflow = m_eps_overflow;
+
+        // compute nb of particles for each cell
+        amrex::ParallelFor(bx, [plo,dx,bx_smallEnd,bx_size,eps_arr,flags_arr,
+            hcp_vector_ptr,gen_number_ptr,eps_overflow,eps_tolerance,pdiameter]
+          AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+          amrex::Real eps = eps_arr(i,j,k)*eps_overflow;
+
+          amrex::RealVect dlo(plo[0] + dx[0]*i, plo[1] + dx[1]*j, plo[2] + dx[2]*k);
+          amrex::RealVect dhi(plo[0] + dx[0]*(i+1), plo[1] + dx[1]*(j+1), plo[2] + dx[2]*(k+1));
+
+          const Long n = IdxsAux::get_g_idx(i, j, k, bx_size, bx_smallEnd);
+
+          hcp_vector_ptr[n].initialize(plo, dx);
+
+          RealBox region(dlo.begin(), dhi.begin());
+
+          if (flags_arr(i,j,k).isCovered())
+            eps = 1.e+40;
+
+          hcp_vector_ptr[n].setup({i,j,k}, {i,j,k}, region, pdiameter, eps, eps_tolerance);
+
+          if (eps > eps_tolerance && eps < 1.) {
+
+            gen_number_ptr[n] = hcp_vector_ptr[n].get_particles_number();
+
+          } else {
+
+            AMREX_ALWAYS_ASSERT(hcp_vector_ptr[n].get_particles_number() == 0);
+            gen_number_ptr[n] = 0;
+          }
+        });
+
+        const int vec_size = gen_indexes.size();
+
+        AMREX_ASSERT(vec_size == bx.numPts());
+
+        Gpu::inclusive_scan(gen_number.begin(), gen_number.end(), gen_indexes.begin());
+
+        Long local_np(0);
+
+#ifdef AMREX_USE_GPU
+        Gpu::HostVector<Long> gen_indexes_host(vec_size, 0);
+        Gpu::copy(Gpu::deviceToHost, gen_indexes.begin(), gen_indexes.end(), gen_indexes_host.begin());
+
+        local_np = gen_indexes_host[vec_size-1];
+#else
+        local_np = gen_indexes[vec_size-1];
+#endif
+
+        if (local_np > 0) {
+
+          particles.resize(local_np);
+
+          const int id = MFIXParticleContainer::ParticleType::NextID();
+          const int cpu = ParallelDescriptor::MyProc();
+
+          // generate positions
+          generate_particles(local_np, bx, particles, hcp_vector_ptr, gen_number_ptr,
+                             gen_indexes_ptr, id, cpu);
+
+          // Update the particles NextID
+          MFIXParticleContainer::ParticleType::NextID(id+local_np);
+
+          // Add components for each of the runtime variables
+          const int start = SoArealData::count;
+          for (int comp(0); comp < pc_fine->m_runtimeRealData.count; ++comp)
+            particles.push_back_real(start+comp, local_np, 0.);
+
+          total_np += local_np;
+        }
+      }
+
+      ParallelDescriptor::ReduceLongSum(total_np);
+
+      amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
+      pc_fine->setTotalNumParticles(total_np);
+
+      // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
+      // we do need this to move particles from tile 0 to the correct tile.
+      pc_fine->Redistribute();
+    }
 
     pc_fine->Redistribute();
 
@@ -728,179 +903,6 @@ MFIXRestarter::generate_particles (const mfix* mfix_coarse,
     ParallelDescriptor::ReduceRealMax(end_init_part, ParallelDescriptor::IOProcessorNumber());
     Print() << "Time spent in initializing particles " << end_init_part << std::endl;
   }
-}
-
-
-void
-MFIXRestarter::init_particles (const mfix* mfix_coarse,
-                               MFIXParticleContainer* pc_fine) const
-{
-  int lev = 0;
-
-  const auto& solids = mfix_coarse->solids;
-
-  Transfer txfr_idxs(solids);
-  const int idx_eps = txfr_idxs.idx_eps;
-
-  MultiFab* eps_ptr;
-
-  const auto& geom_coarse = mfix_coarse->Geom(lev);
-
-  const auto& f_ba = mfix_coarse->boxArray(lev);
-  const auto& f_dmap = mfix_coarse->DistributionMap(lev);
-
-  const BoxArray& p_ba = mfix_coarse->ParticleEBFactory(lev).boxArray();
-  const DistributionMapping& p_dmap = mfix_coarse->ParticleEBFactory(lev).DistributionMap();
-
-  bool OnSameGrids = ((f_dmap == p_dmap) && (f_ba.CellEqual(p_ba)));
-
-  if (OnSameGrids) {
-
-    eps_ptr = new MultiFab(f_ba, f_dmap, 1, 0, MFInfo());
-    eps_ptr->setVal(0.);
-    MultiFab::Copy(*eps_ptr, *avgdPIC_coarse[lev], idx_eps, 0, 1, 0);
-
-  } else {
-
-    eps_ptr = new MultiFab(p_ba, p_dmap, 1, 0);
-    eps_ptr->setVal(0.);
-    eps_ptr->ParallelCopy(*avgdPIC_coarse[lev], idx_eps, 0, 1, 0, 0);
-
-  }
-
-  eps_ptr->FillBoundary(geom_coarse.periodicity());
-  EB_set_covered(*eps_ptr, mfix::covered_val);
-
-  const RealVect dx(geom_coarse.CellSize());
-  const RealVect plo(geom_coarse.ProbLo());
-
-  Long total_np = 0;
-
-  const auto& flags = mfix_coarse->ParticleEBFactory(lev).getMultiEBCellFlagFab();
-
-  const Real pdiameter = m_inputs_pdiameter;
-
-  for (MFIter mfi = pc_fine->MakeMFIter(lev,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
-    // Now that we know pcount, go ahead and create a particle container for this
-    // grid and add the particles to it
-    auto& particles = pc_fine->DefineAndReturnParticleTile(lev, mfi);
-
-    // Get the fine box and coarsen it
-    Box bx = mfi.tilebox();
-    bx.coarsen(m_refinement_ratio);
-
-    Gpu::DeviceVector<Hex_ClosePack> hcp_vector;
-    Gpu::DeviceVector<Long> gen_indexes;
-    Gpu::DeviceVector<Long> gen_number;
-
-    const IntVect bx_smallEnd = bx.smallEnd();
-    const IntVect bx_size = bx.size();
-    const int bx_numPts = bx.numPts();
-
-    AMREX_ALWAYS_ASSERT(bx_numPts == (bx_size[0]*bx_size[1]*bx_size[2]));
-
-    hcp_vector.clear();
-    gen_indexes.clear();
-    gen_number.clear();
-    hcp_vector.resize(bx_numPts, Hex_ClosePack());
-    gen_indexes.resize(bx_numPts, 0);
-    gen_number.resize(bx_numPts, 0);
-
-    Hex_ClosePack* hcp_vector_ptr = hcp_vector.dataPtr();
-    Long* gen_number_ptr = gen_number.dataPtr();
-    Long* gen_indexes_ptr = gen_indexes.dataPtr();
-
-    Array4<const Real> const& eps_arr = eps_ptr->const_array(mfi);
-
-    Array4<EBCellFlag const> const& flags_arr = flags.const_array(mfi);
-
-    const amrex::Real eps_tolerance = m_eps_tolerance;
-    const amrex::Real eps_overflow = m_eps_overflow;
-
-    // compute nb of particles for each cell
-    amrex::ParallelFor(bx, [plo,dx,bx_smallEnd,bx_size,eps_arr,flags_arr,
-        hcp_vector_ptr,gen_number_ptr,eps_overflow,eps_tolerance,pdiameter]
-      AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-    {
-      amrex::Real eps = eps_arr(i,j,k)*eps_overflow;
-
-      amrex::RealVect dlo(plo[0] + dx[0]*i, plo[1] + dx[1]*j, plo[2] + dx[2]*k);
-      amrex::RealVect dhi(plo[0] + dx[0]*(i+1), plo[1] + dx[1]*(j+1), plo[2] + dx[2]*(k+1));
-
-      const Long n = IdxsAux::get_g_idx(i, j, k, bx_size, bx_smallEnd);
-
-      hcp_vector_ptr[n].initialize(plo, dx);
-
-      RealBox region(dlo.begin(), dhi.begin());
-
-      if (flags_arr(i,j,k).isCovered())
-        eps = 1.e+40;
-
-      hcp_vector_ptr[n].setup({i,j,k}, {i,j,k}, region, pdiameter, eps, eps_tolerance);
-
-      if (eps > eps_tolerance && eps < 1.) {
-
-        gen_number_ptr[n] = hcp_vector_ptr[n].get_particles_number();
-
-      } else {
-
-        AMREX_ALWAYS_ASSERT(hcp_vector_ptr[n].get_particles_number() == 0);
-        gen_number_ptr[n] = 0;
-
-      }
-    });
-
-    const int vec_size = gen_indexes.size();
-
-    AMREX_ASSERT(vec_size == bx.numPts());
-
-    Gpu::inclusive_scan(gen_number.begin(), gen_number.end(), gen_indexes.begin());
-
-    Long local_np(0);
-
-#ifdef AMREX_USE_GPU
-    Gpu::HostVector<Long> gen_indexes_host(vec_size, 0);
-    Gpu::copy(Gpu::deviceToHost, gen_indexes.begin(), gen_indexes.end(), gen_indexes_host.begin());
-
-    local_np = gen_indexes_host[vec_size-1];
-#else
-    local_np = gen_indexes[vec_size-1];
-#endif
-
-    if (local_np > 0) {
-
-      particles.resize(local_np);
-
-      const int id = MFIXParticleContainer::ParticleType::NextID();
-      const int cpu = ParallelDescriptor::MyProc();
-
-      // generate positions
-      generate_particles(local_np, bx, particles, hcp_vector_ptr, gen_number_ptr,
-                         gen_indexes_ptr, id, cpu);
-
-      // Update the particles NextID
-      MFIXParticleContainer::ParticleType::NextID(id+local_np);
-
-      // Add components for each of the runtime variables
-      const int start = SoArealData::count;
-      for (int comp(0); comp < pc_fine->m_runtimeRealData.count; ++comp)
-        particles.push_back_real(start+comp, local_np, 0.);
-
-      total_np += local_np;
-    }
-  }
-
-  delete eps_ptr;
-
-  ParallelDescriptor::ReduceLongSum(total_np);
-
-  amrex::Print() << "Total number of generated particles: " << total_np << std::endl;
-  pc_fine->setTotalNumParticles(total_np);
-
-  // We shouldn't need this if the particles are tiled with one tile per grid, but otherwise
-  // we do need this to move particles from tile 0 to the correct tile.
-  pc_fine->Redistribute();
 }
 
 

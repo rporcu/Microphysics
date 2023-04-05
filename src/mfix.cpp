@@ -36,7 +36,7 @@ RealVect mfix::gp0     {0.};
 // Destructor
 mfix::~mfix ()
 {
-  if (m_dem.solve() && pc != nullptr)
+  if ((m_dem.solve() || m_pic.solve()) && pc != nullptr)
     delete pc;
 
   for (int lev(0); lev < nlev; ++lev)

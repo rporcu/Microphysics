@@ -71,12 +71,24 @@ class MFIXRestarter
                     const amrex::Vector<amrex::MultiFab*>& avgdPIC,
                     const amrex::Real time);
 
+    void set_eps_ptr (amrex::MultiFab* eps_ptr,
+                      const mfix* mfix_coarse) const;
+
     void txfr_fluid_data (const mfix* mfix_coarse,
                           mfix* mfix_fine) const;
 
+    void get_eps_coarse (const mfix* mfix_coarse);
+
+    void free_eps_coarse ()
+    { 
+      if (avgd_eps_coarse != nullptr)
+        delete avgd_eps_coarse;
+      avgd_eps_coarse = nullptr;
+    }
+
     void get_particles_radius (const mfix* mfix_ptr);
 
-    void generate_particles (const mfix* mfix_coarse,
+    void generate_particles (const amrex::Geometry& geom_coarse,
                              mfix* mfix_fine) const;
 
     void generate_particles (const long particles_count,
@@ -87,9 +99,6 @@ class MFIXRestarter
                              const Long* gen_indexes_ptr,
                              const int id,
                              const int cpu) const;
-
-    void init_particles (const mfix* mfix_coarse,
-                         MFIXParticleContainer* pc_fine) const;
 
     void init_particles_data (mfix* mfix_fine) const;
 
@@ -107,6 +116,8 @@ class MFIXRestarter
 
     amrex::Vector<amrex::MultiFab*> avgdPIC_coarse;
     amrex::Vector<amrex::MultiFab*> avgdPIC_fine;
+
+    amrex::MultiFab* avgd_eps_coarse;
 };
 
 

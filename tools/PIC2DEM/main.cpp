@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
   {
     // Write out the MFIX git hash (the AMReX git hash is already written)
     const char* githash_mfix = buildInfoGetGitHash(1);
-    amrex::Print() << "   MFIX git describe: " << githash_mfix<< "\n";
+    amrex::Print() << "   MFIX git describe: " << githash_mfix << "\n";
 //    amrex::Print() << "     CSG-EB git hash: " << CsgEbGitHash() << "\n";
 
     // Setting format to NATIVE rather than default of NATIVE_32
@@ -74,59 +74,53 @@ int main (int argc, char* argv[])
     // Default constructor. Inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
-    mfix mfix_coarse;
+    mfix* mfix_coarse = new mfix;
 
-    auto& rw_coarse = *(mfix_coarse.m_rw);
-    auto& timer_coarse = mfix_coarse.timer();
+    auto& rw_coarse = *(mfix_coarse->m_rw);
+    auto& timer_coarse = mfix_coarse->timer();
 
-    MFIXRestarter mfix_restarter(mfix_coarse.nlev);
-
+    MFIXRestarter mfix_restarter(mfix_coarse->nlev);
 
     // Initialize internals from ParamParse database
-    mfix_coarse.InitParams();
+    mfix_coarse->InitParams();
 
     // Initialize memory for data-array internals
-    mfix_coarse.ResizeArrays();
+    mfix_coarse->ResizeArrays();
 
     // Initialize EB geometry. This needs to be done before grid creation (in
     // mfix::Init), as the grids are created using each EB-level's volfrac.
-    mfix_coarse.make_eb_geometry();
+    mfix_coarse->make_eb_geometry();
 
     // Initialize derived internals
-    mfix_coarse.Init(timer_coarse.time(), /*init_fluid_grids=*/true);
+    mfix_coarse->Init(timer_coarse.time(), /*init_fluid_grids=*/true);
 
     // Create EB factories on new grids
-    mfix_coarse.make_eb_factories();
+    mfix_coarse->make_eb_factories();
 
-//    // Write out EB surface
-//    mfix_coarse.mfixRW->writeEBSurface();
-
-    if (mfix_coarse.m_dem.solve())
-    {
-      // Fill level-sets on each level
-      mfix_coarse.fill_eb_levelsets();
-    }
+    // Fill level-sets on each level
+    if (mfix_coarse->m_dem.solve())
+      mfix_coarse->fill_eb_levelsets();
 
     // NOTE: mfix::levelset_restart == true loading level-set from a
     // checkpoint file. However, if this is a replicating restart,
     // mfix::levelset_restart is set to false again (so that the level-sets
     // are recomputed for the replicated system).
-    mfix_coarse.levelset_restart = true;
+    mfix_coarse->levelset_restart = true;
 
     // NOTE: during replication 1) this also re-builds ebfactories and
     // level-set 2) this can change the grids
     amrex::IntVect Nrep(1,1,1);
-    mfix_coarse.Restart(rw_coarse.restart_file, timer_coarse.nstep(), timer_coarse.dt(),
+    mfix_coarse->Restart(rw_coarse.restart_file, timer_coarse.nstep(), timer_coarse.dt(),
         timer_coarse.time(), Nrep);
 
-//    // This checks if we want to regrid
-//    if (rw_coarse.regrid_int > -1)
-//    {
-//      amrex::Print() << "Regridding" << std::endl;
-//      mfix_coarse.Regrid();
-//    }
+    mfix_restarter.allocate_coarse_arrays(mfix_coarse);
 
-    mfix_restarter.allocate_coarse_arrays(&mfix_coarse);
+    mfix_restarter.calc_txfr(mfix_coarse, mfix_restarter.avgdPIC_coarse, timer_coarse.time());
+
+    // Free memory
+    delete mfix_coarse->pc;
+
+    mfix_coarse->pc = nullptr;
 
     mfix_restarter.change_inputs_table();
 
@@ -142,7 +136,7 @@ int main (int argc, char* argv[])
     rw_fine.restart_file.clear();
 
     // Set fine mesh objects
-    mfix_restarter.set_fine_objects(&mfix_fine, &mfix_coarse);
+    mfix_restarter.set_fine_objects(&mfix_fine, mfix_coarse);
 
     // Initialize memory for data-array internals
     mfix_fine.ResizeArrays();
@@ -160,9 +154,7 @@ int main (int argc, char* argv[])
     rw_fine.writeEBSurface();
 
     if (mfix_fine.m_dem.solve())
-    {
       mfix_fine.fill_eb_levelsets();
-    }
 
     const int dem_solve_flag = mfix_fine.m_dem.solve();
     AMREX_ALWAYS_ASSERT(mfix_fine.m_pic.solve() == 0);
@@ -175,26 +167,29 @@ int main (int argc, char* argv[])
 
     mfix_restarter.allocate_fine_arrays(&mfix_fine);
 
-    mfix_restarter.calc_txfr(&mfix_coarse, mfix_restarter.avgdPIC_coarse,
-        timer_coarse.time());
-
-    // Free memory
-    delete mfix_coarse.pc;
-    mfix_coarse.pc = nullptr;
-
     // Here starts the part with new stuff
     // Set mfix_fine dem_solve to false so we initialize only the fluid data
     // add here the copy of fluid's coarse to fine variables in here
-    mfix_restarter.txfr_fluid_data(&mfix_coarse, &mfix_fine);
+    mfix_restarter.txfr_fluid_data(mfix_coarse, &mfix_fine);
+
+    mfix_restarter.get_eps_coarse(mfix_coarse);
+    const Geometry geom_coarse(mfix_coarse->Geom(0));
+
+    // Free memory
+    delete mfix_coarse;
+
+    // Free memory
+    for (int lev(0); lev < mfix_coarse->nlev; ++lev) {
+      // Coarse txfr data is not needed anymore
+      delete mfix_restarter.avgdPIC_coarse[lev];
+      mfix_restarter.avgdPIC_coarse[lev] = nullptr;
+    }
 
     mfix_restarter.get_particles_radius(&mfix_fine);
-    mfix_restarter.generate_particles(&mfix_coarse, &mfix_fine);
+    mfix_restarter.generate_particles(geom_coarse, &mfix_fine);
 
-    // Free coarse fluid data
-    for (int lev(0); lev < mfix_coarse.nlev; ++lev) {
-      auto obj =  mfix_coarse.m_leveldata[lev].release();
-      delete obj;
-    }
+    // Free memory allocated in get_eps_coarse
+    mfix_restarter.free_eps_coarse();
 
     int restart_flag(1);
 
@@ -218,7 +213,7 @@ int main (int argc, char* argv[])
     rw_fine.reportGridStats();
 
     if (rw_fine.stop_for_unused_inputs && ParmParse::QueryUnusedInputs())
-      amrex::Abort("Aborting here due to unused inputs");
+      amrex::Warning("there were unused inputs");
 
     rw_fine.writeNow(timer_fine, /*first=*/false, /*last=*/true);
 
@@ -226,9 +221,7 @@ int main (int argc, char* argv[])
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor())
-    {
       std::cout << "Time spent in restarter " << end_time << std::endl;
-    }
 
     amrex::Print() << " " << std::endl;
 
