@@ -60,7 +60,7 @@ mfix::~mfix ()
   for (int lev = 0; lev < fluid_proc.size(); ++lev)
     delete fluid_proc[lev];
 
-  delete mfixRW;
+  delete m_rw;
   delete m_solids_volume_deposition;
   delete m_interphase_txfr_deposition;
 }
@@ -145,14 +145,14 @@ mfix::mfix ()
         m_run_type = RunType::Standard;
     }
 
-    mfixRW = new MfixIO::MfixRW(nlev, grids, geom, pc, fluid, m_leveldata,
-                                ebfactory, dmap, ooo_debug, level_sets,
-                                levelset_refinement, levelset_pad,
-                                levelset_eb_refinement, levelset_eb_pad, solids,
-                                m_dem, m_pic, reactions, particle_cost,
-                                particle_proc, fluid_proc, refRatio(),
-                                load_balance_type, bc_list, particle_ebfactory,
-                                regions);
+    m_rw = new MFIXReadWrite(nlev, grids, geom, pc, fluid, m_leveldata,
+                             ebfactory, dmap, ooo_debug, level_sets,
+                             levelset_refinement, levelset_pad,
+                             levelset_eb_refinement, levelset_eb_pad, solids,
+                             m_dem, m_pic, reactions, particle_cost,
+                             particle_proc, fluid_proc, refRatio(),
+                             load_balance_type, bc_list, particle_ebfactory,
+                             regions);
 
     m_solids_volume_deposition = new MFIXSolidsVolume;
     m_interphase_txfr_deposition = new MFIXInterphaseTxfr;
@@ -639,7 +639,7 @@ Vector< MultiFab const*> mfix::get_divtau_const () const noexcept
 
 void mfix::build_eb_levels_from_chkpt_file () {
 
-   EB2::BuildFromChkptFile(mfixRW->geom_chk_file, geom[nlev-1], nlev-1, 100);
+   EB2::BuildFromChkptFile(m_rw->geom_chk_file, geom[nlev-1], nlev-1, 100);
 
    const EB2::IndexSpace& ebis = EB2::IndexSpace::top();
    for (int lev = 0; lev < nlev; lev ++)
@@ -656,7 +656,7 @@ void mfix::build_eb_levels_from_chkpt_file () {
       }
       else {
          Geometry geom_ls = amrex::refine(geom[0],levelset_refinement);
-         EB2::BuildFromChkptFile(mfixRW->geom_levelset_chk_file, geom_ls, 0, 100);
+         EB2::BuildFromChkptFile(m_rw->geom_levelset_chk_file, geom_ls, 0, 100);
          eb_levels[1] = &(EB2::IndexSpace::top().getLevel(geom_ls));
          particle_eb_levels[1] = eb_levels[1];
       }

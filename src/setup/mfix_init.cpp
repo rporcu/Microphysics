@@ -24,6 +24,7 @@ mfix::InitParams ()
   if (ooo_debug)
     amrex::Print() << "InitParams" << std::endl;
 
+  m_timer.Initialize();
   regions.Initialize();
 
   // Read and process species, fluid and DEM particle model options.
@@ -45,7 +46,7 @@ mfix::InitParams ()
   m_boundary_conditions.Initialize(geom[0], regions, fluid, solids, m_dem, m_pic);
   m_initial_conditions.Initialize(regions, fluid, solids, m_dem, m_pic);
 
-  mfixRW->Initialize();
+  m_rw->Initialize();
 
   // set n_error_buf (used in AmrMesh) to default (can overwrite later)
   for (int i = 0; i < n_error_buf.size(); i++)
@@ -61,12 +62,6 @@ mfix::InitParams ()
 
   {
     ParmParse pp("mfix");
-
-
-    fixed_dt = -1.;
-    pp.query("fixed_dt", fixed_dt);
-    pp.query("dt_min", dt_min);
-    pp.query("dt_max", dt_max);
 
     // Verbosity and MLMG parameters are now ParmParse with "nodal_proj" in the
     // inputs file
@@ -352,7 +347,7 @@ mfix::InitParams ()
 
   if ((m_dem.solve() || m_pic.solve()) && (!fluid.solve()))
   {
-    if (fixed_dt <= 0.0)
+    if (m_timer.timestep_type() != MFIXTimer::TimestepType::Fixed)
       amrex::Abort("If running particle-only must specify a positive fixed_dt"
           " in the inputs file");
   }
@@ -463,18 +458,18 @@ mfix::InitParams ()
   {
     ParmParse reports_pp("mfix.reports");
 
-    reports_pp.query("mass_balance_int", mfixRW->mass_balance_report_int);
-    reports_pp.query("mass_balance_per_approx", mfixRW->mass_balance_report_per_approx);
+    reports_pp.query("mass_balance_int", m_rw->mass_balance_report_int);
+    reports_pp.query("mass_balance_per_approx", m_rw->mass_balance_report_per_approx);
 
-    if ((mfixRW->mass_balance_report_int > 0 && mfixRW->mass_balance_report_per_approx > 0) )
+    if ((m_rw->mass_balance_report_int > 0 && m_rw->mass_balance_report_per_approx > 0) )
       amrex::Abort("Must choose only one of mass_balance_int or mass_balance_report_per_approx");
 
     // OnAdd check to turn off report if not solving species
     if (fluid.solve_species() && fluid.nspecies() >= 1) {
-      mfixRW->report_mass_balance = (mfixRW->mass_balance_report_int > 0 ||
-                                     mfixRW->mass_balance_report_per_approx > 0);
+      m_rw->report_mass_balance = (m_rw->mass_balance_report_int > 0 ||
+                                     m_rw->mass_balance_report_per_approx > 0);
     } else {
-      mfixRW->report_mass_balance = 0;
+      m_rw->report_mass_balance = 0;
     }
   }
 
@@ -504,8 +499,8 @@ mfix::Init (Real time,
             const bool init_fluid_grids)
 {
   if (ooo_debug) amrex::Print() << "Init" << std::endl;
-  mfixRW->InitIOChkData();
-  mfixRW->InitIOPltData();
+  m_rw->InitIOChkData();
+  m_rw->InitIOPltData();
 
   // Note that finest_level = last level
   finest_level = nlev-1;
@@ -624,8 +619,8 @@ mfix::Init (Real time,
     if (!pboxmap.empty())
       pc->setParticleFluidGridMap(pboxmap);
 
-    // Updating mfixRW pc pointer is needed since mfix pc has changed
-    mfixRW->set_pc(pc);
+    // Updating m_rw pc pointer is needed since mfix pc has changed
+    m_rw->set_pc(pc);
   }
 
   /****************************************************************************
@@ -812,7 +807,7 @@ mfix::InitLevelData (Real /*time*/)
        for (int lev = 0; lev < nlev; lev++)
           AllocateArrays(lev);
 
-    if (mfixRW->only_print_grid_report) {
+    if (m_rw->only_print_grid_report) {
        return;
     }
 
@@ -960,7 +955,7 @@ mfix::PostInit (Real& dt,
 
         if (!is_restarting) { pc->InitParticlesRuntimeVariables(fluid.solve_enthalpy()); }
 
-        if (!fluid.solve()) { dt = fixed_dt; }
+        if (!fluid.solve()) { dt = m_timer.dt(); }
       }
     }
 
@@ -1113,7 +1108,7 @@ mfix::mfix_init_fluid (int is_restarting,
       if (initial_iterations > 0)
         mfix_initial_iterations(dt,stop_time);
 
-      mfixRW->InitMassBalance();
+      m_rw->InitMassBalance();
 
     }
     else

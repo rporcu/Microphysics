@@ -23,4 +23,6 @@ target_sources( mfixcore
    mfix_bc.H
    mfix_regions.cpp
    mfix_regions.H
+   mfix_timer.H
+   mfix_timer.cpp
    )

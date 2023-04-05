@@ -43,8 +43,8 @@ void mfix::make_eb_geometry ()
 #endif
 
     // Avoid multiple (ambiguous) inputs
-    if (mfixRW->geom_chk_read) {
-       if (mfixRW->geom_chk_write) {
+    if (m_rw->geom_chk_read) {
+       if (m_rw->geom_chk_write) {
           amrex::Abort("The input file cannot specify both amr.geom_chk_read and "
                        "amr.geom_chk_write at the same time.");
        }
@@ -54,13 +54,13 @@ void mfix::make_eb_geometry ()
                        "another geometry at the same time");
        }
 
-       std::ifstream chkptfile(mfixRW->geom_chk_file);
+       std::ifstream chkptfile(m_rw->geom_chk_file);
        if (chkptfile.fail()) {
           amrex::Abort("No amr.geom_chk_file found.");
        }
 
        if (levelset_refinement != 1) {
-          std::ifstream refined_chkptfile(mfixRW->geom_levelset_chk_file);
+          std::ifstream refined_chkptfile(m_rw->geom_levelset_chk_file);
           if (refined_chkptfile.fail()) {
              amrex::Abort("No amr.geom_levelset_chk_file found.");
           }
@@ -73,12 +73,12 @@ void mfix::make_eb_geometry ()
        }
     }
 
-    bool read_from_chkptfile = mfixRW->geom_chk_read;
-    bool write_to_chkptfile = mfixRW->geom_chk_write;
+    bool read_from_chkptfile = m_rw->geom_chk_read;
+    bool write_to_chkptfile = m_rw->geom_chk_write;
 
     // Special handling of flags for EB checkpoint file CCSE regtest
-    if (mfixRW->geom_chk_ccse_regtest) {
-       if (mfixRW->restart_file.empty()) {
+    if (m_rw->geom_chk_ccse_regtest) {
+       if (m_rw->restart_file.empty()) {
           read_from_chkptfile = false;
           write_to_chkptfile = true;
        } else {
@@ -114,7 +114,7 @@ void mfix::make_eb_geometry ()
         make_eb_generic();
         contains_ebs = true;
     } else if(read_from_chkptfile) {
-      amrex::Print() << "\n Building geometry from chkptfile: " << mfixRW->geom_chk_file << std::endl;
+      amrex::Print() << "\n Building geometry from chkptfile: " << m_rw->geom_chk_file << std::endl;
       build_eb_levels_from_chkpt_file();
       contains_ebs = true;
 
@@ -136,12 +136,12 @@ void mfix::make_eb_geometry ()
     }
 
     if (write_to_chkptfile) {
-       eb_levels[0]->write_to_chkpt_file(mfixRW->geom_chk_file, 
+       eb_levels[0]->write_to_chkpt_file(m_rw->geom_chk_file, 
              amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
 
        if (nlev == 1) {
           if (levelset_refinement != 1) {
-             eb_levels[1]->write_to_chkpt_file(mfixRW->geom_levelset_chk_file, 
+             eb_levels[1]->write_to_chkpt_file(m_rw->geom_levelset_chk_file, 
                    amrex::EB2::ExtendDomainFace(), amrex::EB2::max_grid_size);
           }
        }

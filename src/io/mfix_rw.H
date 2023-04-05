@@ -5,6 +5,7 @@
 #include <AMReX_Vector.H>
 #include <AMReX_BoxArray.H>
 
+#include <mfix_timer.H>
 #include <mfix_pc.H>
 #include <mfix_fluid.H>
 #include <mfix_solids.H>
@@ -14,37 +15,35 @@
 #include <mfix_monitors.H>
 
 
-namespace MfixIO {
-
-class MfixRW {
-
-public:
-   MfixRW (int nlev_in,
-           amrex::Vector<amrex::BoxArray>& grids_in,
-           amrex::Vector<amrex::Geometry>& geom_in,
-           MFIXParticleContainer* pc_in,
-           MFIXFluidPhase& fluid_in,
-           amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
-           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
-           amrex::Vector<amrex::DistributionMapping>& dmap_in,
-           bool ooo_debug_in,
-           amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-           int levelset_refinement_in,
-           int levelset_pad_in,
-           int levelset_eb_refinement_in,
-           int levelset_eb_pad_in,
-           MFIXSolidsPhase& solids_in,
-           MFIXDEM& dem,
-           MFIXPIC& pic,
-           MFIXReactions& reactions_in,
-           amrex::Vector<amrex::MultiFab*>& particle_cost_in,
-           amrex::Vector<amrex::MultiFab*>& particle_proc_in,
-           amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
-           const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-           std::string load_balance_type_in,
-           BCList& bc_list_in,
-           amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
-           MFIXRegions& regions_in);
+class MFIXReadWrite
+{
+  public:
+   MFIXReadWrite (int nlev_in,
+                  amrex::Vector<amrex::BoxArray>& grids_in,
+                  amrex::Vector<amrex::Geometry>& geom_in,
+                  MFIXParticleContainer* pc_in,
+                  MFIXFluidPhase& fluid_in,
+                  amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
+                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
+                  amrex::Vector<amrex::DistributionMapping>& dmap_in,
+                  bool ooo_debug_in,
+                  amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
+                  int levelset_refinement_in,
+                  int levelset_pad_in,
+                  int levelset_eb_refinement_in,
+                  int levelset_eb_pad_in,
+                  MFIXSolidsPhase& solids_in,
+                  MFIXDEM& dem,
+                  MFIXPIC& pic,
+                  MFIXReactions& reactions_in,
+                  amrex::Vector<amrex::MultiFab*>& particle_cost_in,
+                  amrex::Vector<amrex::MultiFab*>& particle_proc_in,
+                  amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
+                  const amrex::Vector<amrex::IntVect>& ref_ratio_in,
+                  std::string load_balance_type_in,
+                  BCList& bc_list_in,
+                  amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
+                  MFIXRegions& regions_in);
 
    // Class for specifying a subregion for ParticleContainer::WritePlotFile
    // and add a filter to plot only a selected group of particles
@@ -96,11 +95,15 @@ public:
 
    void InitIOPltData ();
 
-   void writeNow (int nstep,
-                  amrex::Real time,
+   void writeNow (MFIXTimer& timer,
+                  bool first=false, /* first call*/
+                  bool last=false)  /* last call*/
+   { writeNow(timer, timer.dt(), first, last); }
+
+   void writeNow (MFIXTimer& timer,
                   amrex::Real dt,
                   bool first=false, /* first call*/
-                  bool last=false   /* last call*/);
+                  bool last=false); /* last call*/
 
    void writeStaticPlotFiles () const;
 
@@ -176,10 +179,7 @@ public:
    int repl_x = 1;
    int repl_y = 1;
    int repl_z = 1;
-   int max_step   = -1;
    int regrid_int = -1;
-   amrex::Real stop_time  = -1.0;
-   int overstep_end_time  = 0;
    bool stop_for_unused_inputs = false;
    bool only_print_grid_report = false;
    std::string restart_file {""};
@@ -298,6 +298,10 @@ private:
                        const amrex::Real dt,
                        const amrex::Real per_approx);
 
+   int test_walltime_approaching (const MFIXTimer& timer) const;
+
+   int test_walltime_interval (const MFIXTimer& timer);
+
    bool write_eb_surface = false;
 
    // Flag for writing static particle levelset function in plot file
@@ -311,12 +315,15 @@ private:
    // Checkpoint file controls
    bool checkpoint_files_output = true;
    std::string check_file {"chk"};
+
    int check_int = -1;
+   amrex::Real check_per_approx = -1.;
+   amrex::Real check_walltime_interval = -1.;
+   int m_interval_nb = 1;
+   //amrex::Real check_per_exact  = -1.;
    int last_chk  = -1;
 
-   amrex::Real m_start_time;
-   amrex::Real m_check_walltime = -1.0;
-
+   amrex::Real m_check_max_write_time = 0.;
 
    // Plot file controls
    std::string plot_file {"plt"};
@@ -325,7 +332,7 @@ private:
 
    int plot_int = -1;
    amrex::Real plot_per_approx = -1.;
-   amrex::Real plot_per_exact  = -1.;
+   //amrex::Real plot_per_exact  = -1.;
 
    // Ascent controls
    bool ascent_on_restart = false;
@@ -415,7 +422,5 @@ private:
 
    std::string m_ascent_actions_yaml;
 };
-
-} // end of namespace MfixIO
 
 #endif

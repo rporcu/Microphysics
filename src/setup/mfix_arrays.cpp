@@ -41,7 +41,7 @@ mfix::AllocateArrays (int lev)
     if (ooo_debug) amrex::Print() << "AllocateArrays" << std::endl;
     mfix_update_ebfactory(lev);
 
-    if (mfixRW->only_print_grid_report) {
+    if (m_rw->only_print_grid_report) {
         m_leveldata[lev] = std::make_unique<LevelData>(grids[lev], dmap[lev],
             nghost_state(), *ebfactory[lev], &m_embedded_boundaries, &fluid,
             &reactions, true);

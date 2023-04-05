@@ -31,7 +31,7 @@ mfix::Evolve (int nstep,
 
         Real start_coupling = ParallelDescriptor::second();
         mfix_calc_volume_fraction(time, sum_vol);
-        //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
+        //const IntVect min_epg_cell = m_rw->mfix_print_min_epg();
 
         coupling_timing = ParallelDescriptor::second() - start_coupling;
       }
@@ -105,7 +105,7 @@ mfix::Evolve (int nstep,
                                     levelset_refinement,
                                     particle_cost[ilev],
                                     knapsack_weight_type, nsubsteps,
-                                    mfixRW->report_mass_balance);
+                                    m_rw->report_mass_balance);
           }
           else
           {
@@ -122,7 +122,7 @@ mfix::Evolve (int nstep,
                                       particle_ebfactory[lev].get(), ls_data, 1,
                                       particle_cost[lev],
                                       knapsack_weight_type, nsubsteps,
-                                      mfixRW->report_mass_balance);
+                                      m_rw->report_mass_balance);
               }
           }
       }
@@ -130,10 +130,10 @@ mfix::Evolve (int nstep,
       if (m_pic.solve()) {
 
           BL_PROFILE_REGION("PIC PARTICLE SOLVE");
-          //const IntVect min_epg_cell = mfixRW->mfix_print_min_epg();
+          //const IntVect min_epg_cell = m_rw->mfix_print_min_epg();
           EvolveParcels(dt, time, mfix::gravity, levelset_refinement,
                         particle_cost, knapsack_weight_type,
-                        mfixRW->report_mass_balance);
+                        m_rw->report_mass_balance);
       }
 
       Real end_particles = ParallelDescriptor::second() - start_particles;
@@ -156,8 +156,8 @@ mfix::Evolve (int nstep,
       }
 
 
-      if (mfixRW->report_mass_balance && reactions.solve()) {
-        mfixRW->ComputeMassProduction(dt, get_txfr_const());
+      if (m_rw->report_mass_balance && reactions.solve()) {
+        m_rw->ComputeMassProduction(dt, get_txfr_const());
       }
     }
 

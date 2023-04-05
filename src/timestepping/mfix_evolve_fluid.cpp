@@ -171,6 +171,7 @@ mfix::EvolveFluid (int nstep,
         }
 
         mfix_compute_dt(nstep, time, stop_time, dt, prev_dt);
+        m_timer.dt() = dt;
 
         // Set new and old time to correctly use in fillpatching
         for (int lev = 0; lev <= finest_level; lev++)

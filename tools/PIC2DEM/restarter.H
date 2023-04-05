@@ -142,7 +142,7 @@ class TxfrAuxiliary
       amrex::IntVect result(0);
 
       for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-        result[dir] = amrex::Math::floor<int>((coords[dir]-plo[dir]) / dx[dir]);
+        result[dir] = int(amrex::Math::floor((coords[dir]-plo[dir]) / dx[dir]));
       }
 
       return result;

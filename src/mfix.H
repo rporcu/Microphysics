@@ -40,6 +40,7 @@
 #include <mfix_mlmg_options.H>
 #include <mfix_run_on.H>
 #include <mfix_rw.H>
+#include <mfix_timer.H>
 
 // Mfix run type
 struct RunType { enum {Standard, Restart, PIC2DEM}; };
@@ -81,6 +82,10 @@ class mfix : public AmrCore
     // Embedded boundaries
     MFIXEmbeddedBoundaries m_embedded_boundaries;
 
+    // Timer
+    const MFIXTimer& timer () const { return m_timer; }
+    MFIXTimer& timer () { return m_timer; }
+
     // Regions
     MFIXRegions regions;
 
@@ -103,7 +108,7 @@ class mfix : public AmrCore
     MFIXPIC m_pic;
 
     // IO Class
-    MfixIO::MfixRW* mfixRW;
+    MFIXReadWrite* m_rw;
 
     // Face-based coefficients b in MAC projection and implicit diffusion solve
     Vector< Array<MultiFab*,3> > bcoeff;
@@ -397,7 +402,8 @@ class mfix : public AmrCore
                                amrex::Vector< amrex::MultiFab* > const& w,
                                amrex::Real time);
 
-    void compute_MAC_projected_velocities (amrex::Real time, const amrex::Real l_dt,
+    void compute_MAC_projected_velocities (amrex::Real time,
+                                           const amrex::Real l_dt,
                                            amrex::Vector< amrex::MultiFab const*> const& vel_in,
                                            amrex::Vector< amrex::MultiFab*      > const& ep_u_mac,
                                            amrex::Vector< amrex::MultiFab*      > const& ep_v_mac,
@@ -1041,9 +1047,7 @@ class mfix : public AmrCore
 
     // Options to control time stepping
     Real m_cfl = 0.5;
-    Real fixed_dt;
-    Real dt_min = 0.;    // Min dt allowed
-    Real dt_max = 1.e14; // Max dt allowed
+    MFIXTimer m_timer;
 
     int particle_max_grid_size_x = -1;
     int particle_max_grid_size_y = -1;

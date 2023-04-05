@@ -216,7 +216,8 @@ int main (int argc, char* argv[])
 
     // AMReX will now read the inputs file and the command line arguments, but the
     //        command line arguments are in mfix-format so it will just ignore them.
-    amrex::Initialize(argc,argv,true,MPI_COMM_WORLD,add_par);
+    amrex::Initialize(argc, argv, true, MPI_COMM_WORLD, add_par);
+
     { // This start bracket and the end bracket before Finalize are essential so
       // that the mfix object is deleted before Finalize
     BL_PROFILE_VAR("main()", pmain)
@@ -238,19 +239,13 @@ int main (int argc, char* argv[])
     fix_par();
     fix_par_for_backward_compatibility();
 
-    Real strt_time = ParallelDescriptor::second();
-
-    Real time=0.0L;
-    int nstep = 0;  // Current time step
-
-    Real dt = -1.;
-
     // Default constructor. Note inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix;
 
-    MfixIO::MfixRW& mfixRW = *(mfix.mfixRW);
+    auto& rw = *(mfix.m_rw);
+    auto& timer = mfix.timer();
 
     // Initialize internals from ParamParse database
     mfix.InitParams();
@@ -263,11 +258,11 @@ int main (int argc, char* argv[])
     mfix.make_eb_geometry();
 
     // Initialize derived internals
-    mfix.Init(time);
+    mfix.Init(timer.time());
 
 #ifdef MFIX_CATALYST
     conduit_cpp::Node params;
-    params["catalyst/scripts/script0"].set_string(mfixRW.catalyst_script);
+    params["catalyst/scripts/script0"].set_string(rw.catalyst_script);
     params["catalyst_load/implementation"] = "paraview";
     params["catalyst_load/search_paths/paraview"] = "/home/corey/Builds/pvsb-dev/install/lib/catalyst";
     catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
@@ -282,18 +277,18 @@ int main (int argc, char* argv[])
     mfix.make_eb_factories();
 
     // Write out EB sruface
-    mfixRW.writeEBSurface();
+    rw.writeEBSurface();
 
-    if (mfixRW.only_print_grid_report)
+    if (rw.only_print_grid_report)
     {
-        mfix.InitLevelData(time);
-        mfixRW.reportGridStats();
+        mfix.InitLevelData(timer.time());
+        rw.reportGridStats();
 
-        Real end_init = ParallelDescriptor::second() - strt_time;
-        ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
+        Real init_time = timer.elapsed_runtime();
+        ParallelDescriptor::ReduceRealMax(init_time, ParallelDescriptor::IOProcessorNumber());
 
         if (ParallelDescriptor::IOProcessor())
-           std::cout << "Time spent in init      " << end_init << std::endl;
+           std::cout << "Time spent in init      " << init_time << std::endl;
     }
     else
     {
@@ -306,9 +301,9 @@ int main (int argc, char* argv[])
 
        // Either init from scratch or from the checkpoint file
        int restart_flag = 0;
-       if (mfixRW.restart_file.empty())
+       if (rw.restart_file.empty())
        {
-           mfix.InitLevelData(time);
+           mfix.InitLevelData(timer.time());
        }
        else
        {
@@ -321,11 +316,12 @@ int main (int argc, char* argv[])
 
            // NOTE: during replication 1) this also re-builds ebfactories and
            // level-set 2) this can change the grids
-           IntVect Nrep(mfixRW.repl_x, mfixRW.repl_y, mfixRW.repl_z);
-           mfix.Restart(mfixRW.restart_file, nstep, dt, time, Nrep);
+           IntVect Nrep(rw.repl_x, rw.repl_y, rw.repl_z);
+           mfix.Restart(rw.restart_file, timer.nstep(), timer.dt(),
+               timer.time(), Nrep);
        }
 
-       mfixRW.setReportTime(time);
+       rw.setReportTime(timer.time());
 
        if (mfix.fluid.solve()){
          mfix.init_advection();
@@ -333,42 +329,35 @@ int main (int argc, char* argv[])
          mfix.mfix_init_solvers();
        }
 
-       mfixRW.writeStaticPlotFiles();
+       rw.writeStaticPlotFiles();
 
-       mfix.PostInit(dt, time, restart_flag, mfixRW.stop_time);
+       mfix.PostInit(timer.dt(), timer.time(), restart_flag, timer.stop_time());
 
-       mfixRW.reportGridStats();
+       rw.reportGridStats();
 
-       Real end_init = ParallelDescriptor::second() - strt_time;
-       ParallelDescriptor::ReduceRealMax(end_init, ParallelDescriptor::IOProcessorNumber());
+       Real init_time = timer.elapsed_runtime();
+       ParallelDescriptor::ReduceRealMax(init_time, ParallelDescriptor::IOProcessorNumber());
 
        if (ParallelDescriptor::IOProcessor())
-          std::cout << "Time spent in init      " << end_init << std::endl;
-
-       int finish  = 0;
+          std::cout << "Time spent in init      " << init_time << std::endl;
 
        // Initialize prev_dt here; it will be re-defined by call to evolve_fluid but
        // only if fluid.solve() = T
-       Real prev_dt = dt;
+       Real prev_dt = timer.dt();
 
-       if (mfixRW.restart_file.empty())
+       if (rw.restart_file.empty())
        {
            amrex::Print() << " " << std::endl;
            bool unused_inputs = ParmParse::QueryUnusedInputs();
-           if (mfixRW.stop_for_unused_inputs && unused_inputs)
+           if (rw.stop_for_unused_inputs && unused_inputs)
               amrex::Abort("Aborting here due to unused inputs");
            else if (unused_inputs)
               amrex::Print() << "We should think about aborting here due to unused inputs" << std::endl;
        }
 
-       mfixRW.writeNow(nstep, time, dt, /*first=*/true, /*last=*/false);
+       rw.writeNow(timer, /*first=*/true, /*last=*/false);
 
-       bool do_not_evolve = !mfix.IsSteadyState() && ( (mfixRW.max_step == 0) ||
-                        ( (mfixRW.stop_time >= 0.) && (time >  mfixRW.stop_time) ) ||
-                        ( (mfixRW.stop_time <= 0.) && (mfixRW.max_step <= 0) ) );
-
-       mfixRW.ComputeMassAccum(0);
-
+       rw.ComputeMassAccum(0);
 
        for (int lev = 0; lev <= mfix.finestLevel(); lev++)
        {
@@ -386,65 +375,72 @@ int main (int argc, char* argv[])
            BL_PROFILE("mfix_solve");
            //BL_PROFILE_REGION("mfix_solve");
 
-           if ( !do_not_evolve)
+           bool do_not_evolve = !mfix.IsSteadyState() && ((timer.max_step() == 0) ||
+               ((timer.stop_time() >= 0.) && (timer.time() > timer.stop_time())) ||
+               ((timer.stop_time() <= 0.) && (timer.max_step() <= 0)));
+
+           while (!do_not_evolve)
            {
-               while (finish == 0)
+               mfix.mfix_usr1(timer.time());
+
+               Real start_time = timer.system_time();
+
+               if (!mfix.IsSteadyState() && rw.regrid_int > -1 && timer.nstep()%rw.regrid_int == 0)
                {
-                   mfix.mfix_usr1(time);
-
-                   Real strt_step = ParallelDescriptor::second();
-
-                   if (!mfix.IsSteadyState() && mfixRW.regrid_int > -1 && nstep%mfixRW.regrid_int == 0)
-                   {
-                      amrex::Print() << "Regridding at step " << nstep << std::endl;
-                      mfix.Regrid();
-                   }
-
-                   mfix.Evolve(nstep, dt, prev_dt, time, mfixRW.stop_time);
-
-                   Real end_step = ParallelDescriptor::second() - strt_step;
-                   ParallelDescriptor::ReduceRealMax(end_step, ParallelDescriptor::IOProcessorNumber());
-                   if (ParallelDescriptor::IOProcessor())
-                       std::cout << "   Time per step        " << end_step << std::endl;
-
-                   if (!mfix.IsSteadyState())
-                   {
-                       time += prev_dt;
-                       nstep++;
-
-                       mfixRW.writeNow(nstep, time, prev_dt);
-#ifdef MFIX_CATALYST
-                       mfix.RunCatalystAdaptor(nstep, time);
-#endif
-                   }
-
-                   // Mechanism to terminate MFIX normally.
-                   do_not_evolve =  mfix.IsSteadyState() || (
-                        ( (mfixRW.stop_time >= 0.) && (time+0.1*dt >= mfixRW.stop_time) ) ||
-                        ( mfixRW.max_step >= 0 && nstep >= mfixRW.max_step ) );
-                   if ( do_not_evolve ) finish = 1;
+                  amrex::Print() << "Regridding at step " << timer.nstep() << std::endl;
+                  mfix.Regrid();
                }
+
+               mfix.Evolve(timer.nstep(), timer.dt(), prev_dt,
+                   timer.time(), timer.stop_time());
+
+               Real step_time = timer.elapsed_runtime(start_time);
+
+               ParallelDescriptor::ReduceRealMax(&step_time, 1);
+
+               if (ParallelDescriptor::IOProcessor())
+                   std::cout << "   Time per step        " << step_time << std::endl;
+
+               if (!mfix.IsSteadyState())
+               {
+                   timer.advance_time(prev_dt);
+                   timer.advance_nstep(1);
+
+                   if (timer.walltime_limit() > 0.) {
+                     timer.update_avg_step_runtime(step_time);
+                   }
+
+                   rw.writeNow(timer, prev_dt);
+
+#ifdef MFIX_CATALYST
+                   mfix.RunCatalystAdaptor(timer.nstep(), timer.time());
+#endif
+               }
+
+               // Mechanism to terminate MFIX normally.
+               do_not_evolve = mfix.IsSteadyState() || (!timer.ok());
            }
        }
 
        if (mfix.IsSteadyState())
-           nstep = 1;
+         timer.nstep() = 1;
 
-       mfixRW.writeNow(nstep, time, dt, /*first=*/false, /*last=*/true);
+       if (timer.run_status_type() != MFIXRunStatusType::RuntimeIsOver ||
+           timer.run_status_type() == MFIXRunStatusType::UserStop)
+         rw.writeNow(timer, /*first=*/false, /*last=*/true);
 
        mfix.mfix_usr3();
 
-       Real end_time = ParallelDescriptor::second() - strt_time;
+       Real end_time = timer.elapsed_runtime();
        ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
 
        if (ParallelDescriptor::IOProcessor())
        {
-           std::cout << "Time spent in main (after init) " << end_time-end_init << std::endl;
+           std::cout << "Time spent in main (after init) " << end_time-init_time << std::endl;
            std::cout << "Time spent in main      " << end_time << std::endl;
        }
 
        amrex::Print() << " " << std::endl;
-       //bool unused_inputs = ParmParse::QueryUnusedInputs(); UNUSED VARIABLE
 
        BL_PROFILE_REGION_STOP("mfix::main()");
        BL_PROFILE_VAR_STOP(pmain);
@@ -452,10 +448,12 @@ int main (int argc, char* argv[])
 
     } // This end bracket and the start bracket after Initialize are essential so
       // that the mfix object is deleted before Finalize
+
 #ifdef MFIX_CATALYST
     conduit_node* f_params = conduit_node_create();
     catalyst_finalize(f_params);
 #endif
+
     amrex::Finalize();
     return 0;
 }

@@ -81,24 +81,24 @@ mfix::Restart (std::string& restart_file,
       finest_level = loc_nlev-1;
 
       // Time stepping controls
-      mfixRW->GotoNextLine(is);
+      m_rw->GotoNextLine(is);
       is >> nstep;
 
-      mfixRW->GotoNextLine(is);
+      m_rw->GotoNextLine(is);
       is >> dt;
 
-      mfixRW->GotoNextLine(is);
+      m_rw->GotoNextLine(is);
       is >> time;
 
       // Geometry controls
       if (version == "1.1") {
-        mfixRW->GotoNextLine(is);
+        m_rw->GotoNextLine(is);
         is >> prob_lo;
 
-        mfixRW->GotoNextLine(is);
+        m_rw->GotoNextLine(is);
         is >> prob_hi;
 
-        mfixRW->GotoNextLine(is);
+        m_rw->GotoNextLine(is);
         is >> n_cell;
 
         // Check that inputs geometry matches checkpoint geometry
@@ -112,7 +112,7 @@ mfix::Restart (std::string& restart_file,
 
       } else if (version == "1") {
 
-        mfixRW->GotoNextLine(is);
+        m_rw->GotoNextLine(is);
         std::getline(is, line);
         {
           std::istringstream lis(line);
@@ -147,7 +147,7 @@ mfix::Restart (std::string& restart_file,
       }
 
       if (version == "1.1") {
-        mfixRW->GotoNextLine(is);
+        m_rw->GotoNextLine(is);
         Real small_volfrac(0.);
         is >> small_volfrac;
 
@@ -165,7 +165,7 @@ mfix::Restart (std::string& restart_file,
 
           BoxArray orig_ba, ba;
           orig_ba.readFrom(is);
-          mfixRW->GotoNextLine(is);
+          m_rw->GotoNextLine(is);
 
           Box orig_domain(orig_ba.minimalBox());
 
@@ -317,21 +317,21 @@ mfix::Restart (std::string& restart_file,
         }
 
         // Read scalar variables
-        mfixRW->ResetIOChkData();
+        m_rw->ResetIOChkData();
 
-        for (int i = 0; i < mfixRW->chkScalarVars.size(); i++ )
+        for (int i = 0; i < m_rw->chkScalarVars.size(); i++ )
         {
-          if (mfixRW->chkscaVarsName[i] == "level_sets") {
+          if (m_rw->chkscaVarsName[i] == "level_sets") {
 
-            amrex::Print() << "  Skipping " << mfixRW->chkscaVarsName[i] << std::endl;
+            amrex::Print() << "  Skipping " << m_rw->chkscaVarsName[i] << std::endl;
             continue;
 
           } else {
-            amrex::Print() << "  Loading " << mfixRW->chkscaVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << m_rw->chkscaVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix, 
-                                                        mfixRW->chkscaVarsName[i]);
+                                                        m_rw->chkscaVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -341,11 +341,11 @@ mfix::Restart (std::string& restart_file,
               // Copy from the mf we used to read in to the mf we will use going forward
               const int ng_to_copy = 0;
 
-              (*(mfixRW->chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              (*(m_rw->chkScalarVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
             } else {
 
-              replicate_data(*(mfixRW->chkScalarVars[i][lev]), mf);
+              replicate_data(*(m_rw->chkScalarVars[i][lev]), mf);
             }
           }
         }
@@ -354,15 +354,15 @@ mfix::Restart (std::string& restart_file,
         {
           const auto& fluid_parms = fluid.parameters();
 
-          for (int i = 0; i < mfixRW->chkTVars.size(); i++ )
+          for (int i = 0; i < m_rw->chkTVars.size(); i++ )
           {
-            if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "T_g")
+            if (restart_from_cold_flow && m_rw->chkscaVarsName[i] == "T_g")
             {
               amrex::Print() << "  Setting T_g to T_g0 = " << fluid.cold_flow_temperature() << std::endl;
               m_leveldata[lev]->T_g->setVal(fluid.cold_flow_temperature());
               continue;
 
-            } else if (restart_from_cold_flow && mfixRW->chkscaVarsName[i] == "h_g") {
+            } else if (restart_from_cold_flow && m_rw->chkscaVarsName[i] == "h_g") {
 
               const Real h_g0 = fluid_parms.calc_h_g<RunOn::Host>(fluid.cold_flow_temperature());
 
@@ -373,11 +373,11 @@ mfix::Restart (std::string& restart_file,
               continue;
             }
 
-            amrex::Print() << "  Loading " << mfixRW->chkTVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << m_rw->chkTVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix,
-                                                        mfixRW->chkTVarsName[i]);
+                                                        m_rw->chkTVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -388,24 +388,24 @@ mfix::Restart (std::string& restart_file,
               // going forward
               const int ng_to_copy = 0;
 
-              (*(mfixRW->chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
+              (*(m_rw->chkTVars[i][lev])).ParallelCopy(mf, 0, 0, 1, ng_to_copy, ng_to_copy);
 
             } else {
 
-              replicate_data(*(mfixRW->chkTVars[i][lev]), mf);
+              replicate_data(*(m_rw->chkTVars[i][lev]), mf);
             }
           }
         }
 
         if (fluid.solve_species())
         {
-          for (int i = 0; i < mfixRW->chkSpeciesVars.size(); i++ )
+          for (int i = 0; i < m_rw->chkSpeciesVars.size(); i++ )
           {
-            amrex::Print() << "  Loading " << mfixRW->chkSpeciesVarsName[i] << std::endl;
+            amrex::Print() << "  Loading " << m_rw->chkSpeciesVarsName[i] << std::endl;
 
             auto prefix = amrex::MultiFabFileFullPrefix(lev, restart_file,
                                                         level_prefix,
-                                                        mfixRW->chkSpeciesVarsName[i]);
+                                                        m_rw->chkSpeciesVarsName[i]);
 
             MultiFab mf(The_Pinned_Arena());
             VisMF::Read(mf, prefix);
@@ -415,12 +415,12 @@ mfix::Restart (std::string& restart_file,
               // Copy from the mf we used to read in to the mf we will use going forward
               const int ng_to_copy = 0;
 
-              (*(mfixRW->chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies(),
+              (*(m_rw->chkSpeciesVars[i][lev])).ParallelCopy(mf, 0, 0, fluid.nspecies(),
                                                                ng_to_copy, ng_to_copy);
 
             } else {
 
-              replicate_data(*(mfixRW->chkSpeciesVars[i][lev]), mf);
+              replicate_data(*(m_rw->chkSpeciesVars[i][lev]), mf);
             }
           }
         }

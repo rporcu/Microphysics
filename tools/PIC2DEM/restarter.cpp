@@ -26,8 +26,8 @@ void get_l_idxs (const int n,
                  const amrex::IntVect& bx_size,
                  const amrex::IntVect& bx_lo)
 {
-  k = amrex::Math::floor<int>(n / (bx_size[0]*bx_size[1])) + bx_lo[2];
-  j = amrex::Math::floor<int>((n - (k-bx_lo[2])*bx_size[0]*bx_size[1]) / bx_size[0]) + bx_lo[1];
+  k = int(amrex::Math::floor(n / (bx_size[0]*bx_size[1]))) + bx_lo[2];
+  j = int(amrex::Math::floor((n - (k-bx_lo[2])*bx_size[0]*bx_size[1]) / bx_size[0])) + bx_lo[1];
   i = n - (k-bx_lo[2])*bx_size[0]*bx_size[1] - (j-bx_lo[1])*bx_size[0] + bx_lo[0];
 }
 
@@ -196,8 +196,6 @@ void
 MFIXRestarter::set_fine_objects (mfix* mfix_fine,
                                  const mfix* mfix_coarse) const
 {
-  const int nlev = mfix_fine->nlev;
-
   Vector<Geometry> geom(nlev, Geometry());
   Vector<BoxArray> ba(nlev, BoxArray());
 
@@ -907,7 +905,7 @@ MFIXRestarter::init_particles (const mfix* mfix_coarse,
 
 
 void
-MFIXRestarter::generate_particles (const Long particles_count,
+MFIXRestarter::generate_particles (const Long /*particles_count*/,
                                    const Box& bx,
                                    MFIXParticleContainer::ParticleTileType& particles,
                                    const Hex_ClosePack* hcp_vector_ptr,

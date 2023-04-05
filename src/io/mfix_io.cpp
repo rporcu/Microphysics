@@ -16,23 +16,15 @@
 
 using namespace amrex;
 
-
-//namespace
-//{
-//    const std::string level_prefix {"Level_"};
-//}
-
-namespace MfixIO {
-
 void
-MfixRW::GotoNextLine (std::istream& is)
+MFIXReadWrite::GotoNextLine (std::istream& is)
 {
     constexpr std::streamsize bl_ignore_max { 100000 };
     is.ignore(bl_ignore_max, '\n');
 }
 
 void
-MfixRW::WriteJobInfo (const std::string& dir) const
+MFIXReadWrite::WriteJobInfo (const std::string& dir) const
 {
     if (ParallelDescriptor::IOProcessor())
     {
@@ -127,7 +119,7 @@ MfixRW::WriteJobInfo (const std::string& dir) const
 
 
 void
-MfixRW::WriteParticleAscii (std::string& par_ascii_file_in, int nstep) const
+MFIXReadWrite::WriteParticleAscii (std::string& par_ascii_file_in, int nstep) const
 {
     BL_PROFILE("mfix::WriteParticleASCII()");
 
@@ -140,7 +132,7 @@ MfixRW::WriteParticleAscii (std::string& par_ascii_file_in, int nstep) const
 
 
 void
-MfixRW::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time) const
+MFIXReadWrite::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time) const
 {
   BL_PROFILE("mfix::WriteAverageRegions()");
 
@@ -185,7 +177,7 @@ MfixRW::WriteAverageRegions (std::string& avg_file_in, int /*nstep*/, Real time)
 
 
 void
-MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
+MFIXReadWrite::ComputeAverageFluidVars (const int lev, const Real time,
                                  const std::string&  basename) const
 {
   int nregions = avg_region_x_w.size();
@@ -399,5 +391,3 @@ MfixRW::ComputeAverageFluidVars (const int lev, const Real time,
   delete pg_cc;
   delete one;
 }
-
-} // end namespace MfixIO

@@ -22,10 +22,8 @@ mfix::check_for_nans (int lev)
 }
 
 
-namespace MfixIO {
-
 void
-MfixRW::ComputeVort ()
+MFIXReadWrite::ComputeVort ()
 {
     BL_PROFILE("mfix::mfix_compute_vort");
 
@@ -73,8 +71,6 @@ MfixRW::ComputeVort ()
        }
     }
 }
-
-} // end namespace MfixIO
 
 
 IntVect

@@ -190,6 +190,7 @@ mfix::mfix_initial_iterations (Real dt, Real stop_time)
   int nstep = 0;
 
   mfix_compute_dt(nstep, time, stop_time, dt, dt);
+  m_timer.dt() = dt;
 
   amrex::Print() << "Doing initial pressure iterations with dt = " << dt << "\n";
 

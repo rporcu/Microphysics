@@ -12,9 +12,7 @@
 using namespace amrex;
 
 
-namespace MfixIO {
-
-MfixRW::MfixRW (int nlev_in,
+MFIXReadWrite::MFIXReadWrite (int nlev_in,
                 amrex::Vector<amrex::BoxArray>& grids_in,
                 amrex::Vector<amrex::Geometry>& geom_in,
                 MFIXParticleContainer* pc_in,
@@ -69,12 +67,11 @@ MfixRW::MfixRW (int nlev_in,
   , regions(regions_in)
   , m_ascent_actions_yaml("")
 {
-  m_start_time = ParallelDescriptor::second();
   readParameters();
 }
 
 
-void MfixRW::readParameters ()
+void MFIXReadWrite::readParameters ()
 {
   {
      const std::string pp_root = "mfix";
@@ -86,27 +83,38 @@ void MfixRW::readParameters ()
      pp.query("check_file", check_file);
      pp.query("check_int", check_int);
 
+     //pp.query("check_per_exact", check_per_exact);
+     pp.query("check_per_approx", check_per_approx);
+
+     std::string walltime_interval_in;
+     int has_walltime_interval = pp.query("check_walltime_interval", walltime_interval_in);
+
+     if (has_walltime_interval) {
+       int HH(0), MM(0), SS(0);
+       if (sscanf(walltime_interval_in.c_str(), "%d:%d:%d", &HH, &MM, &SS) >= 2) {
+         check_walltime_interval = static_cast<Real>(HH*3600 + MM*60 + SS);
+       } else {
+         std::string message =
+           " Error: Unable to correctly parse checkpoint walltime interval "
+           + walltime_interval_in + "\n" + " The correct format is HH:MM:SS\n";
+         amrex::Print() << message;
+         amrex::Abort(message);
+       }
+     }
+
+     if (/*(check_int        > 0 && check_per_exact  > 0) ||*/
+         (check_int        > 0 && check_per_approx        > 0) ||
+         (check_int        > 0 && check_walltime_interval > 0) ||
+         (check_per_approx > 0 && check_walltime_interval > 0) /*||
+         (check_per_exact  > 0 && check_per_approx > 0) */ )
+       amrex::Abort("Must choose only one of check_int, check_per_approx, or "
+           "check_walltime_interval");
+
      pp.query("geom_chk_file", geom_chk_file);
      pp.query("geom_levelset_chk_file", geom_levelset_chk_file);
      pp.query("geom_chk_write", geom_chk_write);
      pp.query("geom_chk_read", geom_chk_read);
      pp.query("geom_chk_ccse_regtest", geom_chk_ccse_regtest);
-
-     std::string walltime_in;
-     int has_walltime_limit = pp.query("check_walltime", walltime_in);
-
-     if (has_walltime_limit) {
-       int HH(0), MM(0), SS(0);
-       if (sscanf(walltime_in.c_str(), "%d:%d:%d", &HH, &MM, &SS) >= 2) {
-         m_check_walltime = static_cast<Real>(HH*3600 + MM*60 + SS);
-       } else {
-         std::string message =
-           " Error: Unable to correctly parse checkpoint walltime "
-           + walltime_in + "\n" + " The correct format is HH:MM:SS\n";
-         amrex::Print() << message;
-         amrex::Abort(message);
-       }
-     }
 
      // Plot output control
      pp.query("plot_file", plot_file);
@@ -116,10 +124,10 @@ void MfixRW::readParameters ()
      //pp.query("plot_per_exact", plot_per_exact);
      pp.query("plot_per_approx", plot_per_approx);
 
-     if ((plot_int       > 0 && plot_per_exact  > 0) ||
+     if (/*(plot_int       > 0 && plot_per_exact  > 0) ||*/
          (plot_int       > 0 && plot_per_approx > 0) /*||
          (plot_per_exact > 0 && plot_per_approx > 0) */ )
-       amrex::Abort("Must choose only one of plot_int or plot_per_exact or plot_per_approx");
+       amrex::Abort("Must choose only one of plot_int or plot_per_approx");
 
      // Plot solids only in specific regions
      {
@@ -212,10 +220,6 @@ void MfixRW::readParameters ()
   {
      ParmParse pp("mfix");
 
-     pp.query("stop_time", stop_time);
-     pp.query("overstep_end_time", overstep_end_time);
-     pp.query("max_step", max_step);
-
      pp.query("write_eb_surface", write_eb_surface);
      pp.query("write_ls", write_ls);
      pp.query("stop_for_unused_inputs", stop_for_unused_inputs);
@@ -239,7 +243,7 @@ void MfixRW::readParameters ()
 
 
 void
-MfixRW::Initialize ()
+MFIXReadWrite::Initialize ()
 {
   real_comp_names.clear();
   int_comp_names.clear();
@@ -353,10 +357,12 @@ MfixRW::Initialize ()
 }
 
 
-void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
+void
+MFIXReadWrite::writeNow (MFIXTimer& timer,
+                         Real dt,
+                         bool first,
+                         bool last)
 {
-
-
 /*--------------------------------------------------------------------------------------------------
  *
  *                                     AMReX Plot File Output Control
@@ -376,21 +382,21 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
     else if (plot_per_approx > 0.0)
     {
-        plot_test = test_per_approx(time, dt, plot_per_approx);
+        plot_test = test_per_approx(timer.time(), dt, plot_per_approx);
 
     }/*
-    else if ( plot_per_exact  > 0 && (amrex::Math::abs(remainder(time, plot_per_exact)) < 1.e-12) )
+    else if ( plot_per_exact  > 0 && (amrex::Math::abs(remainder(timer.time(), plot_per_exact)) < 1.e-12) )
     {
         plot_test = 1;
     }*/
 
 
-    if ( (plot_test == 1) || ( ( plot_int > 0) && ( nstep %  plot_int == 0 ) ) )
+    if ( (plot_test == 1) || ( ( plot_int > 0) && ( timer.nstep() %  plot_int == 0 ) ) )
     {
         if (fluid.solve() && mfix::m_run_type != RunType::PIC2DEM)
           ComputeVort();
 
-        WritePlotFile(plot_file, nstep, time);
+        WritePlotFile(plot_file, timer.nstep(), timer.time());
     }
 
 
@@ -423,20 +429,20 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
         else if (plot_region.m_plot_per_approx > 0.0)
         {
-          plot_test = test_per_approx(time, dt, plot_region.m_plot_per_approx);
+          plot_test = test_per_approx(timer.time(), dt, plot_region.m_plot_per_approx);
 
         }/*
         else if (plot_region.m_plot_per_exact  > 0 &&
-                 (amrex::Math::abs(remainder(time, plot_region.m_plot_per_exact)) < 1.e-12) )
+                 (amrex::Math::abs(remainder(timer.time(), plot_region.m_plot_per_exact)) < 1.e-12) )
         {
             plot_test = 1;
         }*/
 
 
         if ((plot_test == 1) || ((plot_region.m_plot_int > 0) &&
-            (nstep % plot_region.m_plot_int == 0)))
+            (timer.nstep() % plot_region.m_plot_int == 0)))
         {
-          WriteSolidsPlotFile(plot_region, plot_solids_file, nstep, time);
+          WriteSolidsPlotFile(plot_region, plot_solids_file, timer.nstep(), timer.time());
         }
       }
     }
@@ -455,7 +461,7 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
       int monitor_test = 0;
 
-      if ( first || (nstep == 0) ) {
+      if ( first || (timer.nstep() == 0) ) {
         if ( (monitor.plot_int() > 0 || monitor.plot_per_approx() > 0) )
           monitor_test = 1;
       }
@@ -465,16 +471,16 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
       }
 
       else if (monitor.plot_per_approx() > 0.0) {
-        monitor_test = test_per_approx(time, dt, monitor.plot_per_approx());
+        monitor_test = test_per_approx(timer.time(), dt, monitor.plot_per_approx());
       }
 
-      else if ((monitor.plot_int() > 0) && (nstep % monitor.plot_int() == 0)) {
+      else if ((monitor.plot_int() > 0) && (timer.nstep() % monitor.plot_int() == 0)) {
         monitor_test = 1;
       }
 
       if ( monitor_test == 1 ) {
 
-        monitor.write_csv(time, dt);
+        monitor.write_csv(timer.time(), dt);
       }
     }
 
@@ -494,13 +500,13 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
             ascent_test = 1;
 
     } else if (ascent_per_approx > 0.0) {
-      ascent_test = test_per_approx(time, dt, ascent_per_approx);
+      ascent_test = test_per_approx(timer.time(), dt, ascent_per_approx);
     }
 
-    if ( (ascent_test == 1) || ( ( ascent_int > 0) && ( nstep %  ascent_int == 0 ) ) )
+    if ( (ascent_test == 1) || ( ( ascent_int > 0) && ( timer.nstep() %  ascent_int == 0 ) ) )
     {
         const int myProc = ParallelDescriptor::MyProc();
-        WriteAscentFile(nstep, time);
+        WriteAscentFile(timer.nstep(), timer.time());
     }
 #endif
 
@@ -515,7 +521,8 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
 
       int check_test = 0;
 
-      if ( check_int > 0 ) {
+      if ( check_int > 0 /* || check_per_exact > 0*/ ||
+           check_per_approx > 0. || check_walltime_interval > 0.) {
 
         // We automatically write checkpoint files with the initial data
         if ( first ) {
@@ -523,26 +530,44 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
         }
         // We automatically write checkpoint files with the final data
         else if (last) {
-          check_test = (nstep != last_chk) ? 1 : 0;
+          check_test = (timer.nstep() != last_chk) ? 1 : 0;
         }
-        else {
-          check_test = (nstep %  check_int == 0) ? 1 :0;
+        else if (check_per_approx > 0) {
+          check_test = test_per_approx(timer.time(), dt, check_per_approx);
+        }/*
+        else if (check_per_exact > 0 &&
+                 (Math::abs(remainder(timer.time(), check_per_exact)) < 1.e-12)) {
+          check_test = 1;
+        }*/
+        else if (check_int > 0) {
+          check_test = (timer.nstep() % check_int == 0) ? 1 : 0;
+        }
+        else if (check_walltime_interval > 0) {
+          check_test = test_walltime_interval(timer);
         }
 
         if (check_test == 1) {
-          WriteCheckPointFile(check_file, nstep, dt, time);
-          last_chk = nstep;
 
+          Real time_start = timer.system_time();
+          WriteCheckPointFile(check_file, timer.nstep(), dt, timer.time());
+          Real chkpt_write_time = timer.elapsed_runtime(time_start);
+
+          if (timer.walltime_limit() > 0) {
+            m_check_max_write_time = max(m_check_max_write_time, chkpt_write_time);
+            ParallelDescriptor::ReduceRealMax(&m_check_max_write_time, 1);
+          }
+
+          last_chk = timer.nstep();
         }
-      }
 
-      if ( m_check_walltime > 0.0 && check_test == 0 ) {
-          Real walltime = ParallelDescriptor::second() - m_start_time;
-          if ( walltime >= m_check_walltime ) {
-            WriteCheckPointFile(check_file, nstep, dt, time);
-            m_check_walltime = -1.0;
+        if ( timer.walltime_limit() > 0. && check_test == 0 ) {
+
+          if ( test_walltime_approaching(timer) ) {
+
+            WriteCheckPointFile(check_file, timer.nstep(), dt, timer.time());
           }
         }
+      }
 
     }
 
@@ -556,18 +581,19 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
     if ( par_ascii_int > 0) {
       if ( first || last ) {
         par_ascii_test = 1;
-      } else if ( nstep %  par_ascii_int == 0 ) {
+      } else if ( timer.nstep() %  par_ascii_int == 0 ) {
         par_ascii_test = 1;
       }
 
     } else if (par_ascii_per_approx > 0.0) {
-      par_ascii_test = test_per_approx(time, dt, par_ascii_per_approx);
+      par_ascii_test = test_per_approx(timer.time(), dt,
+          par_ascii_per_approx);
 
     }
 
     if( par_ascii_test == 1) {
-      WriteParticleAscii(par_ascii_file, nstep);
-      last_par_ascii = nstep;
+      WriteParticleAscii(par_ascii_file, timer.nstep());
+      last_par_ascii = timer.nstep();
     }
 
 /*--------------------------------------------------------------------------------------------------
@@ -586,15 +612,15 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
       }
       // Do it for the last step
       else if ( last ) {
-        avg_region_test = (nstep != last_avg) ? 1 : 0;
+        avg_region_test = (timer.nstep() != last_avg) ? 1 : 0;
       }
       else {
-        avg_region_test = (nstep % avg_int == 0) ? 1 : 0;
+        avg_region_test = (timer.nstep() % avg_int == 0) ? 1 : 0;
       }
 
       if ( avg_region_test == 1 ) {
-        WriteAverageRegions( avg_file, nstep, time );
-        last_avg = nstep;
+        WriteAverageRegions( avg_file, timer.nstep(), timer.time() );
+        last_avg = timer.nstep();
       }
 
     }
@@ -613,31 +639,32 @@ void MfixRW::writeNow (int nstep, Real time, Real dt, bool first, bool last)
         mass_balance_report_test = 0;
 
       } else if (last) { // Always write the last.
-        mass_balance_report_test = (nstep != last_mb_report) ? 1 :0;
+        mass_balance_report_test = (timer.nstep() != last_mb_report) ? 1 :0;
 
       } else {
-        mass_balance_report_test = (nstep % mass_balance_report_int == 0) ? 1 : 0;
+        mass_balance_report_test = (timer.nstep() % mass_balance_report_int == 0) ? 1 : 0;
       }
     }
 
     else if (mass_balance_report_per_approx > 0.0) {
-      mass_balance_report_test = test_per_approx(time, dt, mass_balance_report_per_approx);
+      mass_balance_report_test = test_per_approx(timer.time(),
+          dt, mass_balance_report_per_approx);
     }
 
     if ( mass_balance_report_test == 1) {
-      WriteMassBalanceReport(time);
-      last_mb_report = nstep;
+      WriteMassBalanceReport(timer.time());
+      last_mb_report = timer.nstep();
     }
 
 }
 
-void MfixRW::writeEBSurface() const
+void MFIXReadWrite::writeEBSurface() const
 {
    if(write_eb_surface)
      WriteMyEBSurface();
 }
 
-void MfixRW::writeStaticPlotFiles() const
+void MFIXReadWrite::writeStaticPlotFiles() const
 {
    if ((m_dem.solve() || m_pic.solve()) && write_ls) {
       WriteStaticPlotFileParticleLevelSet(static_plt_file_ls);
@@ -648,7 +675,7 @@ void MfixRW::writeStaticPlotFiles() const
    }
 }
 
-void MfixRW::reportGridStats() const
+void MFIXReadWrite::reportGridStats() const
 {
    if (fluid.solve())
      ReportGridStats();
@@ -658,7 +685,7 @@ void MfixRW::reportGridStats() const
 // Print the maximum values of the velocity components
 //
 void
-MfixRW::mfix_print_max_vel (int lev,
+MFIXReadWrite::mfix_print_max_vel (int lev,
                             const Vector<MultiFab*>& vel_g_in,
                             const Vector<MultiFab*>& p_g_in)
 {
@@ -673,7 +700,7 @@ MfixRW::mfix_print_max_vel (int lev,
 // Print the maximum values of the pressure gradient components
 //
 void
-MfixRW::mfix_print_max_gp (int lev,
+MFIXReadWrite::mfix_print_max_gp (int lev,
                            const Vector<MultiFab*>& gp_g_in)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
@@ -687,9 +714,9 @@ MfixRW::mfix_print_max_gp (int lev,
 // Determine if it is time to write based on approximate interval
 //
 int
-MfixRW::test_per_approx(const Real time,
-                        const Real dt,
-                        const Real per_approx)
+MFIXReadWrite::test_per_approx (const Real time,
+                         const Real dt,
+                         const Real per_approx)
 {
   // Check to see if we've crossed a _per_approx interval by comparing
   // the number of intervals that have elapsed for both the current
@@ -722,10 +749,46 @@ MfixRW::test_per_approx(const Real time,
 
 
 //
+// Determine if it is time to write before job is killed
+//
+int
+MFIXReadWrite::test_walltime_approaching (const MFIXTimer& timer) const
+{
+  const Real missing_time = timer.walltime_limit() - timer.elapsed_runtime();
+
+  Real needed_time = amrex::max(1.1*m_check_max_write_time,
+                                m_check_max_write_time + timer.avg_step_runtime(),
+                                timer.walltime_buffer());
+
+  if (missing_time < needed_time)
+    return 1;
+
+  return 0;
+}
+
+
+//
+// Determine if it is time to write before job is killed
+//
+int
+MFIXReadWrite::test_walltime_interval (const MFIXTimer& timer)
+{
+  const Real walltime = m_interval_nb * check_walltime_interval;
+
+  if (timer.elapsed_runtime() > walltime) {
+    m_interval_nb++;
+    return 1;
+  }
+
+  return 0;
+}
+
+
+//
 //
 //
 void
-MfixRW::ReportGridStats () const
+MFIXReadWrite::ReportGridStats () const
 {
   std::vector<long> counts(6,0);
 
@@ -818,7 +881,7 @@ MfixRW::ReportGridStats () const
 // Print the minimum volume fraction and cell location.
 //
 IntVect
-MfixRW::mfix_print_min_epg ()
+MFIXReadWrite::mfix_print_min_epg ()
 {
 
   ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
@@ -877,5 +940,3 @@ MfixRW::mfix_print_min_epg ()
   IntVect fake = {0,0,0};
   return fake;
 }
-
-} // end of namespace MfixIO

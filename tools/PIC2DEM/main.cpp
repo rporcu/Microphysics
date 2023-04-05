@@ -71,19 +71,16 @@ int main (int argc, char* argv[])
     // Setting format to NATIVE rather than default of NATIVE_32
     FArrayBox::setFormat(FABio::FAB_NATIVE);
 
-    Real strt_time = ParallelDescriptor::second();
-
-    Real time=0.0L;
-    int nstep = 0;
-    Real dt = -1.;
-
     // Default constructor. Inheritance: mfix : AmrCore : AmrMesh
     //                                                             |
     //  => Geometry is constructed here: (constructs Geometry) ----+
     mfix mfix_coarse;
+
+    auto& rw_coarse = *(mfix_coarse.m_rw);
+    auto& timer_coarse = mfix_coarse.timer();
+
     MFIXRestarter mfix_restarter(mfix_coarse.nlev);
 
-    auto& rw_coarse = *(mfix_coarse.mfixRW);
 
     // Initialize internals from ParamParse database
     mfix_coarse.InitParams();
@@ -96,8 +93,7 @@ int main (int argc, char* argv[])
     mfix_coarse.make_eb_geometry();
 
     // Initialize derived internals
-    bool init_fluid_grids = true;
-    mfix_coarse.Init(time, init_fluid_grids);
+    mfix_coarse.Init(timer_coarse.time(), /*init_fluid_grids=*/true);
 
     // Create EB factories on new grids
     mfix_coarse.make_eb_factories();
@@ -120,7 +116,8 @@ int main (int argc, char* argv[])
     // NOTE: during replication 1) this also re-builds ebfactories and
     // level-set 2) this can change the grids
     amrex::IntVect Nrep(1,1,1);
-    mfix_coarse.Restart(rw_coarse.restart_file, nstep, dt, time, Nrep);
+    mfix_coarse.Restart(rw_coarse.restart_file, timer_coarse.nstep(), timer_coarse.dt(),
+        timer_coarse.time(), Nrep);
 
 //    // This checks if we want to regrid
 //    if (rw_coarse.regrid_int > -1)
@@ -135,7 +132,8 @@ int main (int argc, char* argv[])
 
     mfix mfix_fine;
 
-    auto& rw_fine = *(mfix_fine.mfixRW);
+    auto& rw_fine = *(mfix_fine.m_rw);
+    auto& timer_fine = mfix_fine.timer();
 
     mfix_fine.InitParams();
 
@@ -154,8 +152,7 @@ int main (int argc, char* argv[])
     mfix_fine.make_eb_geometry();
 
     // Initialize derived internals
-    init_fluid_grids = false;
-    mfix_fine.Init(time, init_fluid_grids);
+    mfix_fine.Init(timer_fine.time(), /*init_fluid_grids=*/false);
 
     // Create EB factories on new grids
     mfix_fine.make_eb_factories();
@@ -171,14 +168,15 @@ int main (int argc, char* argv[])
     AMREX_ALWAYS_ASSERT(mfix_fine.m_pic.solve() == 0);
 
     mfix_fine.m_dem.set_solve(0);
-    mfix_fine.InitLevelData(time);
+    mfix_fine.InitLevelData(timer_fine.time());
 
     // Reset dem_solve flag to the previous value
     mfix_fine.m_dem.set_solve(dem_solve_flag);
 
     mfix_restarter.allocate_fine_arrays(&mfix_fine);
 
-    mfix_restarter.calc_txfr(&mfix_coarse, mfix_restarter.avgdPIC_coarse, time);
+    mfix_restarter.calc_txfr(&mfix_coarse, mfix_restarter.avgdPIC_coarse,
+        timer_coarse.time());
 
     // Free memory
     delete mfix_coarse.pc;
@@ -200,7 +198,8 @@ int main (int argc, char* argv[])
 
     int restart_flag(1);
 
-    mfix_fine.Restart(rw_fine.restart_file, nstep, dt, time, Nrep);
+    mfix_fine.Restart(rw_fine.restart_file, timer_fine.nstep(), timer_fine.dt(),
+        timer_fine.time(), Nrep);
 
     if (mfix_fine.fluid.solve()) {
       mfix_fine.init_advection();
@@ -208,20 +207,22 @@ int main (int argc, char* argv[])
     }
 
     ///////// Post Init
-    mfix_fine.PostInit(dt, time, restart_flag, time);
+    mfix_fine.PostInit(timer_fine.dt(), timer_fine.time(), restart_flag,
+        timer_fine.time());
 
     mfix_restarter.init_particles_data(&mfix_fine);
 
-    mfix_fine.Evolve(nstep, dt, dt, time, time+dt);
+    mfix_fine.Evolve(timer_fine.nstep(), timer_fine.dt(), timer_fine.dt(),
+        timer_fine.time(), timer_fine.time()+timer_fine.dt());
 
     rw_fine.reportGridStats();
 
     if (rw_fine.stop_for_unused_inputs && ParmParse::QueryUnusedInputs())
       amrex::Abort("Aborting here due to unused inputs");
 
-    rw_fine.writeNow(nstep, time, dt, /*first=*/false, /*last=*/true);
+    rw_fine.writeNow(timer_fine, /*first=*/false, /*last=*/true);
 
-    Real end_time = ParallelDescriptor::second() - strt_time;
+    Real end_time = timer_coarse.elapsed_runtime();
     ParallelDescriptor::ReduceRealMax(end_time, ParallelDescriptor::IOProcessorNumber());
 
     if (ParallelDescriptor::IOProcessor())

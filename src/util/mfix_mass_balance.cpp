@@ -14,11 +14,8 @@
 
 using namespace amrex;
 
-
-namespace MfixIO {
-
 void
-MfixRW::WriteMassBalanceReport (const Real new_time)
+MFIXReadWrite::WriteMassBalanceReport (const Real new_time)
 {
 
   if (!report_mass_balance) {
@@ -135,7 +132,7 @@ MfixRW::WriteMassBalanceReport (const Real new_time)
 
 
 void
-MfixRW::ComputeMassAccum (const int offset)
+MFIXReadWrite::ComputeMassAccum (const int offset)
 {
   BL_PROFILE("mfix::ComputeMassAccum()");
 
@@ -226,7 +223,7 @@ MfixRW::ComputeMassAccum (const int offset)
 
 
 void
-MfixRW::ComputeMassProduction (const Real dt,
+MFIXReadWrite::ComputeMassProduction (const Real dt,
                                Vector< MultiFab const*> const& txfr)
 {
   BL_PROFILE("mfix::ComputeMassProduction()");
@@ -294,7 +291,7 @@ MfixRW::ComputeMassProduction (const Real dt,
 
 
 void
-MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
+MFIXReadWrite::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
                          Vector< MultiFab const*> const& flux_y,
                          Vector< MultiFab const*> const& flux_z,
                          const int scomp,
@@ -497,7 +494,7 @@ MfixRW::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 }
 
 void
-MfixRW::InitMassBalance ()
+MFIXReadWrite::InitMassBalance ()
 {
   if (report_mass_balance) {
     for(int n(0); n<MFIXSpecies::NMAX; n++) {
@@ -509,5 +506,3 @@ MfixRW::InitMassBalance ()
     }
   }
 }
-
-} // end namespace MfixIO

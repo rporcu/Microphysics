@@ -160,38 +160,40 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
     // Don't overshoot the final time if not running to steady state
     if (m_steady_state == 0 && stop_time > 0.)
-       if ((time+dt_new > stop_time) && (fixed_dt <= 0.) && (!mfixRW->overstep_end_time))
-           dt_new = stop_time - time;
+       if ((time+dt_new > stop_time) &&
+           (m_timer.timestep_type() == MFIXTimer::TimestepType::Dynamic) &&
+           (!m_timer.overstep_end_time()))
+         dt_new = stop_time - time;
 
     // dt_new is the step calculated with a cfl constraint; dt is the value set by fixed_dt
     // When the test was on dt > dt_new, there were cases where they were effectively equal
     //   but (dt > dt_new) was being set to true due to precision issues.
     Real ope(1.0 + 1.e-8);
 
-    if (fixed_dt > 0.)
+    if (m_timer.timestep_type() == MFIXTimer::TimestepType::Fixed)
     {
-        if (fixed_dt > dt_new*ope && m_cfl > 0)
+        if (m_timer.dt() > dt_new*ope && m_cfl > 0)
         {
             amrex::Print() << "WARNING: fixed dt does not satisfy CFL condition: "
-                           << " fixed dt = "  << fixed_dt
+                           << " fixed dt = "  << m_timer.dt()
                            << " > dt based on cfl: " << dt_new
                            << std::endl;
             amrex::Abort ("Fixed dt is too large for fluid solve");
         } else {
 
-            const Real new_time = time+fixed_dt;
-            if (((new_time - stop_time) > 1.e-15) && (!mfixRW->overstep_end_time))
+            const Real new_time = time + m_timer.dt();
+            if (((new_time - stop_time) > 1.e-15) && (!m_timer.overstep_end_time()))
                 dt = stop_time - time;
             else
-                dt = fixed_dt;
+                dt = m_timer.dt();
 
         }
     }
     else
     {
-        dt = amrex::min( dt_new, dt_max );
+        dt = amrex::min( dt_new, m_timer.dt_max() );
 
-        if ( dt < dt_min )
+        if ( dt < m_timer.dt_min() )
             amrex::Abort ("Current dt is smaller than dt_min");
 
     }

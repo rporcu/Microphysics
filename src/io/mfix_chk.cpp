@@ -19,15 +19,13 @@ namespace
     const std::string level_prefix {"Level_"};
 }
 
-namespace MfixIO {
-
 // This function initializes the attributes vecVarsName,
 //                                          pltscalarVars, pltscaVarsName,
 //                                          chkScalarVars, chkscaVarsName.
 // If new variables need to be added to the output/checkpoint, simply add them
 // here and the IO routines will automatically take care of them.
 void
-MfixRW::InitIOChkData ()
+MFIXReadWrite::InitIOChkData ()
 {
     if (ooo_debug) amrex::Print() << "InitIOChkData" << std::endl;
     // Define the list of vector variables on faces that need to be written
@@ -45,7 +43,7 @@ MfixRW::InitIOChkData ()
 
 
 void
-MfixRW::ResetIOChkData ()
+MFIXReadWrite::ResetIOChkData ()
 {
   chkScalarVars.clear();
   chkScalarVars.resize(chkscaVarsName.size(), Vector< MultiFab*>(nlev));
@@ -75,7 +73,7 @@ MfixRW::ResetIOChkData ()
 
 
 void
-MfixRW::WriteCheckHeader (const std::string& name,
+MFIXReadWrite::WriteCheckHeader (const std::string& name,
                           int nstep,
                           Real dt,
                           Real time) const
@@ -128,7 +126,7 @@ MfixRW::WriteCheckHeader (const std::string& name,
 
 
 void
-MfixRW::WriteCheckPointFile (std::string& check_file_in,
+MFIXReadWrite::WriteCheckPointFile (std::string& check_file_in,
                              int nstep,
                              Real dt,
                              Real time)
@@ -223,6 +221,4 @@ MfixRW::WriteCheckPointFile (std::string& check_file_in,
         param_file.open(param_file_name.str());
         amrex::writeIntData(levelset_params, 4, param_file);
    }
-}
-
 }

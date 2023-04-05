@@ -14,15 +14,8 @@
 
 using namespace amrex;
 
-//namespace
-//{
-//    const std::string level_prefix {"Level_"};
-//}
-
-namespace MfixIO {
-
 void
-MfixRW::InitIOPltData ()
+MFIXReadWrite::InitIOPltData ()
 {
   if (ooo_debug) amrex::Print() << "InitIOPltData" << std::endl;
 
@@ -145,7 +138,7 @@ MfixRW::InitIOPltData ()
 
 
 void
-MfixRW::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
+MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
                              Vector<int>& write_int_comp_out)
 {
   ParmParse pp("mfix");
@@ -281,7 +274,7 @@ MfixRW::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
 
 
 void
-MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
+MFIXReadWrite::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 {
     // If we've already written this plotfile, don't do it again!
     if (nstep == last_plt) return;
@@ -906,7 +899,7 @@ MfixRW::WritePlotFile (std::string& plot_file_in, int nstep, Real time)
 
 
 void
-MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
+MFIXReadWrite::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
                              std::string& plot_file_in,
                              int nstep,
                              Real time)
@@ -1040,7 +1033,7 @@ MfixRW::WriteSolidsPlotFile (SolidsPlotRegion& plot_region,
 
 
 void
-MfixRW::WriteStaticPlotFileParticleLevelSet (const std::string & plotfilename) const
+MFIXReadWrite::WriteStaticPlotFileParticleLevelSet (const std::string & plotfilename) const
 {
     BL_PROFILE("mfix::WriteStaticPlotFileParticleLevelSet()");
 
@@ -1111,7 +1104,7 @@ MfixRW::WriteStaticPlotFileParticleLevelSet (const std::string & plotfilename) c
 }
 
 void
-MfixRW::WriteStaticPlotFileEBGeometry (const std::string & plotfilename) const
+MFIXReadWrite::WriteStaticPlotFileEBGeometry (const std::string & plotfilename) const
 {
     BL_PROFILE("mfix::WriteStaticPlotFileEBGeometry()");
 
@@ -1265,5 +1258,3 @@ MfixRW::WriteStaticPlotFileEBGeometry (const std::string & plotfilename) const
 
     Print() << "  Done writing static quantities " << plotfilename << std::endl;
 }
-
-} // end namespace MfixIO

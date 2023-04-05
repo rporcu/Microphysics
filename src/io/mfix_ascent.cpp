@@ -12,14 +12,10 @@
 #include <ascent.hpp>
 #endif
 
-
 using namespace amrex;
 
-
-namespace MfixIO {
-
 void
-MfixRW::WriteAscentFile (int nstep, const Real time) const
+MFIXReadWrite::WriteAscentFile (int nstep, const Real time) const
 {
 #ifdef AMREX_USE_ASCENT
   BL_PROFILE("mfix::WriteAscentFile()");
@@ -194,5 +190,3 @@ MfixRW::WriteAscentFile (int nstep, const Real time) const
   amrex::ignore_unused(time);
 #endif
 }
-
-} // end namespace MfixIO

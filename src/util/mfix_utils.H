@@ -284,6 +284,7 @@ static std::string FormatWithCommas(T value)
     ss << std::fixed << value;
     return ss.str();
 }
+
 } // end namespace mfixIO
 
 #endif

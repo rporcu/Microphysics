@@ -8,6 +8,7 @@ CEXE_headers += mfix_reactions.H
 CEXE_headers += mfix_solids.H
 CEXE_headers += mfix_dem.H
 CEXE_headers += mfix_pic.H
+CEXE_headers += mfix_timer.H
 
 CEXE_sources += mfix_regions.cpp
 CEXE_sources += mfix_ic.cpp
@@ -18,3 +19,4 @@ CEXE_sources += mfix_reactions.cpp
 CEXE_sources += mfix_solids.cpp
 CEXE_sources += mfix_dem.cpp
 CEXE_sources += mfix_pic.cpp
+CEXE_sources += mfix_timer.cpp

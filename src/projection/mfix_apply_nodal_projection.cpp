@@ -118,8 +118,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
         else
           amrex::Print() << "Before projection:" << std::endl;
 
-        mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
-        mfixRW->mfix_print_max_gp(lev, gp_in);
+        m_rw->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+        m_rw->mfix_print_max_gp(lev, gp_in);
         amrex::Print() << "Min and Max of ep_g "
                        << ep_g_in[lev]->min(0) << " "
                        << ep_g_in[lev]->max(0) << std::endl;
@@ -319,7 +319,7 @@ mfix::PostProjectionDiagnostics(Real a_time,
           else
              amrex::Print() << "After  projection:" << std::endl;
 
-          mfixRW->mfix_print_max_vel(lev, vel_g_in, p_g_in);
+          m_rw->mfix_print_max_vel(lev, vel_g_in, p_g_in);
       }
     }
 }

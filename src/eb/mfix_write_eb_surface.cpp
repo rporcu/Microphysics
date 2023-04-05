@@ -5,11 +5,8 @@
 
 using namespace amrex;
 
-
-namespace MfixIO {
-
 void
-MfixRW::WriteMyEBSurface () const
+MFIXReadWrite::WriteMyEBSurface () const
 {
   if (geom[0].isAllPeriodic()) return;
 
@@ -30,6 +27,4 @@ MfixRW::WriteMyEBSurface () const
   }
 
   WriteEBSurface(ba,dm,geom[lev],ebf);
-}
-
 }
