@@ -145,6 +145,8 @@ int main (int argc, char* argv[])
     // mfix::Init), as the grids are created using each EB-level's volfrac.
     mfix_fine.make_eb_geometry();
 
+    timer_fine.reset(timer_coarse);
+
     // Initialize derived internals
     mfix_fine.Init(timer_fine.time(), /*init_fluid_grids=*/false);
 

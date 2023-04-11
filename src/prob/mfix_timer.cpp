@@ -59,6 +59,28 @@ MFIXTimer::Initialize ()
 }
 
 
+void
+MFIXTimer::reset (const MFIXTimer& other)
+{
+  m_runtime_start = other.runtime_start();
+  m_walltime_limit = other.walltime_limit();
+  m_walltime_buffer = other.walltime_buffer();
+  m_avg_step_runtime = other.avg_step_runtime();
+  m_start_time = other.start_time();
+  m_time = other.time();
+  m_stop_time = other.stop_time();
+  m_timestep_type = other.timestep_type();
+  m_dt = other.dt();
+  m_dt_min = other.dt_min();
+  m_dt_max = other.dt_max();
+  m_first_step = other.first_step();
+  m_nstep = other.nstep();
+  m_max_step = other.max_step();
+  m_clean_exit = other.clean_exit();
+  m_run_status_type = other.run_status_type();
+}
+
+
 int
 MFIXTimer::ok ()
 {

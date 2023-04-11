@@ -39,6 +39,8 @@ class MFIXTimer
 
     void Initialize ();
 
+    void reset (const MFIXTimer& other);
+
     amrex::Real runtime_start () const { return m_runtime_start; }
     amrex::Real walltime_limit () const { return m_walltime_limit; }
     amrex::Real& walltime_limit () { return m_walltime_limit; }
@@ -89,6 +91,8 @@ class MFIXTimer
     AMREX_FORCE_INLINE
     void advance_nstep (const int n)
     { m_nstep += n; }
+
+    const std::string& clean_exit () const { return m_clean_exit; }
 
     int run_status_type () const { return m_run_status_type; }
 
