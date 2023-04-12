@@ -367,9 +367,9 @@ Monitor::calc_realbox (const Geometry& geometry,
                               prob_lo[1]+box_lo[1]*dx[1],
                               prob_lo[2]+box_lo[2]*dx[2])});
 
-  realbox.setHi({AMREX_D_DECL(prob_lo[0]+box_hi[0]*dx[0],
-                              prob_lo[1]+box_hi[1]*dx[1],
-                              prob_lo[2]+box_hi[2]*dx[2])});
+  realbox.setHi({AMREX_D_DECL(prob_lo[0]+(box_hi[0]+1)*dx[0],
+                              prob_lo[1]+(box_hi[1]+1)*dx[1],
+                              prob_lo[2]+(box_hi[2]+1)*dx[2])});
 
   const Real* realbox_lo = realbox.lo();
   const Real* realbox_hi = realbox.hi();
@@ -3036,7 +3036,7 @@ GeneralProperty::sum (const int lev,
 
     Real l_sum = amrex::get<0>(host_tuple);
 
-    ParallelDescriptor::ReduceRealMax(&l_sum, 1);
+    ParallelDescriptor::ReduceRealSum(&l_sum, 1);
 
     result[var] = l_sum;
   }
