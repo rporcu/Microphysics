@@ -927,7 +927,7 @@ namespace LagrangianMonitor {
 class BaseMonitor: public Monitor {
 
   public:
-    using ParticleTileData = amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count>;
+    using ParticleTileData = amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>;
 
     // Constructor
     BaseMonitor (const std::array<std::string,2> specs,

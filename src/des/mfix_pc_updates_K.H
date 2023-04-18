@@ -18,7 +18,7 @@
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
 part_mass_update (MFIXParticleContainer::ParticleType& p,
-                  const amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count>& ptile_data,
+                  const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                   const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                   const int& i,
                   amrex::Real* X_sn,
@@ -105,7 +105,7 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
 part_momentum_update (MFIXParticleContainer::ParticleType& p,
-                      const amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count>& ptile_data,
+                      const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                       const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                       const amrex::GpuArray<int*, SoAintData::count>& p_intarray,
                       const int& i,
@@ -218,7 +218,7 @@ part_momentum_update (MFIXParticleContainer::ParticleType& p,
 //***************************************************************
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
-part_enthalpy_update (const amrex::ParticleTileData<0,0,SoArealData::count,SoAintData::count>& ptile_data,
+part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                       const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                       const int& i,
                       amrex::Real* X_sn,

@@ -98,7 +98,7 @@ struct MFIXCheckPair
 
   template <int NSR, int NSI, int NAR, int NAI>
   AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile, int i, int j) const
+  bool operator() (const amrex::ConstParticleTileData<amrex::Particle<NSR, NSI>, NAR, NAI>& ptile, int i, int j) const
   {
     const auto p1 = ptile.getSuperParticle(i);
     const auto p2 = ptile.getSuperParticle(j);
@@ -119,7 +119,7 @@ struct MFIXCheckFullPair
 
   template <int NSR, int NSI, int NAR, int NAI>
   AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile, int i, int j) const
+  bool operator() (const amrex::ConstParticleTileData<amrex::Particle<NSR, NSI>, NAR, NAI>& ptile, int i, int j) const
   {
     const auto p1 = ptile.getSuperParticle(i);
     const auto p2 = ptile.getSuperParticle(j);
@@ -145,7 +145,7 @@ struct MFIXCheckPolyPair
 
   template <int NSR, int NSI, int NAR, int NAI>
   AMREX_GPU_DEVICE AMREX_FORCE_INLINE
-  bool operator() (const amrex::ConstParticleTileData<NSR, NSI, NAR, NAI>& ptile,
+  bool operator() (const amrex::ConstParticleTileData<amrex::Particle<NSR, NSI>, NAR, NAI>& ptile,
                    int i, int j, int type, bool ghost_i, bool ghost_j) const
   {
     const auto p1 = ptile.getSuperParticle(i);
