@@ -15,8 +15,6 @@ class MFIXSpecies
     // Constructor
     MFIXSpecies();
 
-    static constexpr int NMAX = 15;
-
     void Initialize ();
 
     // List of recognized species diffusivity models

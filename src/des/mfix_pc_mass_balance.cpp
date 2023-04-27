@@ -7,9 +7,9 @@ using namespace amrex;
 
 void MFIXParticleContainer::ResetMassBalance (int const a_n)
 {
-  m_p_mass_accum[a_n] = m_p_mass_accum[a_n + MFIXSpecies::NMAX];
+  m_p_mass_accum[a_n] = m_p_mass_accum[a_n + solids.nspecies()];
 
-  m_p_mass_accum[a_n + MFIXSpecies::NMAX] = 0.;
+  m_p_mass_accum[a_n + solids.nspecies()] = 0.;
   m_p_mass_inflow[a_n]  = 0.;
   m_p_mass_outflow[a_n] = 0.;
   m_p_mass_prod[a_n]    = 0.;
@@ -142,7 +142,7 @@ void MFIXParticleContainer::ComputeMassAccum ( int const a_offset )
   ParallelDescriptor::ReduceLongSum(m_total_numparticle);
   ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_s);
   for (int n=0; n < nspecies_s; ++n) {
-    m_p_mass_accum[n + a_offset*MFIXSpecies::NMAX] += accum[n];
+    m_p_mass_accum[n + a_offset*nspecies_s] += accum[n];
   }
 
 }

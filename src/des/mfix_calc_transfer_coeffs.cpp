@@ -187,11 +187,11 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))));
 
     MultiFab* interp_ptr;
+    MultiFab* X_gk_interp_ptr;
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 5 + // 3 vel_g + 1 ep_g + 1 ro_g
                             1*int(fluid.solve_enthalpy()) +  // 1 T_g
-                            fluid.nspecies()*int(fluid.solve_species()) +  // Ng X_gk
                             1*int(reactions.solve());  //  1 pressure_g
 
     MultiFab pressure_cc(ep_g_in[lev]->boxArray(), dmap[lev], 1, interp_ng);
@@ -236,16 +236,17 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
         components_count += 1;
       }
 
-      if (fluid.solve_species()) {
-        // Copy species mass fractions
-        MultiFab::Copy(*interp_ptr, *X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng);
-        components_count += fluid.nspecies();
-      }
-
       if (reactions.solve()) {
         // Copy thermodynamic pressure
         MultiFab::Copy(*interp_ptr, pressure_cc,  0, components_count, 1, interp_ng);
         components_count += 1;
+      }
+
+      if (fluid.solve_species()) {
+        X_gk_interp_ptr = new MultiFab(grids[lev], dmap[lev], nspecies_g, interp_ng, MFInfo(), *ebfactory[lev]);
+
+        // Copy fluid temperature
+        MultiFab::Copy(*X_gk_interp_ptr, *X_gk_in[lev], 0, 0, nspecies_g, interp_ng);
       }
     }
     else
@@ -279,16 +280,17 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
         components_count += 1;
       }
 
-      if (fluid.solve_species()) {
-        // Copy fluid species
-        interp_ptr->ParallelCopy(*X_gk_in[lev],  0, components_count, fluid.nspecies(), interp_ng, interp_ng);
-        components_count += fluid.nspecies();
-      }
-
       if (reactions.solve()) {
         // Copy fluid species
         interp_ptr->ParallelCopy(pressure_cc,  0, components_count, 1, interp_ng, interp_ng);
         components_count += 1;
+      }
+
+      if (fluid.solve_species()) {
+        X_gk_interp_ptr = new MultiFab(pba, pdm, nspecies_g, interp_ng, MFInfo(), *particle_ebfactory[lev]);
+
+        // Copy fluid temperature
+        X_gk_interp_ptr->ParallelCopy(*X_gk_in[lev], 0, 0, nspecies_g, interp_ng, interp_ng);
       }
     }
 
@@ -337,13 +339,15 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
         if (flags.getType(amrex::grow(bx,0)) != FabType::covered) {
 
+          const Array4<const Real> empty_array;
+
           const auto& interp_array = interp_ptr->const_array(pti);
+          const auto& X_gk_array = fluid.solve_species() ? X_gk_interp_ptr->const_array(pti) :
+                                                           empty_array;
 
           const auto& flags_array  = flags.array();
 
           const int grown_bx_is_regular = (flags.getType(amrex::grow(bx,1)) == FabType::regular);
-
-          const Array4<const Real> empty_array;
 
           // Cell centroids
           const auto& ccent_fab = grown_bx_is_regular ? empty_array : cellcent->const_array(pti);
@@ -362,19 +366,37 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
           const Real mu_g0 = fluid.mu_g();
 
+          Gpu::DeviceVector<ParticleReal*> X_sn;
+          if (nspecies_s > 0) {
+            X_sn.resize(nspecies_s);
+            for (int n_s(0); n_s < nspecies_s; ++n_s)
+              X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s];
+          }
+          ParticleReal** X_sn_ptr = nspecies_s > 0 ? X_sn.dataPtr() : nullptr;
+
+//          Gpu::DeviceVector<Real*> X_gk;
+//          if (nspecies_g > 0) {
+//            X_gk.resize(nspecies_g);
+//            for (int n_g(0); n_g < nspecies_g; ++n_g)
+//              X_gk[n_g] = &(aux_ptr[n_g*np]);
+//          }
+//          Real** X_gk_ptr = nspecies_g > 0 ? X_gk.dataPtr() : nullptr;
+
+          Real* X_gk_ptr = nspecies_g > 0 ? aux[lev][index].dataPtr() : nullptr;
+
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
                nspecies_g,interp_comp,local_cg_dem,ptile_data,nreactions,
-               nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
+               nspecies_s,X_sn_ptr,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
                fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
-               apz_fab,solve_reactions,aux_ptr,np]
+               apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
-            GpuArray<Real, 7+MFIXSpecies::NMAX> interp_loc; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
+            GpuArray<Real, 7> interp_loc; // vel_g, ep_g, ro_g, T_g, p_g
             interp_loc.fill(0.);
 
             // Indices of cell where particle is located
@@ -383,8 +405,10 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
             const int kloc = static_cast<int>(amrex::Math::floor((particle.pos(2) - plo[2])*dxi[2]));
 
             if (grown_bx_is_regular) {
-              trilinear_interp(particle.pos(), interp_loc.data(), interp_array,
-                               plo, dxi, interp_comp);
+
+              trilinear_interp(particle.pos(), plo, dxi,
+                  interp_array, interp_loc.data(), interp_comp,
+                  X_gk_array, X_gk_ptr, nspecies_g, np, p_id);
 
             } else { // FAB not all regular
 
@@ -436,8 +460,10 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
                     flags_array(i-1,j  ,k  ).isRegular() &&
                     flags_array(i  ,j  ,k  ).isRegular()) {
 
-                  trilinear_interp(particle.pos(), interp_loc.data(),
-                                   interp_array, plo, dxi, interp_comp);
+                  trilinear_interp(particle.pos(), plo, dxi,
+                                   interp_array, interp_loc.data(), interp_comp,
+                                   X_gk_array, X_gk_ptr, nspecies_g, np, p_id);
+
                 // At least one of the cells in the stencil is cut or covered
                 } else {
 #if 0
@@ -466,11 +492,12 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 #else
                   const int srccomp = 0;
                   const int dstcomp = 0;
-                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, X_gk, p_g
+                  const int numcomp = interp_comp; // vel_g, ep_g, ro_g, T_g, p_g
 
                   shepard_interp(particle.pos(), iloc, jloc, kloc, dx, dxi, plo,
                                  flags_array, ccent_fab, bcent_fab, apx_fab, apy_fab, apz_fab,
-                                 interp_array, interp_loc.data(), srccomp, dstcomp, numcomp);
+                                 interp_array, interp_loc.data(), srccomp, dstcomp, numcomp,
+                                 X_gk_array, X_gk_ptr, srccomp, dstcomp, nspecies_g, np, p_id);
 
 #endif
                 } // Cut cell
@@ -487,12 +514,6 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
             if (solve_enthalpy) {
               T_g = interp_loc[comp_count];
               comp_count += 1;
-            }
-
-            Real* X_gk;
-            if (fluid_is_a_mixture) {
-              X_gk = &interp_loc[comp_count];
-              comp_count += nspecies_g;
             }
 
             Real mu_g(0);
@@ -540,7 +561,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
                 cp_g = fluid_parms.calc_cp_g<run_on>(T_g);
               else {
                 for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                  cp_g += X_gk[n_g]*fluid_parms.calc_cp_gk<run_on>(T_g,n_g);
+                  cp_g += X_gk_ptr[n_g*np+p_id]*fluid_parms.calc_cp_gk<run_on>(T_g,n_g);
                 }
               }
 
@@ -551,14 +572,6 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
             }
 
             if (solve_reactions) {
-              // Extract species mass fractions
-              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
-              X_sn.fill(0.);
-
-              for (int n_s(0); n_s < nspecies_s; n_s++) {
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn + n_s][p_id];
-              }
-
               // Extract interpolated thermodynamic pressure
               const Real p_g = interp_loc[comp_count];
 
@@ -571,12 +584,12 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
 
               HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
-                                                              reactions_parms,
-                                                              solids_parms, X_sn.data(),
+                                                              reactions_parms, np, p_id,
+                                                              solids_parms, X_sn_ptr,
                                                               ro_p, ep_s, T_p,
                                                               pvel, fluid_parms,
-                                                              X_gk, ro_g, ep_g, T_g,
-                                                              vel_g, DP, p_g);
+                                                              X_gk_ptr, ro_g, ep_g,
+                                                              T_g, vel_g, DP, p_g);
 
               //***************************************************************
               // Loop over solids species for computing solids txfr rates

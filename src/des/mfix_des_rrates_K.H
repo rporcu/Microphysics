@@ -29,14 +29,16 @@ class HeterogeneousRatesUser
 #endif
     void operator() (amrex::Real* R_q,
                      const MFIXReactionsParms& reactions_parms,
+                     const int np,
+                     const int p_id,
                      const MFIXSolidsParms& solids_parms,
-                     const amrex::Real* X_sn,
+                     amrex::ParticleReal** X_sn_ptr,
                      const amrex::Real ro_s,
                      const amrex::Real ep_s,
                      const amrex::Real T_s,
                      const amrex::RealVect& vel_s,
                      const MFIXFluidParms& fluid_parms,
-                     const amrex::Real* X_gk,
+                     amrex::Real* X_gk,
                      const amrex::Real ro_g,
                      const amrex::Real ep_g,
                      const amrex::Real T_g,
@@ -62,8 +64,10 @@ class HomogeneousRatesUser
 #endif
     void operator() (amrex::Real*, // R_q,
                      const MFIXReactionsParms&, // reactions_parms,
+                     const int np,
+                     const int p_id,
                      const MFIXSolidsParms&, // solids_parms,
-                     const amrex::Real*, // X_sn,
+                     amrex::ParticleReal**, // X_sn,
                      const amrex::Real, // ro_s,
                      const amrex::Real /*ep_s*/) const;
 
@@ -78,8 +82,10 @@ class HomogeneousRatesUser
 #endif
     void operator() (amrex::Real*, // R_q,
                      const MFIXReactionsParms&, // reactions_parms,
+                     const int np,
+                     const int p_id,
                      const MFIXFluidParms&, // fluid_parms,
-                     const amrex::Real*, // X_gk,
+                     amrex::Real*, // X_gk,
                      const amrex::Real, // ro_g,
                      const amrex::Real /*ep_g*/) const;
 };

@@ -20,14 +20,16 @@ AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator() (Real* /*R_q*/,
                                     const MFIXReactionsParms& /*reactions_parms*/,
+                                    const int /*np*/,
+                                    const int /*p_id*/,
                                     const MFIXSolidsParms& /*solids_parms*/,
-                                    const Real* /*X_sn*/,
+                                    ParticleReal** /*X_sn*/,
                                     const Real /*ro_s*/,
                                     const Real /*ep_s*/,
                                     const Real /*T_s*/,
                                     const RealVect& /*vel_s*/,
                                     const MFIXFluidParms& /*fluid_parms*/,
-                                    const Real* /*X_gk*/,
+                                    Real* /*X_gk*/,
                                     const Real /*ro_g*/,
                                     const Real /*ep_g*/,
                                     const Real /*T_g*/,
@@ -69,8 +71,10 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,
                                   const MFIXReactionsParms& /*reactions_parms*/,
+                                  const int /*np*/,
+                                  const int /*p_id*/,
                                   const MFIXSolidsParms& /*solids_parms*/,
-                                  const Real* /*X_sn*/,
+                                  ParticleReal** /*X_sn*/,
                                   const Real /*ro_s*/,
                                   const Real /*ep_s*/) const
 {
@@ -101,8 +105,10 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator() (Real* /*R_q*/,
                                   const MFIXReactionsParms& /*reactions_parms*/,
+                                  const int /*np*/,
+                                  const int /*p_id*/,
                                   const MFIXFluidParms& /*fluid_parms*/,
-                                  const Real* /*X_gk*/,
+                                  Real* /*X_gk*/,
                                   const Real /*ro_s*/,
                                   const Real /*ep_s*/) const
 {
@@ -133,14 +139,16 @@ AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
                                                 const MFIXReactionsParms& /*reactions_parms*/,
+                                                const int /*np*/,
+                                                const int /*p_id*/,
                                                 const MFIXSolidsParms& /*solids_parms*/,
-                                                const Real* /*X_sn*/,
+                                                ParticleReal** /*X_sn*/,
                                                 const Real /*ro_s*/,
                                                 const Real /*ep_s*/,
                                                 const Real /*T_s*/,
                                                 const RealVect& /*vel_s*/,
                                                 const MFIXFluidParms& /*fluid_parms*/,
-                                                const Real* /*X_gk*/,
+                                                Real* /*X_gk*/,
                                                 const Real /*ro_g*/,
                                                 const Real /*ep_g*/,
                                                 const Real /*T_g*/,
@@ -154,14 +162,16 @@ AMREX_GPU_HOST_DEVICE
 void
 HeterogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
                                                const MFIXReactionsParms& /*reactions_parms*/,
+                                               const int /*np*/,
+                                               const int /*p_id*/,
                                                const MFIXSolidsParms& /*solids_parms*/,
-                                               const Real* /*X_sn*/,
+                                               ParticleReal** /*X_sn*/,
                                                const Real /*ro_s*/,
                                                const Real /*ep_s*/,
                                                const Real /*T_s*/,
                                                const RealVect& /*vel_s*/,
                                                const MFIXFluidParms& /*fluid_parms*/,
-                                               const Real* /*X_gk*/,
+                                               Real* /*X_gk*/,
                                                const Real /*ro_g*/,
                                                const Real /*ep_g*/,
                                                const Real /*T_g*/,
@@ -175,8 +185,10 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
                                               const MFIXReactionsParms& /*reactions_parms*/,
+                                              const int /*np*/,
+                                              const int /*p_id*/,
                                               const MFIXSolidsParms& /*solids_parms*/,
-                                              const Real* /*X_sn*/,
+                                              ParticleReal** /*X_sn*/,
                                               const Real /*ro_s*/,
                                               const Real /*ep_s*/) const;
 
@@ -186,8 +198,10 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
                                              const MFIXReactionsParms& /*reactions_parms*/,
+                                             const int /*np*/,
+                                             const int /*p_id*/,
                                              const MFIXSolidsParms& /*solids_parms*/,
-                                             const Real* /*X_sn*/,
+                                             ParticleReal** /*X_sn*/,
                                              const Real /*ro_s*/,
                                              const Real /*ep_s*/) const;
 
@@ -197,8 +211,10 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator()<RunOn::Host>(Real* /*R_q*/,
                                               const MFIXReactionsParms& /*reactions_parms*/,
+                                              const int /*np*/,
+                                              const int /*p_id*/,
                                               const MFIXFluidParms& /*fluid_parms*/,
-                                              const Real* /*X_gk*/,
+                                              Real* /*X_gk*/,
                                               const Real /*ro_s*/,
                                               const Real /*ep_s*/) const;
 
@@ -208,7 +224,9 @@ AMREX_GPU_HOST_DEVICE
 void
 HomogeneousRatesUser::operator()<RunOn::Gpu>(Real* /*R_q*/,
                                              const MFIXReactionsParms& /*reactions_parms*/,
+                                             const int /*np*/,
+                                             const int /*p_id*/,
                                              const MFIXFluidParms& /*fluid_parms*/,
-                                             const Real* /*X_gk*/,
+                                             Real* /*X_gk*/,
                                              const Real /*ro_s*/,
                                              const Real /*ep_s*/) const;

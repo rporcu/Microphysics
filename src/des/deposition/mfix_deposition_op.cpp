@@ -269,8 +269,8 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
 
       AMREX_ASSERT(aux_iterator != m_aux[lev].end());
 
-      const auto& aux_vector = aux_iterator->second;
-      const Real* aux_ptr = aux_vector.dataPtr();
+      auto& aux_vector = aux_iterator->second;
+      Real* aux_ptr = aux_vector.dataPtr();
 
       const Box& box = pti.tilebox(); // I need a box without ghosts
 
@@ -359,12 +359,9 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
             pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
-          GpuArray<Real, MFIXSpecies::NMAX> ro_chem_txfr;
-          ro_chem_txfr.fill(0.);
-
           if (solve_reactions) {
             for (int n_g(0); n_g < nspecies_g; ++n_g) {
-              ro_chem_txfr[n_g] = statwt * aux_ptr[n_g*nrp + ip] / reg_cell_vol;
+              aux_ptr[n_g*nrp + ip] = statwt * aux_ptr[n_g*nrp + ip] / reg_cell_vol;
             }
           }
 
@@ -417,7 +414,7 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
 
                 if (solve_reactions) {
                   for (int n_g(0); n_g < nspecies_g; ++n_g) {
-                    HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*ro_chem_txfr[n_g]);
+                    HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_Xg_txfr+n_g), weight_vol*aux_ptr[n_g*nrp + ip]);
                   }
 
                   HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_velg_txfr+0), weight_vol*velx_chem_txfr);

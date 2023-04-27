@@ -118,14 +118,16 @@ struct Residue
 {
   AMREX_GPU_HOST_DEVICE
   Residue (const int& solid_is_a_mixture,
+           const int& i,
            const int& nspecies_s,
            const MFIXSolidsParms& solids_parms,
-           const amrex::Real* X_sn,
+           amrex::ParticleReal** X_sn_ptr,
            const amrex::Real& hp)
     : m_solid_is_a_mixture(solid_is_a_mixture)
+    , m_i(i)
     , m_nspecies_s(nspecies_s)
     , m_solids_parms(solids_parms)
-    , m_X_sn(X_sn)
+    , m_X_sn_ptr(X_sn_ptr)
     , m_hp(hp)
   {}
 
@@ -138,16 +140,17 @@ struct Residue
       hp_loc = m_solids_parms.calc_h_s<run_on>(Tp_arg);
     } else {
       for (int n_s(0); n_s < m_nspecies_s; ++n_s)
-        hp_loc += m_X_sn[n_s]*m_solids_parms.calc_h_sn<run_on>(Tp_arg,n_s);
+        hp_loc += m_X_sn_ptr[n_s][m_i]*m_solids_parms.calc_h_sn<run_on>(Tp_arg,n_s);
     }
 
     return hp_loc - m_hp;
   }
 
   const int& m_solid_is_a_mixture;
+  const int& m_i;
   const int& m_nspecies_s;
   const MFIXSolidsParms& m_solids_parms;
-  const amrex::Real* m_X_sn;
+  amrex::ParticleReal** m_X_sn_ptr;
   const amrex::Real& m_hp;
 };
 
@@ -155,13 +158,15 @@ struct Gradient
 {
   AMREX_GPU_HOST_DEVICE
   Gradient (const int& solid_is_a_mixture,
+            const int& i,
             const int& nspecies_s,
             const MFIXSolidsParms& solids_parms,
-            const amrex::Real* X_sn)
+            amrex::ParticleReal** X_sn_ptr)
     : m_solid_is_a_mixture(solid_is_a_mixture)
+    , m_i(i)
     , m_nspecies_s(nspecies_s)
     , m_solids_parms(solids_parms)
-    , m_X_sn(X_sn)
+    , m_X_sn_ptr(X_sn_ptr)
   {}
 
   AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
@@ -173,7 +178,7 @@ struct Gradient
       gradient = m_solids_parms.calc_partial_h_s<run_on>(Tp_arg);
     } else {
       for (int n_s(0); n_s < m_nspecies_s; ++n_s) {
-        gradient += m_X_sn[n_s]*m_solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n_s);
+        gradient += m_X_sn_ptr[n_s][m_i]*m_solids_parms.calc_partial_h_sn<run_on>(Tp_arg,n_s);
       }
     }
 
@@ -181,9 +186,10 @@ struct Gradient
   }
 
   const int& m_solid_is_a_mixture;
+  const int& m_i;
   const int& m_nspecies_s;
   const MFIXSolidsParms& m_solids_parms;
-  const amrex::Real* m_X_sn;
+  amrex::ParticleReal** m_X_sn_ptr;
 };
 
 } // end namespace SolidsEnthalpy

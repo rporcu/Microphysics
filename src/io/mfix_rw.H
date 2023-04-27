@@ -143,7 +143,7 @@ class MFIXReadWrite
                                  const amrex::Real time,
                                  const std::string& basename) const;
 
-   void InitMassBalance ();
+   void InitMassBalance (const int nspecies);
 
    void ComputeMassAccum (const int offset = 1);
 
@@ -287,10 +287,10 @@ private:
 
    MFIXRegions& regions;
 
-   amrex::GpuArray<amrex::Real,2*MFIXSpecies::NMAX> m_mass_accum   = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_inflow  = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_outflow = {0.};
-   amrex::GpuArray<amrex::Real,  MFIXSpecies::NMAX> m_mass_prod    = {0.};
+   amrex::Vector<amrex::Real> m_mass_accum;
+   amrex::Vector<amrex::Real> m_mass_inflow;
+   amrex::Vector<amrex::Real> m_mass_outflow;
+   amrex::Vector<amrex::Real> m_mass_prod;
 
    void readParameters ();
 

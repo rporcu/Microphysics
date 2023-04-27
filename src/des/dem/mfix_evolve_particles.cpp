@@ -341,6 +341,12 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const int nspecies_s = solids.nspecies();
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
+
+            Gpu::DeviceVector<ParticleReal*> X_sn(nspecies_s);
+            for (int n_s(0); n_s < nspecies_s; ++n_s)
+              X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s];
+            ParticleReal** X_sn_ptr = X_sn.dataPtr();
+
             const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
             const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
             const int idx_h_txfr = m_runtimeRealData.h_txfr;
@@ -357,7 +363,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             const auto& solids_parms = solids.parameters();
 
             amrex::ParallelFor(nrp, [pstruct,p_realarray,p_intarray,subdt,
-                ptile_data,nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
+                ptile_data,nspecies_s,X_sn_ptr,idx_mass_txfr,idx_vel_txfr,
                 idx_h_txfr,update_mass,fc_ptr,cond_ptr,ntot,gravity,tow_ptr,
                 p_hi,p_lo,lo_hi_bc,enthalpy_source,update_momentum,time,
                 solid_is_a_mixture,solids_parms,solve_enthalpy,solve_reactions,
@@ -365,14 +371,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
-
-              GpuArray<Real, MFIXSpecies::NMAX> X_sn;
-              X_sn.fill(0.);
-
-              // Get current particle's species mass fractions
-              for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
-              }
 
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
@@ -392,9 +390,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               //***************************************************************
               if (update_mass) {
 
-                part_mass_update(p, ptile_data, p_realarray, i, X_sn.data(),
+                part_mass_update(p, ptile_data, p_realarray, i, X_sn_ptr,
                     nspecies_s, subdt, p_mass_old, p_mass_new, &p_oneOverI_old,
-                    &p_oneOverI_new, proceed, coeff, idx_mass_txfr, idx_X_sn, 1);
+                    &p_oneOverI_new, proceed, coeff, idx_mass_txfr, 1);
 
               }
 
@@ -416,7 +414,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 //***************************************************************
                 if (solve_enthalpy) {
 
-                  part_enthalpy_update(ptile_data, p_realarray, i, X_sn.data(),
+                  part_enthalpy_update(ptile_data, p_realarray, i, X_sn_ptr,
                       nspecies_s, solid_is_a_mixture, solids_parms, subdt, coeff,
                       p_mass_new, cond_ptr, enthalpy_source, solve_reactions,
                       idx_h_txfr, abstol, reltol, maxiter, is_IOProc, 1);

@@ -60,8 +60,16 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
       const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
-      const int update_mass      = solids.update_mass() && solids.solve_species() && reactions.solve();
-      const int solve_enthalpy  = solids.solve_enthalpy();
+      Gpu::DeviceVector<ParticleReal*> X_sn;
+      if (nspecies_s > 0) {
+        X_sn.resize(nspecies_s);
+        for (int n_s(0); n_s < nspecies_s; ++n_s)
+          X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s];
+      }
+      ParticleReal** X_sn_ptr = nspecies_s > 0 ? X_sn.dataPtr() : nullptr;
+
+      const int update_mass = solids.update_mass() && solids.solve_species() && reactions.solve();
+      const int solve_enthalpy = solids.solve_enthalpy();
       const int solve_reactions = reactions.solve();
 
       const Real enthalpy_source = solids.enthalpy_source();
@@ -72,20 +80,12 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
       amrex::ParallelFor(nrp,
           [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
-           idx_X_sn,idx_mass_txfr,update_mass,solve_reactions,idx_h_txfr,
+           X_sn_ptr,idx_mass_txfr,update_mass,solve_reactions,idx_h_txfr,
            solid_is_a_mixture,solve_enthalpy,enthalpy_source,solids_parms,
            is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int i) noexcept
       {
         auto& p = pstruct[i];
-
-        GpuArray<Real, MFIXSpecies::NMAX> X_sn;
-        X_sn.fill(0.);
-
-        // Get current particle's species mass fractions
-        for (int n_s(0); n_s < nspecies_s; ++n_s) {
-          X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][i];
-        }
 
         // Get current particle's mass
         const Real p_mass_old = p_realarray[SoArealData::mass][i];
@@ -101,9 +101,9 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         //*********************************************************************
         if (update_mass) {
 
-          part_mass_update(p, ptile_data, p_realarray, i, X_sn.data(), nspecies_s,
+          part_mass_update(p, ptile_data, p_realarray, i, X_sn_ptr, nspecies_s,
               dt, p_mass_old, p_mass_new, nullptr, nullptr, proceed, coeff,
-              idx_mass_txfr, idx_X_sn, 0);
+              idx_mass_txfr, 0);
         }
 
         if (proceed) {
@@ -113,7 +113,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           //*********************************************************************
           if (solve_enthalpy) {
 
-            part_enthalpy_update(ptile_data, p_realarray, i, X_sn.data(), nspecies_s,
+            part_enthalpy_update(ptile_data, p_realarray, i, X_sn_ptr, nspecies_s,
                 solid_is_a_mixture, solids_parms, dt, coeff, p_mass_new, nullptr,
                 enthalpy_source, solve_reactions, idx_h_txfr, abstol, reltol,
                 maxiter, is_IOProc, 0);

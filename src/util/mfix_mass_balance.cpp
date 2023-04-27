@@ -25,7 +25,6 @@ MFIXReadWrite::WriteMassBalanceReport (const Real new_time)
   // Compute current mass in system
   ComputeMassAccum(1);
 
-  const int offset = MFIXSpecies::NMAX;
   const int nspecies_g = fluid.nspecies();
   const int nspecies_s = solids.nspecies();
 
@@ -49,17 +48,17 @@ MFIXReadWrite::WriteMassBalanceReport (const Real new_time)
 
     if (fluid.solve()) {
       for (int n=0; n < nspecies_g; ++n) {
-        Real delta_accum( m_mass_accum[n+offset] - m_mass_accum[n] - m_mass_prod[n] );
+        Real delta_accum( m_mass_accum[n+nspecies_g] - m_mass_accum[n] - m_mass_prod[n] );
         Real bc_flux( m_mass_inflow[n] - m_mass_outflow[n]);
 
         //net_acc  += delta_accum;
         //net_flux += bc_flux;
 
         printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", fluid.species_names(n).c_str(),
-               m_mass_accum[n+offset], m_mass_accum[n],m_mass_prod[n],
+               m_mass_accum[n+nspecies_g], m_mass_accum[n],m_mass_prod[n],
                m_mass_inflow[n], m_mass_outflow[n], delta_accum, bc_flux);
 
-        totals[0] += m_mass_accum[n+offset];
+        totals[0] += m_mass_accum[n+nspecies_g];
         totals[1] += m_mass_accum[n];
         totals[2] += m_mass_prod[n];
         totals[3] += m_mass_inflow[n];
@@ -67,7 +66,7 @@ MFIXReadWrite::WriteMassBalanceReport (const Real new_time)
         totals[5] += delta_accum;
         totals[6] += bc_flux;
 
-        m_mass_accum[n] = m_mass_accum[n+offset];
+        m_mass_accum[n] = m_mass_accum[n+nspecies_g];
         m_mass_inflow[n] = 0.;
         m_mass_outflow[n] = 0.;
         m_mass_prod[n] = 0.;
@@ -76,18 +75,18 @@ MFIXReadWrite::WriteMassBalanceReport (const Real new_time)
 
     if (m_dem.solve() || m_pic.solve()) {
       for (int n=0; n < nspecies_s; ++n) {
-        Real delta_accum(pc->get_mass_accum(n+offset) - pc->get_mass_accum(n) - pc->get_mass_prod(n));
+        Real delta_accum(pc->get_mass_accum(n+nspecies_s) - pc->get_mass_accum(n) - pc->get_mass_prod(n));
         Real bc_flux(pc->get_mass_inflow(n) - pc->get_mass_outflow(n));
 
         //net_acc += delta_accum;
         //net_flux += bc_flux;
 
         printf("  %-8s%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e%14.4e\n", solids.species_names(n).c_str(),
-               pc->get_mass_accum(n+offset), pc->get_mass_accum(n), pc->get_mass_prod(n),
+               pc->get_mass_accum(n+nspecies_s), pc->get_mass_accum(n), pc->get_mass_prod(n),
                pc->get_mass_inflow(n), pc->get_mass_outflow(n),
                delta_accum, bc_flux);
 
-        totals[0] += pc->get_mass_accum(n+offset);
+        totals[0] += pc->get_mass_accum(n+nspecies_s);
         totals[1] += pc->get_mass_accum(n);
         totals[2] += pc->get_mass_prod(n);
         totals[3] += pc->get_mass_inflow(n);
@@ -143,7 +142,7 @@ MFIXReadWrite::ComputeMassAccum (const int offset)
 
   if (fluid.solve()) {
 
-    GpuArray<Real, MFIXSpecies::NMAX> accum = {0.};
+    Vector<Real> accum(fluid.nspecies(), 0.);
 
     const int nspecies_g = fluid.nspecies();
     for (int lev = 0; lev < nlev; lev++) {
@@ -209,9 +208,9 @@ MFIXReadWrite::ComputeMassAccum (const int offset)
     } // nlev
 
     // Global sum and copy to global variable with offset
-    ParallelDescriptor::ReduceRealSum(accum.data(), nspecies_g);
+    ParallelDescriptor::ReduceRealSum(accum.dataPtr(), nspecies_g);
     for (int n=0; n < nspecies_g; ++n) {
-      m_mass_accum[n + offset*MFIXSpecies::NMAX] = accum[n];
+      m_mass_accum[n + offset*nspecies_g] = accum[n];
     }
 
   }// solve fluid
@@ -494,12 +493,12 @@ MFIXReadWrite::ComputeMassFlux (Vector< MultiFab const*> const& flux_x,
 }
 
 void
-MFIXReadWrite::InitMassBalance ()
+MFIXReadWrite::InitMassBalance (const int nspecies)
 {
   if (report_mass_balance) {
-    for(int n(0); n<MFIXSpecies::NMAX; n++) {
+    for(int n(0); n < nspecies; n++) {
         m_mass_accum[n] = m_mass_accum[n];
-        m_mass_accum[n] = m_mass_accum[n+MFIXSpecies::NMAX];
+        m_mass_accum[n] = m_mass_accum[n+nspecies];
         m_mass_inflow[n] = 0.;
         m_mass_outflow[n] = 0.;
         m_mass_prod[n] = 0.;

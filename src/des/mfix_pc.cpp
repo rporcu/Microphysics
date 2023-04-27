@@ -22,6 +22,10 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
                         reactions_in.nreactions()*reactions_in.solve())
     , nlev (amr_core->maxLevel() + 1)
+    , m_p_mass_accum(solids_in.nspecies()*2, 0.)
+    , m_p_mass_inflow(solids_in.nspecies(), 0.)
+    , m_p_mass_outflow(solids_in.nspecies(), 0.)
+    , m_p_mass_prod(solids_in.nspecies(), 0.)
     , m_initial_conditions(initial_conditions)
     , m_boundary_conditions(boundary_conditions)
     , fluid(fluid_in)

@@ -65,6 +65,10 @@ MFIXReadWrite::MFIXReadWrite (int nlev_in,
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
   , regions(regions_in)
+  , m_mass_accum(fluid_in.nspecies()*2, 0.)
+  , m_mass_inflow(fluid_in.nspecies(), 0.)
+  , m_mass_outflow(fluid_in.nspecies(), 0.)
+  , m_mass_prod(fluid_in.nspecies(), 0.)
   , m_ascent_actions_yaml("")
 {
   readParameters();

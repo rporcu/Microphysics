@@ -34,8 +34,6 @@ mfix::InitParams ()
   solids.Initialize(species, reactions);
 
   BL_ASSERT(reactions.nreactions() <= reactions.NMAX);
-  BL_ASSERT(fluid.nspecies() <= MFIXSpecies::NMAX);
-  BL_ASSERT(solids.nspecies() <= MFIXSpecies::NMAX);
 
   m_dem.Initialize();
   m_pic.Initialize();
@@ -1106,9 +1104,9 @@ mfix::mfix_init_fluid (int is_restarting,
 
       // Iterate to compute the initial pressure
       if (initial_iterations > 0)
-        mfix_initial_iterations(dt,stop_time);
+        mfix_initial_iterations(dt, stop_time);
 
-      m_rw->InitMassBalance();
+      m_rw->InitMassBalance(fluid.nspecies());
 
     }
     else

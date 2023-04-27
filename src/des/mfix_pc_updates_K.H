@@ -21,7 +21,7 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
                   const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                   const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                   const int& i,
-                  amrex::Real* X_sn,
+                  amrex::ParticleReal** X_sn_ptr,
                   const int& nspecies_s,
                   const amrex::Real& dt,
                   const amrex::Real& p_mass_old,
@@ -31,7 +31,6 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
                   int& proceed,
                   amrex::Real& coeff,
                   const int& idx_mass_txfr,
-                  const int& idx_X_sn,
                   const int& solve_dem)
 {
   // Get current particle's density
@@ -49,7 +48,7 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
     // Get the current reaction rate for species n_s
     const amrex::Real mass_sn_rate = ptile_data.m_runtime_rdata[idx_mass_txfr+n_s][i];
 
-    X_sn[n_s] = X_sn[n_s]*p_mass_old + dt*mass_sn_rate;
+    X_sn_ptr[n_s][i] = X_sn_ptr[n_s][i]*p_mass_old + dt*mass_sn_rate;
 
     // Update the total mass exchange rate
     total_mass_rate += mass_sn_rate;
@@ -64,19 +63,18 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
 
     // Normalize species mass fractions
     for (int n_s(0); n_s < nspecies_s; n_s++) {
-      amrex::Real X_sn_new = X_sn[n_s] / p_mass_new;
+      amrex::Real X_sn_ptr_new = X_sn_ptr[n_s][i] / p_mass_new;
 
-      if (X_sn_new < 0) X_sn_new = 0;
-      if (X_sn_new > 1) X_sn_new = 1;
+      if (X_sn_ptr_new < 0) X_sn_ptr_new = 0;
+      if (X_sn_ptr_new > 1) X_sn_ptr_new = 1;
 
-      total_X += X_sn_new;
-      X_sn[n_s] = X_sn_new;
+      total_X += X_sn_ptr_new;
+      X_sn_ptr[n_s][i] = X_sn_ptr_new;
     }
 
     for (int n_s(0); n_s < nspecies_s; n_s++) {
       // Divide updated species mass fractions by total_X
-      X_sn[n_s] /= total_X;
-      ptile_data.m_runtime_rdata[idx_X_sn+n_s][i] = X_sn[n_s];
+      X_sn_ptr[n_s][i] /= total_X;
     }
 
     // Write out to global memory particle's mass and density
@@ -221,7 +219,7 @@ void
 part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                       const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                       const int& i,
-                      amrex::Real* X_sn,
+                      amrex::ParticleReal** X_sn_ptr,
                       const int& nspecies_s,
                       const int& solid_is_a_mixture,
                       const MFIXSolidsParms& solids_parms,
@@ -244,7 +242,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   if (solid_is_a_mixture) {
     for (int n_s(0); n_s < nspecies_s; ++n_s) {
-      p_enthalpy_old += X_sn[n_s]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
+      p_enthalpy_old += X_sn_ptr[n_s][i]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
     }
   } else {
     p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp);
@@ -269,10 +267,10 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
   // temperature
   // ************************************************************
   Solvers::Newton::SolidsEnthalpy::Residue residue(solid_is_a_mixture,
-      nspecies_s, solids_parms, X_sn, p_enthalpy_new);
+      i, nspecies_s, solids_parms, X_sn_ptr, p_enthalpy_new);
 
   Solvers::Newton::SolidsEnthalpy::Gradient gradient(solid_is_a_mixture,
-      nspecies_s, solids_parms, X_sn);
+      i, nspecies_s, solids_parms, X_sn_ptr);
 
   amrex::Real Tp_new(Tp);
 
@@ -285,7 +283,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   if (solid_is_a_mixture) {
     for (int n_s(0); n_s < nspecies_s; ++n_s)
-      cp_s_new += X_sn[n_s]*solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
+      cp_s_new += X_sn_ptr[n_s][i]*solids_parms.calc_cp_sn<run_on>(Tp_new,n_s);
 
   } else {
     cp_s_new = solids_parms.calc_cp_s<run_on>(Tp_new);
