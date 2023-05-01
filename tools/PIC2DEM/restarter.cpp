@@ -624,15 +624,6 @@ MFIXPICDeposition::deposit (F WeightFunc,
           if (solve_enthalpy)
             ptemp = p_realarray[SoArealData::temperature][ip];
 
-          GpuArray<Real, MFIXSpecies::NMAX> pspecies;
-          pspecies.fill(0);
-
-          if (solve_species) {
-            for (int n_s(0); n_s < nspecies_s; ++n_s) {
-              pspecies[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s][ip];
-            }
-          }
-
           // Deposition
           for (int ii = -1; ii <= 0; ++ii) {
             for (int jj = -1; jj <= 0; ++jj) {
@@ -654,7 +645,8 @@ MFIXPICDeposition::deposit (F WeightFunc,
 
                 if (solve_species) {
                   for (int n_s(0); n_s < nspecies_s; ++n_s) {
-                    HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_species+n_s), statwt*weight*pspecies[n_s]);
+                    HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_species+n_s),
+                        statwt*weight*ptile_data.m_runtime_rdata[idx_X_sn+n_s][ip]);
                   }
                 }
               }
