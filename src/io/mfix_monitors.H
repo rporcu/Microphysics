@@ -120,6 +120,9 @@ class Monitor {
     // Simulation time for outputting
     amrex::Real m_plot_per_approx;
 
+    // Monitor output file openmode
+    std::string m_openmode;
+
     // Output formatting options
     int m_setw;
     std::string m_setfill;

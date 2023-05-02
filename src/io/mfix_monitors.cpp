@@ -138,6 +138,7 @@ Monitor::Monitor (const std::array<std::string,2> specs,
   , m_filename(std::string())
   , m_plot_int(-1)
   , m_plot_per_approx(0.)
+  , m_openmode("app")
   , m_setw(0)
   , m_setfill("")
   , m_setprecision(0)
@@ -163,6 +164,8 @@ Monitor::Monitor (const std::array<std::string,2> specs,
 
   // XOR operation
   AMREX_ASSERT(plot_int ^ per_approx);
+
+  ppMonitor.query("output.openmode", m_openmode);
 
   ppMonitor.query("output.setw", m_setw);
   ppMonitor.query("output.setfill", m_setfill);
@@ -219,7 +222,13 @@ Monitor::initialize ()
   if (ParallelDescriptor::IOProcessor()) {
 
     std::ofstream output_file;
-    output_file.open(m_filename.c_str(), std::ios::out | std::ios::trunc);
+
+    if (toLower(m_openmode).compare("app") == 0)
+      output_file.open(m_filename.c_str(), std::ios::out | std::ios::app);
+    else if (toLower(m_openmode).compare("trunc") == 0)
+      output_file.open(m_filename.c_str(), std::ios::out | std::ios::trunc);
+    else
+      amrex::Abort("Unknown openmode for monitor output file");
 
     output_file << "time";
     for (const std::string& variable: m_variables)
