@@ -40,7 +40,6 @@ RUN apt-get install -y --no-install-recommends \
     git \
     libnuma-dev \
     libopenmpi-dev \
-    llvm-amdgpu \
     openmpi-bin \
     pkg-config \
     rocm-dev \

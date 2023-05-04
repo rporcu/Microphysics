@@ -131,6 +131,7 @@ build:hip:
             -DMFIX_CSG=ON
             -DMFIX_GPU_BACKEND=HIP
             -DMFIX_MPI=0
+            -DCMAKE_CXX_STANDARD=17
             -G Ninja
     - cmake --build build
   <<: *build_base
