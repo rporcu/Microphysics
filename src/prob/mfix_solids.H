@@ -34,39 +34,39 @@ class MFIXSolidsPhase {
     void Initialize (const MFIXSpecies& species,
                      const MFIXReactions& reactions);
 
-    int ntypes () const { return m_ntypes; };
+    int ntypes () const { return m_ntypes; }
 
-    const amrex::Vector<std::string>& names () const { return m_names; };
-    const std::string& names (const int n) const { return m_names[n]; };
+    const amrex::Vector<std::string>& names () const { return m_names; }
+    const std::string& names (const int n) const { return m_names[n]; }
 
-    const amrex::Vector<int>& phases () const { return m_phases; };
-    int phases (const int n) const { return m_phases[n]; };
+    const amrex::Vector<int>& phases () const { return m_phases; }
+    int phases (const int n) const { return m_phases[n]; }
 
     // Return phase ID given a solids type
     int name_to_phase (const std::string& name) const;
 
-    int update_mass () const { return m_update_mass; };
+    int update_mass () const { return m_update_mass; }
 
-    int solve_species () const { return m_solve_species; };
+    int solve_species () const { return m_solve_species; }
 
-    int update_momentum () const { return m_update_momentum; };
+    int update_momentum () const { return m_update_momentum; }
 
-    amrex::Real enthalpy_source () const { return m_enthalpy_source; };
+    amrex::Real enthalpy_source () const { return m_enthalpy_source; }
 
-    int update_enthalpy () const { return m_update_enthalpy; };
+    int update_enthalpy () const { return m_update_enthalpy; }
 
-    int solve_enthalpy () const { return m_solve_enthalpy; };
+    int solve_enthalpy () const { return m_solve_enthalpy; }
 
-    const amrex::Vector<std::string>& species_names () const { return m_species_names; };
-    const std::string& species_names (const int n) const { return m_species_names[n]; };
+    const amrex::Vector<std::string>& species_names () const { return m_species_names; }
+    const std::string& species_names (const int n) const { return m_species_names[n]; }
 
-    int nspecies () const { return m_nspecies; };
+    int nspecies () const { return m_nspecies; }
 
-    int isMixture () const { return m_is_a_mixture; };
+    int isMixture () const { return m_is_a_mixture; }
 
-    const MFIXSolidsParms& parameters () const { return *m_parameters; };
+    const MFIXSolidsParms& parameters () const { return *m_parameters; }
 
-    int isInitialized () const { return m_is_initialized; };
+    int isInitialized () const { return m_is_initialized; }
 
   private:
     int m_ntypes;
@@ -449,14 +449,14 @@ struct INPUT_DIST_t {
 
   int set (const std::string a_field, const std::string a_pprop);
 
-  int is_constant () const { return m_is_constant;};
-  int is_uniform  () const { return m_is_uniform; };
-  int is_normal   () const { return m_is_normal;  };
+  int is_constant () const { return m_is_constant; }
+  int is_uniform  () const { return m_is_uniform; }
+  int is_normal   () const { return m_is_normal; }
 
-  amrex::Real get_mean ()   const { return m_mean;   };
-  amrex::Real get_stddev () const { return m_stddev; };
-  amrex::Real get_max ()    const { return m_max;    };
-  amrex::Real get_min ()    const { return m_min;    };
+  amrex::Real get_mean ()   const { return m_mean; }
+  amrex::Real get_stddev () const { return m_stddev; }
+  amrex::Real get_max ()    const { return m_max; }
+  amrex::Real get_min ()    const { return m_min; }
 
   private:
     int m_is_constant;

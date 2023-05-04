@@ -820,7 +820,7 @@ class mfix : public AmrCore
     // intersection/union
     int ct_ls_mf;
 
-    MFIXParticleContainer* getParticleContainer() const { return pc; };
+    MFIXParticleContainer* getParticleContainer() const { return pc; }
 
     Vector< MultiFab* > get_ep_g () noexcept;
     Vector< MultiFab* > get_ro_g () noexcept;

@@ -20,11 +20,11 @@ class MFIXEmbeddedBoundaries
       , m_has_flow(0)
     {}
 
-    int fix_temperature () const { return m_fix_temperature; };
-    void set_fix_temperature (const int val) { m_fix_temperature = val; };
+    int fix_temperature () const { return m_fix_temperature; }
+    void set_fix_temperature (const int val) { m_fix_temperature = val; }
 
-    int has_flow () const { return m_has_flow; };
-    void set_has_flow (const int val) { m_has_flow = val; };
+    int has_flow () const { return m_has_flow; }
+    void set_has_flow (const int val) { m_has_flow = val; }
 
   private:
     // Flag to specify if we have Dirichlet BCs on the EB

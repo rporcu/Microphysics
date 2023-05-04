@@ -19,33 +19,33 @@ class MFIXPIC {
 
     void Initialize ();
 
-    int solve () const { return m_solve; };
-    void set_solve (const int val) { m_solve = val; };
+    int solve () const { return m_solve; }
+    void set_solve (const int val) { m_solve = val; }
 
-    int NPHASE () const { return m_NPHASE; };
+    int NPHASE () const { return m_NPHASE; }
 
-    int verbose () const { return m_verbose; };
+    int verbose () const { return m_verbose; }
 
     // Coefficients for computing the solid stress
-    amrex::Real Ps () const { return m_Ps; };
-    amrex::Real beta () const { return m_beta; };
-    amrex::Real ep_cp () const { return m_ep_cp; };
+    amrex::Real Ps () const { return m_Ps; }
+    amrex::Real beta () const { return m_beta; }
+    amrex::Real ep_cp () const { return m_ep_cp; }
 
-    amrex::Real vel_ref_frame () const { return m_vel_ref_frame; };
+    amrex::Real vel_ref_frame () const { return m_vel_ref_frame; }
 
-    amrex::Real small_number () const { return m_small_number; };
-    amrex::Real damping_factor () const { return m_damping_factor; };
+    amrex::Real small_number () const { return m_small_number; }
+    amrex::Real damping_factor () const { return m_damping_factor; }
 
-    amrex::Real damping_factor_wall_normal () const { return m_damping_factor_wall_normal; };
-    amrex::Real damping_factor_wall_tangent () const { return m_damping_factor_wall_tangent; };
+    amrex::Real damping_factor_wall_normal () const { return m_damping_factor_wall_normal; }
+    amrex::Real damping_factor_wall_tangent () const { return m_damping_factor_wall_tangent; }
 
-    amrex::Real advance_vel_p () const { return m_advance_vel_p; };
+    amrex::Real advance_vel_p () const { return m_advance_vel_p; }
 
-    int max_iter () const { return m_max_iter; };
+    int max_iter () const { return m_max_iter; }
 
-    int initial_step () const { return m_initial_step; };
+    int initial_step () const { return m_initial_step; }
 
-    int restart_refinement () const { return m_restart_refinement; };
+    int restart_refinement () const { return m_restart_refinement; }
 
   private:
     int m_solve;

@@ -34,14 +34,14 @@ class MFIXInitialConditions
 
     int allow_overlap () const { return m_allow_overlap; }
 
-    const amrex::Vector<IC_t>& ic () const { return m_ic; };
-    const IC_t& ic (const int icv) const { return m_ic[icv]; };
+    const amrex::Vector<IC_t>& ic () const { return m_ic; }
+    const IC_t& ic (const int icv) const { return m_ic[icv]; }
 
     enum struct ParticleInitType {Invalid, Auto, AsciiFile};
 
     int AutoParticleInit () const {
       return (m_particle_init_type == ParticleInitType::Auto) ? 1 : 0;
-    };
+    }
 
     // Store the number of particles generated in the IC region.
     void set_particle_count ( const int icv, const long np_in ) {

@@ -29,17 +29,17 @@ class MFIXReactions {
     // Initialization procedure
     void Initialize(const MFIXSpecies& species);
 
-    int solve () const { return m_solve; };
+    int solve () const { return m_solve; }
 
-    int nreactions () const { return m_nreactions; };
+    int nreactions () const { return m_nreactions; }
 
-    const std::vector<std::string>& reactions () const { return m_reactions; };
+    const std::vector<std::string>& reactions () const { return m_reactions; }
 
-    const std::vector<std::string>& reaction_equations () const { return m_reaction_equations; };
+    const std::vector<std::string>& reaction_equations () const { return m_reaction_equations; }
 
-    int isInitialized () const { return m_is_initialized; };
+    int isInitialized () const { return m_is_initialized; }
 
-    const MFIXReactionsParms& parameters () const { return *m_parameters; };
+    const MFIXReactionsParms& parameters () const { return *m_parameters; }
 
     // Getter
     MFIXChemicalReaction* get(const int q) const

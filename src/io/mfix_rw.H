@@ -80,14 +80,14 @@ class MFIXReadWrite
        amrex::Vector<int> m_write_int_comp = amrex::Vector<int>(SoAintData::count,1);
    };
 
-   void set_pc (MFIXParticleContainer* pc_in) { this->pc = pc_in; };
+   void set_pc (MFIXParticleContainer* pc_in) { this->pc = pc_in; }
 
    void output (int estatus,
                 int finish,
                 int nstep,
                 amrex::Real dt,
                 amrex::Real time)
-   { pc->output(estatus, finish, nstep, dt, time); };
+   { pc->output(estatus, finish, nstep, dt, time); }
 
    void InitIOChkData ();
 
@@ -220,7 +220,7 @@ class MFIXReadWrite
    void Initialize ();
 
     bool solids_plot_regions () const
-    { return m_solids_plot_regions.size() > 0; };
+    { return m_solids_plot_regions.size() > 0; }
 
 private:
    // Private members

@@ -8,7 +8,7 @@
 struct NullConvectionCoeff
 {
     // Constructor
-    NullConvectionCoeff () {};
+    NullConvectionCoeff () {}
 
     AMREX_GPU_HOST_DEVICE AMREX_INLINE
     amrex::Real operator() (amrex::Real /*EPg*/, amrex::Real /*Mug*/, amrex::Real /*Kg*/, amrex::Real /*Cpg*/,

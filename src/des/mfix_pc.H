@@ -214,7 +214,7 @@ class MFIXParticleContainer final
 
     void define();
 
-    virtual ~MFIXParticleContainer () {};
+    virtual ~MFIXParticleContainer () {}
 
     void InitData ();
 
@@ -384,7 +384,7 @@ class MFIXParticleContainer final
     { sort_int = sort_particle_int; }
 
     void setReduceGhostParticles(bool reduce)
-    { reduceGhostParticles = reduce; };
+    { reduceGhostParticles = reduce; }
 
     void setGreedyRegrid(int dir, bool partition_3d, int min_size=2)
     { greedy_dir = dir; greedy_3d = partition_3d; greedy_min_grid_size=min_size;}

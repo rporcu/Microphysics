@@ -71,59 +71,59 @@ class MFIXDEM
 
     void Initialize ();
 
-    int NPHASE () const { return m_NPHASE; };
+    int NPHASE () const { return m_NPHASE; }
 
-    int collision_model () const { return m_collision_model; };
+    int collision_model () const { return m_collision_model; }
 
-    int solve () const { return m_solve; };
-    void set_solve (const int val) { m_solve = val; };
+    int solve () const { return m_solve; }
+    void set_solve (const int val) { m_solve = val; }
 
-    amrex::Real dtsolid () const { return m_dtsolid; };
-    void set_dtsolid (const amrex::Real val) { m_dtsolid = val; };
+    amrex::Real dtsolid () const { return m_dtsolid; }
+    void set_dtsolid (const amrex::Real val) { m_dtsolid = val; }
 
     // tangential component of spring constant
-    amrex::Real kt () const { return m_kt; };
-    amrex::Real kt_w () const { return m_kt_w; };
+    amrex::Real kt () const { return m_kt; }
+    amrex::Real kt_w () const { return m_kt_w; }
 
     // normal component of spring constant
-    amrex::Real kn () const { return m_kn; };
-    amrex::Real kn_w () const { return m_kn_w; };
+    amrex::Real kn () const { return m_kn; }
+    amrex::Real kn_w () const { return m_kn_w; }
 
     // friction coefficients for particle-particle and particle-wall collisions
-    amrex::Real mew () const { return m_mew; };
-    amrex::Real mew_w () const { return m_mew_w; };
+    amrex::Real mew () const { return m_mew; }
+    amrex::Real mew_w () const { return m_mew_w; }
 
     // assumed to be a constant factor relating these for linear spring-dashpot
-    amrex::Real kt_fac () const { return m_kt_fac; };
-    amrex::Real kt_w_fac () const { return m_kt_w_fac; };
+    amrex::Real kt_fac () const { return m_kt_fac; }
+    amrex::Real kt_w_fac () const { return m_kt_w_fac; }
 
     // Hack to get fluid conductivity
-    amrex::Real k_g_dem () const { return m_k_g_dem; };
+    amrex::Real k_g_dem () const { return m_k_g_dem; }
 
     // normal and tangential components of the damping coefficients
-    A2D etan () const { return m_etan; };
-    A1D etan_w () const { return m_etan_w; };
+    A2D etan () const { return m_etan; }
+    A1D etan_w () const { return m_etan_w; }
 
-    A2D etat () const { return m_etat; };
-    A1D etat_w () const { return m_etat_w; };
+    A2D etat () const { return m_etat; }
+    A1D etat_w () const { return m_etat_w; }
 
     // coefficients of restitution, normal and tangential
-    A2D en () const { return m_en; };
-    A1D en_w () const { return m_en_w; };
+    A2D en () const { return m_en; }
+    A1D en_w () const { return m_en_w; }
 
-    amrex::Real eta_fac () const { return m_eta_fac; };
-    amrex::Real eta_w_fac () const { return m_eta_w_fac; };
+    amrex::Real eta_fac () const { return m_eta_fac; }
+    amrex::Real eta_w_fac () const { return m_eta_w_fac; }
 
     // Tangential damping factor ratio
-    amrex::Real eta_fac_pp () const { return m_eta_fac_pp; };
-    amrex::Real eta_fac_pw () const { return m_eta_fac_pw; };
+    amrex::Real eta_fac_pp () const { return m_eta_fac_pp; }
+    amrex::Real eta_fac_pw () const { return m_eta_fac_pw; }
 
-    amrex::Real small_number () const { return m_small_number; };
-    amrex::Real large_number () const { return m_large_number; };
-    amrex::Real eps () const { return m_eps; };
+    amrex::Real small_number () const { return m_small_number; }
+    amrex::Real large_number () const { return m_large_number; }
+    amrex::Real eps () const { return m_eps; }
 
-    amrex::Real neighborhood () const { return m_neighborhood; };
-    void set_neighborhood (const amrex::Real val) { m_neighborhood = val; };
+    amrex::Real neighborhood () const { return m_neighborhood; }
+    void set_neighborhood (const amrex::Real val) { m_neighborhood = val; }
 
     // Polydisperse neighbor search
     amrex::Gpu::DeviceVector<amrex::Real>& get_pneighborhood () { return m_pneighborhood; }
@@ -139,9 +139,9 @@ class MFIXDEM
     int nppairs ()     { return ( (m_nptypes*(m_nptypes+1)) / 2 ); }
 
     // Coarse-grain DEM
-    int cg_dem () const { return m_cg_dem; };
+    int cg_dem () const { return m_cg_dem; }
 
-    int restart_from_PIC () const { return m_restart_from_PIC; };
+    int restart_from_PIC () const { return m_restart_from_PIC; }
 
   private:
     int m_NPHASE;

@@ -409,7 +409,7 @@ class MFIXBoundaryConditions
     const std::bitset<6>& flow_plane () const { return m_flow_plane; }
 
     // Vectors storing EB planes for level-set creation
-    const amrex::Vector<amrex::EB2::PlaneIF>& flow_planes () const { return m_flow_planes; };
+    const amrex::Vector<amrex::EB2::PlaneIF>& flow_planes () const { return m_flow_planes; }
     const amrex::Vector<amrex::EB2::PlaneIF>& wall_planes () const { return m_wall_planes; }
 
     // Use AMReX LinOpBCType to define the domain extents
@@ -433,58 +433,58 @@ class MFIXBoundaryConditions
     BC_t& bc (const int bcv) { return m_bc[bcv]; }
     const BC_t& bc (const int bcv) const { return m_bc[bcv]; }
 
-    amrex::Real& h_bc_u_g (const int bcv) { return m_h_bc_u_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_u_g () { return m_h_bc_u_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_u_g () { return m_bc_u_g; };
+    amrex::Real& h_bc_u_g (const int bcv) { return m_h_bc_u_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_u_g () { return m_h_bc_u_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_u_g () { return m_bc_u_g; }
 
-    amrex::Real& h_bc_v_g (const int bcv) { return m_h_bc_v_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_v_g () { return m_h_bc_v_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_v_g () { return m_bc_v_g; };
+    amrex::Real& h_bc_v_g (const int bcv) { return m_h_bc_v_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_v_g () { return m_h_bc_v_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_v_g () { return m_bc_v_g; }
 
-    amrex::Real& h_bc_w_g (const int bcv) { return m_h_bc_w_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_w_g () { return m_h_bc_w_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_w_g () { return m_bc_w_g; };
+    amrex::Real& h_bc_w_g (const int bcv) { return m_h_bc_w_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_w_g () { return m_h_bc_w_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_w_g () { return m_bc_w_g; }
 
-    amrex::Real& h_bc_t_g (const int bcv) { return m_h_bc_t_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_t_g () { return m_h_bc_t_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_t_g () { return m_bc_t_g; };
+    amrex::Real& h_bc_t_g (const int bcv) { return m_h_bc_t_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_t_g () { return m_h_bc_t_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_t_g () { return m_bc_t_g; }
 
-    amrex::Real& h_bc_h_g (const int bcv) { return m_h_bc_h_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_h_g () { return m_h_bc_h_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_h_g () { return m_bc_h_g; };
+    amrex::Real& h_bc_h_g (const int bcv) { return m_h_bc_h_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_h_g () { return m_h_bc_h_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_h_g () { return m_bc_h_g; }
 
-    amrex::Real& h_bc_ro_g (const int bcv) { return m_h_bc_ro_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_ro_g () { return m_h_bc_ro_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_ro_g () { return m_bc_ro_g; };
+    amrex::Real& h_bc_ro_g (const int bcv) { return m_h_bc_ro_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_ro_g () { return m_h_bc_ro_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_ro_g () { return m_bc_ro_g; }
 
-    amrex::Real& h_bc_tracer (const int bcv) { return m_h_bc_tracer[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_tracer () { return m_h_bc_tracer; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_tracer () { return m_bc_tracer; };
+    amrex::Real& h_bc_tracer (const int bcv) { return m_h_bc_tracer[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_tracer () { return m_h_bc_tracer; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_tracer () { return m_bc_tracer; }
 
-    amrex::Real& h_bc_ep_g (const int bcv) { return m_h_bc_ep_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_ep_g () { return m_h_bc_ep_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_ep_g () { return m_bc_ep_g; };
+    amrex::Real& h_bc_ep_g (const int bcv) { return m_h_bc_ep_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_ep_g () { return m_h_bc_ep_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_ep_g () { return m_bc_ep_g; }
 
-    amrex::Real& h_bc_p_g (const int bcv) { return m_h_bc_p_g[bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_p_g () { return m_h_bc_p_g; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_p_g () { return m_bc_p_g; };
+    amrex::Real& h_bc_p_g (const int bcv) { return m_h_bc_p_g[bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_p_g () { return m_h_bc_p_g; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_p_g () { return m_bc_p_g; }
 
-    amrex::Real& h_bc_X_gk (const int n, const int bcv) { return m_h_bc_X_gk[n][bcv]; };
-    amrex::Gpu::HostVector<amrex::Real>& h_bc_X_gk (const int n) { return m_h_bc_X_gk[n]; };
-    amrex::Vector<amrex::Gpu::HostVector<amrex::Real>>& h_bc_X_gk () { return m_h_bc_X_gk; };
-    amrex::Gpu::DeviceVector<amrex::Real>& bc_X_gk (const int n) { return m_bc_X_gk[n]; };
-    amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real>>& bc_X_gk () { return m_bc_X_gk; };
-    amrex::Real* h_bc_X_gk_ptr (const int n) { return m_h_bc_X_gk_ptr[n]; };
+    amrex::Real& h_bc_X_gk (const int n, const int bcv) { return m_h_bc_X_gk[n][bcv]; }
+    amrex::Gpu::HostVector<amrex::Real>& h_bc_X_gk (const int n) { return m_h_bc_X_gk[n]; }
+    amrex::Vector<amrex::Gpu::HostVector<amrex::Real>>& h_bc_X_gk () { return m_h_bc_X_gk; }
+    amrex::Gpu::DeviceVector<amrex::Real>& bc_X_gk (const int n) { return m_bc_X_gk[n]; }
+    amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real>>& bc_X_gk () { return m_bc_X_gk; }
+    amrex::Real* h_bc_X_gk_ptr (const int n) { return m_h_bc_X_gk_ptr[n]; }
 
     void set_h_bc_X_gk_ptr (const int n)
     {
       if (m_bc_X_gk[n].size() > 0)
         m_h_bc_X_gk_ptr[n] = m_bc_X_gk[n].dataPtr();
-    };
+    }
 
-    amrex::Gpu::HostVector<amrex::Real*>& h_bc_X_gk_ptr () { return m_h_bc_X_gk_ptr; };
-    amrex::Real* bc_X_gk_ptr (const int n) { return m_bc_X_gk_ptr[n]; };
-    amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; };
+    amrex::Gpu::HostVector<amrex::Real*>& h_bc_X_gk_ptr () { return m_h_bc_X_gk_ptr; }
+    amrex::Real* bc_X_gk_ptr (const int n) { return m_bc_X_gk_ptr[n]; }
+    amrex::Gpu::DeviceVector<amrex::Real*>& bc_X_gk_ptr () { return m_bc_X_gk_ptr; }
 
     amrex::Real& get_bc_area (const int bcv);
 
