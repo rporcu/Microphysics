@@ -297,6 +297,10 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
     // FillBoundary on interpolation MultiFab
     interp_ptr->FillBoundary(geom[lev].periodicity());
 
+    if (fluid.solve_species()) {
+      X_gk_interp_ptr->FillBoundary(geom[lev].periodicity());
+    }
+
     {
       const auto dxi = geom[lev].InvCellSizeArray();
       const auto dx  = geom[lev].CellSizeArray();
