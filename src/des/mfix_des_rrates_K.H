@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-//#include <mfix_pc.H>
+#include <mfix_pc.H>
 #include <mfix_fluid.H>
 #include <mfix_solids.H>
 #include <mfix_reactions.H>
@@ -32,7 +32,8 @@ class HeterogeneousRatesUser
                      const int np,
                      const int p_id,
                      const MFIXSolidsParms& solids_parms,
-                     amrex::ParticleReal** X_sn_ptr,
+                     const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
+                     const int idx_X_sn,
                      const amrex::Real ro_s,
                      const amrex::Real ep_s,
                      const amrex::Real T_s,
@@ -67,7 +68,8 @@ class HomogeneousRatesUser
                      const int np,
                      const int p_id,
                      const MFIXSolidsParms&, // solids_parms,
-                     amrex::ParticleReal**, // X_sn,
+                     const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>&,
+                     const int, // X_sn,
                      const amrex::Real, // ro_s,
                      const amrex::Real /*ep_s*/) const;
 

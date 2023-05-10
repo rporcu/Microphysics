@@ -49,15 +49,12 @@ void MFIXParticleContainer::ComputeMassProduction (int const a_lev, Real const a
       // variables added at runtime
       auto ptile_data = plev[index].getParticleTileData();
 
-      // rate of production
-      auto p_txfr_mass_n = ptile_data.m_runtime_rdata[idx_mass_txfr+n];
-
       const int np = NumberOfParticles(pti);
 
-      reduce_op.eval(np, reduce_data, [p_statwt, p_txfr_mass_n]
+      reduce_op.eval(np, reduce_data, [p_statwt, ptile_data, idx_mass_txfr, n]
       AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
       {
-        return {p_statwt[p_id]*p_txfr_mass_n[p_id]};
+        return {p_statwt[p_id]*ptile_data.m_runtime_rdata[idx_mass_txfr+n][p_id]};
       });
     } // MFIXParIter
 
@@ -114,15 +111,12 @@ void MFIXParticleContainer::ComputeMassAccum ( int const a_offset )
         // variables added at runtime
         auto ptile_data = plev[index].getParticleTileData();
 
-        // species mass fraction
-        auto p_Xn = ptile_data.m_runtime_rdata[idx_X_sn+n];
-
         const int np = NumberOfParticles(pti);
 
-        reduce_op.eval(np, reduce_data, [p_statwt, p_mass, p_Xn]
+        reduce_op.eval(np, reduce_data, [p_statwt, p_mass, ptile_data, idx_X_sn, n]
         AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
         {
-          return {p_statwt[p_id]*p_mass[p_id]*p_Xn[p_id]};
+          return {p_statwt[p_id]*p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id]};
         });
       } // MFIXParIter
 
@@ -192,12 +186,10 @@ void MFIXParticleContainer::ComputeMassOutflow (int const a_lev)
       // variables added at runtime
       auto ptile_data = plev[index].getParticleTileData();
 
-      // species mass fraction
-      auto p_Xn = ptile_data.m_runtime_rdata[idx_X_sn+n];
-
       const int np = NumberOfParticles(pti);
 
-      reduce_op.eval(np, reduce_data, [p_lo, p_hi, pstruct, p_statwt, p_mass, p_Xn]
+      reduce_op.eval(np, reduce_data, [p_lo, p_hi, pstruct, p_statwt, p_mass,
+          ptile_data, idx_X_sn, n]
       AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
       {
         auto p = pstruct[p_id];
@@ -205,7 +197,7 @@ void MFIXParticleContainer::ComputeMassOutflow (int const a_lev)
         if ( p.pos(0) < p_lo[0] || p.pos(0) > p_hi[0] ||
              p.pos(1) < p_lo[1] || p.pos(1) > p_hi[1] ||
              p.pos(2) < p_lo[2] || p.pos(2) > p_hi[2] ) {
-          p_mass_Xn = p_statwt[p_id]*p_mass[p_id]*p_Xn[p_id];
+          p_mass_Xn = p_statwt[p_id]*p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id];
         }
         return {p_mass_Xn};
       });

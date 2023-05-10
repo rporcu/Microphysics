@@ -370,29 +370,13 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
           const Real mu_g0 = fluid.mu_g();
 
-          Gpu::DeviceVector<ParticleReal*> X_sn;
-          if (nspecies_s > 0) {
-            X_sn.resize(nspecies_s);
-            for (int n_s(0); n_s < nspecies_s; ++n_s)
-              X_sn[n_s] = ptile_data.m_runtime_rdata[idx_X_sn+n_s];
-          }
-          ParticleReal** X_sn_ptr = nspecies_s > 0 ? X_sn.dataPtr() : nullptr;
-
-//          Gpu::DeviceVector<Real*> X_gk;
-//          if (nspecies_g > 0) {
-//            X_gk.resize(nspecies_g);
-//            for (int n_g(0); n_g < nspecies_g; ++n_g)
-//              X_gk[n_g] = &(aux_ptr[n_g*np]);
-//          }
-//          Real** X_gk_ptr = nspecies_g > 0 ? X_gk.dataPtr() : nullptr;
-
-          Real* X_gk_ptr = nspecies_g > 0 ? aux[lev][index].dataPtr() : nullptr;
+          Real* X_gk_ptr = (nspecies_g > 0) ? aux[lev][index].dataPtr() : nullptr;
 
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
                nspecies_g,interp_comp,local_cg_dem,ptile_data,nreactions,
-               nspecies_s,X_sn_ptr,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
+               nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
                fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
                apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array]
@@ -589,7 +573,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
               HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
                                                               reactions_parms, np, p_id,
-                                                              solids_parms, X_sn_ptr,
+                                                              solids_parms, ptile_data, idx_X_sn,
                                                               ro_p, ep_s, T_p,
                                                               pvel, fluid_parms,
                                                               X_gk_ptr, ro_g, ep_g,
