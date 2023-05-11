@@ -557,17 +557,14 @@ MFIXReadWrite::writeNow (MFIXTimer& timer,
           Real chkpt_write_time = timer.elapsed_runtime(time_start);
 
           if (timer.walltime_limit() > 0) {
-            m_check_max_write_time = max(m_check_max_write_time, chkpt_write_time);
-            ParallelDescriptor::ReduceRealMax(&m_check_max_write_time, 1);
+            timer.update_max_write_chkpt_time(chkpt_write_time);
           }
 
           last_chk = timer.nstep();
         }
 
         if ( timer.walltime_limit() > 0. && check_test == 0 ) {
-
-          if ( test_walltime_approaching(timer) ) {
-
+          if ( !timer.runtime_left_is_sufficient() ) {
             WriteCheckPointFile(check_file, timer.nstep(), dt, timer.time());
           }
         }
@@ -749,25 +746,6 @@ MFIXReadWrite::test_per_approx (const Real time,
       num_per_old += 1;
 
   return (num_per_old != num_per_new) ? 1 : 0;
-}
-
-
-//
-// Determine if it is time to write before job is killed
-//
-int
-MFIXReadWrite::test_walltime_approaching (const MFIXTimer& timer) const
-{
-  const Real missing_time = timer.walltime_limit() - timer.elapsed_runtime();
-
-  Real needed_time = amrex::max(1.1*m_check_max_write_time,
-                                m_check_max_write_time + timer.avg_step_runtime(),
-                                timer.walltime_buffer());
-
-  if (missing_time < needed_time)
-    return 1;
-
-  return 0;
 }
 
 

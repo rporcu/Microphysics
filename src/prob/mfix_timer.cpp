@@ -37,20 +37,6 @@ MFIXTimer::Initialize ()
     }
   }
 
-  std::string walltime_buffer_in;
-  if (pp.query("walltime_buffer", walltime_buffer_in)) {
-    int HH(0), MM(0), SS(0);
-    if (sscanf(walltime_buffer_in.c_str(), "%d:%d:%d", &HH, &MM, &SS) >= 2) {
-      m_walltime_buffer = static_cast<Real>(HH*3600 + MM*60 + SS);
-    } else {
-      std::string message =
-        " Error: Unable to correctly parse walltime buffer "
-        + walltime_buffer_in + "\n" + " The correct format is HH:MM:SS\n";
-      Print() << message;
-      Abort(message);
-    }
-  }
-
   pp.query("stop_time", m_stop_time);
   pp.query("overstep_end_time", m_overstep_end_time);
   pp.query("max_step", m_max_step);
@@ -64,7 +50,6 @@ MFIXTimer::reset (const MFIXTimer& other)
 {
   m_runtime_start = other.runtime_start();
   m_walltime_limit = other.walltime_limit();
-  m_walltime_buffer = other.walltime_buffer();
   m_avg_step_runtime = other.avg_step_runtime();
   m_start_time = other.start_time();
   m_time = other.time();
@@ -92,7 +77,7 @@ MFIXTimer::ok ()
 
   if (ParallelDescriptor::IOProcessor()) {
 
-    if ((m_walltime_limit > 0.) && ((elapsed_runtime()+m_avg_step_runtime) > m_walltime_limit))
+    if ((m_walltime_limit > 0.) && (!runtime_left_is_sufficient()))
       m_run_status_type = MFIXRunStatusType::RuntimeIsOver;
 
     if((m_clean_exit != "") && std::ifstream(m_clean_exit.c_str()).good())
@@ -105,4 +90,18 @@ MFIXTimer::ok ()
   }
 
   return (m_run_status_type == MFIXRunStatusType::OK);
+}
+
+
+int
+MFIXTimer::runtime_left_is_sufficient ()
+{
+  const Real needed_time = 1.1*(m_max_write_chkpt_time + m_avg_step_runtime);
+
+  const Real missing_time = m_walltime_limit - elapsed_runtime();
+
+  if (needed_time < missing_time)
+    return 1;
+
+  return 0;
 }

@@ -19,8 +19,8 @@ class MFIXTimer
     MFIXTimer ()
       : m_runtime_start(0.)
       , m_walltime_limit(-1.)
-      , m_walltime_buffer(0.)
       , m_avg_step_runtime(0.)
+      , m_max_write_chkpt_time(0.)
       , m_start_time(0.)
       , m_time(0.)
       , m_stop_time(std::numeric_limits<amrex::Real>::infinity())
@@ -44,16 +44,24 @@ class MFIXTimer
     amrex::Real runtime_start () const { return m_runtime_start; }
     amrex::Real walltime_limit () const { return m_walltime_limit; }
     amrex::Real& walltime_limit () { return m_walltime_limit; }
-    amrex::Real walltime_buffer () const { return m_walltime_buffer; }
     amrex::Real avg_step_runtime () const { return m_avg_step_runtime; }
+    amrex::Real max_write_chkpt_time () const { return m_max_write_chkpt_time; }
 
     AMREX_FORCE_INLINE
-    void update_avg_step_runtime (const amrex::Real avg_time)
+    void update_avg_step_runtime (const amrex::Real step_time)
     {
-      m_avg_step_runtime = (m_avg_step_runtime*(m_nstep-1) + avg_time) / m_nstep;
+      m_avg_step_runtime = (m_avg_step_runtime*(m_nstep-1) + step_time) / m_nstep;
+      amrex::ParallelDescriptor::ReduceRealMax(&m_avg_step_runtime, 1);
 
       if ((m_max_step > 0) && (m_walltime_limit > 0.))
         this->update_max_step();
+    }
+
+    AMREX_FORCE_INLINE
+    void update_max_write_chkpt_time (const amrex::Real write_time)
+    {
+      m_max_write_chkpt_time = amrex::max(m_max_write_chkpt_time, write_time);
+      amrex::ParallelDescriptor::ReduceRealMax(&m_max_write_chkpt_time, 1);
     }
 
     AMREX_FORCE_INLINE
@@ -97,12 +105,13 @@ class MFIXTimer
     int run_status_type () const { return m_run_status_type; }
 
     int ok ();
+    int runtime_left_is_sufficient ();
 
   private:
     amrex::Real m_runtime_start;
     amrex::Real m_walltime_limit;
-    amrex::Real m_walltime_buffer;
     amrex::Real m_avg_step_runtime;
+    amrex::Real m_max_write_chkpt_time;
 
     amrex::Real m_start_time;
     amrex::Real m_time;

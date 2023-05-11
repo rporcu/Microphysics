@@ -298,8 +298,6 @@ private:
                        const amrex::Real dt,
                        const amrex::Real per_approx);
 
-   int test_walltime_approaching (const MFIXTimer& timer) const;
-
    int test_walltime_interval (const MFIXTimer& timer);
 
    bool write_eb_surface = false;
@@ -322,8 +320,6 @@ private:
    int m_interval_nb = 1;
    //amrex::Real check_per_exact  = -1.;
    int last_chk  = -1;
-
-   amrex::Real m_check_max_write_time = 0.;
 
    // Plot file controls
    std::string plot_file {"plt"};
