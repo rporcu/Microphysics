@@ -9,6 +9,12 @@
 #include <string>
 #include <sstream>
 
+#ifdef MFIX_CATALYST
+#include "catalyst.hpp"
+#include "AMReX_Conduit_Blueprint.H"
+#endif
+
+
 using namespace amrex;
 
 
@@ -72,7 +78,39 @@ MFIXReadWrite::MFIXReadWrite (int nlev_in,
   , m_ascent_actions_yaml("")
 {
   readParameters();
+
+#ifdef MFIX_CATALYST
+  if (catalyst_enabled) {
+
+    conduit_cpp::Node params;
+
+    params["catalyst/scripts/script0"].set_string(catalyst_script);
+    params["catalyst_load/implementation"].set_string(catalyst_impl);
+    params["catalyst_load/search_paths/paraview"].set_string(catalyst_library_path);
+
+    catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
+
+    if (err != catalyst_status_ok) {
+      std::string message = " Error: Failed to initialize Catalyst!\n";
+      std::cerr << message << err << std::endl;
+      amrex::Print() << message;
+      amrex::Abort(message);
+    }
+  }
+#endif
 }
+
+
+MFIXReadWrite::~MFIXReadWrite ()
+{
+#ifdef MFIX_CATALYST
+  if (catalyst_enabled) {
+      conduit_node* f_params = conduit_node_create();
+      catalyst_finalize(f_params);
+  }
+#endif
+}
+
 
 
 void MFIXReadWrite::readParameters ()
@@ -192,7 +230,7 @@ void MFIXReadWrite::readParameters ()
      pp.query("par_ascii_per_approx", par_ascii_per_approx);
 
      pp.query("restart", restart_file);
-       
+
      ParmParse("pic2dem").query("convert", restart_file);
 
      pp.query("repl_x", repl_x);
@@ -240,7 +278,11 @@ void MFIXReadWrite::readParameters ()
 #ifdef MFIX_CATALYST
   {
     ParmParse pp("catalyst");
+    pp.query("catalyst_on_restart", catalyst_on_restart);
     pp.query("script", catalyst_script);
+    pp.query("implementation", catalyst_impl);
+    pp.query("library_path", catalyst_library_path);
+    pp.query("enabled", catalyst_enabled);
   }
 #endif
 }
@@ -656,6 +698,18 @@ MFIXReadWrite::writeNow (MFIXTimer& timer,
       WriteMassBalanceReport(timer.time());
       last_mb_report = timer.nstep();
     }
+
+/*--------------------------------------------------------------------------------------------------
+ *
+ *                                  MFIX call to catalyst
+ *
+ *------------------------------------------------------------------------------------------------*/
+
+#ifdef MFIX_CATALYST
+    if (catalyst_enabled) {
+      RunCatalystAdaptor(timer.nstep(), timer.time());
+    }
+#endif
 
 }
 

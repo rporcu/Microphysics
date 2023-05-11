@@ -15,11 +15,6 @@
 #include <mfix_fluid.H>
 #include <mfix_rw.H>
 
-#ifdef MFIX_CATALYST
-#include "catalyst.hpp"
-#include "AMReX_Conduit_Blueprint.H"
-#endif
-
 // Set defaults that are different that what ARMeX uses.  We only
 // add them if they are not already specified in the inputs file.
 void add_par () {
@@ -260,19 +255,6 @@ int main (int argc, char* argv[])
     // Initialize derived internals
     mfix.Init(timer.time());
 
-#ifdef MFIX_CATALYST
-    conduit_cpp::Node params;
-    params["catalyst/scripts/script0"].set_string(rw.catalyst_script);
-    params["catalyst_load/implementation"] = "paraview";
-    params["catalyst_load/search_paths/paraview"] = "/home/corey/Builds/pvsb-dev/install/lib/catalyst";
-    catalyst_status err = catalyst_initialize(conduit_cpp::c_node(&params));
-    if (err != catalyst_status_ok)
-    {
-        std::cerr << "Failed to initialize Catalyst: " << err << std::endl;
-        return 1;
-    }
-#endif
-
     // Create EB factories on new grids
     mfix.make_eb_factories();
 
@@ -359,8 +341,8 @@ int main (int argc, char* argv[])
 
        rw.ComputeMassAccum(0);
 
-       for (int lev = 0; lev <= mfix.finestLevel(); lev++)
-       {
+       for (int lev = 0; lev <= mfix.finestLevel(); lev++) {
+
          if (mfix.m_dem.restart_from_PIC()) {
 
            mfix.m_pic.set_solve(false);
@@ -401,8 +383,8 @@ int main (int argc, char* argv[])
                if (ParallelDescriptor::IOProcessor())
                    std::cout << "   Time per step        " << step_time << std::endl;
 
-               if (!mfix.IsSteadyState())
-               {
+               if (!mfix.IsSteadyState()) {
+
                    timer.advance_time(prev_dt);
                    timer.advance_nstep(1);
 
@@ -411,10 +393,6 @@ int main (int argc, char* argv[])
                    }
 
                    rw.writeNow(timer, prev_dt);
-
-#ifdef MFIX_CATALYST
-                   mfix.RunCatalystAdaptor(timer.nstep(), timer.time());
-#endif
                }
 
                // Mechanism to terminate MFIX normally.
@@ -444,15 +422,11 @@ int main (int argc, char* argv[])
 
        BL_PROFILE_REGION_STOP("mfix::main()");
        BL_PROFILE_VAR_STOP(pmain);
+
     }
 
     } // This end bracket and the start bracket after Initialize are essential so
       // that the mfix object is deleted before Finalize
-
-#ifdef MFIX_CATALYST
-    conduit_node* f_params = conduit_node_create();
-    catalyst_finalize(f_params);
-#endif
 
     amrex::Finalize();
     return 0;

@@ -152,10 +152,6 @@ class mfix : public AmrCore
                                     amrex::Vector< amrex::MultiFab*> const& S_cc,
                                     bool proj_for_small_dt);
 
-#ifdef MFIX_CATALYST
-    void RunCatalystAdaptor ( int nstep, Real time );
-#endif
-
     void Restart (std::string& restart_chkfile,
                   int& nstep,
                   amrex::Real& dt,

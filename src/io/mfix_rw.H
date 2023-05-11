@@ -45,6 +45,8 @@ class MFIXReadWrite
                   amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
                   MFIXRegions& regions_in);
 
+   ~MFIXReadWrite ();
+
    // Class for specifying a subregion for ParticleContainer::WritePlotFile
    // and add a filter to plot only a selected group of particles
    struct SolidsPlotRegion {
@@ -130,6 +132,11 @@ class MFIXReadWrite
    void WriteAscentFile (int nstep,
                          amrex::Real time) const;
 
+#ifdef MFIX_CATALYST
+    void RunCatalystAdaptor (int nstep,
+                             amrex::Real time) const;
+#endif
+
    void WriteParticleAscii (std::string& par_ascii_file_name,
                             int nstep = 0) const;
 
@@ -201,7 +208,11 @@ class MFIXReadWrite
    { mass_balance_report_time = a_time; }
 
 #ifdef MFIX_CATALYST
+   bool catalyst_on_restart = false;
    std::string catalyst_script {""};
+   std::string catalyst_impl {""};
+   std::string catalyst_library_path {""};
+   bool catalyst_enabled = false;
 #endif
 
    // Variables to simplify checkpoint IO

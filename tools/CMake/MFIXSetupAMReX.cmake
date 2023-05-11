@@ -31,7 +31,9 @@ if (AMReX_FOUND)
    if (MFIX_HYPRE)
       list(APPEND AMREX_REQUIRED_COMPONENTS HYPRE)
    endif ()
-
+   if (MFIX_CATALYST)
+      list(APPEND AMREX_REQUIRED_COMPONENTS CONDUIT)
+   endif ()
 
    # We now check again for the AMReX package.
    # This time we mark AMReX + its required components as REQUIRED.
