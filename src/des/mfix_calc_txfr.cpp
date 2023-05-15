@@ -668,8 +668,10 @@ mfix::mfix_calc_txfr_particle (Real time,
               } // Not covered
             } // if box not all regular
 
+            Real pradius = p_realarray[SoArealData::radius][p_id];
+
+            Real pvol = SoArealData::volume(pradius);
             Real pbeta = p_realarray[SoArealData::dragcoeff][p_id];
-            Real pvol = p_realarray[SoArealData::volume][p_id];
 
             // Particle drag calculation.  We multiply the particle velocity
             // by "pmult" so that DEM uses the slip velocity. For PIC we

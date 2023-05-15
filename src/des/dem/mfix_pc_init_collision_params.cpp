@@ -54,8 +54,9 @@ void MFIXParticleContainer::MFIX_PC_InitCollisionParams ()
 
           if (phase == p_intarray[SoAintData::phase][p_id])
           {
-            const Real density  = p_realarray[SoArealData::density][p_id];
-            const Real diameter = 2.0*p_realarray[SoArealData::radius][p_id];
+            const Real radius   = p_realarray[SoArealData::radius][p_id];
+            const Real density  = p_realarray[SoArealData::mass][p_id] / SoArealData::volume(radius);
+            const Real diameter = 2.0*radius;
 
             l_pnum  = 1._rt;
             l_pdiam = diameter;

@@ -94,8 +94,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         if (update_mass) {
 
           part_mass_update(p, ptile_data, p_realarray, i, idx_X_sn, nspecies_s,
-              dt, p_mass_old, p_mass_new, nullptr, nullptr, proceed, coeff,
-              idx_mass_txfr, 0);
+              dt, p_mass_old, p_mass_new, proceed, coeff, idx_mass_txfr);
         }
 
         if (proceed) {
@@ -108,7 +107,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
             part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn, nspecies_s,
                 solid_is_a_mixture, solids_parms, dt, coeff, p_mass_new, nullptr,
                 enthalpy_source, solve_reactions, idx_h_txfr, abstol, reltol,
-                maxiter, is_IOProc, 0);
+                maxiter, is_IOProc);
           }
         }
       });

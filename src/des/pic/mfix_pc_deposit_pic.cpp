@@ -38,6 +38,11 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
 
     for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
+      PairIndex index(pti.index(), pti.LocalTileIndex());
+      auto& plev  = GetParticles(lev);
+      auto& ptile = plev[index];
+      auto ptile_data = ptile.getParticleTileData();
+
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
 
@@ -87,7 +92,10 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
         }
 #endif
 
-        amrex::ParallelFor(nrp, [pstruct,p_realarray,p_lo,dxi,inv_reg_cell_vol,u_s, v_s, w_s]
+        const int idx_statwt = m_runtimeRealData.statwt;
+
+        amrex::ParallelFor(nrp, [pstruct,p_realarray,p_lo,dxi,inv_reg_cell_vol,
+            u_s, v_s, w_s, idx_statwt, ptile_data]
         AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -108,8 +116,9 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
           const Real wy_lo(1.0 - wy_hi);
           const Real wz_lo(1.0 - wz_hi);
 
-          const Real pvol = p_realarray[SoArealData::statwt][ip] *
-            p_realarray[SoArealData::volume][ip] * inv_reg_cell_vol;
+          const Real pradius = p_realarray[SoArealData::radius][ip];
+          const Real pvol = ptile_data.m_runtime_rdata[idx_statwt][ip] *
+            SoArealData::volume(pradius) * inv_reg_cell_vol;
 
           {// Deposition of x velocity -- x-face deposition
 
@@ -413,6 +422,8 @@ MFIXParticleContainer::PICHydroStep (int lev,
 #endif
 
         auto ptile_data = ptile.getParticleTileData();
+        const int idx_eps = m_runtimeRealData.ep_s;
+        const int idx_statwt = m_runtimeRealData.statwt;
 
         amrex::ParallelFor(nrp,
            [pstruct,p_realarray,p_hi,p_lo,dx,dxi,vfrac,volarr, u_so, v_so, w_so, en, ep_cp,
@@ -420,7 +431,7 @@ MFIXParticleContainer::PICHydroStep (int lev,
             vel_ref_frame, three_sqrt_two, en_w, et_w, u_s, v_s, w_s, inv_ep_cp,
             apply_forces, update_parcels, use_taylor_approx, advance_vel_p,
             x_lo_bc,x_hi_bc, y_lo_bc,y_hi_bc,z_lo_bc,z_hi_bc, idx_vel_txfr,
-            solve_reactions, ptile_data]
+            solve_reactions, ptile_data, idx_eps, idx_statwt]
           AMREX_GPU_DEVICE (int ip) noexcept
           {
             ParticleType& p = pstruct[ip];
@@ -433,10 +444,13 @@ MFIXParticleContainer::PICHydroStep (int lev,
             RealVect pos(p.pos());
             RealVect vel_p(vel_p_old);
 
+            const amrex::Real radius_p = p_realarray[SoArealData::radius][ip];
+
             if (apply_forces ) {
               // solids volume fraction
-              const amrex::Real eps_p = amrex::max(1.0e-8, p_realarray[SoArealData::oneOverI][ip]);
-              const amrex::Real density_p = p_realarray[SoArealData::density][ip];
+              const amrex::Real eps_p = amrex::max(1.0e-8, ptile_data.m_runtime_rdata[idx_eps][ip]);
+              const amrex::Real density_p = p_realarray[SoArealData::mass][ip] /
+                SoArealData::volume(radius_p);
 
               // inverse of particle mass
               const Real inv_mass = 1.0/p_realarray[SoArealData::mass][ip];
@@ -481,7 +495,7 @@ MFIXParticleContainer::PICHydroStep (int lev,
 
               // Effective radius of the parcel
               Real eff_radius = p_realarray[SoArealData::radius][ip] *
-                std::cbrt(p_realarray[SoArealData::statwt][ip] * inv_ep_cp);
+                std::cbrt(ptile_data.m_runtime_rdata[idx_statwt][ip] * inv_ep_cp);
 
               // If this FAB has EB, reflect any parcels overlapping the levelset
               // back into the domain.
@@ -615,8 +629,8 @@ MFIXParticleContainer::PICHydroStep (int lev,
                 for (int kk = 0; kk <= 1; ++kk)
                   weights[ii][jj][kk] /= total_weight;
 
-            const Real pvol = p_realarray[SoArealData::statwt][ip] *
-              p_realarray[SoArealData::volume][ip] / reg_cell_vol;
+            const Real pvol = ptile_data.m_runtime_rdata[idx_statwt][ip] *
+              SoArealData::volume(radius_p) / reg_cell_vol;
 
             for (int kk = -1; kk <= 0; ++kk) {
               for (int jj = -1; jj <= 0; ++jj) {

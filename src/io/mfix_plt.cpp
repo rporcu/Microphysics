@@ -147,7 +147,8 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
   pp.query("plt_regtest", plt_ccse_regtest);
 
   const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
-                               reactions.nreactions()*reactions.solve());
+                               reactions.nreactions()*reactions.solve(),
+                               m_pic.solve(), m_dem.cg_dem());
 
   // Runtime-added variables
   const int size = SoArealData::count + rtData.count;
@@ -162,20 +163,8 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     write_real_comp_out[SoArealData::radius] = input_value;
 
     input_value = 0;
-    pp.query("plt_volume", input_value);
-    write_real_comp_out[SoArealData::volume] = input_value;
-
-    input_value = 0;
     pp.query("plt_mass", input_value);
     write_real_comp_out[SoArealData::mass] = input_value;
-
-    input_value = 0;
-    pp.query("plt_ro_p", input_value);
-    write_real_comp_out[SoArealData::density] = input_value;
-
-    input_value = 0;
-    pp.query("plt_omoi", input_value);
-    write_real_comp_out[SoArealData::oneOverI] = input_value;
 
     input_value = 1;
     pp.query("plt_vel_p", input_value);
@@ -188,10 +177,6 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     write_real_comp_out[SoArealData::omegax] = input_value;
     write_real_comp_out[SoArealData::omegay] = input_value;
     write_real_comp_out[SoArealData::omegaz] = input_value;
-
-    input_value = 0;
-    pp.query("plt_statwt", input_value);
-    write_real_comp_out[SoArealData::statwt] = input_value;
 
     input_value = 0;
     pp.query("plt_drag_p", input_value);
@@ -253,6 +238,22 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
         write_real_comp_out[start+n] = input_value;
     }
 
+    if (m_pic.solve()) {
+      input_value = 0;
+      pp.query("plt_eps", input_value);
+
+      const int start = gap + rtData.ep_s;
+      write_real_comp_out[start] = input_value;
+    }
+
+    if (m_pic.solve() || m_dem.cg_dem()) {
+      input_value = 0;
+      pp.query("plt_statwt", input_value);
+
+      const int start = gap + rtData.statwt;
+      write_real_comp_out[start] = input_value;
+    }
+
     // Int data
     input_value = 0;
     pp.query("plt_phase", input_value);
@@ -261,13 +262,6 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     input_value = 0;
     pp.query("plt_state", input_value);
     write_int_comp_out[SoAintData::state] = input_value;
-
-  } else {
-
-    write_real_comp_out[SoArealData::volume] = 0;
-    write_real_comp_out[SoArealData::density] = 0;
-    write_real_comp_out[SoArealData::oneOverI] = 0;
-    write_real_comp_out[SoArealData::statwt] = 0;
 
   }
 

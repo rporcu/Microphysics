@@ -2734,25 +2734,10 @@ BaseMonitor::setup_variables ()
       variables_names.push_back(var);
       m_components.push_back(5+SoArealData::radius);
 
-    } else if (var.compare("volume") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::volume);
-
     } else if (var.compare("mass") == 0) {
 
       variables_names.push_back(var);
       m_components.push_back(5+SoArealData::mass);
-
-    } else if (var.compare("density") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::density);
-
-    } else if (var.compare("oneOverI") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::oneOverI);
 
     } else if (var.compare("velocity") == 0) {
 
@@ -2805,11 +2790,6 @@ BaseMonitor::setup_variables ()
 
       variables_names.push_back(var);
       m_components.push_back(5+SoArealData::omegaz);
-
-    } else if (var.compare("statwt") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::statwt);
 
     } else if (var.compare("dragcoeff") == 0) {
 
@@ -2871,13 +2851,17 @@ BaseMonitor::setup_variables ()
 
     } else if (var.compare("X_sn") == 0) {
 
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+
       for (int n_s(0); n_s < m_solids.nspecies(); ++n_s) {
         variables_names.push_back("X_sn_"+m_solids.species_names(n_s));
         const int idx = 5+SoArealData::count+SoAintData::count;
-        m_components.push_back(idx+n_s);
+        m_components.push_back(idx+rrData.X_sn+n_s);
       }
 
     } else if (var.substr(0,5).compare("X_sn_") == 0) {
+
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
 
       const int var_name_size = var.size();
       const std::string var_species = var.substr(5,var_name_size-5);
@@ -2886,7 +2870,7 @@ BaseMonitor::setup_variables ()
         if (var_species.compare(m_solids.species_names(n_s)) == 0) {
           variables_names.push_back("X_sn_"+m_solids.species_names(n_s));
           const int idx = 5+SoArealData::count+SoAintData::count;
-          m_components.push_back(idx+n_s);
+          m_components.push_back(idx+rrData.X_sn+n_s);
           break;
         }
       }
@@ -3190,15 +3174,18 @@ AveragedProperty::average (const int lev,
     ReduceTuple default_value = {0., 0.};
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
-                                           const int index,
-                                           const int i) -> ReduceTuple
+    auto R = [get_value,idx_statwt,solve_pic,cg_dem]
+      AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
+                        const int index,
+                        const int i) -> ReduceTuple
     {
-      const auto& particle = ptile_data.getSuperParticle(i);
-
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
 
       return {statwt*p_value, statwt};
     };
@@ -3245,15 +3232,18 @@ AveragedProperty::stddev (const int lev,
     GetParticleValue get_value(m_pc->m_runtimeRealData);
 
     const Real d_avg = avg[var];
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value,d_avg] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
-                                                 const int index,
-                                                 const int i) -> ReduceTuple
+    auto R = [get_value,d_avg,idx_statwt,solve_pic,cg_dem]
+      AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
+                        const int index,
+                        const int i) -> ReduceTuple
     {
-      const auto& particle = ptile_data.getSuperParticle(i);
-
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
 
       const Real diff = p_value - d_avg;
 
@@ -3298,15 +3288,20 @@ AveragedProperty::mass_weighted_average (const int lev,
     ReduceTuple default_value = {0., 0.};
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
-                                           const int index,
-                                           const int i) -> ReduceTuple
+    auto R = [get_value,idx_statwt,solve_pic,cg_dem]
+      AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
+                        const int index,
+                        const int i) -> ReduceTuple
     {
       const auto& particle = ptile_data.getSuperParticle(i);
 
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
       const Real mass = particle.rdata(SoArealData::mass);
 
       return {statwt*mass*p_value, statwt*mass};
@@ -3350,16 +3345,22 @@ AveragedProperty::volume_weighted_average (const int lev,
     ReduceTuple default_value = {0., 0.};
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value] AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
-                                           const int index,
-                                           const int i) -> ReduceTuple
+    auto R = [get_value,idx_statwt,solve_pic,cg_dem]
+      AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
+                        const int index,
+                        const int i) -> ReduceTuple
     {
       const auto& particle = ptile_data.getSuperParticle(i);
 
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
-      const Real volume = particle.rdata(SoArealData::volume);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
+      const Real radius = particle.rdata(SoArealData::radius);
+      const Real volume = SoArealData::volume(radius);
 
       return {statwt*volume*p_value, statwt*volume};
     };
@@ -3493,8 +3494,12 @@ FlowRate::flow_rate (const int lev,
     CrossesFlowPlane crossing_check;
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
+    auto R = [get_value,crossing_check,direction,plane_coordinate,dt,idx_statwt,
+         solve_pic,cg_dem]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                         const int index,
                         const int i) -> ReduceTuple
@@ -3502,7 +3507,8 @@ FlowRate::flow_rate (const int lev,
       const auto& particle = ptile_data.getSuperParticle(i);
 
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
 
       const Real pos = particle.pos(direction);
       const Real vel = particle.rdata(SoArealData::velx+direction);
@@ -3550,8 +3556,12 @@ FlowRate::mass_weighted_flow_rate (const int lev,
     CrossesFlowPlane crossing_check;
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
+    auto R = [get_value,crossing_check,direction,plane_coordinate,dt,idx_statwt,
+         solve_pic,cg_dem]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                         const int index,
                         const int i) -> ReduceTuple
@@ -3559,7 +3569,8 @@ FlowRate::mass_weighted_flow_rate (const int lev,
       const auto& particle = ptile_data.getSuperParticle(i);
 
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
       const Real mass = particle.rdata(SoArealData::mass);
 
       const Real pos = particle.pos(direction);
@@ -3608,8 +3619,12 @@ FlowRate::volume_weighted_flow_rate (const int lev,
     CrossesFlowPlane crossing_check;
 
     GetParticleValue get_value(m_pc->m_runtimeRealData);
+    const int idx_statwt = m_pc->m_runtimeRealData.statwt;
+    const int solve_pic = m_pc->get_pic().solve();
+    const int cg_dem = m_pc->get_dem().cg_dem();
 
-    auto R = [get_value,crossing_check,direction,plane_coordinate,dt]
+    auto R = [get_value,crossing_check,direction,plane_coordinate,dt,idx_statwt,
+         solve_pic,cg_dem]
       AMREX_GPU_DEVICE (const ParticleTileData& ptile_data,
                         const int index,
                         const int i) -> ReduceTuple
@@ -3617,8 +3632,10 @@ FlowRate::volume_weighted_flow_rate (const int lev,
       const auto& particle = ptile_data.getSuperParticle(i);
 
       const Real p_value = get_value(ptile_data, index, i);
-      const Real statwt = particle.rdata(SoArealData::statwt);
-      const Real volume = particle.rdata(SoArealData::volume);
+      const Real statwt = (solve_pic || cg_dem) ?
+        ptile_data.m_runtime_rdata[idx_statwt][i] : 1;
+      const Real radius = particle.rdata(SoArealData::radius);
+      const Real volume = SoArealData::volume(radius);
 
       const Real pos = particle.pos(direction);
       const Real vel = particle.rdata(SoArealData::velx+direction);

@@ -136,6 +136,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
+  const int idx_statwt   = (pc->m_runtimeRealData).statwt;
   const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
@@ -366,7 +367,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
           const int fluid_is_a_mixture = fluid.isMixture();
           const int solve_reactions = reactions.solve();
 
-          auto local_cg_dem = m_dem.cg_dem();
+          const int cg_dem = m_dem.cg_dem();
 
           const Real mu_g0 = fluid.mu_g();
 
@@ -375,11 +376,11 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
           amrex::ParallelFor(np,
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
-               nspecies_g,interp_comp,local_cg_dem,ptile_data,nreactions,
+               nspecies_g,interp_comp,cg_dem,ptile_data,nreactions,
                nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
                fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
-               apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array]
+               apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array,idx_statwt]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
@@ -512,7 +513,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               mu_g = mu_g0;
 
             Real rad = p_realarray[SoArealData::radius][p_id];
-            Real vol = p_realarray[SoArealData::volume][p_id];
+            Real vol = SoArealData::volume(rad);
 
             int pID = particle.id();
 
@@ -530,8 +531,8 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
             Real vrel = sqrt(dot_product(vslp, vslp));
             Real dp = 2.0*rad;
 
-            if (local_cg_dem) {
-               dp = dp/std::cbrt(p_realarray[SoArealData::statwt][p_id]);
+            if (cg_dem) {
+               dp = dp/std::cbrt(ptile_data.m_runtime_rdata[idx_statwt][p_id]);
             }
 
             Real ep_s = 1.0 - ep_g;
@@ -563,7 +564,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               // Extract interpolated thermodynamic pressure
               const Real p_g = interp_loc[comp_count];
 
-              const Real ro_p = p_realarray[SoArealData::density][p_id];
+              const Real ro_p = p_realarray[SoArealData::mass][p_id] / vol;
 
               GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
               R_q_heterogeneous.fill(0.);

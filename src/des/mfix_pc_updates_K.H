@@ -26,20 +26,10 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
                   const amrex::Real& dt,
                   const amrex::Real& p_mass_old,
                   amrex::Real& p_mass_new,
-                  const amrex::Real* p_oneOverI_old,
-                  amrex::Real* p_oneOverI_new,
                   int& proceed,
                   amrex::Real& coeff,
-                  const int& idx_mass_txfr,
-                  const int& solve_dem)
+                  const int& idx_mass_txfr)
 {
-  // Get current particle's density
-  const amrex::Real p_density_old = p_realarray[SoArealData::density][i];
-  amrex::Real p_density_new(p_density_old);
-
-  // Get current particle's volume
-  const amrex::Real p_vol = p_realarray[SoArealData::volume][i];
-
   // Total particle density exchange rate
   amrex::Real total_mass_rate(0);
 
@@ -80,16 +70,8 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
 
     // Write out to global memory particle's mass and density
     p_realarray[SoArealData::mass][i] = p_mass_new;
-    p_density_new = p_mass_new / p_vol;
-    p_realarray[SoArealData::density][i] = p_density_new;
 
     coeff = p_mass_old / p_mass_new;
-
-    // Write out to global memory particle's moment of inertia
-    if (solve_dem) {
-      *p_oneOverI_new = coeff * (*p_oneOverI_old);
-      p_realarray[SoArealData::oneOverI][i] = *p_oneOverI_new;
-    }
 
   } else {
     p.id() = -1;
@@ -234,8 +216,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
                       const amrex::Real& abstol,
                       const amrex::Real& reltol,
                       const int& maxiter,
-                      const int& is_IOProc,
-                      const int& solve_dem)
+                      const int& is_IOProc)
 {
   amrex::Real p_enthalpy_old(0);
 
@@ -251,7 +232,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   amrex::Real p_enthalpy_new(0.);
 
-  if (solve_dem) {
+  if (cond_ptr != nullptr) {
     p_enthalpy_new = coeff*p_enthalpy_old +
       dt*((p_realarray[SoArealData::convection][i]+cond_ptr[i]+enthalpy_source) / p_mass_new);
   } else {

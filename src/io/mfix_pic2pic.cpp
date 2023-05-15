@@ -43,8 +43,15 @@ void mfix::PIC_to_PIC(const int lev,
   // Copy particles from the accumulator to the MFIXParticleContainer
   pc->copyParticles(accumulator, true);
 
+  const int idx_statwt = pc->m_runtimeRealData.statwt;
+
   for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
     int np = pti.numParticles();
+
+    MFIXParticleContainer::PairIndex index(pti.index(), pti.LocalTileIndex());
+    auto& plev  = pc->GetParticles(lev);
+    auto& ptile = plev[index];
+    auto ptile_data = ptile.getParticleTileData();
 
     auto& soa = pti.GetStructOfArrays();
     auto p_realarray = soa.realarray();
@@ -52,7 +59,7 @@ void mfix::PIC_to_PIC(const int lev,
     auto& aos = pti.GetArrayOfStructs();
     auto pstruct = aos().dataPtr();
 
-    ParallelForRNG(np, [p_realarray,pic_factor,pstruct]
+    ParallelForRNG(np, [p_realarray,pic_factor,pstruct,ptile_data,idx_statwt]
       AMREX_GPU_DEVICE (int i, amrex::RandomEngine const& engine) noexcept
     {
       auto& part = pstruct[i];
@@ -63,7 +70,7 @@ void mfix::PIC_to_PIC(const int lev,
       part.pos(1) += (2*amrex::Random(engine)-1)*p_radius;
       part.pos(2) += (2*amrex::Random(engine)-1)*p_radius;
 
-      p_realarray[SoArealData::statwt][i] /= pic_factor;
+      ptile_data.m_runtime_rdata[idx_statwt][i] /= pic_factor;
     });
   }
 

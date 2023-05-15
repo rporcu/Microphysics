@@ -81,15 +81,11 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     // Set other particle properties
                     p_intarray[SoAintData::phase][index_repl] = p_intarray[SoAintData::phase][index];
                     p_intarray[SoAintData::state][index_repl] = p_intarray[SoAintData::state][index];
-                    p_realarray[SoArealData::volume][index_repl] = p_realarray[SoArealData::volume][index];
-                    p_realarray[SoArealData::density][index_repl] = p_realarray[SoArealData::density][index];
                     p_realarray[SoArealData::mass][index_repl] = p_realarray[SoArealData::mass][index];
-                    p_realarray[SoArealData::oneOverI][index_repl] = p_realarray[SoArealData::oneOverI][index];
                     p_realarray[SoArealData::radius][index_repl] = p_realarray[SoArealData::radius][index];
                     p_realarray[SoArealData::omegax][index_repl] = p_realarray[SoArealData::omegax][index];
                     p_realarray[SoArealData::omegay][index_repl] = p_realarray[SoArealData::omegay][index];
                     p_realarray[SoArealData::omegaz][index_repl] = p_realarray[SoArealData::omegaz][index];
-                    p_realarray[SoArealData::statwt][index_repl] = p_realarray[SoArealData::statwt][index];
                     p_realarray[SoArealData::dragcoeff][index_repl] = p_realarray[SoArealData::dragcoeff][index];
                     p_realarray[SoArealData::dragx][index_repl] = p_realarray[SoArealData::dragx][index];
                     p_realarray[SoArealData::dragy][index_repl] = p_realarray[SoArealData::dragy][index];

@@ -30,17 +30,13 @@ struct SoArealData
 {
   enum {
     radius = 0,
-    volume,
     mass,
-    density,
-    oneOverI,
     velx,
     vely,
     velz,
     omegax,
     omegay,
     omegaz,
-    statwt,
     dragcoeff,
     dragx,
     dragy,
@@ -50,6 +46,17 @@ struct SoArealData
     convection,
     count
   };
+
+  static
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real volume (const amrex::Real radius)
+  { return (4.0/3.0)*M_PI*(radius*radius*radius); }
+
+  static
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+  amrex::Real oneOverI (const amrex::Real radius,
+                        const amrex::Real mass)
+  { return 2.5/(mass*(radius*radius)); }
 };
 
 
@@ -59,18 +66,24 @@ class runtimeRealData
   public:
     AMREX_GPU_HOST_DEVICE
     runtimeRealData (const int nspecies_s,
-                     const int nreactions)
-      : X_sn(0)                              // nb of components = nspecies_s
-      , vel_txfr(X_sn + nspecies_s)          // nb of components = 3
-      , h_txfr(vel_txfr + 3*(nreactions>0))  // nb of components = 1
-      , mass_txfr(h_txfr + 1*(nreactions>0)) // nb of components = nspecies_s
-      , count(mass_txfr + nspecies_s*(nreactions>0))
+                     const int nreactions,
+                     const int solve_pic,
+                     const int cg_dem)
+      : X_sn(0)                                       // nb of components = nspecies_s
+      , vel_txfr(X_sn + nspecies_s)                   // nb of components = 3
+      , h_txfr(vel_txfr + 3*(nreactions>0))           // nb of components = 1
+      , mass_txfr(h_txfr + 1*(nreactions>0))          // nb of components = nspecies_s
+      , ep_s(mass_txfr + nspecies_s*(nreactions>0))   // nb of components = 1
+      , statwt(ep_s + 1*(solve_pic>0))                // nb of components = 1
+      , count(statwt + 1*((solve_pic > 0) || (cg_dem > 0)))
     {}
 
     const int X_sn;
     const int vel_txfr;
     const int h_txfr;
     const int mass_txfr;
+    const int ep_s;
+    const int statwt;
     const int count;
 };
 

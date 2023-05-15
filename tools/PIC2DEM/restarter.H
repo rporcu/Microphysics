@@ -10,7 +10,7 @@ struct Transfer {
 
   Transfer (const MFIXSolidsPhase& solids)
     : idx_eps(0)
-    , idx_density(1)
+    , idx_mass(1)
     , idx_vel(2)
     , idx_temp(5)
     , idx_species(idx_temp + solids.solve_enthalpy())
@@ -18,7 +18,7 @@ struct Transfer {
   {}
 
   const int idx_eps;
-  const int idx_density;
+  const int idx_mass;
   const int idx_vel;
   const int idx_temp;
   const int idx_species;

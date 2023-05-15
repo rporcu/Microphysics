@@ -53,7 +53,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     int  pstate, pphase;
     Real velx, vely, velz;
-    Real pradius, pdensity, pvolume, pomoi, pmass, pomega;
+    Real pradius, pdensity, pvolume, pmass, pomega;
 
     pstate = 1;
 
@@ -82,7 +82,6 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       // Compute other particle properties
       pvolume  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
       pmass = pvolume * pdensity;
-      pomoi  = 2.5/(pmass * (pradius*pradius));
       pomega = 0.0;
 
       // Set id and cpu for this particle
@@ -96,15 +95,11 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       host_intarrays[SoAintData::ptype][i]        = 0;
 #endif
 
-      host_realarrays[SoArealData::volume][i]     = pvolume;
-      host_realarrays[SoArealData::density][i]    = pdensity;
       host_realarrays[SoArealData::mass][i]       = pmass;
-      host_realarrays[SoArealData::oneOverI][i]   = pomoi;
       host_realarrays[SoArealData::radius][i]     = pradius;
       host_realarrays[SoArealData::omegax][i]     = pomega;
       host_realarrays[SoArealData::omegay][i]     = pomega;
       host_realarrays[SoArealData::omegaz][i]     = pomega;
-      host_realarrays[SoArealData::statwt][i]     = 1.0;
 
       // Initialize these for I/O purposes
       host_realarrays[SoArealData::dragcoeff][i]     = 0.0;
@@ -230,7 +225,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                 int pcount = 0;
 
                 particles_generator.generate(pcount, particles, ic_regions_ptr,
-                    ic_regions_size, allow_ic_regions_overlap);
+                    ic_regions_size, allow_ic_regions_overlap, m_runtimeRealData);
 
                 // Update the particles NextID
                 ParticleType::NextID(id+pcount);

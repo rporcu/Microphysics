@@ -398,7 +398,7 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
 
     Transfer txfr_idxs(solids);
     const int idx_eps = txfr_idxs.idx_eps;
-    const int idx_density = txfr_idxs.idx_density;
+    const int idx_mass = txfr_idxs.idx_mass;
     const int idx_vel = txfr_idxs.idx_vel;
     const int idx_temp = txfr_idxs.idx_temp;
     const int idx_species = txfr_idxs.idx_species;
@@ -420,14 +420,14 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
       const int solve_species  = solids.solve_species();
 
       amrex::ParallelFor(box, [avgdPIC_arr,solve_enthalpy,solve_species,idx_eps,
-          idx_vel,idx_species,idx_temp,nspecies_s,idx_density]
+          idx_vel,idx_species,idx_temp,nspecies_s,idx_mass]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const Real eps = avgdPIC_arr(i,j,k,idx_eps);
 
         if (eps < 1.e-15) {
 
-          avgdPIC_arr(i,j,k,idx_density) = 0.;
+          avgdPIC_arr(i,j,k,idx_mass) = 0.;
 
           avgdPIC_arr(i,j,k,idx_vel+0) = 0.;
           avgdPIC_arr(i,j,k,idx_vel+1) = 0.;
@@ -442,7 +442,7 @@ MFIXRestarter::calc_txfr (const mfix* mfix_coarse,
 
         } else {
 
-          avgdPIC_arr(i,j,k,idx_density) /= eps;
+          avgdPIC_arr(i,j,k,idx_mass) /= eps;
 
           avgdPIC_arr(i,j,k,idx_vel+0) /= eps;
           avgdPIC_arr(i,j,k,idx_vel+1) /= eps;
@@ -534,12 +534,13 @@ MFIXPICDeposition::deposit (F WeightFunc,
 
   Transfer txfr_idxs(solids);
   const int idx_eps     = txfr_idxs.idx_eps;
-  const int idx_density = txfr_idxs.idx_density;
+  const int idx_mass    = txfr_idxs.idx_mass;
   const int idx_vel     = txfr_idxs.idx_vel;
   const int idx_temp    = txfr_idxs.idx_temp;
   const int idx_species = txfr_idxs.idx_species;
 
   const int idx_X_sn = pc->m_runtimeRealData.X_sn;
+  const int idx_statwt = pc->m_runtimeRealData.statwt;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -597,7 +598,7 @@ MFIXPICDeposition::deposit (F WeightFunc,
         amrex::ParallelFor(nrp, [pstruct,p_realarray,plo,dx,dxi,ptile_data,dV,idx_eps,
             deposition_scale_factor,WeightFunc,flags_arr,txfr_arr,solve_enthalpy,
             idx_vel,idx_temp,idx_species,nspecies_s,idx_X_sn,solve_species,vfrac_arr,
-            idx_density]
+            idx_mass,idx_statwt]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -605,16 +606,16 @@ MFIXPICDeposition::deposit (F WeightFunc,
           int i; int j; int k;
 
           const Real pradius = p_realarray[SoArealData::radius][ip];
-          const Real pdensity = p_realarray[SoArealData::density][ip];
+          const Real pmass = p_realarray[SoArealData::mass][ip];
 
-          const Real statwt  = p_realarray[SoArealData::statwt][ip];
+          const Real statwt = ptile_data.m_runtime_rdata[idx_statwt][ip];
 
           GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
           WeightFunc(plo, dx, dxi, flags_arr, p.pos(), pradius, i, j, k, weights,
             deposition_scale_factor);
 
-          const Real pvol = p_realarray[SoArealData::volume][ip];
+          const Real pvol = SoArealData::volume(pradius);
 
           const Real pvel_x = p_realarray[SoArealData::velx][ip];
           const Real pvel_y = p_realarray[SoArealData::vely][ip];
@@ -634,7 +635,7 @@ MFIXPICDeposition::deposit (F WeightFunc,
                 Real weight = weights[ii+1][jj+1][kk+1] * (pvol/(vfrac_arr(i+ii,j+jj,k+kk)*dV));
 
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_eps), statwt*weight);
-                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_density), statwt*weight*pdensity);
+                HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_mass), statwt*weight*pmass);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+0), statwt*weight*pvel_x);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+1), statwt*weight*pvel_y);
                 HostDevice::Atomic::Add(&txfr_arr(i+ii,j+jj,k+kk,idx_vel+2), statwt*weight*pvel_z);
@@ -949,14 +950,8 @@ MFIXRestarter::generate_particles (const Long /*particles_count*/,
       p_realarray[SoArealData::vely][p_tot] = 9.87654321e32;
       p_realarray[SoArealData::velz][p_tot] = 9.87654321e32;
 
-      p_realarray[SoArealData::statwt][p_tot] = 1;
-
       p_realarray[SoArealData::radius][p_tot] = 0.0;
-      p_realarray[SoArealData::density][p_tot] = 0.0;
-
-      p_realarray[SoArealData::volume][p_tot] = 0.0;
       p_realarray[SoArealData::mass][p_tot] = 0.0;
-      p_realarray[SoArealData::oneOverI][p_tot] = 0.0;
 
       p_realarray[SoArealData::omegax][p_tot] = 0.0;
       p_realarray[SoArealData::omegay][p_tot] = 0.0;
@@ -1062,17 +1057,7 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
         int i = ijk[0]; int j = ijk[1]; int k = ijk[2];
 
         p_realarray[SoArealData::radius][p] = .5*pdiameter;
-        p_realarray[SoArealData::density][p] = avgdPIC_array(i,j,k,fld_transfer.idx_density);
-
-        const Real radius = p_realarray[SoArealData::radius][p];
-        const Real volume = (4./3.)*M_PI*(radius*radius*radius);
-        const Real density = p_realarray[SoArealData::density][p];
-        const Real mass = volume*density;
-        const Real oneOverI = 10. / (mass*4.*radius*radius);
-
-        p_realarray[SoArealData::volume][p] = volume;
-        p_realarray[SoArealData::mass][p] = mass;
-        p_realarray[SoArealData::oneOverI][p] = oneOverI;
+        p_realarray[SoArealData::mass][p] = avgdPIC_array(i,j,k,fld_transfer.idx_mass);
 
         p_realarray[SoArealData::velx][p] = avgdPIC_array(i,j,k,fld_transfer.idx_vel+0);
         p_realarray[SoArealData::vely][p] = avgdPIC_array(i,j,k,fld_transfer.idx_vel+1);

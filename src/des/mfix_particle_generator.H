@@ -35,7 +35,8 @@ class ParticlesGenerator {
                    ParticleTileType& particles,
                    const amrex::RealBox* regions,
                    const int regions_nb,
-                   const int allow_overlap);
+                   const int allow_overlap,
+                   const runtimeRealData& rrData);
 
     // Particle generator
     template <typename F1>
@@ -44,6 +45,7 @@ class ParticlesGenerator {
                    const amrex::RealBox* regions,
                    const int regions_nb,
                    const int allow_overlap,
+                   const runtimeRealData& rrData,
                    F1 positions_generator);
 
     // Write particles data

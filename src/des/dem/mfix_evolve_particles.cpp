@@ -366,12 +366,15 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             {
               ParticleType& p = pstruct[i];
 
+              // Get current particle's radius
+              const Real p_radius = p_realarray[SoArealData::radius][i];
+
               // Get current particle's mass
               const Real p_mass_old = p_realarray[SoArealData::mass][i];
               Real p_mass_new(p_mass_old);
 
               // Get current particle's oneOverI
-              const Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][i];
+              const Real p_oneOverI_old = SoArealData::oneOverI(p_radius, p_mass_old);
               Real p_oneOverI_new(p_oneOverI_old);
 
               // Flag to stop computing particle's quantities if mass_new < 0,
@@ -385,9 +388,10 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               if (update_mass) {
 
                 part_mass_update(p, ptile_data, p_realarray, i, idx_X_sn,
-                    nspecies_s, subdt, p_mass_old, p_mass_new, &p_oneOverI_old,
-                    &p_oneOverI_new, proceed, coeff, idx_mass_txfr, 1);
+                    nspecies_s, subdt, p_mass_old, p_mass_new, proceed, coeff,
+                    idx_mass_txfr);
 
+                p_oneOverI_new *= coeff;
               }
 
               if (proceed) {
@@ -411,7 +415,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn,
                       nspecies_s, solid_is_a_mixture, solids_parms, subdt, coeff,
                       p_mass_new, cond_ptr, enthalpy_source, solve_reactions,
-                      idx_h_txfr, abstol, reltol, maxiter, is_IOProc, 1);
+                      idx_h_txfr, abstol, reltol, maxiter, is_IOProc);
 
                 }
               }

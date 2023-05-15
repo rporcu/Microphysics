@@ -20,7 +20,9 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
-                        reactions_in.nreactions()*reactions_in.solve())
+                        reactions_in.nreactions()*reactions_in.solve(),
+                        pic.solve(),
+                        dem.cg_dem())
     , nlev (amr_core->maxLevel() + 1)
     , m_p_mass_accum(solids_in.nspecies()*2, 0.)
     , m_p_mass_inflow(solids_in.nspecies(), 0.)
@@ -51,7 +53,9 @@ MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
-                        reactions_in.nreactions()*reactions_in.solve())
+                        reactions_in.nreactions()*reactions_in.solve(),
+                        pic.solve(),
+                        dem.cg_dem())
     , nlev(nlevel)
     , m_initial_conditions(initial_conditions)
     , m_boundary_conditions(boundary_conditions)
@@ -77,24 +81,20 @@ void MFIXParticleContainer::define ()
     setRealCommComp(1, true);   // posy
     setRealCommComp(2, true);   // posz
     setRealCommComp(3, true);   // radius
-    setRealCommComp(4, false);  // volume
-    setRealCommComp(5, false);  // mass
-    setRealCommComp(6, false);  // density
-    setRealCommComp(7, false);  // oneOverI
-    setRealCommComp(8, true);   // velx
-    setRealCommComp(9, true);   // vely
-    setRealCommComp(10, true);  // velz
-    setRealCommComp(11, true);  // omegax
-    setRealCommComp(12, true);  // omegay
-    setRealCommComp(13, true);  // omegaz
-    setRealCommComp(14, false); // statwt
-    setRealCommComp(15, false); // dragcoeff
-    setRealCommComp(16, false); // dragx
-    setRealCommComp(17, false); // dragy
-    setRealCommComp(18, false); // dragz
-    setRealCommComp(19, false); // cp_s
-    setRealCommComp(20, true);  // temperature
-    setRealCommComp(21, true);  // convection
+    setRealCommComp(4, false);  // mass
+    setRealCommComp(5, true);   // velx
+    setRealCommComp(6, true);   // vely
+    setRealCommComp(7, true);   // velz
+    setRealCommComp(8, true);   // omegax
+    setRealCommComp(9, true);   // omegay
+    setRealCommComp(10, true);  // omegaz
+    setRealCommComp(11, false); // dragcoeff
+    setRealCommComp(12, false); // dragx
+    setRealCommComp(13, false); // dragy
+    setRealCommComp(14, false); // dragz
+    setRealCommComp(15, false); // cp_s
+    setRealCommComp(16, true);  // temperature
+    setRealCommComp(17, true);  // convection
 
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
     setIntCommComp(0, true);  // id
@@ -112,7 +112,7 @@ void MFIXParticleContainer::define ()
     // Add solids nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
       AddRealComp(true); // Turn on comm for redistribute on ghosting
-      setRealCommComp(21+n, false); // turn off for ghosting
+      setRealCommComp((SoArealData::count+2)+n, false); // turn off for ghosting
     }
 }
 
@@ -242,7 +242,8 @@ ComputeAverageDensities (const int lev,
             if (avg_region.contains(p.pos()))
             {
               l_np = static_cast<long>(1);
-              l_ro_p = p_realarray[SoArealData::density][p_id];
+              const Real radius = p_realarray[SoArealData::radius][p_id];
+              l_ro_p = p_realarray[SoArealData::mass][p_id] / SoArealData::volume(radius);
             }
 
             return {l_np, l_ro_p};

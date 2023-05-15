@@ -33,8 +33,11 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
         const FabArray<EBCellFlagFab>* flags = &(ebfactory->getMultiEBCellFlagFab());
 
         const Real inv_ep_cp = (m_pic.solve()) ? 1.0/m_pic.ep_cp() : 1.0;
+        const int idx_statwt = m_runtimeRealData.statwt;
+        const int solve_pic = m_pic.solve();
+        const int cg_dem = m_dem.cg_dem();
 
-        for (MFIXParIter pti(* this, lev); pti.isValid(); ++pti)
+        for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti)
         {
             // Real particles
 
@@ -43,6 +46,11 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
             // Remove particles outside of or touching the walls
             if ((*flags)[pti].getType(bx) != FabType::regular)
             {
+                PairIndex index(pti.index(), pti.LocalTileIndex());
+                auto& plev  = GetParticles(lev);
+                auto& ptile = plev[index];
+                auto ptile_data = ptile.getParticleTileData();
+
                 auto& aos = pti.GetArrayOfStructs();
                 ParticleType* pstruct = aos().dataPtr();
 
@@ -64,8 +72,9 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                     const auto& flag_fab =  flags->array(pti);
                     const auto&  phi_arr = ls_phi->array(pti);
 
-                    amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,inv_ep_cp,
-                    dx_ls,phi_arr, ls_refinement, p_lo, dxi, cg_dem=m_dem.cg_dem()]
+                    amrex::ParallelFor(np, [pstruct,p_realarray,plo,dx,flag_fab,
+                        inv_ep_cp,dx_ls,phi_arr, ls_refinement, p_lo, dxi,
+                        ptile_data,idx_statwt,solve_pic,cg_dem]
                     AMREX_GPU_DEVICE (int ip) noexcept
                     {
                         ParticleType& p = pstruct[ip];
@@ -86,11 +95,10 @@ void MFIXParticleContainer::RemoveOutOfRange (int lev,
                           RealVect pos(p.pos());
                           Real ls_value = interp_level_set(pos, ls_refinement, phi_arr, p_lo, dxi);
 
-                          Real radius = p_realarray[SoArealData::radius][ip] *
-                            std::cbrt(p_realarray[SoArealData::statwt][ip] * inv_ep_cp);
+                          Real radius = p_realarray[SoArealData::radius][ip] * inv_ep_cp;
 
-                          if (cg_dem) {
-                            radius = radius/std::cbrt(p_realarray[SoArealData::statwt][ip]);
+                          if (solve_pic) {
+                            radius *= std::cbrt(ptile_data.m_runtime_rdata[idx_statwt][ip]);
                           }
 
                           const Real overlap = radius - ls_value;
