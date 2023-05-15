@@ -39,7 +39,7 @@ for DES_ETA in 0.9 0.8 0.7 0.6; do
        "dem.restitution_coeff.solid0.solid0=${DES_ETA}  dem.restitution_coeff.solid0.wall=${DES_ETA}"
 
     write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  2
-    write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA} 10
+    write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA}  7
 
 done
 
@@ -53,7 +53,7 @@ for DES_KN in 25000 50000 100000; do
            "dem.restitution_coeff.solid0.solid0=${DES_ETA}  dem.restitution_coeff.solid0.wall=${DES_ETA}"
 
         write_data "POST_POS.dat" ${DES_KN} ${DES_ETA}  2
-        write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA} 10
+        write_data "POST_VEL.dat" ${DES_KN} ${DES_ETA}  7
 
     done
 done
