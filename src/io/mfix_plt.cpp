@@ -139,7 +139,7 @@ MFIXReadWrite::InitIOPltData ()
 
 void
 MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
-                             Vector<int>& write_int_comp_out)
+                                    Vector<int>& write_int_comp_out)
 {
   ParmParse pp("mfix");
 
@@ -261,6 +261,13 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     input_value = 0;
     pp.query("plt_state", input_value);
     write_int_comp_out[SoAintData::state] = input_value;
+
+  } else {
+
+    write_real_comp_out[SoArealData::volume] = 0;
+    write_real_comp_out[SoArealData::density] = 0;
+    write_real_comp_out[SoArealData::oneOverI] = 0;
+    write_real_comp_out[SoArealData::statwt] = 0;
 
   }
 
