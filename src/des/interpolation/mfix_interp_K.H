@@ -9,7 +9,7 @@
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void trilinear_interp (const amrex::RealVect& pos,
                        amrex::Real* interp_vals,
                        amrex::Array4<amrex::Real const> const& interp_array,
@@ -47,7 +47,7 @@ void trilinear_interp (const amrex::RealVect& pos,
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void trilinear_interp (const amrex::RealVect& pos,
                        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& plo,
                        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxi,

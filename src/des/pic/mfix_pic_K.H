@@ -1,6 +1,6 @@
 #include "mfix_pc.H"
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real solids_stress (const amrex::Real Ps,
                            const amrex::Real beta,
                            const amrex::Real ep_cp,
@@ -13,7 +13,7 @@ amrex::Real solids_stress (const amrex::Real Ps,
 }
 
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::RealVect
 updated_pic_velocity (const amrex::RealVect& pos,         // parcel position
                       const amrex::RealVect& vel_p_old,   // parcel velocity (current)

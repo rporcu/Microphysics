@@ -6,7 +6,7 @@
 #include <AMReX_RealVect.H>
 #include <AMReX_Array.H>
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void cfrelvel (const amrex::RealVect& vel1, 
                const amrex::RealVect& vel2,
                const amrex::Real& radius1,

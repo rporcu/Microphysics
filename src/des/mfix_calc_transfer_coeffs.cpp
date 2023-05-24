@@ -4,7 +4,7 @@
 #include <mfix_eb_interp_shepard_K.H>
 #include <mfix_des_drag_K.H>
 #include <mfix_des_conv_coeff_K.H>
-#include <mfix_des_rrates_K.H>
+#include <mfix_des_usr_reactions_rates_K.H>
 #include <mfix_mf_helpers.H>
 #include <mfix_algorithm.H>
 

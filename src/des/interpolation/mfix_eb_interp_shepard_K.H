@@ -9,7 +9,7 @@
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void shepard_interp (const amrex::RealVect& pos,
                      const int i,
                      const int j,
@@ -202,7 +202,7 @@ void shepard_interp (const amrex::RealVect& pos,
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void shepard_interp (const amrex::RealVect& pos,
                      const int i,
                      const int j,
@@ -430,7 +430,7 @@ void shepard_interp (const amrex::RealVect& pos,
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void shepard_interp_eb(const amrex::RealVect& pos,
                        const int i,
                        const int j,

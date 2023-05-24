@@ -293,16 +293,16 @@ class Hex_ClosePack
 
     }
 
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     int get_particles_number () const
     { return m_np; }
 
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real get_particles_radius () const
     { return m_eff_rad; }
 
     template <amrex::RunOn >
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::RealVect operator() (const int p_id,
                                 amrex::RandomEngine const&) const
     {
@@ -724,7 +724,7 @@ class nCubePer_Fill
     { return m_np; }
 
     template <amrex::RunOn >
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::RealVect operator() (const int p_id,
                                 amrex::RandomEngine const&) const
     {
@@ -986,7 +986,7 @@ class RandomFill_DEM
     { return m_np; }
 
     template <amrex::RunOn run_on>
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::RealVect operator() (const int p_id,
                                 amrex::RandomEngine const&) const
     {
@@ -1091,7 +1091,7 @@ class RandomFill_PIC
     { return m_np; }
 
     template <amrex::RunOn >
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::RealVect operator() (const int p_id,
                                 amrex::RandomEngine const& engine) const
     {

@@ -33,7 +33,7 @@ struct ComputeDragWenYu
      *    i, j, k - particle cell indices
      *    pid     - particle id number
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real /*DPA*/, amrex::Real /*PHIS*/,
                             amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
@@ -55,6 +55,7 @@ struct ComputeDragWenYu
         return 0.75 * C_d * vrel * ROPg * std::pow(EPg, -2.65) / DPM;
     }
 };
+
 
 struct ComputeDragGidaspow
 {
@@ -86,7 +87,7 @@ struct ComputeDragGidaspow
      *    i, j, k - particle cell indices
      *    pid     - particle id number
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real /*DPA*/, amrex::Real /*PHIS*/,
                             amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
@@ -119,6 +120,7 @@ struct ComputeDragGidaspow
         return (1.0 - PHI_gs)*Ergun + PHI_gs*WenYu;
     }
 };
+
 
 /**
 
@@ -163,7 +165,7 @@ struct ComputeDragBVK2
      *    i, j, k - particle cell indices
      *    pid     - particle id number
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real DPA, amrex::Real PHIS,
                             amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
@@ -190,8 +192,6 @@ struct ComputeDragBVK2
         return F*F_Stokes;
     }
 };
-
-
 
 
 /**********************************************************************************
@@ -225,7 +225,7 @@ struct ComputeDragSyamOBrien1988
      *    DPM     - particle diameter of solids phase M
      *    DPA     - average particle diameter
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real ROPg, amrex::Real vrel,
                             amrex::Real DPM, amrex::Real DPA, amrex::Real /*PHIS*/,
                             amrex::Real /*fvelx*/, amrex::Real /*fvely*/, amrex::Real /*fvelz*/,
@@ -258,21 +258,6 @@ struct ComputeDragSyamOBrien1988
 
     }
 };
-
-
-
-
-
-//****************************************************************************************************
-
-
-
-
-
-
-
-
-
 
 
 struct ComputeDragUser

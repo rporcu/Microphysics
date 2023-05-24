@@ -8,7 +8,7 @@
 
 // Particle-Particle conduction calculation
 //   REF: Batchelor & O'Brien 1977
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real des_pp_conduction(amrex::Real dist_mag,
                               const amrex::Real p1radius,
                               const amrex::Real p2radius,
@@ -49,7 +49,7 @@ amrex::Real des_pp_conduction(amrex::Real dist_mag,
 
 // Particle-Fluid-Particle conduction calculation
 //   REF: Rong & Horio 1999
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real des_pfp_conduction(const amrex::Real dist_mag_eff,
                                const amrex::Real Rp_eff,
                                const amrex::Real Rlens_eff,

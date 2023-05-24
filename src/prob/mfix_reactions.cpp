@@ -11,7 +11,7 @@
 #include <mfix_pic.H>
 #include <mfix_regions.H>
 #include <mfix_species.H>
-#include <mfix_des_rrates_K.H>
+#include <mfix_des_usr_reactions_rates_K.H>
 
 #include <string>
 #include <sstream>

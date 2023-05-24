@@ -5,7 +5,7 @@
 #include <mfix.H>
 
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real fface (const amrex::Real& overlap, const amrex::Real& rad)
 {
   amrex::Real del = overlap / rad;
@@ -13,7 +13,7 @@ amrex::Real fface (const amrex::Real& overlap, const amrex::Real& rad)
 
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real fedge (const amrex::Real& ahat,
                    const amrex::Real& bhat)
 {
@@ -34,7 +34,7 @@ amrex::Real fedge (const amrex::Real& ahat,
 
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real fcorner (const amrex::Real& ahat,
                      const amrex::Real& bhat,
                      const amrex::Real& chat,
@@ -62,7 +62,7 @@ amrex::Real fcorner (const amrex::Real& ahat,
 
 struct TrilinearDeposition
 {
-  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& /*dx*/,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
@@ -119,7 +119,7 @@ struct TrilinearDeposition
 
 struct TrilinearDPVMSquareDeposition
 {
-  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
@@ -227,7 +227,7 @@ struct TrilinearDPVMSquareDeposition
 
 struct TrueDPVMDeposition
 {
-  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,
@@ -435,7 +435,7 @@ struct TrueDPVMDeposition
 
 struct CentroidDeposition
 {
-  AMREX_GPU_HOST_DEVICE AMREX_INLINE
+  AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
   void operator() (amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& plo,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& /*dx*/,
                    amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dxi,

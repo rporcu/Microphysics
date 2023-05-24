@@ -12,7 +12,7 @@
  *                                                              *
  *                                                              *
  ***************************************************************/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void fe_interp(const amrex::RealVect& pos,
                const int ip,
                const int jp,

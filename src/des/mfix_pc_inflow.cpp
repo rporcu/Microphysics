@@ -11,7 +11,7 @@ using namespace amrex;
 
 namespace{
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real
 rand_prop (const amrex::Real var_mean,
            const amrex::Real var_min,

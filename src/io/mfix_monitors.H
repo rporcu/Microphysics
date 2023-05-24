@@ -338,7 +338,7 @@ class BaseMonitor: public Monitor {
         AMREX_GPU_HOST_DEVICE
         void set_direction (const int direction) { m_direction = direction; }
 
-        AMREX_GPU_HOST_DEVICE AMREX_INLINE
+        AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
         int operator() (const amrex::Array4<amrex::EBCellFlag const>& flags_arr,
                         const amrex::IntVect& ijk) const
         {
@@ -1013,7 +1013,7 @@ class BaseMonitor: public Monitor {
           : m_rrData_count(rrData.count)
         {}
 
-        AMREX_GPU_HOST_DEVICE AMREX_INLINE
+        AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
         amrex::Real operator() (const ParticleTileData& ptile_data,
                                 const int index,
                                 const int i) const
@@ -1211,7 +1211,7 @@ class FlowRate final: public BaseMonitor {
 
     struct CrossesFlowPlane {
 
-      AMREX_GPU_HOST_DEVICE AMREX_INLINE
+      AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
       int operator() (const amrex::Real& position,
                       const amrex::Real& velocity,
                       const amrex::Real& plane_coordinate,

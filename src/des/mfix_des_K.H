@@ -6,7 +6,7 @@
 #include <AMReX_RealVect.H>
 #include <AMReX_Array.H>
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void cross_product (const amrex::RealVect& a,
                     const amrex::RealVect& b,
                     amrex::RealVect& c)
@@ -16,14 +16,14 @@ void cross_product (const amrex::RealVect& a,
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real dot_product (const amrex::RealVect& a,
                          const amrex::RealVect& b)
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::Real interp_level_set (const amrex::RealVect& pos,
                               const int n_refine,
                               amrex::Array4<amrex::Real const> const& phi,
@@ -64,7 +64,7 @@ amrex::Real interp_level_set (const amrex::RealVect& pos,
     return ls_value;
 }
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void level_set_normal (const amrex::RealVect& pos,
                        const int n_refine,
                        amrex::RealVect& normal,

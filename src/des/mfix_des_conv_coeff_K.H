@@ -10,7 +10,7 @@ struct NullConvectionCoeff
     // Constructor
     NullConvectionCoeff () {}
 
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real /*EPg*/, amrex::Real /*Mug*/, amrex::Real /*Kg*/, amrex::Real /*Cpg*/,
                             amrex::Real /*ROPg*/, amrex::Real /*Vrel*/, amrex::Real /*dp*/,
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
@@ -47,7 +47,7 @@ struct ComputeConvRanzMarshall
      *     single particles and packed beds," Chemical Engineering Science,
      *     Vol. 48, No. 5, pp 247-253, 1925.
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real /*EPg*/, amrex::Real Mug, amrex::Real Kg, amrex::Real Cpg,
                             amrex::Real ROPg, amrex::Real Vrel, amrex::Real dp,
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const
@@ -95,7 +95,7 @@ struct ComputeConvGunn
      *     single particles and packed beds," Chemical Engineering Science,
      *     Vol. 48, No. 5, pp 247-253, 1925.
      */
-    AMREX_GPU_HOST_DEVICE AMREX_INLINE
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     amrex::Real operator() (amrex::Real EPg, amrex::Real Mug, amrex::Real Kg, amrex::Real Cpg,
                             amrex::Real ROPg, amrex::Real Vrel, amrex::Real dp,
                             int /*i*/, int /*j*/, int /*k*/, int /*pid*/) const

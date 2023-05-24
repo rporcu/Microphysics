@@ -6,7 +6,7 @@
 *                                    NODE 0                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node0_EB(const int covered,
                         const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -82,7 +82,7 @@ amrex::IntVect Node0_EB(const int covered,
 *                                    NODE 1                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node1_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,
@@ -158,7 +158,7 @@ amrex::IntVect Node1_EB(const int covered,
 *                                    NODE 2                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node2_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -235,7 +235,7 @@ amrex::IntVect Node2_EB(const int covered,
 *                                    NODE 3                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node3_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -312,7 +312,7 @@ amrex::IntVect Node3_EB(const int covered,
 *                                    NODE 4                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node4_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -389,7 +389,7 @@ amrex::IntVect Node4_EB(const int covered,
 *                                    NODE 5                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node5_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -465,7 +465,7 @@ amrex::IntVect Node5_EB(const int covered,
 *                                    NODE 6                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node6_EB(const int covered,
                         const amrex::IntVect Node0, const int /*Node0_isNotConnected*/,
                         const amrex::IntVect Node1, const int Node1_isNotConnected,
@@ -542,7 +542,7 @@ amrex::IntVect Node6_EB(const int covered,
 *                                    NODE 7                                        *
 *                                                                                  *
 *----------------------------------------------------------------------------------*/
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 amrex::IntVect Node7_EB(const int covered,
                         const amrex::IntVect Node0, const int Node0_isNotConnected,
                         const amrex::IntVect Node1, const int /*Node1_isNotConnected*/,

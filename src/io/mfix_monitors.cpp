@@ -3416,7 +3416,7 @@ FlowRate::set_coordinate ()
 }
 
 
-AMREX_GPU_HOST_DEVICE AMREX_INLINE
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 int
 FlowRate::CrossesFlowPlane::operator() (const Real& position,
                                         const Real& velocity,

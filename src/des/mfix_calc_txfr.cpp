@@ -7,7 +7,7 @@
 
 #include <mfix_mf_helpers.H>
 #include <mfix_dem.H>
-#include <mfix_des_rrates_K.H>
+#include <mfix_des_usr_reactions_rates_K.H>
 #include <mfix_algorithm.H>
 
 #include <AMReX_BC_TYPES.H>
