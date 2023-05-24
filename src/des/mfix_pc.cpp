@@ -20,6 +20,7 @@ MFIXParticleContainer::MFIXParticleContainer (AmrCore* amr_core,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0,0,SoArealData::count,SoAintData::count>(amr_core->GetParGDB(), 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
+                        solids_in.solve_enthalpy(),
                         reactions_in.nreactions()*reactions_in.solve(),
                         pic.solve(),
                         dem.cg_dem())
@@ -53,6 +54,7 @@ MFIXParticleContainer::MFIXParticleContainer (const Geometry& geom,
                                               MFIXReactions& reactions_in)
     : NeighborParticleContainer<0, 0, SoArealData::count,SoAintData::count>(geom, dmap, ba, 1)
     , m_runtimeRealData(solids_in.nspecies()*solids_in.solve_species(),
+                        solids_in.solve_enthalpy(),
                         reactions_in.nreactions()*reactions_in.solve(),
                         pic.solve(),
                         dem.cg_dem())
@@ -92,9 +94,6 @@ void MFIXParticleContainer::define ()
     setRealCommComp(12, false); // dragx
     setRealCommComp(13, false); // dragy
     setRealCommComp(14, false); // dragz
-    setRealCommComp(15, false); // cp_s
-    setRealCommComp(16, true);  // temperature
-    setRealCommComp(17, true);  // convection
 
 #if defined(AMREX_DEBUG) || defined(AMREX_USE_ASSERTION)
     setIntCommComp(0, true);  // id
@@ -112,7 +111,12 @@ void MFIXParticleContainer::define ()
     // Add solids nspecies components
     for (int n(0); n < m_runtimeRealData.count; ++n) {
       AddRealComp(true); // Turn on comm for redistribute on ghosting
-      setRealCommComp((SoArealData::count+2)+n, false); // turn off for ghosting
+
+      if (n == m_runtimeRealData.temperature ||
+          n == m_runtimeRealData.convection)
+        setRealCommComp((SoArealData::count+2)+n, true);
+      else
+        setRealCommComp((SoArealData::count+2)+n, false); // turn off for ghosting
     }
 }
 
@@ -584,10 +588,16 @@ ComputeAverageTemperatures (const int lev,
           const AoS &particles = pti.GetArrayOfStructs();
           const ParticleType* pstruct = particles().dataPtr();
 
-          auto& soa = pti.GetStructOfArrays();
-          auto p_realarray = soa.realarray();
+          PairIndex index(pti.index(), pti.LocalTileIndex());
 
-          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,avg_region]
+          auto& plev  = GetParticles(lev);
+          auto& ptile = plev[index];
+          auto ptile_data = ptile.getParticleTileData();
+
+          const int idx_temperature = m_runtimeRealData.temperature;
+
+          reduce_op.eval(np, reduce_data, [pstruct,ptile_data,avg_region,
+              idx_temperature]
             AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
           {
             const ParticleType p = pstruct[p_id];
@@ -598,7 +608,7 @@ ComputeAverageTemperatures (const int lev,
             if (avg_region.contains(p.pos()))
             {
               l_np = static_cast<long>(1);
-              l_Tp = p_realarray[SoArealData::temperature][p_id];
+              l_Tp = ptile_data.m_runtime_rdata[idx_temperature][p_id];
             }
 
             return {l_np, l_Tp};

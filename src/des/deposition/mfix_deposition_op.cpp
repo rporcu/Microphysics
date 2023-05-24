@@ -229,6 +229,8 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
   const int nspecies_g = pc->get_fluid().nspecies();
   const int solve_reactions = pc->get_reactions().solve();
 
+  const int idx_temperature = pc->m_runtimeRealData.temperature;
+  const int idx_convection = pc->m_runtimeRealData.convection;
   const int idx_mass_txfr = pc->m_runtimeRealData.mass_txfr;
   const int idx_vel_txfr = pc->m_runtimeRealData.vel_txfr;
   const int idx_h_txfr = pc->m_runtimeRealData.h_txfr;
@@ -331,7 +333,8 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,aux_ptr,
              idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,idx_velx_txfr,
              idx_vely_txfr,idx_velz_txfr,idx_drag_txfr,idx_gammaTp_txfr,cg_dem,
-             idx_convection_coeff_txfr,local_cg_dem,idx_statwt,solve_pic]
+             idx_convection_coeff_txfr,local_cg_dem,idx_statwt,solve_pic,
+             idx_temperature,idx_convection]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -358,7 +361,7 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
           Real pgamma(0.);
 
           if (solve_enthalpy) {
-            pgamma = p_realarray[SoArealData::convection][ip] / reg_cell_vol;
+            pgamma = ptile_data.m_runtime_rdata[idx_convection][ip] / reg_cell_vol;
 
             if (solve_pic)
               pgamma *= ptile_data.m_runtime_rdata[idx_statwt][ip];
@@ -371,7 +374,7 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
           Real pTp(0.);
 
           if (solve_enthalpy)
-            pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
+            pTp = ptile_data.m_runtime_rdata[idx_temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
           if (solve_reactions) {

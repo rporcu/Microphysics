@@ -318,13 +318,15 @@ MFIXReadWrite::Initialize ()
     real_comp_names.push_back("dragy");
     real_comp_names.push_back("dragz");
 
-    real_comp_names.push_back("c_ps");
-    real_comp_names.push_back("temperature");
-    real_comp_names.push_back("convection");
-
     if (solids.solve_species())
       for (auto species: solids.species_names())
         real_comp_names.push_back("X_"+species);
+
+    if (solids.solve_enthalpy()) {
+      real_comp_names.push_back("c_ps");
+      real_comp_names.push_back("temperature");
+      real_comp_names.push_back("convection");
+    }
 
     if (solids.solve_species() && reactions.solve()) {
       for (int n(0); n < solids.nspecies(); ++n) {

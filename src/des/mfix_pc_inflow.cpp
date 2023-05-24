@@ -251,6 +251,9 @@ mfix_pc_inflow (int const lev,
           total_np += new_np;
 
           const int idx_X_sn = m_runtimeRealData.X_sn;
+          const int idx_cp_s = m_runtimeRealData.cp_s;
+          const int idx_temperature = m_runtimeRealData.temperature;
+          const int idx_convection = m_runtimeRealData.convection;
           const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
           const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
           const int idx_h_txfr = m_runtimeRealData.h_txfr;
@@ -288,7 +291,8 @@ mfix_pc_inflow (int const lev,
             mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
             mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
             adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn, solve_pic, cg_dem,
-            idx_mass_txfr, idx_vel_txfr, idx_h_txfr, idx_statwt, idx_eps, solve_reactions]
+            idx_mass_txfr, idx_vel_txfr, idx_h_txfr, idx_statwt, idx_eps, solve_reactions,
+            idx_cp_s, idx_temperature, idx_convection]
             AMREX_GPU_DEVICE (int pid, amrex::RandomEngine const& engine) noexcept
           {
             const int ip = pid + old_np;
@@ -412,13 +416,11 @@ mfix_pc_inflow (int const lev,
             p_real[SoArealData::dragx][ip] = 0.;
             p_real[SoArealData::dragy][ip] = 0.;
             p_real[SoArealData::dragz][ip] = 0.;
-            p_real[SoArealData::cp_s][ip] = 0.;
-            p_real[SoArealData::temperature][ip] = 0.;
-            p_real[SoArealData::convection][ip] = 0.;
 
-            if(adv_enthalpy) {
-              p_real[SoArealData::cp_s][ip] = p_bc_inputs[0];
-              p_real[SoArealData::temperature][ip] = p_bc_inputs[1];
+            if (adv_enthalpy) {
+              ptile_data.m_runtime_rdata[idx_cp_s][ip] = p_bc_inputs[0];
+              ptile_data.m_runtime_rdata[idx_temperature][ip] = p_bc_inputs[1];
+              ptile_data.m_runtime_rdata[idx_convection][ip] = 0.;
             }
 
             if (solve_species) {

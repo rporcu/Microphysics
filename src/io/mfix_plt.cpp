@@ -147,6 +147,7 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
   pp.query("plt_regtest", plt_ccse_regtest);
 
   const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
+                               solids.solve_enthalpy(),
                                reactions.nreactions()*reactions.solve(),
                                m_pic.solve(), m_dem.cg_dem());
 
@@ -185,18 +186,6 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     write_real_comp_out[SoArealData::dragy] = input_value;  // dragy
     write_real_comp_out[SoArealData::dragz] = input_value;  // dragz
 
-    input_value = 0;
-    pp.query("plt_cp_s", input_value);
-    write_real_comp_out[SoArealData::cp_s] = input_value;  // specific heat
-
-    input_value = 0;
-    pp.query("plt_T_p", input_value);
-    write_real_comp_out[SoArealData::temperature] = input_value;  // temperature
-
-    input_value = 0;
-    pp.query("plt_convection", input_value);
-    write_real_comp_out[SoArealData::convection] = input_value;  // heat transfer coefficient
-
     int gap = SoArealData::count;
 
     if (solids.solve_species())
@@ -207,6 +196,32 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
       const int start = gap + rtData.X_sn;
       for(int n(0); n < solids.nspecies(); ++n)
         write_real_comp_out[start+n] = input_value;
+    }
+
+    if (solids.solve_enthalpy()) {
+      {
+        input_value = 0;
+        pp.query("plt_cp_s", input_value);
+
+        const int start = gap + rtData.cp_s;
+        write_real_comp_out[start] = input_value;  // specific heat
+      }
+
+      {
+        input_value = 0;
+        pp.query("plt_T_p", input_value);
+
+        const int start = gap + rtData.temperature;
+        write_real_comp_out[start] = input_value;  // temperature
+      }
+
+      {
+        input_value = 0;
+        pp.query("plt_convection", input_value);
+
+        const int start = gap + rtData.convection;
+        write_real_comp_out[start] = input_value;  // heat transfer coefficient
+      }
     }
 
     if (reactions.solve())

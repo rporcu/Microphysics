@@ -19,7 +19,8 @@
 //**********************************************************
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
-particle_walls (const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
+particle_walls (const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
+                const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                 const amrex::GpuArray<int*, SoAintData::count>& p_intarray,
                 const int& i,
                 const int& solve_enthalpy,
@@ -39,6 +40,7 @@ particle_walls (const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>&
                 const amrex::Real& mew_w,
                 amrex::RealVect& total_force,
                 amrex::RealVect& total_tow_force,
+                const int idx_temperature,
                 amrex::Real* cond_ptr,
                 const int& istate)
 {
@@ -59,7 +61,7 @@ particle_walls (const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>&
     amrex::Real Rlens      = (1.0 + FLPC)*rp;
     if (ls_value < Rlens) {
       const amrex::Real Rough = solids_parms.get_min_cond<run_on>();
-      Tp1              = p_realarray[SoArealData::temperature][i];
+      Tp1 = ptile_data.m_runtime_rdata[idx_temperature][i];
 
       // Construct a point inside the wall (to machine precision)
       amrex::RealVect normal(0.);
@@ -221,6 +223,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
 particle_particles (const MFIXParticleContainer::ParticleType& particle,
                     const amrex::Neighbors<MFIXParticleContainer::ParticleType>& neighbs,
+                    const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
                     const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                     const amrex::GpuArray<int*, SoAintData::count>& p_intarray,
                     const int& i,
@@ -239,6 +242,7 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
                     amrex::Real* tow_ptr,
                     amrex::Real* cond_ptr,
                     int& has_collisions,
+                    const int& idx_temperature,
                     const int& ntot,
                     const int& istate)
 {
@@ -275,8 +279,8 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
         amrex::Real lens_lm    = 2.0*Rlens_eff;
         if ( r2 <= (lens_lm - small_number)*(lens_lm - small_number) ) {
           const amrex::Real Rough  = solids_parms.get_min_cond<run_on>();
-          const amrex::Real Tp1    = p_realarray[SoArealData::temperature][i];
-          const amrex::Real Tp2    = p_realarray[SoArealData::temperature][j];
+          const amrex::Real Tp1 = ptile_data.m_runtime_rdata[idx_temperature][i];
+          const amrex::Real Tp2 = ptile_data.m_runtime_rdata[idx_temperature][j];
           amrex::Real dist_mag_eff = sqrt(r2)/2.0; // Two particles with a midpoint wall
           amrex::Real Q_dot = des_pfp_conduction(dist_mag_eff,Rp_eff,Rlens_eff,
                                           Rough,k_g,Tp1,Tp2);
@@ -297,8 +301,8 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
 
           // PP conduction
           if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
-            const amrex::Real Tp1 = p_realarray[SoArealData::temperature][i];
-            const amrex::Real Tp2 = p_realarray[SoArealData::temperature][j];
+            const amrex::Real Tp1 = ptile_data.m_runtime_rdata[idx_temperature][i];
+            const amrex::Real Tp2 = ptile_data.m_runtime_rdata[idx_temperature][j];
             const amrex::Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
             const amrex::Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
             amrex::Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,

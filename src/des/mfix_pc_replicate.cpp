@@ -90,9 +90,6 @@ void MFIXParticleContainer::Replicate (IntVect& Nrep,
                     p_realarray[SoArealData::dragx][index_repl] = p_realarray[SoArealData::dragx][index];
                     p_realarray[SoArealData::dragy][index_repl] = p_realarray[SoArealData::dragy][index];
                     p_realarray[SoArealData::dragz][index_repl] = p_realarray[SoArealData::dragz][index];
-                    p_realarray[SoArealData::cp_s][index_repl] = p_realarray[SoArealData::cp_s][index];
-                    p_realarray[SoArealData::temperature][index_repl] = p_realarray[SoArealData::temperature][index];
-                    p_realarray[SoArealData::convection][index_repl] = p_realarray[SoArealData::convection][index];
 
                     // Set id and cpu for this particle
                     p_rep.id()  = nextID + n;

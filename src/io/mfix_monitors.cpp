@@ -2822,21 +2822,6 @@ BaseMonitor::setup_variables ()
       variables_names.push_back(var);
       m_components.push_back(5+SoArealData::dragz);
 
-    } else if (var.compare("cp_s") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::cp_s);
-
-    } else if (var.compare("T_s") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::temperature);
-
-    } else if (var.compare("convection") == 0) {
-
-      variables_names.push_back(var);
-      m_components.push_back(5+SoArealData::convection);
-
     } else if (var.compare("phase") == 0) {
 
       variables_names.push_back(var);
@@ -2874,6 +2859,30 @@ BaseMonitor::setup_variables ()
           break;
         }
       }
+
+    } else if (var.compare("cp_s") == 0) {
+
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+
+      variables_names.push_back(var);
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.cp_s);
+
+    } else if (var.compare("T_s") == 0) {
+
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+
+      variables_names.push_back(var);
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.temperature);
+
+    } else if (var.compare("convection") == 0) {
+
+      const runtimeRealData& rrData = m_pc->m_runtimeRealData;
+
+      variables_names.push_back(var);
+      const int idx = 5+SoArealData::count+SoAintData::count;
+      m_components.push_back(idx+rrData.convection);
 
     } else if (var.compare("txfr_velocity") == 0) {
 

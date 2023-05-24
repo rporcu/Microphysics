@@ -215,6 +215,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
             auto& aos   = ptile.GetArrayOfStructs();
             ParticleType* pstruct = aos().dataPtr();
 
+            //Access to added variables
+            auto ptile_data = ptile.getParticleTileData();
+
             const auto ntp = aos.size();
             const int  nrp = GetParticles(lev)[index].numRealParticles();
 
@@ -266,14 +269,16 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               const auto& solids_parms = solids.parameters();
               const int solve_enthalpy = solids.solve_enthalpy();
 
+              const int idx_temperature = m_runtimeRealData.temperature;
+
               // now we loop over the neighbor list and compute the forces
               amrex::ParallelFor(nlp,
                   [nrp,pstruct,p_realarray,p_intarray,fc_ptr,tow_ptr,cond_ptr,
                    nbor_data,subdt,ntot,walls_in_tile,ls_refinement,phiarr,plo,
                    dxi,solids_parms,solve_enthalpy,bc_tw_count,p_bc_rbv,p_bc_twv,
-                   mew=m_dem.mew(),mew_w=m_dem.mew_w(),kn=m_dem.kn(),
-                   kn_w=m_dem.kn_w(),etan=m_dem.etan(),etan_w=m_dem.etan_w(),
-                   k_g=m_dem.k_g_dem()]
+                   idx_temperature,ptile_data,mew=m_dem.mew(),mew_w=m_dem.mew_w(),
+                   kn=m_dem.kn(),kn_w=m_dem.kn_w(),etan=m_dem.etan(),
+                   etan_w=m_dem.etan_w(),k_g=m_dem.k_g_dem()]
                 AMREX_GPU_DEVICE (int i) noexcept
                 {
                     auto particle = pstruct[i];
@@ -290,11 +295,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     //**********************************************************
                     if (walls_in_tile && (i < nrp)) {
 
-                      particle_walls(p_realarray, p_intarray, i, solve_enthalpy,
-                          ls_refinement, phiarr, plo, dxi, subdt, pos1,
-                          solids_parms, bc_tw_count, p_bc_rbv, p_bc_twv, k_g,
-                          kn_w, etan_w, mew_w, total_force, total_tow_force,
-                          cond_ptr, istate);
+                      particle_walls(ptile_data, p_realarray, p_intarray, i,
+                          solve_enthalpy, ls_refinement, phiarr, plo, dxi, subdt,
+                          pos1, solids_parms, bc_tw_count, p_bc_rbv, p_bc_twv,
+                          k_g, kn_w, etan_w, mew_w, total_force, total_tow_force,
+                          idx_temperature, cond_ptr, istate);
 
                     } // tile has walls
 
@@ -305,11 +310,11 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                     const auto neighbs = nbor_data.getNeighbors(i);
 
-                    particle_particles(particle, neighbs, p_realarray,
+                    particle_particles(particle, neighbs, ptile_data, p_realarray,
                         p_intarray, i, solve_enthalpy, subdt, pos1, nrp,
                         solids_parms, k_g, kn, etan, mew, total_force,
-                        total_tow_force, fc_ptr, tow_ptr, cond_ptr,
-                        has_collisions, ntot, istate);
+                        total_tow_force, fc_ptr, tow_ptr, cond_ptr, has_collisions,
+                        idx_temperature, ntot, istate);
 
               });
 
@@ -335,12 +340,13 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                                      m_boundary_conditions.domain_bc(4),
                                      m_boundary_conditions.domain_bc(5)};
 
-            //Access to added variables
-            auto ptile_data = ptile.getParticleTileData();
-
             const int nspecies_s = solids.nspecies();
 
             const int idx_X_sn = m_runtimeRealData.X_sn;
+
+            const int idx_cp_s = m_runtimeRealData.cp_s;
+            const int idx_temperature = m_runtimeRealData.temperature;
+            const int idx_convection = m_runtimeRealData.convection;
             const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
             const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
             const int idx_h_txfr = m_runtimeRealData.h_txfr;
@@ -361,7 +367,8 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 idx_h_txfr,update_mass,fc_ptr,cond_ptr,ntot,gravity,tow_ptr,
                 p_hi,p_lo,lo_hi_bc,enthalpy_source,update_momentum,time,
                 solid_is_a_mixture,solids_parms,solve_enthalpy,solve_reactions,
-                is_IOProc,abstol,reltol,maxiter]
+                is_IOProc,abstol,reltol,maxiter,idx_cp_s,idx_temperature,
+                idx_convection]
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
@@ -414,8 +421,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn,
                       nspecies_s, solid_is_a_mixture, solids_parms, subdt, coeff,
-                      p_mass_new, cond_ptr, enthalpy_source, solve_reactions,
-                      idx_h_txfr, abstol, reltol, maxiter, is_IOProc);
+                      p_mass_new, cond_ptr, enthalpy_source, solve_reactions, idx_cp_s,
+                      idx_temperature, idx_convection, idx_h_txfr, abstol, reltol,
+                      maxiter, is_IOProc);
 
                 }
               }

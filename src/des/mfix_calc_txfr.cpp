@@ -319,6 +319,8 @@ mfix::mfix_calc_txfr_particle (Real time,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
+  const int idx_temperature = (pc->m_runtimeRealData).temperature;
+  const int idx_convection = (pc->m_runtimeRealData).convection;
   const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
@@ -542,7 +544,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                flags_array,grown_bx_is_regular,interp_comp,solve_reactions,
                ptile_data,nspecies_s,nspecies_g,idx_X_sn,idx_mass_txfr,idx_vel_txfr,
                idx_h_txfr,HeterogeneousRRates,reactions_parms,fluid_parms,
-               solids_parms,nreactions]
+               solids_parms,nreactions,idx_temperature,idx_convection]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
@@ -589,7 +591,7 @@ mfix::mfix_calc_txfr_particle (Real time,
                 p_realarray[SoArealData::dragz][p_id] = 0.0;
 
                 if (solve_enthalpy) {
-                  p_realarray[SoArealData::convection][p_id] = 0.0;
+                  ptile_data.m_runtime_rdata[idx_convection][p_id] = 0.0;
                 }
 
                 // chemical reaction txfr variables
@@ -700,10 +702,10 @@ mfix::mfix_calc_txfr_particle (Real time,
 
             if(solve_enthalpy) {
               // gamma == (heat transfer coeff) * (particle surface area)
-              Real pgamma = p_realarray[SoArealData::convection][p_id];
+              Real pgamma = ptile_data.m_runtime_rdata[idx_convection][p_id];
 
-              p_realarray[SoArealData::convection][p_id] =
-                pgamma * (T_g - p_realarray[SoArealData::temperature][p_id]);
+              ptile_data.m_runtime_rdata[idx_convection][p_id] =
+                pgamma * (T_g - ptile_data.m_runtime_rdata[idx_temperature][p_id]);
             }
 
             if (solve_reactions) {

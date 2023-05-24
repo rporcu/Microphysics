@@ -41,9 +41,6 @@ struct SoArealData
     dragx,
     dragy,
     dragz,
-    cp_s,
-    temperature,
-    convection,
     count
   };
 
@@ -66,11 +63,15 @@ class runtimeRealData
   public:
     AMREX_GPU_HOST_DEVICE
     runtimeRealData (const int nspecies_s,
+                     const int solve_enthalpy,
                      const int nreactions,
                      const int solve_pic,
                      const int cg_dem)
       : X_sn(0)                                       // nb of components = nspecies_s
-      , vel_txfr(X_sn + nspecies_s)                   // nb of components = 3
+      , cp_s(X_sn + nspecies_s)                       // nb of components = 1
+      , temperature(cp_s + 1*solve_enthalpy)          // nb of components = 1
+      , convection(temperature + 1*solve_enthalpy)    // nb of components = 1
+      , vel_txfr(convection + 1*solve_enthalpy)       // nb of components = 3
       , h_txfr(vel_txfr + 3*(nreactions>0))           // nb of components = 1
       , mass_txfr(h_txfr + 1*(nreactions>0))          // nb of components = nspecies_s
       , ep_s(mass_txfr + nspecies_s*(nreactions>0))   // nb of components = 1
@@ -79,6 +80,9 @@ class runtimeRealData
     {}
 
     const int X_sn;
+    const int cp_s;
+    const int temperature;
+    const int convection;
     const int vel_txfr;
     const int h_txfr;
     const int mass_txfr;

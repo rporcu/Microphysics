@@ -136,7 +136,6 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
   // Particles SoA starting indexes for mass fractions and rate of formations
   const int idx_X_sn   = (pc->m_runtimeRealData).X_sn;
-  const int idx_statwt   = (pc->m_runtimeRealData).statwt;
   const int idx_mass_txfr = (pc->m_runtimeRealData).mass_txfr;
   const int idx_vel_txfr = (pc->m_runtimeRealData).vel_txfr;
   const int idx_h_txfr = (pc->m_runtimeRealData).h_txfr;
@@ -367,6 +366,9 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
           const int fluid_is_a_mixture = fluid.isMixture();
           const int solve_reactions = reactions.solve();
 
+          const int idx_temperature = pc->m_runtimeRealData.temperature;
+          const int idx_convection = pc->m_runtimeRealData.convection;
+          const int idx_statwt = pc->m_runtimeRealData.statwt;
           const int cg_dem = m_dem.cg_dem();
 
           const Real mu_g0 = fluid.mu_g();
@@ -380,7 +382,8 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
                nspecies_s,idx_X_sn,idx_mass_txfr,idx_vel_txfr,idx_h_txfr,
                fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
-               apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array,idx_statwt]
+               apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array,
+               idx_temperature,idx_convection,idx_statwt]
             AMREX_GPU_DEVICE (int p_id) noexcept
           {
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
@@ -409,7 +412,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
                 // convection-related enthalpy txfr variable
                 if (solve_enthalpy) {
-                  p_realarray[SoArealData::convection][p_id] = 0.;
+                  ptile_data.m_runtime_rdata[idx_convection][p_id] = 0.;
                 }
 
                 // chemical reaction txfr variables
@@ -557,7 +560,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               Real gamma = ConvectionCoeff(ep_g, mu_g, k_g, cp_g, rop_g, vrel,
                                            dp, iloc, jloc, kloc, pID);
 
-              p_realarray[SoArealData::convection][p_id] = 4.0*M_PI*rad*rad*gamma;
+              ptile_data.m_runtime_rdata[idx_convection][p_id] = 4.0*M_PI*rad*rad*gamma;
             }
 
             if (solve_reactions) {
@@ -569,7 +572,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
               R_q_heterogeneous.fill(0.);
 
-              const Real T_p = p_realarray[SoArealData::temperature][p_id];
+              const Real T_p = ptile_data.m_runtime_rdata[idx_temperature][p_id];
               const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
 
               HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
