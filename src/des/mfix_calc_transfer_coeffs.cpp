@@ -8,6 +8,41 @@
 #include <mfix_mf_helpers.H>
 #include <mfix_algorithm.H>
 
+namespace txfr_aux {
+
+class Accessor
+{
+  public:
+    AMREX_GPU_HOST_DEVICE
+    Accessor ()
+      : m_gap(-1)
+      , m_flag(-1)
+    {}
+
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    void set (const int gap,
+              const int flag)
+    {
+      m_gap = gap;
+      m_flag = flag;
+    }
+
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+    int operator () (const int row,
+                     const int column) const
+    {
+      return row*m_gap + column*m_flag;
+    }
+
+  private:
+    int m_gap;
+    int m_flag;
+};
+
+} // end namespace txfr_aux
+
+using namespace txfr_aux;
+
 void mfix::mfix_calc_transfer_coeffs (const Real time,
                                       Vector< MultiFab* > const& ep_g_in,
                                       Vector< MultiFab* > const& ro_g_in,
@@ -375,7 +410,45 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
           Real* X_gk_ptr = (nspecies_g > 0) ? aux[lev][index].dataPtr() : nullptr;
 
+          Accessor accessor;
+
+#ifdef AMREX_USE_GPU
+          int nthreads_per_block = (nreactions > 0) ? 16 : 256;
+          int nblocks = std::ceil(Real(np) / nthreads_per_block);
+
+          std::size_t needed_sm_bytes = nreactions*nthreads_per_block*sizeof(Real);
+          std::size_t available_sm_per_block = Gpu::Device::sharedMemPerBlock();
+
+          int use_shared_mem(1);
+          accessor.set(nthreads_per_block, 1);
+
+          Gpu::DeviceVector<Real> glob_mem;
+          Real* glob_mem_ptr(nullptr);
+
+          if (needed_sm_bytes > available_sm_per_block) {
+            nthreads_per_block = 256;
+            nblocks = std::ceil(Real(np) / nthreads_per_block);
+
+            use_shared_mem = 0;
+            needed_sm_bytes = 0;
+
+            if (nreactions > 0) {
+              glob_mem.resize(nreactions*np);
+              glob_mem_ptr = glob_mem.dataPtr();
+            }
+
+            accessor.set(np, 1);
+          }
+
+          amrex::launch(nblocks, nthreads_per_block, needed_sm_bytes, Gpu::gpuStream(),
+#else
+          int use_shared_mem(0);
+          Real* glob_mem_ptr(nullptr);
+
+          accessor.set(1, 0);
+
           amrex::ParallelFor(np,
+#endif
               [pstruct,p_realarray,interp_array,DragFunc,ConvectionCoeff,
                HeterogeneousRRates,plo,dxi,solve_enthalpy,fluid_is_a_mixture,
                nspecies_g,interp_comp,cg_dem,ptile_data,nreactions,
@@ -383,9 +456,51 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
                fluid_parms,solids_parms,reactions_parms,flags_array,mu_g0,
                grown_bx_is_regular,dx,ccent_fab,bcent_fab,apx_fab,apy_fab,
                apz_fab,solve_reactions,aux_ptr,np,X_gk_ptr,X_gk_array,
-               idx_temperature,idx_convection,idx_statwt]
-            AMREX_GPU_DEVICE (int p_id) noexcept
+               idx_temperature,idx_convection,idx_statwt,
+               use_shared_mem,glob_mem_ptr,accessor]
+#ifdef AMREX_USE_GPU
+#ifdef AMREX_USE_SYCL
+            AMREX_GPU_DEVICE (Gpu::Handler const& handler) noexcept
           {
+            int p_id = handler.globalIdx();
+
+            Real* R_q_heterogeneous(nullptr);
+
+            if (nreactions > 0) {
+              if (use_shared_mem) {
+                R_q_heterogeneous = (Real*)handler.sharedMemory();
+              } else {
+                R_q_heterogeneous = glob_mem_ptr;
+              }
+            }
+
+            if (p_id < np) {
+#else
+            AMREX_GPU_DEVICE () noexcept
+          {
+            int p_id = blockDim.x*blockIdx.x+threadIdx.x;
+
+            Real* R_q_heterogeneous(nullptr);
+            Gpu::SharedMemory<Real> gsm;
+
+            if (nreactions > 0) {
+              if (use_shared_mem) {
+                R_q_heterogeneous = gsm.dataPtr();
+              } else {
+                R_q_heterogeneous = glob_mem_ptr;
+              }
+            }
+
+            if (p_id < np) {
+#endif
+#else
+            (int p_id) noexcept
+          {
+            Vector<Real> R_q_vec(nreactions, 0.);
+            Real* R_q_heterogeneous = R_q_vec.dataPtr();
+
+            {
+#endif
             MFIXParticleContainer::ParticleType& particle = pstruct[p_id];
 
             GpuArray<Real, 7> interp_loc; // vel_g, ep_g, ro_g, T_g, p_g
@@ -569,13 +684,26 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
               const Real ro_p = p_realarray[SoArealData::mass][p_id] / vol;
 
-              GpuArray<Real,MFIXReactions::NMAX> R_q_heterogeneous;
-              R_q_heterogeneous.fill(0.);
+              int idx = p_id;
+
+#ifdef AMREX_USE_GPU
+#ifdef AMREX_USE_SYCL
+              if (use_shared_mem)
+                idx = handler.threadIdx();
+#else
+              if (use_shared_mem)
+                idx = threadIdx.x;
+#endif
+              for (int q(0); q < nreactions; ++q)
+                R_q_heterogeneous[accessor(q,idx)] = 0.;
+#else
+#endif
 
               const Real T_p = ptile_data.m_runtime_rdata[idx_temperature][p_id];
               const Real DP  = 2. * p_realarray[SoArealData::radius][p_id];
 
-              HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous.data(),
+              HeterogeneousRRates.template operator()<run_on>(R_q_heterogeneous,
+                                                              accessor, idx,
                                                               reactions_parms, np, p_id,
                                                               solids_parms, ptile_data, idx_X_sn,
                                                               ro_p, ep_s, T_p,
@@ -598,7 +726,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
                   // Compute solids species n_s transfer rate for reaction q
                   const Real MW_sn = solids_parms.get_MW_sn<run_on>(n_s);
-                  Real G_m_sn_q = stoich_coeff * MW_sn * R_q_heterogeneous[q];
+                  Real G_m_sn_q = stoich_coeff * MW_sn * R_q_heterogeneous[accessor(q,idx)];
 
                   G_m_sn_heterogeneous += G_m_sn_q;
                 }
@@ -624,7 +752,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
 
                   // Compute fluid species n_g transfer rate for reaction q
                   const Real MW_gk = fluid_parms.get_MW_gk<run_on>(n_g);
-                  Real G_m_gk_q = stoich_coeff * MW_gk * R_q_heterogeneous[q];
+                  Real G_m_gk_q = stoich_coeff * MW_gk * R_q_heterogeneous[accessor(q,idx)];
 
                   G_m_gk_heterogeneous += G_m_gk_q;
 
@@ -653,8 +781,13 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
               // Write the result in the enthalpy transfer space
               ptile_data.m_runtime_rdata[idx_h_txfr][p_id] = -G_H_g_heterogeneous;
             }
+          }
 
           }); // pid
+
+          if ((nreactions > 0) && (!use_shared_mem))
+            Gpu::synchronize();
+
         } // if entire FAB not covered
       } // pti
     } // GPU region

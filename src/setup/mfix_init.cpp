@@ -33,8 +33,6 @@ mfix::InitParams ()
   fluid.Initialize(species, reactions);
   solids.Initialize(species, reactions);
 
-  BL_ASSERT(reactions.nreactions() <= reactions.NMAX);
-
   m_dem.Initialize();
   m_pic.Initialize();
 

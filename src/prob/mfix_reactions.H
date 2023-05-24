@@ -23,9 +23,6 @@ class MFIXReactions {
     // Destructor
     ~MFIXReactions();
 
-    // Max number of chemical reactions
-    static constexpr int NMAX = 10;
-
     // Initialization procedure
     void Initialize(const MFIXSpecies& species);
 

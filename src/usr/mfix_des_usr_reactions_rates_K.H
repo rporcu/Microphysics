@@ -21,9 +21,11 @@ class HeterogeneousRatesUser
     /**
      *  \brief Returns: the calculated heterogeneous chemical reactions rates
      */
-    template <amrex::RunOn run_on>
+    template <amrex::RunOn run_on, class F1>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     void operator() (amrex::Real* /*R_q*/,
+                     F1 /*accessor*/,
+                     const int /*idx*/,
                      const MFIXReactionsParms& /*reactions_parms*/,
                      const int /*np*/,
                      const int /*p_id*/,
@@ -66,7 +68,7 @@ class HeterogeneousRatesUser
 //      }
 //    }
 //  
-//    R_q[q] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
+//    R_q[accessor(q,idx)] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
 //  }
 //
     }
