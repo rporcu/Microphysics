@@ -372,13 +372,13 @@ Monitor::calc_realbox (const Geometry& geometry,
 
   RealBox realbox;
 
-  realbox.setLo({AMREX_D_DECL(prob_lo[0]+box_lo[0]*dx[0],
-                              prob_lo[1]+box_lo[1]*dx[1],
-                              prob_lo[2]+box_lo[2]*dx[2])});
+  realbox.setLo(Vector<Real>{AMREX_D_DECL(prob_lo[0]+box_lo[0]*dx[0],
+                                          prob_lo[1]+box_lo[1]*dx[1],
+                                          prob_lo[2]+box_lo[2]*dx[2])});
 
-  realbox.setHi({AMREX_D_DECL(prob_lo[0]+(box_hi[0]+1)*dx[0],
-                              prob_lo[1]+(box_hi[1]+1)*dx[1],
-                              prob_lo[2]+(box_hi[2]+1)*dx[2])});
+  realbox.setHi(Vector<Real>{AMREX_D_DECL(prob_lo[0]+(box_hi[0]+1)*dx[0],
+                                          prob_lo[1]+(box_hi[1]+1)*dx[1],
+                                          prob_lo[2]+(box_hi[2]+1)*dx[2])});
 
   const Real* realbox_lo = realbox.lo();
   const Real* realbox_hi = realbox.hi();
@@ -401,16 +401,16 @@ Monitor::realboxes_intersection (const RealBox& realbox_a,
   const Real* a_lo = realbox_a.lo();
   const Real* b_lo = realbox_b.lo();
 
-  realbox.setLo({AMREX_D_DECL(amrex::max(a_lo[0], b_lo[0]),
-                              amrex::max(a_lo[1], b_lo[1]),
-                              amrex::max(a_lo[2], b_lo[2]))});
+  realbox.setLo(Vector<Real>{AMREX_D_DECL(amrex::max(a_lo[0], b_lo[0]),
+                                          amrex::max(a_lo[1], b_lo[1]),
+                                          amrex::max(a_lo[2], b_lo[2]))});
 
   const Real* a_hi = realbox_a.hi();
   const Real* b_hi = realbox_b.hi();
 
-  realbox.setHi({AMREX_D_DECL(amrex::min(a_hi[0], b_hi[0]),
-                              amrex::min(a_hi[1], b_hi[1]),
-                              amrex::min(a_hi[2], b_hi[2]))});
+  realbox.setHi(Vector<Real>{AMREX_D_DECL(amrex::min(a_hi[0], b_hi[0]),
+                                          amrex::min(a_hi[1], b_hi[1]),
+                                          amrex::min(a_hi[2], b_hi[2]))});
 
   return realbox;
 }
