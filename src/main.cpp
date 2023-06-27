@@ -222,7 +222,9 @@ int main (int argc, char* argv[])
     const char* githash_mfix = buildInfoGetGitHash(1);
     amrex::Print() << "   MFIX git describe: " << githash_mfix<< "\n";
     amrex::Print() << "AMReX-Hydro git hash: " << HydroGitHash() << "\n";
+#ifdef CSG_EB
     amrex::Print() << "     CSG-EB git hash: " << CsgEbGitHash() << "\n";
+#endif
 #ifdef AMREX_USE_HYPRE
     amrex::Print() << "       HYPRE Version: " << HypreVersion() << "\n";
 #endif

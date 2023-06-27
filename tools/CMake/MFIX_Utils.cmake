@@ -26,9 +26,6 @@ macro( get_git_info ) # EXTRA ARGS: branch commit
   get_hash(${PROJECT_SOURCE_DIR}/subprojects/AMReX-Hydro)
   set(HYDRO_GIT_HASH ${GIT_HASH})
 
-  get_hash(${PROJECT_SOURCE_DIR}/subprojects/csg-eb)
-  set(CSGEB_GIT_HASH ${GIT_HASH})
-
   configure_file(
 	  tools/CMake/build_info.H.in
 	  ${PROJECT_BINARY_DIR}/build_info.H

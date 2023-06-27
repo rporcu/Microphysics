@@ -10,4 +10,6 @@ ifdef CSGEB_HOME
   INCLUDE_LOCATIONS += $(CSGEB_HOME)/include
   CPPFLAGS += -DCSG_EB
   LIBRARIES += -lcsg-eb -L$(CSGEB_HOME)/lib
+  CSGEB_GIT_HASH := CSGEB_GIT_HASH-NOTFOUND
+  -include $(CSGEB_HOME)/CsgEbConfig.mk
 endif

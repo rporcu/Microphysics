@@ -7,7 +7,9 @@ if(CsgEb_FOUND)
 	message(STATUS "Found installation of CsgEb")
 	include(CMakePrintHelpers)
 	cmake_print_properties(TARGETS CsgEb::csg-eb PROPERTIES
-                       LOCATION INTERFACE_INCLUDE_DIRECTORIES)
+                       LOCATION INTERFACE_INCLUDE_DIRECTORIES
+                       CSGEB_GIT_HASH)
+   get_target_property(CSGEB_GIT_HASH CsgEb::csg-eb CSGEB_GIT_HASH)
   return()
 endif()
 message(STATUS "Could not find CsgEb; building from submodule")
@@ -38,3 +40,4 @@ unset(GIT_SUBMOD_RESULT)
 
 # Add subdirectory to the build
 add_subdirectory(${CSGEB_SRC_DIR})
+get_target_property(CSGEB_GIT_HASH CsgEb::csg-eb CSGEB_GIT_HASH)

@@ -115,7 +115,7 @@ $(AMREX_INSTALL_DIR)/build_info.H: $(TOP)/tools/CMake/build_info.H.in
 	| sed 's/@AMREX_GIT_HASH@/$(shell git -C $(TOP)/subprojects/amrex rev-parse HEAD)/g' \
 	| sed 's/@MFIX_GIT_HASH@/$(shell git -C $(TOP) rev-parse HEAD)/g' \
 	| sed 's/@HYDRO_GIT_HASH@/$(shell git -C $(TOP)/subprojects/AMReX-Hydro rev-parse HEAD)/g' \
-	| sed 's/@CSGEB_GIT_HASH@/$(shell git -C $(TOP)/subprojects/csg-eb rev-parse HEAD)/g' \
+	| sed 's/@CSGEB_GIT_HASH@/$(CSGEB_GIT_HASH)/g' \
 	> $@
 
 vpath %.c   . $(VPATH_LOCATIONS)
