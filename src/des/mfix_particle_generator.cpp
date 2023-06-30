@@ -58,8 +58,7 @@ ParticlesGenerator::generate (int& particles_count,
                               ParticleTileType& particles,
                               const RealBox* regions,
                               const int regions_nb,
-                              const int allow_overlap,
-                              const runtimeRealData& rrData)
+                              const int allow_overlap)
 {
   std::string ic_pack_type_str = m_initial_conditions.ic(m_icv).packing;
 
@@ -90,7 +89,7 @@ ParticlesGenerator::generate (int& particles_count,
     hex_close_pack.setup(m_bx_lo, m_bx_hi, ic_region,
                          ic_solids.diameter.get_mean(), ic_solids.volfrac);
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, hex_close_pack);
+        hex_close_pack);
 
   } else if (m_dem.solve() && ic_pack_type_str.compare("random") == 0) {
 
@@ -102,7 +101,7 @@ ParticlesGenerator::generate (int& particles_count,
         m_phase, m_h_data, m_d_data, false);
 
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, random_fill_dem);
+        random_fill_dem);
 
   } else if (m_pic.solve() && ic_pack_type_str.compare("random") == 0) {
 
@@ -111,7 +110,7 @@ ParticlesGenerator::generate (int& particles_count,
         m_phase, false);
 
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, random_fill_pic);
+        random_fill_pic);
 
   } else if (m_dem.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
@@ -123,7 +122,7 @@ ParticlesGenerator::generate (int& particles_count,
         m_phase, m_h_data, m_d_data, true);
 
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, random_fill_dem);
+        random_fill_dem);
 
   } else if (m_pic.solve() && ic_pack_type_str.compare("pseudo_random") == 0) {
 
@@ -132,7 +131,7 @@ ParticlesGenerator::generate (int& particles_count,
         m_phase, true);
 
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, random_fill_pic);
+        random_fill_pic);
 
   } else if (cube_base > 0) {
 
@@ -141,7 +140,7 @@ ParticlesGenerator::generate (int& particles_count,
         m_phase);
 
     generate(particles_count, particles, regions, regions_nb, allow_overlap,
-        rrData, n_cube_per_fill);
+        n_cube_per_fill);
 
   } else {
 
@@ -157,7 +156,6 @@ void ParticlesGenerator::generate (int& particles_count,
                                    const RealBox* regions,
                                    const int regions_nb,
                                    const int allow_overlap,
-                                   const runtimeRealData& rrData,
                                    F1 positions_generator)
 {
   particles_count = positions_generator.get_particles_number();
@@ -194,8 +192,6 @@ void ParticlesGenerator::generate (int& particles_count,
   const int has_granular_temperature = m_initial_conditions.has_granular_temperature(m_icv);
   const Real statwt = ic_solid.statwt;
 
-  auto ptile_data = particles.getParticleTileData();
-
   auto& aos = particles.GetArrayOfStructs();
   ParticleType* pstruct = aos().dataPtr();
 
@@ -203,18 +199,17 @@ void ParticlesGenerator::generate (int& particles_count,
   auto p_realarray = soa.realarray();
   auto p_intarray = soa.intarray();
 
+  const Real picmulti = (m_dem.solve()) ? 1.0 : 0.0;
+
   const int phase = m_phase;
+  const int local_cg_dem=m_dem.cg_dem();
   const int id = m_id;
   const int cpu = m_cpu;
 
-  const int solve_pic = m_pic.solve();
-  const int cg_dem = m_dem.cg_dem();
-  const int idx_statwt = rrData.statwt;
-
   amrex::ParallelForRNG(particles_count, [pstruct,p_realarray,p_intarray,
-      ic_u_s,ic_v_s,ic_w_s,statwt,phase,id,cpu,cg_dem,ptile_data,idx_statwt,
+      picmulti,ic_u_s,ic_v_s,ic_w_s,statwt,phase,id,cpu,local_cg_dem,
       diameter_distr_uniform,diameter_distr_normal,diameter_mean,current_size,
-      diameter_stddev,diameter_min,diameter_max,density_distr_uniform,solve_pic,
+      diameter_stddev,diameter_min,diameter_max,density_distr_uniform,
       density_distr_normal,density_mean,density_stddev,density_min,density_max,
       positions_generator,regions,regions_nb,allow_overlap,has_granular_temperature]
     AMREX_GPU_DEVICE (int p, RandomEngine const& engine) noexcept
@@ -254,7 +249,7 @@ void ParticlesGenerator::generate (int& particles_count,
         diameter = diameter_mean;
       }
 
-      if (cg_dem) {
+      if (local_cg_dem) {
         diameter *= std::cbrt(statwt);
       }
 
@@ -275,6 +270,7 @@ void ParticlesGenerator::generate (int& particles_count,
 
       Real vol  = (4.0/3.0)*M_PI*rad*rad*rad;
       Real mass = vol * rho;
+      Real omoi = 2.5/(mass * rad*rad);
 
       if (has_granular_temperature) {
         p_realarray[SoArealData::velx][p_tot] = amrex::RandomNormal(0., 1., engine);
@@ -286,13 +282,14 @@ void ParticlesGenerator::generate (int& particles_count,
         p_realarray[SoArealData::velz][p_tot] = ic_w_s;
       }
 
-      if (solve_pic || cg_dem) {
-        ptile_data.m_runtime_rdata[idx_statwt][p_tot] = statwt;
-      }
+      p_realarray[SoArealData::statwt][p_tot] = statwt;
 
       p_realarray[SoArealData::radius][p_tot] = rad;
+      p_realarray[SoArealData::density][p_tot] = rho;
 
+      p_realarray[SoArealData::volume][p_tot] = vol;
       p_realarray[SoArealData::mass][p_tot] = mass;
+      p_realarray[SoArealData::oneOverI][p_tot] = omoi*picmulti;
 
       p_realarray[SoArealData::omegax][p_tot] = 0.0;
       p_realarray[SoArealData::omegay][p_tot] = 0.0;
@@ -374,11 +371,9 @@ ParticlesGenerator::write (const int nrp,
 
   for(int lc1 = 0; lc1 < nrp; ++lc1)
   {
-    const Real radius = p_realarray[SoArealData::radius][lc1];
-
     output_file << "               "
                 << std::scientific << std::setw(13) << std::setprecision(6)
-                << Real(p_realarray[SoArealData::mass][lc1]/SoArealData::volume(radius)) << std::endl;
+                << Real(p_realarray[SoArealData::density][lc1]) << std::endl;
   }
 
   output_file << "            " << "</DataArray>" << std::endl;

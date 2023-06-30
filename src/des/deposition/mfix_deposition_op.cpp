@@ -67,10 +67,6 @@ MFIXSolidsVolume::deposit (F WeightFunc,
 
   const auto      reg_cell_vol = dx[0]*dx[1]*dx[2];
 
-  const int solve_pic = pc->get_pic().solve();
-  const int cg_dem = pc->get_dem().cg_dem();
-  const int idx_statwt = pc->m_runtimeRealData.statwt;
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
@@ -78,11 +74,6 @@ MFIXSolidsVolume::deposit (F WeightFunc,
     FArrayBox local_fab_to_be_filled;
 
     for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
-
-      MFIXParticleContainer::PairIndex index(pti.index(), pti.LocalTileIndex());
-      auto& plev  = pc->GetParticles(lev);
-      auto& ptile = plev[index];
-      auto ptile_data = ptile.getParticleTileData();
 
       const auto& particles = pti.GetArrayOfStructs();
       const ParticleType* pstruct = particles().dataPtr();
@@ -120,8 +111,7 @@ MFIXSolidsVolume::deposit (F WeightFunc,
 
         amrex::ParallelFor(nrp,
             [pstruct,p_realarray,plo,dx,dxi,vfrac,deposition_scale_factor,volarr,
-             reg_cell_vol,WeightFunc,flagsarr,local_cg_dem,ptile_data,idx_statwt,
-             solve_pic,cg_dem]
+             reg_cell_vol,WeightFunc,flagsarr,local_cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -137,12 +127,13 @@ MFIXSolidsVolume::deposit (F WeightFunc,
           WeightFunc(plo, dx, dxi, flagsarr, p.pos(), pradius, i, j, k, weights,
               deposition_scale_factor);
 
-          const Real pvolume = SoArealData::volume(pradius);
+          const Real pstatwt = p_realarray[SoArealData::statwt][ip];
+          const Real pvolume = p_realarray[SoArealData::volume][ip];
 
-          Real pvol = pvolume / reg_cell_vol;
+          Real pvol = pstatwt * pvolume / reg_cell_vol;
 
-          if (solve_pic) {
-            pvol *= ptile_data.m_runtime_rdata[idx_statwt][ip];
+          if (local_cg_dem){
+             pvol = pvol / pstatwt;
           }
 
           for (int kk = -1; kk <= 0; ++kk) {
@@ -229,12 +220,9 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
   const int nspecies_g = pc->get_fluid().nspecies();
   const int solve_reactions = pc->get_reactions().solve();
 
-  const int idx_temperature = pc->m_runtimeRealData.temperature;
-  const int idx_convection = pc->m_runtimeRealData.convection;
   const int idx_mass_txfr = pc->m_runtimeRealData.mass_txfr;
   const int idx_vel_txfr = pc->m_runtimeRealData.vel_txfr;
   const int idx_h_txfr = pc->m_runtimeRealData.h_txfr;
-  const int idx_statwt = pc->m_runtimeRealData.statwt;
 
   InterphaseTxfrIndexes txfr_idxs(pc->get_fluid().nspecies(), pc->get_reactions().nreactions());
 
@@ -322,8 +310,6 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
 #endif
 
         const int solve_enthalpy = pc->get_fluid().solve_enthalpy();
-        const int solve_pic = pc->get_pic().solve();
-        const int cg_dem = pc->get_dem().cg_dem();
 
         const auto local_cg_dem = pc->get_dem().cg_dem();
 
@@ -332,9 +318,8 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
              nrp,reg_cell_vol,WeightFunc,flagsarr,txfr_arr,solve_enthalpy,
              ptile_data,nspecies_g,solve_reactions,idx_mass_txfr,idx_vel_txfr,aux_ptr,
              idx_h_txfr,idx_Xg_txfr,idx_velg_txfr,idx_hg_txfr,idx_velx_txfr,
-             idx_vely_txfr,idx_velz_txfr,idx_drag_txfr,idx_gammaTp_txfr,cg_dem,
-             idx_convection_coeff_txfr,local_cg_dem,idx_statwt,solve_pic,
-             idx_temperature,idx_convection]
+             idx_vely_txfr,idx_velz_txfr,idx_drag_txfr,idx_gammaTp_txfr,
+             idx_convection_coeff_txfr,local_cg_dem]
           AMREX_GPU_DEVICE (int ip) noexcept
         {
           const ParticleType& p = pstruct[ip];
@@ -343,28 +328,25 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
           int j;
           int k;
 
+          const Real statwt = p_realarray[SoArealData::statwt][ip];
+
           GpuArray<GpuArray<GpuArray<Real,2>,2>,2> weights;
 
-          Real pradius = p_realarray[SoArealData::radius][ip];
-
-          WeightFunc(plo, dx, dxi, flagsarr, p.pos(), pradius, i, j, k, weights,
+          WeightFunc(plo, dx, dxi, flagsarr, p.pos(), p_realarray[SoArealData::radius][ip], i, j, k, weights,
                      deposition_scale_factor);
 
-          Real pvol = SoArealData::volume(pradius) / reg_cell_vol;
-          Real pbeta = p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
+          Real pvol = statwt * p_realarray[SoArealData::volume][ip] / reg_cell_vol;
 
-          if (solve_pic) {
-            pvol *= ptile_data.m_runtime_rdata[idx_statwt][ip];
-            pbeta *= ptile_data.m_runtime_rdata[idx_statwt][ip];
-          }
+          Real pbeta = statwt * p_realarray[SoArealData::dragcoeff][ip] / reg_cell_vol;
 
           Real pgamma(0.);
 
-          if (solve_enthalpy) {
-            pgamma = ptile_data.m_runtime_rdata[idx_convection][ip] / reg_cell_vol;
+          if (solve_enthalpy)
+            pgamma = statwt * p_realarray[SoArealData::convection][ip] / reg_cell_vol;
 
-            if (solve_pic)
-              pgamma *= ptile_data.m_runtime_rdata[idx_statwt][ip];
+          if (local_cg_dem) {
+            pvol = pvol / statwt;
+            pbeta = pbeta / statwt;
           }
 
           Real pvx = p_realarray[SoArealData::velx][ip] * pbeta;
@@ -374,17 +356,13 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
           Real pTp(0.);
 
           if (solve_enthalpy)
-            pTp = ptile_data.m_runtime_rdata[idx_temperature][ip] * pgamma;
+            pTp = p_realarray[SoArealData::temperature][ip] * pgamma;
 
           // Chemical reactions deposition terms
           if (solve_reactions) {
             for (int n_g(0); n_g < nspecies_g; ++n_g) {
-              aux_ptr[n_g*nrp + ip] = aux_ptr[n_g*nrp + ip] / reg_cell_vol;
+              aux_ptr[n_g*nrp + ip] = statwt * aux_ptr[n_g*nrp + ip] / reg_cell_vol;
             }
-
-            if (solve_pic)
-              for (int n_g(0); n_g < nspecies_g; ++n_g)
-                aux_ptr[n_g*nrp + ip] *= ptile_data.m_runtime_rdata[idx_statwt][ip];
           }
 
           Real velx_chem_txfr(0.);
@@ -399,10 +377,7 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
             const Real G_m_g_heterogeneous = -1*ptile_data.m_runtime_rdata[idx_vel_txfr][ip];
             const Real coeff = amrex::max(0., G_m_g_heterogeneous);
 
-            Real psigma = coeff / reg_cell_vol;
-
-            if (solve_pic)
-              psigma *= ptile_data.m_runtime_rdata[idx_statwt][ip];
+            Real psigma = statwt * coeff / reg_cell_vol;
 
             velx_chem_txfr = p_realarray[SoArealData::velx][ip] * psigma;
             vely_chem_txfr = p_realarray[SoArealData::vely][ip] * psigma;
@@ -412,10 +387,7 @@ MFIXInterphaseTxfr::deposit (F WeightFunc,
             // contains the opposite of G_H_g_heterogeneous
             const Real G_H_g_heterogeneous = -1*ptile_data.m_runtime_rdata[idx_h_txfr][ip];
 
-            h_chem_txfr = G_H_g_heterogeneous / reg_cell_vol;
-
-            if (solve_pic)
-              h_chem_txfr *= ptile_data.m_runtime_rdata[idx_statwt][ip];
+            h_chem_txfr = statwt * G_H_g_heterogeneous / reg_cell_vol;
           }
 
           // Deposition

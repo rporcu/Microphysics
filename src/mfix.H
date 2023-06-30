@@ -166,6 +166,9 @@ class mfix : public AmrCore
                  const amrex::Real time,
                  amrex::Real stop_time);
 
+    void restart_pc_from_new_chkpt (const std::string& restart_file,
+                                    const std::string& name);
+
     void mfix_usr0 () const;
     static void mfix_usr1 (Real time);
     void mfix_usr2 () const;

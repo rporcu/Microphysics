@@ -52,6 +52,31 @@ mfix::Restart (std::string& restart_file,
 
     {
       std::string File(restart_file + "/Header");
+      std::string particlesFile(restart_file + "/particles/Header");
+
+///////////////////////////////////////////////////////////////////////////////
+      int num_real_comps(0);
+      int num_real_comps_read(0);
+
+      // Read num_real_comps_read
+      {
+        std::ifstream ff;
+        ff.open(particlesFile.c_str());
+
+        std::string temp_str;
+        ff >> temp_str;
+
+        int temp_int;
+        ff >> temp_int;
+
+        ff >> num_real_comps_read;
+        Print() << "num_real_comps = " << num_real_comps_read << "\n";
+
+        ff.close();
+      }
+
+      num_real_comps = SoArealData::count + pc->m_runtimeRealData.count;
+///////////////////////////////////////////////////////////////////////////////
 
       VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
 
@@ -89,6 +114,8 @@ mfix::Restart (std::string& restart_file,
 
       m_rw->GotoNextLine(is);
       is >> time;
+
+      const Real version_nb = std::stod(version);
 
       // Geometry controls
       if (version == "1.1") {
@@ -213,7 +240,12 @@ mfix::Restart (std::string& restart_file,
 
           if (m_dem.solve() && lev == 0) {
 
-            pc->Restart(restart_file, "particles");
+            if (version_nb > (1.09 + std::numeric_limits<Real>::epsilon()) &&
+                (num_real_comps > num_real_comps_read)) {
+              restart_pc_from_new_chkpt(restart_file, "particles");
+            } else {
+              pc->Restart(restart_file, "particles");
+            }
 
           } else if (m_pic.solve() && lev == 0) {
 
@@ -225,7 +257,12 @@ mfix::Restart (std::string& restart_file,
 
             } else {
 
-              pc->Restart(restart_file, "particles");
+              if (version_nb > (1.09 + std::numeric_limits<Real>::epsilon()) &&
+                  (num_real_comps > num_real_comps_read)) {
+                restart_pc_from_new_chkpt(restart_file, "particles");
+              } else {
+                pc->Restart(restart_file, "particles");
+              }
 
             }
           }
@@ -578,4 +615,182 @@ mfix::Restart (std::string& restart_file,
   }
 
   amrex::Print() << "  Done with mfix::Restart " << std::endl;
+}
+
+
+void mfix::
+restart_pc_from_new_chkpt (const std::string& restart_file,
+                           const std::string& name)
+{
+  const int nspecies_s = solids.nspecies();
+  const int solve_enthalpy = solids.solve_enthalpy();
+  const int solve_reactions = reactions.solve();
+  const int nreactions = reactions.nreactions();
+  const int solve_pic = m_pic.solve();
+  const int solve_cg = m_dem.cg_dem();
+
+  // New SoArealData
+  struct new_SoArealData { enum {radius = 0, mass, velx, vely, velz, omegax,
+                                 omegay, omegaz, dragcoeff, dragx, dragy, dragz,
+                                 count}; };
+
+  // New SoAintData
+  struct new_SoAintData { enum {phase = 0, state,
+#if MFIX_POLYDISPERSE
+                                ptype,
+#endif
+                                count}; };
+
+  //
+  constexpr int NArrayReal = new_SoArealData::count;
+  constexpr int NArrayInt = new_SoAintData::count;
+
+  using PC = amrex::NeighborParticleContainer<0,0,NArrayReal,NArrayInt>;
+  using PCIter = amrex::ParIter<0,0,NArrayReal,NArrayInt>;
+
+  PC* new_pc = new PC(GetParGDB(), 1);
+
+  const int new_idx_X_sn = 0;
+  const int new_idx_cp_s = new_idx_X_sn + nspecies_s;
+  const int new_idx_temperature = new_idx_cp_s + 1*solve_enthalpy;
+  const int new_idx_convection = new_idx_temperature + 1*solve_enthalpy;
+  const int new_idx_vel_txfr = new_idx_convection + 1*solve_enthalpy;
+  const int new_idx_h_txfr = new_idx_vel_txfr + 3*solve_reactions;
+  const int new_idx_mass_txfr = new_idx_h_txfr + 1*solve_reactions;
+  const int new_idx_ep_s = new_idx_mass_txfr + nspecies_s*(nreactions>0);
+
+  const int new_idx_statwt = new_idx_ep_s +
+    1*((solve_pic > 0) || (m_run_type == RunType::PIC2DEM));
+
+  const int new_count = new_idx_statwt +
+    1*((solve_pic > 0) || (solve_cg > 0) || (m_run_type == RunType::PIC2DEM));
+
+  // Check if this is needed
+  for (int n(0); n < new_count; ++n) {
+    new_pc->AddRealComp(true);
+
+    if (n == new_idx_temperature ||
+        n == new_idx_convection)
+      new_pc->setRealCommComp((new_SoArealData::count+2)+n, true);
+    else
+      new_pc->setRealCommComp((new_SoArealData::count+2)+n, false);
+  }
+
+  new_pc->Restart(restart_file, name);
+
+  // Check if this is needed
+  new_pc->Redistribute();
+
+  const int idx_X_sn = pc->m_runtimeRealData.X_sn;
+  const int idx_vel_txfr = pc->m_runtimeRealData.vel_txfr;
+  const int idx_h_txfr = pc->m_runtimeRealData.h_txfr;
+  const int idx_mass_txfr = pc->m_runtimeRealData.mass_txfr;
+
+  for (int lev(0); lev < nlev; ++lev) {
+    for (PCIter pti(*new_pc,lev); pti.isValid(); ++pti) {
+
+      const int np = pti.numParticles();
+
+      MFIXParticleContainer::PairIndex index(pti.index(), pti.LocalTileIndex());
+      auto& new_particles = new_pc->GetParticles(lev);
+      auto& new_ptile = new_particles[index];
+      auto& new_aos = new_ptile.GetArrayOfStructs();
+      auto new_pstruct = new_aos().dataPtr();
+      auto& new_soa = new_ptile.GetStructOfArrays();
+      auto new_realarray = new_soa.realarray();
+      auto new_intarray = new_soa.intarray();
+      auto new_tile_data = new_ptile.getParticleTileData();
+
+      auto& particletile = pc->DefineAndReturnParticleTile(lev, pti);
+      particletile.resize(np);
+      auto& particles  = pc->GetParticles(lev);
+      auto& ptile = particles[index];
+      auto& aos = particletile.GetArrayOfStructs();
+      auto pstruct = aos().dataPtr();
+      auto& soa = particletile.GetStructOfArrays();
+      auto realarray = soa.realarray();
+      auto intarray = soa.intarray();
+      auto tile_data = ptile.getParticleTileData();
+
+      const int run_type = m_run_type;
+
+      ParallelFor(np, [pstruct,new_pstruct,new_realarray,realarray,
+          new_intarray,intarray,new_tile_data,tile_data,new_idx_X_sn,
+          new_idx_vel_txfr,new_idx_h_txfr,new_idx_mass_txfr,idx_X_sn,new_idx_cp_s,
+          new_idx_temperature,new_idx_convection,idx_vel_txfr,idx_h_txfr,
+          idx_mass_txfr,new_idx_ep_s,new_idx_statwt,nspecies_s,solve_enthalpy,
+          solve_reactions,solve_pic,solve_cg,run_type]
+        AMREX_GPU_DEVICE (int i) noexcept
+      {
+        auto& part = pstruct[i];
+        auto& new_part = new_pstruct[i];
+
+        part.pos(0) = new_part.pos(0);
+        part.pos(1) = new_part.pos(1);
+        part.pos(2) = new_part.pos(2);
+
+        part.id() = new_part.id();
+        part.cpu() = new_part.cpu();
+
+        intarray[SoAintData::phase][i] = new_intarray[new_SoAintData::phase][i];
+        intarray[SoAintData::state][i] = new_intarray[new_SoAintData::state][i];
+#if MFIX_POLYDISPERSE
+        intarray[SoAintData::ptype][i] = new_intarray[new_SoAintData::ptype][i];
+#endif
+
+        const Real radius = new_realarray[new_SoArealData::radius][i];
+        const Real mass = new_realarray[new_SoArealData::mass][i];
+
+        realarray[SoArealData::radius][i] = new_realarray[new_SoArealData::radius][i];
+        realarray[SoArealData::volume][i] = (4.0/3.0)*M_PI*(radius*radius*radius);
+        realarray[SoArealData::mass][i] = new_realarray[new_SoArealData::mass][i];
+        realarray[SoArealData::density][i] = mass / realarray[SoArealData::volume][i];
+        realarray[SoArealData::oneOverI][i] = 2.5/(mass*(radius*radius));
+        realarray[SoArealData::velx][i] = new_realarray[new_SoArealData::velx][i];
+        realarray[SoArealData::vely][i] = new_realarray[new_SoArealData::vely][i];
+        realarray[SoArealData::velz][i] = new_realarray[new_SoArealData::velz][i];
+        realarray[SoArealData::omegax][i] = new_realarray[new_SoArealData::omegax][i];
+        realarray[SoArealData::omegay][i] = new_realarray[new_SoArealData::omegay][i];
+        realarray[SoArealData::omegaz][i] = new_realarray[new_SoArealData::omegaz][i];
+        realarray[SoArealData::statwt][i] = 1.;
+        realarray[SoArealData::dragcoeff][i] = new_realarray[new_SoArealData::dragcoeff][i];
+        realarray[SoArealData::dragx][i] = new_realarray[new_SoArealData::dragx][i];
+        realarray[SoArealData::dragy][i] = new_realarray[new_SoArealData::dragy][i];
+        realarray[SoArealData::dragz][i] = new_realarray[new_SoArealData::dragz][i];
+
+        for (int n_s(0); n_s < nspecies_s; ++n_s)
+          tile_data.m_runtime_rdata[idx_X_sn+n_s][i] = new_tile_data.m_runtime_rdata[new_idx_X_sn+n_s][i];
+
+        if (solve_enthalpy) {
+          realarray[SoArealData::cp_s][i] = new_tile_data.m_runtime_rdata[new_idx_cp_s][i];
+          realarray[SoArealData::temperature][i] = new_tile_data.m_runtime_rdata[new_idx_temperature][i];
+          realarray[SoArealData::convection][i] = new_tile_data.m_runtime_rdata[new_idx_convection][i];
+        } else {
+          realarray[SoArealData::cp_s][i] = 0.;
+          realarray[SoArealData::temperature][i] = 0.;
+          realarray[SoArealData::convection][i] = 0.;
+        }
+
+        if (solve_reactions) {
+          tile_data.m_runtime_rdata[idx_vel_txfr+0][i] = new_tile_data.m_runtime_rdata[new_idx_vel_txfr+0][i];
+          tile_data.m_runtime_rdata[idx_vel_txfr+1][i] = new_tile_data.m_runtime_rdata[new_idx_vel_txfr+1][i];
+          tile_data.m_runtime_rdata[idx_vel_txfr+2][i] = new_tile_data.m_runtime_rdata[new_idx_vel_txfr+2][i];
+
+          tile_data.m_runtime_rdata[idx_h_txfr][i] = new_tile_data.m_runtime_rdata[new_idx_h_txfr][i];
+
+          for (int n_s(0); n_s < nspecies_s; ++n_s)
+            tile_data.m_runtime_rdata[idx_mass_txfr+n_s][i] = new_tile_data.m_runtime_rdata[new_idx_mass_txfr+n_s][i];
+        }
+
+        if (solve_pic || (run_type == RunType::PIC2DEM)) {
+          realarray[SoArealData::oneOverI][i] = new_tile_data.m_runtime_rdata[new_idx_ep_s][i];
+        }
+
+        if (solve_pic || solve_cg || (run_type == RunType::PIC2DEM))
+          realarray[SoArealData::statwt][i] = new_tile_data.m_runtime_rdata[new_idx_statwt][i];
+      });
+    }
+  }
+
+  delete new_pc;
 }

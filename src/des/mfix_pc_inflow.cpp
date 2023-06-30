@@ -251,17 +251,9 @@ mfix_pc_inflow (int const lev,
           total_np += new_np;
 
           const int idx_X_sn = m_runtimeRealData.X_sn;
-          const int idx_cp_s = m_runtimeRealData.cp_s;
-          const int idx_temperature = m_runtimeRealData.temperature;
-          const int idx_convection = m_runtimeRealData.convection;
           const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
           const int idx_vel_txfr = m_runtimeRealData.vel_txfr;
           const int idx_h_txfr = m_runtimeRealData.h_txfr;
-          const int idx_statwt = m_runtimeRealData.statwt;
-          const int idx_eps = m_runtimeRealData.ep_s;
-
-          const int solve_pic = m_pic.solve();
-          const int cg_dem = m_dem.cg_dem();
 
           // DEM particles go OUTSIDE the EB surface, PIC parcels
           // are place inside the domain.
@@ -285,14 +277,13 @@ mfix_pc_inflow (int const lev,
                                              factory->getBndryCent()[mfi].const_array();
 
           amrex::ParallelForRNG(pcount, [pstruct, ptile_data, NextID, MyProc, old_np, bbx,
-            p_real, p_int, phase, state, is_dem, is_pic, statwt, plo, phi, dx, idx, rbbx,
-            regular_fab, is_mi, dir_lohi, dir, shift_dir, shift_lohi, eff_rad_scale,
-            bc_velmag, bc_velvec, has_normal, normal, norm_tol_lo, norm_tol_hi, flagsfab, bnorm, bcent,
-            mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
-            mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
-            adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn, solve_pic, cg_dem,
-            idx_mass_txfr, idx_vel_txfr, idx_h_txfr, idx_statwt, idx_eps, solve_reactions,
-            idx_cp_s, idx_temperature, idx_convection]
+              p_real, p_int, phase, state, is_dem, is_pic, statwt, plo, phi, dx, idx, rbbx,
+              regular_fab, is_mi, dir_lohi, dir, shift_dir, shift_lohi, eff_rad_scale,
+              bc_velmag, bc_velvec, has_normal, normal, norm_tol_lo, norm_tol_hi, flagsfab, bnorm, bcent,
+              mean_dp,   max_dp,   min_dp,   std_dp,     dp_is_constant,   dp_is_normal,
+              mean_rhop, max_rhop, min_rhop, std_rhop, rhop_is_constant, rhop_is_normal,
+              adv_enthalpy, solve_species, p_bc_inputs, nspecies_s, idx_X_sn,
+              idx_mass_txfr, idx_vel_txfr, idx_h_txfr, solve_reactions]
             AMREX_GPU_DEVICE (int pid, amrex::RandomEngine const& engine) noexcept
           {
             const int ip = pid + old_np;
@@ -406,24 +397,31 @@ mfix_pc_inflow (int const lev,
 
             const Real pvol = (4.0/3.0) * M_PI * (rad*rad*rad);
             const Real mass = pvol * rhop;
+            const Real omoi = (is_pic ? 0. : (2.5/(mass * rad*rad)));
 
+            p_real[SoArealData::volume][ip] = pvol;
+            p_real[SoArealData::density][ip] = rhop;
             p_real[SoArealData::mass][ip] = mass;
+            p_real[SoArealData::oneOverI][ip] = omoi;
             p_real[SoArealData::radius][ip] = rad;
             p_real[SoArealData::omegax][ip] = 0.;
             p_real[SoArealData::omegay][ip] = 0.;
             p_real[SoArealData::omegaz][ip] = 0.;
+            p_real[SoArealData::statwt][ip] = statwt;
             p_real[SoArealData::dragcoeff][ip] = 0.;
             p_real[SoArealData::dragx][ip] = 0.;
             p_real[SoArealData::dragy][ip] = 0.;
             p_real[SoArealData::dragz][ip] = 0.;
+            p_real[SoArealData::cp_s][ip] = 0.;
+            p_real[SoArealData::temperature][ip] = 0.;
+            p_real[SoArealData::convection][ip] = 0.;
 
-            if (adv_enthalpy) {
-              ptile_data.m_runtime_rdata[idx_cp_s][ip] = p_bc_inputs[0];
-              ptile_data.m_runtime_rdata[idx_temperature][ip] = p_bc_inputs[1];
-              ptile_data.m_runtime_rdata[idx_convection][ip] = 0.;
+            if(adv_enthalpy) {
+              p_real[SoArealData::cp_s][ip] = p_bc_inputs[0];
+              p_real[SoArealData::temperature][ip] = p_bc_inputs[1];
             }
 
-            if (solve_species) {
+            if(solve_species) {
               for (int n(0); n < nspecies_s; n++) {
                 ptile_data.m_runtime_rdata[idx_X_sn+n][ip] = p_bc_inputs[2+n];
               }
@@ -438,14 +436,6 @@ mfix_pc_inflow (int const lev,
               ptile_data.m_runtime_rdata[idx_vel_txfr+2][ip] = 0;
 
               ptile_data.m_runtime_rdata[idx_h_txfr][ip] = 0;
-            }
-
-            if (solve_pic) {
-              ptile_data.m_runtime_rdata[idx_eps][ip] = 0;
-            }
-
-            if (solve_pic || cg_dem) {
-              ptile_data.m_runtime_rdata[idx_statwt][ip] = statwt;
             }
 
           });
@@ -466,8 +456,7 @@ mfix_pc_inflow (int const lev,
             reduce_op.eval(pcount, reduce_data, [old_np, p_real]
               AMREX_GPU_DEVICE (int pid) -> ReduceTuple
             {
-              Real pradius = p_real[SoArealData::radius][pid + old_np];
-              Real pvol = SoArealData::volume(pradius);
+              Real pvol = p_real[SoArealData::volume][pid + old_np];
               return pvol;
             });
 

@@ -26,10 +26,20 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
                   const amrex::Real& dt,
                   const amrex::Real& p_mass_old,
                   amrex::Real& p_mass_new,
+                  const amrex::Real* p_oneOverI_old,
+                  amrex::Real* p_oneOverI_new,
                   int& proceed,
                   amrex::Real& coeff,
-                  const int& idx_mass_txfr)
+                  const int& idx_mass_txfr,
+                  const int& solve_dem)
 {
+  // Get current particle's density
+  const amrex::Real p_density_old = p_realarray[SoArealData::density][i];
+  amrex::Real p_density_new(p_density_old);
+
+  // Get current particle's volume
+  const amrex::Real p_vol = p_realarray[SoArealData::volume][i];
+
   // Total particle density exchange rate
   amrex::Real total_mass_rate(0);
 
@@ -70,8 +80,16 @@ part_mass_update (MFIXParticleContainer::ParticleType& p,
 
     // Write out to global memory particle's mass and density
     p_realarray[SoArealData::mass][i] = p_mass_new;
+    p_density_new = p_mass_new / p_vol;
+    p_realarray[SoArealData::density][i] = p_density_new;
 
     coeff = p_mass_old / p_mass_new;
+
+    // Write out to global memory particle's moment of inertia
+    if (solve_dem) {
+      *p_oneOverI_new = coeff * (*p_oneOverI_old);
+      p_realarray[SoArealData::oneOverI][i] = *p_oneOverI_new;
+    }
 
   } else {
     p.id() = -1;
@@ -200,7 +218,7 @@ part_momentum_update (MFIXParticleContainer::ParticleType& p,
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void
 part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoArealData::count,SoAintData::count>& ptile_data,
-                      const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& /*p_realarray*/,
+                      const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>& p_realarray,
                       const int& i,
                       const int idx_X_sn,
                       const int& nspecies_s,
@@ -212,18 +230,16 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
                       amrex::Real* cond_ptr,
                       const amrex::Real& enthalpy_source,
                       const int& solve_reactions,
-                      const int& idx_cp_s,
-                      const int& idx_temperature,
-                      const int& idx_convection,
                       const int& idx_h_txfr,
                       const amrex::Real& abstol,
                       const amrex::Real& reltol,
                       const int& maxiter,
-                      const int& is_IOProc)
+                      const int& is_IOProc,
+                      const int& solve_dem)
 {
   amrex::Real p_enthalpy_old(0);
 
-  const amrex::Real Tp = ptile_data.m_runtime_rdata[idx_temperature][i];
+  const amrex::Real Tp = p_realarray[SoArealData::temperature][i];
 
   if (solid_is_a_mixture) {
     for (int n_s(0); n_s < nspecies_s; ++n_s) {
@@ -235,12 +251,12 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   amrex::Real p_enthalpy_new(0.);
 
-  if (cond_ptr != nullptr) {
+  if (solve_dem) {
     p_enthalpy_new = coeff*p_enthalpy_old +
-      dt*((ptile_data.m_runtime_rdata[idx_convection][i]+cond_ptr[i]+enthalpy_source) / p_mass_new);
+      dt*((p_realarray[SoArealData::convection][i]+cond_ptr[i]+enthalpy_source) / p_mass_new);
   } else {
     p_enthalpy_new = coeff*p_enthalpy_old +
-      dt*((ptile_data.m_runtime_rdata[idx_convection][i]+enthalpy_source) / p_mass_new);
+      dt*((p_realarray[SoArealData::convection][i]+enthalpy_source) / p_mass_new);
   }
 
   if (solve_reactions) {
@@ -261,7 +277,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   Solvers::Newton::solve(Tp_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
 
-  ptile_data.m_runtime_rdata[idx_temperature][i] = Tp_new;
+  p_realarray[SoArealData::temperature][i] = Tp_new;
 
   // Update cp_s
   amrex::Real cp_s_new(0);
@@ -276,7 +292,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
   }
 
   AMREX_ASSERT(cp_s_new > 0.);
-  ptile_data.m_runtime_rdata[idx_cp_s][i] = cp_s_new;
+  p_realarray[SoArealData::cp_s][i] = cp_s_new;
 }
 
 #endif

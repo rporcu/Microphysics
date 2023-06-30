@@ -26,7 +26,7 @@ rm -f ${RUN_NAME}* const_plt* POST_* &> /dev/null
 time -p ${MFIX} inputs
 
 for pID in {1..62}; do
-    write_data POST_VEL.dat ${pID}  7 6 11
+    write_data POST_VEL.dat ${pID} 10 9 14
 done
 
 post_dats=../DEM05-y/AUTOTEST/POST*.dat

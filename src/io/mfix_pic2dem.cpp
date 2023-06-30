@@ -27,8 +27,6 @@ void mfix::PIC_to_DEM(const int lev)
 
   pc->buildNeighborList(MFIXCheckFullPair(m_dem.neighborhood()), false);
 
-  const int idx_statwt = pc->m_runtimeRealData.statwt;
-
   for (MFIXParIter pti(*pc, lev); pti.isValid(); ++pti) {
     
     MFIXParticleContainer::PairIndex index(pti.index(), pti.LocalTileIndex());
@@ -36,8 +34,6 @@ void mfix::PIC_to_DEM(const int lev)
     auto& plev  = pc->GetParticles(lev);
     auto& ptile = plev[index];
     auto& aos   = ptile.GetArrayOfStructs();
-    auto ptile_data = ptile.getParticleTileData();
-
     MFIXParticleContainer::ParticleType* pstruct = aos().dataPtr();
 
     const int nrp = pc->GetParticles(lev)[index].numRealParticles();
@@ -49,19 +45,21 @@ void mfix::PIC_to_DEM(const int lev)
     auto m_neighbor_list = pc->get_neighbor_list();
     auto nbor_data = m_neighbor_list[lev][index].data();
 
-    amrex::ParallelFor(nrp, [p_intarray,p_realarray,pstruct,nbor_data,ptile_data,
-        idx_statwt]
+    amrex::ParallelFor(nrp, [p_intarray,p_realarray,pstruct,nbor_data]
       AMREX_GPU_DEVICE (int i) noexcept
     {
-      const Real p1statwt = ptile_data.m_runtime_rdata[idx_statwt][i];
-
+      const Real p1statwt = p_realarray[SoArealData::statwt][i];
       AMREX_ALWAYS_ASSERT_WITH_MESSAGE(p1statwt == 1.,
         "A PIC parcel with statwt != 1 cannot be converted to a DEM particle");
 
       auto& particle = pstruct[i];
 
       const Real p1radius = p_realarray[SoArealData::radius][i];
+      const Real p1mass = p_realarray[SoArealData::mass][i];
 
+      const Real p1I = p1mass * (4*p1radius*p1radius) / 10.;
+
+      p_realarray[SoArealData::oneOverI][i] = 1. / p1I;
       p_realarray[SoArealData::omegax][i] = 0.;
       p_realarray[SoArealData::omegay][i] = 0.;
       p_realarray[SoArealData::omegaz][i] = 0.;

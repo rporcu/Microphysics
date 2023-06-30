@@ -352,11 +352,6 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         auto& particles = pti.GetArrayOfStructs();
         MFIXParticleContainer::ParticleType* pstruct = particles().dataPtr();
 
-        MFIXParticleContainer::PairIndex index(pti.index(), pti.LocalTileIndex());
-        auto& plev  = pc->GetParticles(lev);
-        auto& ptile = plev[index];
-        auto ptile_data = ptile.getParticleTileData();
-
         auto& soa = pti.GetStructOfArrays();
         auto p_realarray = soa.realarray();
 
@@ -372,16 +367,14 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         Array4<const Real> const& tau_arr   = tau.array(pti);
         const auto& flags_array = flags_loc.array();
 
-        const int idx_eps = pc->m_runtimeRealData.ep_s;
-
         if (flags_loc.getType(amrex::grow(bx,1)) == FabType::covered)
         {
 
           // We shouldn't have this case but if we do -- zero the stress.
-          amrex::ParallelFor(np, [pstruct, p_realarray, idx_eps, ptile_data]
+          amrex::ParallelFor(np, [pstruct, p_realarray]
             AMREX_GPU_DEVICE (int pid) noexcept
             {
-              ptile_data.m_runtime_rdata[idx_eps][pid] = 0.0;
+              p_realarray[SoArealData::oneOverI][pid] = 0.0;
 
               p_realarray[SoArealData::omegax][pid] = 0.0;
               p_realarray[SoArealData::omegay][pid] = 0.0;
@@ -390,8 +383,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         }
         else if (flags_loc.getType(amrex::grow(bx,1)) == FabType::regular)
         {
-          amrex::ParallelFor(np, [pstruct,p_realarray,ep_s_arr,tau_arr,plo,dxi,
-              ptile_data,idx_eps]
+          amrex::ParallelFor(np, [pstruct,p_realarray,ep_s_arr,tau_arr,plo,dxi]
             AMREX_GPU_DEVICE (int pid) noexcept
           {
 
@@ -473,7 +465,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
 
 
             // Store local solids volume fraction in unused array location.
-            ptile_data.m_runtime_rdata[idx_eps][pid] = ep_s_loc;
+            p_realarray[SoArealData::oneOverI][pid] = ep_s_loc;
 
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc >= 0.,"Check valid ep_s_loc");
 
@@ -486,7 +478,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
         {
           amrex::ParallelFor(np,
            [pstruct,p_realarray,flags_array,ep_s_arr,tau_arr,plo,dxi,
-           Ps0,beta,ep_cp,small_number,ptile_data,idx_eps]
+           Ps0,beta,ep_cp,small_number]
           AMREX_GPU_DEVICE (int pid) noexcept
           {
 
@@ -1036,7 +1028,7 @@ void mfix::MFIX_CalcSolidsStress (Vector< MultiFab* >& ep_s_in,
               AMREX_ALWAYS_ASSERT_WITH_MESSAGE(ep_s_loc <= 1.,"ep_s_loc too high");
 
               // Store local solids volume fraction in unused array location.
-              ptile_data.m_runtime_rdata[idx_eps][pid] = ep_s_loc;
+              p_realarray[SoArealData::oneOverI][pid] = ep_s_loc;
 
 
               p_realarray[SoArealData::omegax][pid] = dtaudx;

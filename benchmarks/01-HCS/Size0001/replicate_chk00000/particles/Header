@@ -1,6 +1,6 @@
-Version_Two_Dot_One_double
+Version_Two_Dot_Zero_double
 3
-15
+19
 real_comp0
 real_comp1
 real_comp2
@@ -16,6 +16,10 @@ real_comp11
 real_comp12
 real_comp13
 real_comp14
+real_comp15
+real_comp16
+real_comp17
+real_comp18
 2
 int_comp0
 int_comp1

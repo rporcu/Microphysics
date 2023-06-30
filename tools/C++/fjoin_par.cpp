@@ -320,20 +320,24 @@ void help ()
         << "\n                      2 - position-y"
         << "\n                      3 - position-z"
         << "\n                      4 - radius"
-        << "\n                      5 - mass"
-        << "\n                      6 - velocity-x"
-        << "\n                      7 - velocity-y"
-        << "\n                      8 - velocity-z"
-        << "\n                      9 - omega-x"
-        << "\n                     10 - omega-y"
-        << "\n                     11 - omega-z"
-        << "\n                     12 - dragcoeff"
-        << "\n                     13 - drag-x"
-        << "\n                     14 - drag-y"
-        << "\n                     15 - drag-z"
-        << "\n                     16 - cp_s"
-        << "\n                     17 - temperature"
-        << "\n                     18 - convection"
+        << "\n                      5 - volume"
+        << "\n                      6 - mass"
+        << "\n                      7 - density"
+        << "\n                      8 - oneOverI"
+        << "\n                      9 - velocity-x"
+        << "\n                     10 - velocity-y"
+        << "\n                     11 - velocity-z"
+        << "\n                     12 - omega-x"
+        << "\n                     13 - omega-y"
+        << "\n                     14 - omega-z"
+        << "\n                     15 - statwt"
+        << "\n                     16 - dragcoeff"
+        << "\n                     17 - drag-x"
+        << "\n                     18 - drag-y"
+        << "\n                     19 - drag-z"
+        << "\n                     20 - cp_s"
+        << "\n                     21 - temperature"
+        << "\n                     22 - convection"
         << "\n "
         << "\n                    100 - kinetic energy"
         << "\n\n";
@@ -347,9 +351,9 @@ amrex::Real calc_granular_temperature (amrex::Vector<particle_t> a_particles)
   amrex::Real np = a_particles.size();
 
   for(int lc(0); lc < np; lc++){
-    gtmp += a_particles[lc].rdata[ 5]*a_particles[lc].rdata[ 5]
-         +  a_particles[lc].rdata[ 6]*a_particles[lc].rdata[ 6]
-         +  a_particles[lc].rdata[ 7]*a_particles[lc].rdata[ 7];
+    gtmp += a_particles[lc].rdata[ 8]*a_particles[lc].rdata[ 8]
+         +  a_particles[lc].rdata[ 9]*a_particles[lc].rdata[ 9]
+         +  a_particles[lc].rdata[10]*a_particles[lc].rdata[10];
   }
   amrex::Real myval = gtmp / (3.0 *np);
   return gtmp / (3.0 * np);

@@ -53,7 +53,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
 
     int  pstate, pphase;
     Real velx, vely, velz;
-    Real pradius, pdensity, pvolume, pmass, pomega;
+    Real pradius, pdensity, pvolume, pomoi, pmass, pomega;
 
     pstate = 1;
 
@@ -82,6 +82,7 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       // Compute other particle properties
       pvolume  = (4.0/3.0)*M_PI*(pradius*pradius*pradius);
       pmass = pvolume * pdensity;
+      pomoi  = 2.5/(pmass * (pradius*pradius));
       pomega = 0.0;
 
       // Set id and cpu for this particle
@@ -95,17 +96,24 @@ void MFIXParticleContainer::InitParticlesAscii (const std::string& file)
       host_intarrays[SoAintData::ptype][i]        = 0;
 #endif
 
+      host_realarrays[SoArealData::volume][i]     = pvolume;
+      host_realarrays[SoArealData::density][i]    = pdensity;
       host_realarrays[SoArealData::mass][i]       = pmass;
+      host_realarrays[SoArealData::oneOverI][i]   = pomoi;
       host_realarrays[SoArealData::radius][i]     = pradius;
       host_realarrays[SoArealData::omegax][i]     = pomega;
       host_realarrays[SoArealData::omegay][i]     = pomega;
       host_realarrays[SoArealData::omegaz][i]     = pomega;
+      host_realarrays[SoArealData::statwt][i]     = 1.0;
 
       // Initialize these for I/O purposes
       host_realarrays[SoArealData::dragcoeff][i]     = 0.0;
       host_realarrays[SoArealData::dragx][i]         = 0.0;
       host_realarrays[SoArealData::dragy][i]         = 0.0;
       host_realarrays[SoArealData::dragz][i]         = 0.0;
+      host_realarrays[SoArealData::cp_s][i]          = 0.0;
+      host_realarrays[SoArealData::temperature][i]   = 0.0;
+      host_realarrays[SoArealData::convection][i]    = 0.0;
 
       if (!ifs.good())
           amrex::Abort("Error initializing particles from Ascii file. \n");
@@ -222,7 +230,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
                 int pcount = 0;
 
                 particles_generator.generate(pcount, particles, ic_regions_ptr,
-                    ic_regions_size, allow_ic_regions_overlap, m_runtimeRealData);
+                    ic_regions_size, allow_ic_regions_overlap);
 
                 // Update the particles NextID
                 ParticleType::NextID(id+pcount);
@@ -565,13 +573,11 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
           Real* p_mass_fractions = solve_species ? d_mass_fractions.data() : nullptr;
 
           const int idx_X_sn = m_runtimeRealData.X_sn;
-          const int idx_cp_s = m_runtimeRealData.cp_s;
-          const int idx_temperature = m_runtimeRealData.temperature;
 
           amrex::ParallelFor(np,
             [particles_ptr,p_realarray,p_intarray,ptile_data,h_temperature_loc,
              p_mass_fractions,ic_realbox,nspecies_s,solid_is_a_mixture,adv_enthalpy,
-             solids_parms,solve_species,idx_X_sn,ic_phase,idx_cp_s,idx_temperature]
+             solids_parms,solve_species,idx_X_sn,ic_phase]
             AMREX_GPU_DEVICE (int ip) noexcept
           {
             const auto& p = particles_ptr[ip];
@@ -581,14 +587,14 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
             if(ic_realbox.contains(p.pos()) && (p_phase == ic_phase)) {
 
               if(adv_enthalpy) {
-                ptile_data.m_runtime_rdata[idx_temperature][ip] = h_temperature_loc;
+                p_realarray[SoArealData::temperature][ip] = h_temperature_loc;
               }
 
               if(adv_enthalpy) {
 
                 if(!solid_is_a_mixture) {
 
-                  ptile_data.m_runtime_rdata[idx_cp_s][ip] =
+                  p_realarray[SoArealData::cp_s][ip] =
                     solids_parms.calc_cp_s<run_on>(h_temperature_loc);
 
                 } else {
@@ -601,7 +607,7 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
                     cp_s_sum += p_mass_fractions[n_s]*cp_sn;
                   }
 
-                  ptile_data.m_runtime_rdata[idx_cp_s][ip] = cp_s_sum;
+                  p_realarray[SoArealData::cp_s][ip] = cp_s_sum;
                 }
               }
 

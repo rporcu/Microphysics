@@ -147,9 +147,7 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
   pp.query("plt_regtest", plt_ccse_regtest);
 
   const runtimeRealData rtData(solids.nspecies()*solids.solve_species(),
-                               solids.solve_enthalpy(),
-                               reactions.nreactions()*reactions.solve(),
-                               m_pic.solve(), m_dem.cg_dem());
+                               reactions.nreactions()*reactions.solve());
 
   // Runtime-added variables
   const int size = SoArealData::count + rtData.count;
@@ -164,8 +162,20 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     write_real_comp_out[SoArealData::radius] = input_value;
 
     input_value = 0;
+    pp.query("plt_volume", input_value);
+    write_real_comp_out[SoArealData::volume] = input_value;
+
+    input_value = 0;
     pp.query("plt_mass", input_value);
     write_real_comp_out[SoArealData::mass] = input_value;
+
+    input_value = 0;
+    pp.query("plt_ro_p", input_value);
+    write_real_comp_out[SoArealData::density] = input_value;
+
+    input_value = 0;
+    pp.query("plt_omoi", input_value);
+    write_real_comp_out[SoArealData::oneOverI] = input_value;
 
     input_value = 1;
     pp.query("plt_vel_p", input_value);
@@ -180,11 +190,27 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     write_real_comp_out[SoArealData::omegaz] = input_value;
 
     input_value = 0;
+    pp.query("plt_statwt", input_value);
+    write_real_comp_out[SoArealData::statwt] = input_value;
+
+    input_value = 0;
     pp.query("plt_drag_p", input_value);
     write_real_comp_out[SoArealData::dragcoeff] = input_value;  // drag coeff
     write_real_comp_out[SoArealData::dragx] = input_value;  // dragx
     write_real_comp_out[SoArealData::dragy] = input_value;  // dragy
     write_real_comp_out[SoArealData::dragz] = input_value;  // dragz
+
+    input_value = 0;
+    pp.query("plt_cp_s", input_value);
+    write_real_comp_out[SoArealData::cp_s] = input_value;  // specific heat
+
+    input_value = 0;
+    pp.query("plt_T_p", input_value);
+    write_real_comp_out[SoArealData::temperature] = input_value;  // temperature
+
+    input_value = 0;
+    pp.query("plt_convection", input_value);
+    write_real_comp_out[SoArealData::convection] = input_value;  // heat transfer coefficient
 
     int gap = SoArealData::count;
 
@@ -196,32 +222,6 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
       const int start = gap + rtData.X_sn;
       for(int n(0); n < solids.nspecies(); ++n)
         write_real_comp_out[start+n] = input_value;
-    }
-
-    if (solids.solve_enthalpy()) {
-      {
-        input_value = 0;
-        pp.query("plt_cp_s", input_value);
-
-        const int start = gap + rtData.cp_s;
-        write_real_comp_out[start] = input_value;  // specific heat
-      }
-
-      {
-        input_value = 0;
-        pp.query("plt_T_p", input_value);
-
-        const int start = gap + rtData.temperature;
-        write_real_comp_out[start] = input_value;  // temperature
-      }
-
-      {
-        input_value = 0;
-        pp.query("plt_convection", input_value);
-
-        const int start = gap + rtData.convection;
-        write_real_comp_out[start] = input_value;  // heat transfer coefficient
-      }
     }
 
     if (reactions.solve())
@@ -253,22 +253,6 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
         write_real_comp_out[start+n] = input_value;
     }
 
-    if (m_pic.solve()) {
-      input_value = 0;
-      pp.query("plt_eps", input_value);
-
-      const int start = gap + rtData.ep_s;
-      write_real_comp_out[start] = input_value;
-    }
-
-    if (m_pic.solve() || m_dem.cg_dem()) {
-      input_value = 0;
-      pp.query("plt_statwt", input_value);
-
-      const int start = gap + rtData.statwt;
-      write_real_comp_out[start] = input_value;
-    }
-
     // Int data
     input_value = 0;
     pp.query("plt_phase", input_value);
@@ -277,6 +261,13 @@ MFIXReadWrite::GetSolidsIOPltFlags (Vector<int>& write_real_comp_out,
     input_value = 0;
     pp.query("plt_state", input_value);
     write_int_comp_out[SoAintData::state] = input_value;
+
+  } else {
+
+    write_real_comp_out[SoArealData::volume] = 0;
+    write_real_comp_out[SoArealData::density] = 0;
+    write_real_comp_out[SoArealData::oneOverI] = 0;
+    write_real_comp_out[SoArealData::statwt] = 0;
 
   }
 

@@ -23,10 +23,6 @@ void MFIXParticleContainer::ComputeMassProduction (int const a_lev, Real const a
   std::vector<Real> prod(nspecies_s, 0.); // Mass produced/consumed
 
   const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
-  const int idx_statwt = m_runtimeRealData.statwt;
-
-  const int solve_pic = m_pic.solve();
-  const int cg_dem = m_dem.cg_dem();
 
   // Ideally, we would do this in one loop, but since the number of spcies
   // is unknown, we loop over each one.
@@ -45,20 +41,20 @@ void MFIXParticleContainer::ComputeMassProduction (int const a_lev, Real const a
       auto& plev  = GetParticles(a_lev);
       PairIndex index(pti.index(), pti.LocalTileIndex());
 
+      auto& soa = pti.GetStructOfArrays();
+
+      // particle stat weight
+      auto p_statwt = soa.GetRealData(SoArealData::statwt).data();
+
       // variables added at runtime
       auto ptile_data = plev[index].getParticleTileData();
 
       const int np = NumberOfParticles(pti);
 
-      reduce_op.eval(np, reduce_data, [ptile_data, idx_statwt, idx_mass_txfr, n,
-        solve_pic, cg_dem]
+      reduce_op.eval(np, reduce_data, [p_statwt, ptile_data, idx_mass_txfr, n]
       AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
       {
-        if (solve_pic || cg_dem)
-          return {ptile_data.m_runtime_rdata[idx_statwt][p_id]*
-                  ptile_data.m_runtime_rdata[idx_mass_txfr+n][p_id]};
-
-        return {ptile_data.m_runtime_rdata[idx_mass_txfr+n][p_id]};
+        return {p_statwt[p_id]*ptile_data.m_runtime_rdata[idx_mass_txfr+n][p_id]};
       });
     } // MFIXParIter
 
@@ -84,13 +80,9 @@ void MFIXParticleContainer::ComputeMassAccum ( int const a_offset )
   std::vector<Real> accum(nspecies_s, 0.);
   m_total_numparticle = 0;
 
-  const int solve_pic = m_pic.solve();
-  const int cg_dem = m_dem.cg_dem();
-
   for (int lev(0); lev < nlev; lev++) {
 
     const int idx_X_sn = m_runtimeRealData.X_sn;
-    const int idx_statwt = m_runtimeRealData.statwt;
 
     // Ideally, we would do this in one loop, but since the number of spcies
     // is unknown, we loop over each one.
@@ -112,22 +104,19 @@ void MFIXParticleContainer::ComputeMassAccum ( int const a_offset )
         // SoA real variables
         auto& soa = pti.GetStructOfArrays();
 
+        // particle stat weight and mass
+        auto p_statwt = soa.GetRealData(SoArealData::statwt).data();
+        auto p_mass   = soa.GetRealData(SoArealData::mass).data();
+
         // variables added at runtime
         auto ptile_data = plev[index].getParticleTileData();
 
-        auto p_mass = soa.GetRealData(SoArealData::mass).data();
-
         const int np = NumberOfParticles(pti);
 
-        reduce_op.eval(np, reduce_data, [p_mass, ptile_data, idx_statwt,
-          idx_X_sn, n, solve_pic, cg_dem]
+        reduce_op.eval(np, reduce_data, [p_statwt, p_mass, ptile_data, idx_X_sn, n]
         AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
         {
-          if (solve_pic || cg_dem)
-            return {ptile_data.m_runtime_rdata[idx_statwt][p_id]*
-                    p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id]};
-
-          return {p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id]};
+          return {p_statwt[p_id]*p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id]};
         });
       } // MFIXParIter
 
@@ -165,10 +154,6 @@ void MFIXParticleContainer::ComputeMassOutflow (int const a_lev)
   const auto p_hi = Geom(a_lev).ProbHiArray();
 
   const int idx_X_sn = m_runtimeRealData.X_sn;
-  const int idx_statwt = m_runtimeRealData.statwt;
-
-  const int solve_pic = m_pic.solve();
-  const int cg_dem = m_dem.cg_dem();
 
   // Ideally, we would do this in one loop, but since the number of spcies
   // is unknown, we loop over each one.
@@ -194,28 +179,25 @@ void MFIXParticleContainer::ComputeMassOutflow (int const a_lev)
       // SoA real variables
       auto& soa = pti.GetStructOfArrays();
 
+      // particle stat weight and mass
+      auto p_statwt = soa.GetRealData(SoArealData::statwt).data();
+      auto p_mass   = soa.GetRealData(SoArealData::mass).data();
+
       // variables added at runtime
       auto ptile_data = plev[index].getParticleTileData();
 
-      auto p_radius = soa.GetRealData(SoArealData::radius).data();
-      auto p_mass = soa.GetRealData(SoArealData::mass).data();
       const int np = NumberOfParticles(pti);
 
-      reduce_op.eval(np, reduce_data, [p_lo, p_hi, pstruct, p_radius, p_mass,
-          ptile_data, idx_statwt, idx_X_sn, n, solve_pic, cg_dem]
+      reduce_op.eval(np, reduce_data, [p_lo, p_hi, pstruct, p_statwt, p_mass,
+          ptile_data, idx_X_sn, n]
       AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
       {
         auto p = pstruct[p_id];
-
         Real p_mass_Xn(0);
         if ( p.pos(0) < p_lo[0] || p.pos(0) > p_hi[0] ||
              p.pos(1) < p_lo[1] || p.pos(1) > p_hi[1] ||
              p.pos(2) < p_lo[2] || p.pos(2) > p_hi[2] ) {
-          if (solve_pic || cg_dem)
-            p_mass_Xn = ptile_data.m_runtime_rdata[idx_statwt][p_id]*
-                        p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id];
-          else
-            p_mass_Xn = p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id];
+          p_mass_Xn = p_statwt[p_id]*p_mass[p_id]*ptile_data.m_runtime_rdata[idx_X_sn+n][p_id];
         }
         return {p_mass_Xn};
       });

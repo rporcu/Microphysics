@@ -35,7 +35,7 @@ time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.check_input=0" "mfix.stop_time=0.150"
 time -p ${MPIRUN} ${MFIX} "${INPUTS}" "amr.check_input=0" "mfix.restart=DEM06_chk00150"
 
 ${FJOIN_PAR} -f DEM06_par --end 350 --var  3 --format 4 --dt 0.001 -j POST_POS.NEW
-${FJOIN_PAR} -f DEM06_par --end 350 --var  8 --format 4 --dt 0.001 -j POST_VEL.NEW
+${FJOIN_PAR} -f DEM06_par --end 350 --var 11 --format 4 --dt 0.001 -j POST_VEL.NEW
 
 post_dats=POST*.NEW
 for result in ${post_dats}; do

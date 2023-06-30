@@ -57,9 +57,6 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
       // Particles SoA starting indexes for mass fractions and rate of
       // formations
       const int idx_X_sn = m_runtimeRealData.X_sn;
-      const int idx_cp_s = m_runtimeRealData.cp_s;
-      const int idx_temperature = m_runtimeRealData.temperature;
-      const int idx_convection = m_runtimeRealData.convection;
       const int idx_mass_txfr = m_runtimeRealData.mass_txfr;
       const int idx_h_txfr = m_runtimeRealData.h_txfr;
 
@@ -77,7 +74,7 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
           [pstruct,p_realarray,p_intarray,ptile_data,dt,nspecies_s,nreactions,
            idx_X_sn,idx_mass_txfr,update_mass,solve_reactions,idx_h_txfr,
            solid_is_a_mixture,solve_enthalpy,enthalpy_source,solids_parms,
-           is_IOProc,abstol,reltol,maxiter,idx_cp_s,idx_temperature,idx_convection]
+           is_IOProc,abstol,reltol,maxiter]
         AMREX_GPU_DEVICE (int i) noexcept
       {
         auto& p = pstruct[i];
@@ -97,7 +94,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
         if (update_mass) {
 
           part_mass_update(p, ptile_data, p_realarray, i, idx_X_sn, nspecies_s,
-              dt, p_mass_old, p_mass_new, proceed, coeff, idx_mass_txfr);
+              dt, p_mass_old, p_mass_new, nullptr, nullptr, proceed, coeff,
+              idx_mass_txfr, 0);
         }
 
         if (proceed) {
@@ -109,8 +107,8 @@ void MFIXParticleContainer::MFIX_PC_AdvanceParcels (Real dt,
 
             part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn, nspecies_s,
                 solid_is_a_mixture, solids_parms, dt, coeff, p_mass_new, nullptr,
-                enthalpy_source, solve_reactions, idx_cp_s, idx_temperature,
-                idx_convection, idx_h_txfr, abstol, reltol, maxiter, is_IOProc);
+                enthalpy_source, solve_reactions, idx_h_txfr, abstol, reltol,
+                maxiter, is_IOProc, 0);
           }
         }
       });

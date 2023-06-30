@@ -297,13 +297,21 @@ MFIXReadWrite::Initialize ()
   // Vectors of names for solids plot
   {
     real_comp_names.push_back("radius");
+    real_comp_names.push_back("volume");
     real_comp_names.push_back("mass");
+    real_comp_names.push_back("density");
+
+    if (m_dem.solve()) {
+      real_comp_names.push_back("omoi");
+    } else {
+      real_comp_names.push_back("ep_s");
+    }
 
     real_comp_names.push_back("velx");
     real_comp_names.push_back("vely");
     real_comp_names.push_back("velz");
 
-    if (m_dem.solve()) {
+    if (m_dem.solve()){
       real_comp_names.push_back("omegax");
       real_comp_names.push_back("omegay");
       real_comp_names.push_back("omegaz");
@@ -313,20 +321,19 @@ MFIXReadWrite::Initialize ()
       real_comp_names.push_back("grad_tau_z");
     }
 
+    real_comp_names.push_back("statwt");
     real_comp_names.push_back("dragcoeff");
     real_comp_names.push_back("dragx");
     real_comp_names.push_back("dragy");
     real_comp_names.push_back("dragz");
 
+    real_comp_names.push_back("c_ps");
+    real_comp_names.push_back("temperature");
+    real_comp_names.push_back("convection");
+
     if (solids.solve_species())
       for (auto species: solids.species_names())
         real_comp_names.push_back("X_"+species);
-
-    if (solids.solve_enthalpy()) {
-      real_comp_names.push_back("c_ps");
-      real_comp_names.push_back("temperature");
-      real_comp_names.push_back("convection");
-    }
 
     if (solids.solve_species() && reactions.solve()) {
       for (int n(0); n < solids.nspecies(); ++n) {
@@ -343,14 +350,6 @@ MFIXReadWrite::Initialize ()
 
     if (reactions.solve())
       real_comp_names.push_back("chem_h_txfr");
-
-    if (m_pic.solve()) {
-      real_comp_names.push_back("ep_s");
-    }
-
-    if (m_pic.solve() || m_dem.cg_dem()) {
-      real_comp_names.push_back("statwt");
-    }
 
     int_comp_names.push_back("phase");
     int_comp_names.push_back("state");
