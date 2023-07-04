@@ -247,7 +247,7 @@ template <class H> void time_clr(const H &clr, int N) {
   for (auto xx : XX) {
     for (auto yy : YY) {
       for (auto zz : ZZ) {
-        clr(xx, yy, zz);
+        (void)clr(xx, yy, zz);
       }
     }
   }

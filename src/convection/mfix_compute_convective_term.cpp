@@ -1,13 +1,13 @@
 #include <mfix.H>
 #include <mfix_algorithm.H>
 #include <hydro_utils.H>
-#include <hydro_redistribution.H>
 
 #include <AMReX_REAL.H>
 #include <AMReX_BLFort.H>
 #include <AMReX_SPACE.H>
 #include <AMReX_Array.H>
 #include <AMReX_EB_utils.H>
+#include <AMReX_EB_Redistribution.H>
 
 #include <mfix_eb.H>
 #include <mfix_fluid.H>
@@ -639,14 +639,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
             auto const& bc_vel = get_hydro_velocity_bcrec_device_ptr();
 
-            Redistribution::Apply( bx, ncomp, conv_u[lev]->array(mfi), dvdt_tmp.array(mfi),
-                                   vel_in[lev]->const_array(mfi),
-                                   (m_redistribution_type == "StateRedist") ? scratchfab.array()
-                                                                            : ep_g_in[lev]->array(mfi),
-                                   flagfab.const_array(),
-                                   apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                   bc_vel, geom[lev], l_dt,
-                                   m_redistribution_type, 2, Real(0.5), epg);
+            ApplyRedistribution(bx, ncomp, conv_u[lev]->array(mfi), dvdt_tmp.array(mfi),
+                                vel_in[lev]->const_array(mfi),
+                                (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                         : ep_g_in[lev]->array(mfi),
+                                flagfab.const_array(),
+                                apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                bc_vel, geom[lev], l_dt,
+                                m_redistribution_type, true, 2, Real(0.5), epg);
 
             // Density
             const int use_species_advection = fluid.isMixture() && fluid.solve_species();
@@ -657,14 +657,14 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_den = get_density_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,0), dsdt_tmp.array(mfi,0),
-                                       ro_g_in[lev]->const_array(mfi),
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
-                                                                                : ep_g_in[lev]->array(mfi),
-                                       flagfab.const_array(),
-                                       apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_den, geom[lev], l_dt,
-                                       m_redistribution_type, 2, Real(0.5), epg);
+                ApplyRedistribution(bx, ncomp, conv_s[lev]->array(mfi,0), dsdt_tmp.array(mfi,0),
+                                    ro_g_in[lev]->const_array(mfi),
+                                    (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                             : ep_g_in[lev]->array(mfi),
+                                    flagfab.const_array(),
+                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                    bc_den, geom[lev], l_dt,
+                                    m_redistribution_type, true, 2, Real(0.5), epg);
             }
 
             // Enthalpy
@@ -683,13 +683,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rh = get_enthalpy_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,1), dsdt_tmp.array(mfi,1), rhoh,
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
-                                                                                : ep_g_in[lev]->array(mfi),
-                                       flagfab.const_array(),
-                                       apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rh, geom[lev], l_dt,
-                                       m_redistribution_type, 2, Real(0.5), epg);
+                ApplyRedistribution(bx, ncomp, conv_s[lev]->array(mfi,1), dsdt_tmp.array(mfi,1), rhoh,
+                                    (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                             : ep_g_in[lev]->array(mfi),
+                                    flagfab.const_array(),
+                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                    bc_rh, geom[lev], l_dt,
+                                    m_redistribution_type, true, 2, Real(0.5), epg);
             }
 
             // Tracers
@@ -708,13 +708,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rt = get_tracer_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_s[lev]->array(mfi,2), dsdt_tmp.array(mfi,2), rhotrac,
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
-                                                                                : ep_g_in[lev]->array(mfi),
-                                       flagfab.const_array(),
-                                       apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rt, geom[lev], l_dt,
-                                       m_redistribution_type, 2, Real(0.5), epg);
+                ApplyRedistribution(bx, ncomp, conv_s[lev]->array(mfi,2), dsdt_tmp.array(mfi,2), rhotrac,
+                                    (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                             : ep_g_in[lev]->array(mfi),
+                                    flagfab.const_array(),
+                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                    bc_rt, geom[lev], l_dt,
+                                    m_redistribution_type, true, 2, Real(0.5), epg);
             }
 
             if (fluid.solve_species() && (fluid.nspecies() > 0))
@@ -734,13 +734,13 @@ mfix::mfix_compute_convective_term (Vector< MultiFab*      >& conv_u,  // veloci
 
                 auto const& bc_rX = get_species_bcrec_device_ptr();
 
-                Redistribution::Apply( bx, ncomp, conv_X[lev]->array(mfi), dXdt_tmp.array(mfi), rhoX,
-                                       (m_redistribution_type == "StateRedist") ? scratchfab.array()
-                                                                                : ep_g_in[lev]->array(mfi),
-                                       flagfab.const_array(),
-                                       apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                       bc_rX, geom[lev], l_dt,
-                                       m_redistribution_type, 2, Real(0.5), epg);
+                ApplyRedistribution(bx, ncomp, conv_X[lev]->array(mfi), dXdt_tmp.array(mfi), rhoX,
+                                    (m_redistribution_type == "StateRedist") ? scratchfab.array()
+                                                                             : ep_g_in[lev]->array(mfi),
+                                    flagfab.const_array(),
+                                    apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                    bc_rX, geom[lev], l_dt,
+                                    m_redistribution_type, true, 2, Real(0.5), epg);
 
             }
 

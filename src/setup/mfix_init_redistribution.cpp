@@ -1,7 +1,8 @@
 #include <mfix.H>
-#include <hydro_redistribution.H>
-
 #include <mfix_fluid.H>
+
+#include <AMReX_EB_Redistribution.H>
+
 void
 mfix::InitialRedistribution (Real l_time)
 {
@@ -49,55 +50,55 @@ mfix::InitialRedistribution (Real l_time)
                 int ncomp = AMREX_SPACEDIM;
 
                 auto const& bc_vel = get_hydro_velocity_bcrec_device_ptr();
-                Redistribution::ApplyToInitialData( bx,ncomp,
-                                          ld.vel_g->array(mfi), ld.vel_go->array(mfi),
-                                          flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                          bc_vel, geom[lev],
-                                          m_redistribution_type);
+                ApplyInitialRedistribution(bx,ncomp,
+                                           ld.vel_g->array(mfi), ld.vel_go->array(mfi),
+                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                           bc_vel, geom[lev],
+                                           m_redistribution_type);
 
                 if (fluid.solve_density()) {
 
                   ncomp = 1;
 
                   auto const& bc_den = get_density_bcrec_device_ptr();
-                  Redistribution::ApplyToInitialData( bx,ncomp,
-                                           ld.ro_g->array(mfi), ld.ro_go->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_den, geom[lev],
-                                           m_redistribution_type);
+                  ApplyInitialRedistribution(bx,ncomp,
+                                             ld.ro_g->array(mfi), ld.ro_go->array(mfi),
+                                             flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                             bc_den, geom[lev],
+                                             m_redistribution_type);
                 }
                 if (fluid.solve_enthalpy()) {
 
                   ncomp = 1;
 
                   auto const& bc_h = get_enthalpy_bcrec_device_ptr();
-                  Redistribution::ApplyToInitialData( bx,ncomp,
-                                           ld.h_g->array(mfi), ld.h_go->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_h, geom[lev],
-                                           m_redistribution_type);
+                  ApplyInitialRedistribution(bx,ncomp,
+                                             ld.h_g->array(mfi), ld.h_go->array(mfi),
+                                             flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                             bc_h, geom[lev],
+                                             m_redistribution_type);
                 }
                 if (fluid.solve_tracer()) {
 
                   ncomp = ntrac;
 
                   auto const& bc_t = get_tracer_bcrec_device_ptr();
-                  Redistribution::ApplyToInitialData( bx,ncomp,
-                                           ld.trac->array(mfi), ld.trac_o->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_t, geom[lev],
-                                           m_redistribution_type);
+                  ApplyInitialRedistribution(bx,ncomp,
+                                             ld.trac->array(mfi), ld.trac_o->array(mfi),
+                                             flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                             bc_t, geom[lev],
+                                             m_redistribution_type);
                 }
                 if (fluid.solve_species()) {
 
                   ncomp = fluid.nspecies();
 
                   auto const& bc_X = get_species_bcrec_device_ptr();
-                  Redistribution::ApplyToInitialData( bx,ncomp,
-                                           ld.X_gk->array(mfi), ld.X_gko->array(mfi),
-                                           flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
-                                           bc_X, geom[lev],
-                                           m_redistribution_type);
+                  ApplyInitialRedistribution(bx,ncomp,
+                                             ld.X_gk->array(mfi), ld.X_gko->array(mfi),
+                                             flag, apx, apy, apz, vfrac, fcx, fcy, fcz, ccc,
+                                             bc_X, geom[lev],
+                                             m_redistribution_type);
                 }
 
             }

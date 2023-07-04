@@ -1,7 +1,8 @@
 #include <mfix.H>
-#include <hydro_redistribution.H>
-
 #include <mfix_fluid.H>
+
+#include <AMReX_EB_Redistribution.H>
+
 void
 mfix::PostProjectionRedistribution (Real l_time, Real l_dt, 
                                     const Vector<MultiFab*>& sigma)
@@ -56,11 +57,11 @@ mfix::PostProjectionRedistribution (Real l_time, Real l_dt,
                 apz = fact.getAreaFrac()[2]->const_array(mfi);
                 vfrac = fact.getVolFrac().const_array(mfi);
 
-                Redistribution::ApplyToInitialData( bx, ncomp, vel_redist, vel_orig,
-                                                    flag, apx, apy, apz, vfrac,
-                                                    fcx, fcy, fcz, ccc, bc_vel,
-                                                    geom[lev],
-                                                    m_redistribution_type);
+                ApplyInitialRedistribution(bx, ncomp, vel_redist, vel_orig,
+                                           flag, apx, apy, apz, vfrac,
+                                           fcx, fcy, fcz, ccc, bc_vel,
+                                           geom[lev],
+                                           m_redistribution_type);
 
                 // We update gradp so that (vel_redist + dt gradp_redistnew/rho) == (vel_orig + dt gradp_orig/rho)
                 // Note that we do not change rho in the redistribution
@@ -136,11 +137,11 @@ mfix::PreProjectionRedistribution (Real l_time)
                 apz = fact.getAreaFrac()[2]->const_array(mfi);
                 vfrac = fact.getVolFrac().const_array(mfi);
 
-                Redistribution::ApplyToInitialData( bx, ncomp, vel_redist, vel_orig,
-                                                    flag, apx, apy, apz, vfrac,
-                                                    fcx, fcy, fcz, ccc, bc_vel,
-                                                    geom[lev],
-                                                    m_redistribution_type);
+                ApplyInitialRedistribution(bx, ncomp, vel_redist, vel_orig,
+                                           flag, apx, apy, apz, vfrac,
+                                           fcx, fcy, fcz, ccc, bc_vel,
+                                           geom[lev],
+                                           m_redistribution_type);
 
             } else {
                 amrex::ParallelFor(bx, ncomp, [=]

@@ -3,6 +3,7 @@
 #include <AMReX_EB_utils.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Vector.H>
+#include <AMReX_EB_Redistribution.H>
 
 #include <mfix_diffusion_op.H>
 #include <mfix_eb.H>
@@ -345,7 +346,8 @@ void DiffusionOp::ComputeDivTau (const Vector< MultiFab* >& divtau_out,
                                                  *ep_in[lev],
                                                  0,
                                                  AMREX_SPACEDIM,
-                                                 geom[lev]);
+                                                 geom[lev],
+                                                 true);
 
        EB_set_covered(*divtau_out[lev], 0, divtau_out[lev]->nComp(), divtau_out[lev]->nGrow(), 0.);
     }
