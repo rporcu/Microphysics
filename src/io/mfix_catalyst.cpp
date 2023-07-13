@@ -223,9 +223,10 @@ MFIXReadWrite::RunCatalystAdaptor(int nstep, const Real time) const
 #if MFIX_POLYDISPERSE
     int_comp_names.push_back("ptype");
 #endif
-
+    conduit::Node amrexParticles;
     amrex::ParticleContainerToBlueprint(*pc,
-              real_comp_names, int_comp_names, particleData);
+              real_comp_names, int_comp_names, amrexParticles);
+    particleData.update(amrexParticles);
     if(!particleData.dtype().is_object())
     {
       internal::EmptyParticleData(real_comp_names, int_comp_names, particleData);
