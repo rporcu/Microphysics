@@ -2,6 +2,8 @@
 # Solver settings
 
 amrex.fpe_trap_invalid = 1
+amrex.the_arena_init_size=1073741824
+
 
 #! Fluid solver
 #!-----------------------------------------------------------//
