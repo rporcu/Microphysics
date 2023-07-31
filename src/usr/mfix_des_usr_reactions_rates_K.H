@@ -23,10 +23,10 @@ class HeterogeneousRatesUser
      */
     template <amrex::RunOn run_on, class F1>
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-    void operator() (amrex::Real* /*R_q*/,
-                     F1 /*accessor*/,
-                     const int /*idx*/,
-                     const MFIXReactionsParms& /*reactions_parms*/,
+    void operator() (amrex::Real* R_q,
+                     F1 accessor,
+                     const int idx,
+                     const MFIXReactionsParms& reactions_parms,
                      const int /*np*/,
                      const int /*p_id*/,
                      const MFIXSolidsParms& /*solids_parms*/,
@@ -45,32 +45,33 @@ class HeterogeneousRatesUser
                      const amrex::Real /*DP*/,
                      const amrex::Real /*p_g*/) const
     {
-//  // Loop over reactions
-//  for (int q(0); q < reactions_parms.nreactions; q++)
-//  {
-//    int nreact(0);
-//    for (int n(0); n < reactions_parms.nreactants[q]; n++)
-//    {
-//      const int current_species_id = reactions_parms.reactants_id[q][n];
+      // Loop over reactions
+      for (int q(0); q < reactions_parms.m_nreactions; q++)
+      {
+//        int nreact(0);
+//        for (int n(0); n < reactions_parms.nreactants[q]; n++)
+//        {
+//          const int current_species_id = reactions_parms.reactants_id[q][n];
 //
-//      {
-//        const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
-//        if (pos != -1)
-//          if (X_gk[pos] > 0)
-//            nreact += 1;
-//      }
+//          {
+//            const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
+//            if (pos != -1)
+//              if (X_gk[pos] > 0)
+//                nreact += 1;
+//          }
 //
-//      {
-//        const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
-//        if (pos != -1)
-//          if (X_sn[pos] > 0)
-//            nreact += 1;
-//      }
-//    }
-//  
-//    R_q[accessor(q,idx)] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
-//  }
-//
+//          {
+//            const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
+//            if (pos != -1)
+//              if (X_sn[pos] > 0)
+//                nreact += 1;
+//          }
+//        }
+//      
+//        R_q[accessor(q,idx)] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
+
+        R_q[accessor(q,idx)] = 0.;
+      }
     }
 };
 

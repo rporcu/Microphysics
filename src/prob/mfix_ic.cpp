@@ -323,6 +323,9 @@ MFIXInitialConditions::Initialize (const MFIXRegions& regions,
             ppSolid.get("temperature", new_solid.temperature);
           }
 
+          new_solid.statwt = 1.0;
+          ppSolid.query("statwt", new_solid.statwt);
+
           if (solids.solve_species()) {
 
             std::string species_field = field+".species";

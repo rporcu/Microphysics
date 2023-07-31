@@ -1,0 +1,405 @@
+#_______________________________________________________________________
+# Solver settings
+
+amrex.fpe_trap_invalid = 1
+amrex.the_arena_init_size=1073741824
+
+#! Fluid solver
+#!-----------------------------------------------------------//
+mfix.max_step   =  10
+
+mfix.fixed_dt = 0
+mfix.cfl      = 0.9
+mfix.dt_min   = 1.0e-8
+mfix.dt_max   = 2.0e-4
+
+mfix.tcoll_ratio = 20.
+
+mac_proj.verbose = 0
+nodal_proj.verbose = 1
+
+mfix.particle_init_type = "Auto"
+
+mfix.gravity = -9.81  0.0  0.0
+
+mfix.drag_type = "BVK2"
+
+
+#----------------------------------------------------------------------
+# Fluid solver options
+#----------------------------------------------------------------------
+mfix.advect_density         = 1
+mfix.advect_enthalpy        = 1
+mfix.solve_species          = 1
+mfix.constraint_type        = "IdealGasOpenSystem"
+
+mfix.do_initial_proj    = true
+mfix.initial_iterations = 3
+
+mfix.use_drag_coeff_in_proj_gp = false
+
+mfix.advection_type = "Godunov"
+
+mfix.use_drag_in_godunov = true
+
+mfix.redistribution_type = "StateRedist"
+
+mfix.max_solids_volume_fraction = 0.73
+
+
+#_______________________________________________________________________
+# Geometry / grids / tiles
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.      0.      0.      # lo corner of physical domain
+geometry.prob_hi     = 0.008   0.008   0.008   # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =  40  40  40
+
+#! Grids
+#!-----------------------------------------------------------//
+# Maximum allowable size of each fluid subdomain in the problem domain;
+
+# Fluid
+amr.max_grid_size_x = 40
+amr.max_grid_size_y = 10
+amr.max_grid_size_z = 10
+
+eb2.max_grid_size = 20
+
+# Particles (not with KDTree)
+#particles.max_grid_size_x =   32
+#particles.max_grid_size_y =   32
+#particles.max_grid_size_z =   32
+
+#! Tiles
+#!-----------------------------------------------------------//
+
+# Fluid: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particles: Maximum particle tile size
+particles.tile_size = 1024 1024 1024
+
+
+#! EB settings
+#!-----------------------------------------------------------//
+
+# Level-set refinement and padding
+mfix.levelset__refinement    = 4 # levelset resolution
+mfix.levelset__refinement    = 1 # levelset resolution
+
+#mfix.write_eb_surface = false # Needed to output eb-surfaces
+
+#_______________________________________________________________________
+# Load balancing
+
+mfix.load_balance_type = "KnapSack"
+
+mfix.dual_grid          =  1
+mfix.regrid_int         =  1
+
+# We over-ride the default ("RunTimeCosts") here so that we can
+# get reproducibility in the regression testing
+
+mfix.knapsack_weight_type = "NumParticles"
+
+#_______________________________________________________________________
+# IO / Checkpointing
+
+mfix.par_ascii_int  = -1
+mfix.par_ascii_file ="vis"
+
+mfix.plot_int       = 10
+mfix.plot_file      ="plt"
+
+mfix.check_int      = -1
+mfix.check_file     ="chk"
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+species.solve  =  CH4  H2  CO  H2O  CO2  O2  N2  Fe2O3  FeO  inert
+
+species.diffusivity = constant
+species.diffusivity.constant  =  2.31000e-5  # m^2 / sec
+
+species.specific_heat         = NASA7-poly
+
+# Methane
+species.CH4.molecular_weight  = 16.04276e-3
+species.CH4.specific_heat.NASA7.a0 =  5.14911468E+00    1.65326226E+00
+species.CH4.specific_heat.NASA7.a1 = -1.36622009E-02    1.00263099E-02
+species.CH4.specific_heat.NASA7.a2 =  4.91453921E-05   -3.31661238E-06
+species.CH4.specific_heat.NASA7.a3 = -4.84246767E-08    5.36483138E-10
+species.CH4.specific_heat.NASA7.a4 =  1.66603441E-11   -3.14696758E-14
+species.CH4.specific_heat.NASA7.a5 = -1.02465983E+04   -1.00095936E+04
+
+# Hydrogen
+species.H2.molecular_weight = 2.01588e-3
+species.H2.specific_heat.NASA7.a0 =  2.34433112E+00    2.93286575E+00
+species.H2.specific_heat.NASA7.a1 =  7.98052075E-03    8.26608026E-04
+species.H2.specific_heat.NASA7.a2 = -1.94781510E-05   -1.46402364E-07
+species.H2.specific_heat.NASA7.a3 =  2.01572094E-08    1.54100414E-11
+species.H2.specific_heat.NASA7.a4 = -7.37611761E-12   -6.88804800E-16
+species.H2.specific_heat.NASA7.a5 = -9.17935173E+02   -8.13065581E+02
+
+# Carbon monoxide
+species.CO.molecular_weight = 28.01040e-3
+species.CO.specific_heat.NASA7.a0 =  3.57953350E+00    3.04848590E+00
+species.CO.specific_heat.NASA7.a1 = -6.10353690E-04    1.35172810E-03
+species.CO.specific_heat.NASA7.a2 =  1.01681430E-06   -4.85794050E-07
+species.CO.specific_heat.NASA7.a3 =  9.07005860E-10    7.88536440E-11
+species.CO.specific_heat.NASA7.a4 = -9.04424490E-13   -4.69807460E-15
+species.CO.specific_heat.NASA7.a5 = -1.43440860E+04   -1.42661170E+04
+
+# Water vapor
+species.H2O.molecular_weight = 18.01528e-3
+species.H2O.specific_heat.NASA7.a0 =  0.41986352E+01    0.26770389E+01
+species.H2O.specific_heat.NASA7.a1 = -0.20364017E-02    0.29731816E-02
+species.H2O.specific_heat.NASA7.a2 =  0.65203416E-05   -0.77376889E-06
+species.H2O.specific_heat.NASA7.a3 = -0.54879269E-08    0.94433514E-10
+species.H2O.specific_heat.NASA7.a4 =  0.17719680E-11   -0.42689991E-14
+species.H2O.specific_heat.NASA7.a5 = -0.30293726E+05   -0.29885894E+05
+
+# Carbon dioxide
+species.CO2.molecular_weight = 44.00980e-3
+species.CO2.specific_heat.NASA7.a0 =  2.35681300E+00    4.63651110E+00
+species.CO2.specific_heat.NASA7.a1 =  8.98412990E-03    2.74145690E-03
+species.CO2.specific_heat.NASA7.a2 = -7.12206320E-06   -9.95897590E-07
+species.CO2.specific_heat.NASA7.a3 =  2.45730080E-09    1.60386660E-10
+species.CO2.specific_heat.NASA7.a4 = -1.42885480E-13   -9.16198570E-15
+species.CO2.specific_heat.NASA7.a5 = -4.83719710E+04   -4.90249040E+04
+
+# Oxygen
+species.O2.molecular_weight = 31.99880e-3
+species.O2.specific_heat.NASA7.a0 =  3.78245636E+00    3.66096065E+00
+species.O2.specific_heat.NASA7.a1 = -2.99673416E-03    6.56365811E-04
+species.O2.specific_heat.NASA7.a2 =  9.84730201E-06   -1.41149627E-07
+species.O2.specific_heat.NASA7.a3 = -9.68129509E-09    2.05797935E-11
+species.O2.specific_heat.NASA7.a4 =  3.24372837E-12   -1.29913436E-15
+species.O2.specific_heat.NASA7.a5 = -1.06394356E+03   -1.21597718E+03
+
+# Nitrogen
+species.N2.molecular_weight = 28.01340e-3
+species.N2.specific_heat.NASA7.a0 =  3.53100528E+00    2.95257637E+00
+species.N2.specific_heat.NASA7.a1 = -1.23660988E-04    1.39690040E-03
+species.N2.specific_heat.NASA7.a2 = -5.02999433E-07   -4.92631603E-07
+species.N2.specific_heat.NASA7.a3 =  2.43530612E-09    7.86010195E-11
+species.N2.specific_heat.NASA7.a4 = -1.40881235E-12   -4.60755204E-15
+species.N2.specific_heat.NASA7.a5 = -1.04697628E+03   -9.23948688E+02
+
+# Hematite
+species.Fe2O3.molecular_weight = 159.68820e-3
+species.Fe2O3.specific_heat.NASA7.a0 =  1.52218166E-01    2.09445369E+01
+species.Fe2O3.specific_heat.NASA7.a1 =  6.70757040E-02    0.00000000E+00
+species.Fe2O3.specific_heat.NASA7.a2 = -1.12860954E-04    0.00000000E+00
+species.Fe2O3.specific_heat.NASA7.a3 =  9.93356662E-08    0.00000000E+00
+species.Fe2O3.specific_heat.NASA7.a4 = -3.27580975E-11    0.00000000E+00
+species.Fe2O3.specific_heat.NASA7.a5 = -1.01344092E+05   -1.07936580E+05
+
+## Hematite (filled out from 4-coeff c_p expression in Parker 2012)
+#species.Fe2O3.molecular_weight = 159.68820e-3
+#species.Fe2O3.specific_heat.NASA7.a0 =  4.81226894E+00    1.73403781E+01
+#species.Fe2O3.specific_heat.NASA7.a1 =  3.69466865E-02    0.00000000E+00
+#species.Fe2O3.specific_heat.NASA7.a2 = -4.12219542E-05    0.00000000E+00
+#species.Fe2O3.specific_heat.NASA7.a3 =  1.68033768E-08    0.00000000E+00
+#species.Fe2O3.specific_heat.NASA7.a4 =  0.00000000E+00    0.00000000E+00
+#species.Fe2O3.specific_heat.NASA7.a5 = -1.02030673E+05   -1.05625246E+05
+
+# Wustite
+species.FeO.molecular_weight = 71.84440e-3
+species.FeO.specific_heat.NASA7.a0 =  3.68765953E+00    1.81588527E+00
+species.FeO.specific_heat.NASA7.a1 =  1.09133433E-02    1.70742829E-02
+species.FeO.specific_heat.NASA7.a2 = -1.61179493E-05   -2.39919190E-05
+species.FeO.specific_heat.NASA7.a3 =  1.06449256E-08    1.53690046E-08
+species.FeO.specific_heat.NASA7.a4 = -2.39514915E-12   -3.53442390E-12
+species.FeO.specific_heat.NASA7.a5 = -3.34867527E+04   -3.30239565E+04
+
+# inert
+species.inert.molecular_weight = 92.82399e-3
+species.inert.specific_heat.NASA7.a0 =  1.52218166E-01    2.09445369E+01
+species.inert.specific_heat.NASA7.a1 =  6.70757040E-02    0.00000000E+00
+species.inert.specific_heat.NASA7.a2 = -1.12860954E-04    0.00000000E+00
+species.inert.specific_heat.NASA7.a3 =  9.93356662E-08    0.00000000E+00
+species.inert.specific_heat.NASA7.a4 = -3.27580975E-11    0.00000000E+00
+species.inert.specific_heat.NASA7.a5 = -1.01344092E+05   -1.07936580E+05
+
+
+#_______________________________________________________________________
+# Fluid model settings
+#
+fluid.solve = fluid
+
+fluid.thermodynamic_pressure = 101325.
+fluid.reference_temperature = 298.15
+
+fluid.species =  CH4  H2  CO  H2O  CO2  O2  N2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 4.73e-5  #air @ 1200K
+
+fluid.specific_heat = mixture
+
+fluid.thermal_conductivity          = constant
+fluid.thermal_conductivity.constant = 0.024
+
+
+#_______________________________________________________________________
+# Solids properties
+#
+solids.types = solid0
+solids.reference_temperature = 298.15
+
+solids.species  =  Fe2O3  FeO  inert
+
+solids.specific_heat = mixture
+
+
+#_______________________________________________________________________
+# DEM model settings
+#
+dem.solve = solid0
+
+dem.friction_coeff.pp     =     0.35
+dem.friction_coeff.pw     =     0.35
+
+dem.spring_const.pp       =   55. 
+dem.spring_const.pw       =   55. 
+
+dem.restitution_coeff.solid0.solid0  =     0.84
+dem.restitution_coeff.solid0.wall    =     0.92
+
+dem.spring_tang_fac.pp    =     0.285714285
+dem.spring_tang_fac.pw    =     0.285714285
+
+dem.damping_tang_fac.pp   =     0.5
+dem.damping_tang_fac.pw   =     0.5
+
+
+#_______________________________________________________________________
+# PIC model settings
+#
+pic.solve = None
+
+
+#_______________________________________________________________________
+## CHEMICAL reactions
+#
+chemistry.solve  =  Hem_CH4  Hem_H2  Hem_CO  Wus_O2
+
+chemistry.Hem_CH4.reaction = Fe2O3(s)+0.25CH4(g)-->2.FeO(s)+0.25CO2(g)+0.5H2O(g)
+chemistry.Hem_H2.reaction  = Fe2O3(s)+H2(g)-->2.FeO(s)+H2O(g)
+chemistry.Hem_CO.reaction  = Fe2O3(s)+CO(g)-->2.FeO(s)+CO2(g)
+
+chemistry.Wus_O2.reaction  = FeO(s)+0.25O2(g)-->0.5Fe2O3(s)
+
+
+#_______________________________________________________________________
+# EB geometry
+#
+mfix.geometry = "cylinder"
+# mfix.geometry_filename = "geometry.csg"
+
+cylinder.internal_flow = true
+
+cylinder.radius  = 0.0039
+cylinder.height  = -1.
+
+cylinder.direction = 0
+cylinder.center    =  0.004   0.004   0.004
+
+
+#_______________________________________________________________________
+# Regions for defining ICs and BCs
+#
+mfix.regions = full-domain  bed  inflow   outflow  hot-walls
+
+regions.full-domain.lo = 0.0000  0.0000  0.0000
+regions.full-domain.hi = 0.0080  0.0080  0.0080
+
+regions.bed.lo         = 0.0000  0.0000  0.0000
+regions.bed.hi         = 0.0064  0.0080  0.0080
+
+regions.inflow.lo      = 0.0000  0.0000  0.0000
+regions.inflow.hi      = 0.0000  0.0080  0.0080
+
+regions.outflow.lo     = 0.0080  0.0000  0.0000
+regions.outflow.hi     = 0.0080  0.0080  0.0080
+
+regions.hot-walls.lo = 0.0000  0.0000  0.0000
+regions.hot-walls.hi = 0.0080  0.0080  0.0080
+
+
+#_______________________________________________________________________
+# Initial Conditions
+#
+ic.regions = full-domain  bed
+
+ic.full-domain.fluid.volfrac       = 1.0
+ic.full-domain.fluid.velocity      = 0.015  0.0  0.0
+ic.full-domain.fluid.temperature   = 1273.
+ic.full-domain.fluid.species.CH4   = 0.1
+ic.full-domain.fluid.species.H2    = 0.2
+ic.full-domain.fluid.species.CO    = 0.1
+ic.full-domain.fluid.species.H2O   = 0.2
+ic.full-domain.fluid.species.CO2   = 0.1
+ic.full-domain.fluid.species.O2    = 0.1
+ic.full-domain.fluid.species.N2    = 0.2
+
+ic.bed.fluid.volfrac       = 0.725
+ic.bed.fluid.velocity      = 0.015  0.00  0.00
+ic.bed.fluid.temperature   = 1273.
+ic.bed.fluid.species.CH4   = 0.1
+ic.bed.fluid.species.H2    = 0.2
+ic.bed.fluid.species.CO    = 0.1
+ic.bed.fluid.species.H2O   = 0.2
+ic.bed.fluid.species.CO2   = 0.1
+ic.bed.fluid.species.O2    = 0.1
+ic.bed.fluid.species.N2    = 0.2
+
+ic.bed.solids  = solid0
+ic.bed.packing = pseudo_random
+
+ic.bed.solid0.volfrac  =  0.275
+ic.bed.solid0.velocity =  0.00  0.00  0.00
+
+ic.bed.solid0.diameter = constant
+ic.bed.solid0.density  = constant
+
+ic.bed.solid0.diameter.constant =  100.0e-6
+ic.bed.solid0.density.constant  = 2000.0
+
+ic.bed.solid0.temperature = 1273.
+ic.bed.solid0.species.Fe2O3 = 0.3
+ic.bed.solid0.species.FeO   = 0.3
+ic.bed.solid0.species.inert = 0.4
+
+
+#_______________________________________________________________________
+# Boundary Conditions
+#
+bc.regions = inflow  outflow
+
+bc.inflow = mi
+bc.inflow.fluid.volfrac       = 1.0
+bc.inflow.fluid.velocity      = 0.015  0.0  0.0
+bc.inflow.fluid.temperature   = 1273.
+bc.inflow.fluid.species.CH4   = 0.1
+bc.inflow.fluid.species.H2    = 0.2
+bc.inflow.fluid.species.CO    = 0.1
+bc.inflow.fluid.species.H2O   = 0.2
+bc.inflow.fluid.species.CO2   = 0.1
+bc.inflow.fluid.species.O2    = 0.1
+bc.inflow.fluid.species.N2    = 0.2
+
+bc.outflow = po
+bc.outflow.fluid.pressure =  101325.
+
+mfix.stop_for_unused_inputs = true
