@@ -128,8 +128,13 @@ struct ComputeDragGidaspow
    Purpose: Calculate the gas-solids drag coefficient
 
    Literature/Document References:
-       Beetstra, van der Hoef, Kuipers, Chem. Eng. Science 62
+   van der Hoef, Beetstra, Kuipers, J. Fluid. Mech., 528 (2005)
+
+   Beetstra, van der Hoef, Kuipers, Chem. Eng. Science, 62
      (Jan 2007)
+
+   Tenneti, Garg, Subramaniam, Int. J. Multiphase Flow, 37(9)
+     (2011)  
 
    Tang, Peters, Kuipers, Kriebitzsch, van der Hoef, AIChEJ,
        61(2) (Feb 2015)
@@ -176,18 +181,26 @@ struct ComputeDragBVK2
 
         amrex::Real oEPgfour = 1.0/EPg/EPg/EPg/EPg;
 
-        // eq(9) BVK J. fluid. Mech. 528, 2005
         // (this F_Stokes is /= of Koch_Hill by a factor of ep_g)
+        // see eq(5) J. Fluid. Mech. 528, 2005
         amrex::Real F_Stokes = 18.0*Mug*EPg/DPM/DPM;
 
+        // BVK2:
         amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
 
         F += RE*(0.11*PHIS*(1.0+PHIS) - 4.56e-3*oEPgfour +
              std::pow(RE, -0.343)*(0.169*EPg + 6.44e-2*oEPgfour));
 
+        // BVK: 
+        // amrex::Real F = 10.0*PHIS/EPg/EPg + EPg*EPg*(1.0 + 1.5*sqrt(PHIS));
         // F += 0.413*RE/(24.0*EPg*EPg) *
         //     (1.0/EPg + 3.0*EPg*PHIS + 8.4/std::pow(RE, 0.343)) /
         //     (1.0 + std::pow(10.0, 3.0*PHIS)/std::pow(RE, 0.5 + 2.0*PHIS));
+
+        //TGS: 
+        // amrex::Real F = (amrex::max(1. + 0.15*std::pow(RE, 0.687), 0.44*RE/24.)
+        //                 + 5.81*PHIS + 0.48*std::pow(PHIS, 1./3.)/EPg)/EPg/EPg
+        //                 + EPg*PHIS*PHIS*PHIS*RE*(0.95 + 0.61*PHIS*PHIS*PHIS/EPg/EPg);
 
         return F*F_Stokes;
     }
