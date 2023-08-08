@@ -935,6 +935,9 @@ class mfix : public AmrCore
     bool m_use_depdt_constraint = false;
     bool m_use_drag_in_projection = false;
 
+    // Redistribute the velocity field before the nodal projection
+    bool m_redistribute_before_nodal_proj = true;
+
     // Redistribute the velocity field after the nodal projection
     bool m_redistribute_nodal_proj = false;
 

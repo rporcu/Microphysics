@@ -166,6 +166,9 @@ mfix::InitParams ()
     // Include drag multiplier in projection. (False by default)
     pp.query("use_drag_coeff_in_proj_gp"        , m_use_drag_in_projection);
 
+    // Redistribute before the nodal projection
+    pp.query("redistribute_before_nodal_proj"   , m_redistribute_before_nodal_proj);
+
     // Redistribute after the nodal projection
     pp.query("redistribute_nodal_proj"          , m_redistribute_nodal_proj);
 

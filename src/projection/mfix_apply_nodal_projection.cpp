@@ -175,7 +175,9 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
       EB_set_covered(*a_S_cc[lev], 0, a_S_cc[lev]->nComp(), 1, 0.0);
     }
 
-    PreProjectionRedistribution(a_time);
+    if ( m_redistribute_before_nodal_proj ) {
+      PreProjectionRedistribution(a_time);
+    }
 
     //
     // Setup the nodal projector
