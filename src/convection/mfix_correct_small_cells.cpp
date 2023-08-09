@@ -12,6 +12,7 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
 
   // Get EB geometric info
   Array< const MultiCutFab*,AMREX_SPACEDIM> areafrac;
+  Real sm_vf = m_correction_small_volfrac;
 
   for (int lev = 0; lev < nlev; lev++)
   {
@@ -59,11 +60,11 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
           // This FAB has cut cells -- we define the centroid value in terms
           // of the MAC velocities onfaces
           amrex::ParallelFor(bx,
-            [vfrac_fab,apx_fab,apy_fab,apz_fab,ccvel_fab,umac_fab,vmac_fab,wmac_fab]
+            [vfrac_fab,apx_fab,apy_fab,apz_fab,ccvel_fab,umac_fab,vmac_fab,wmac_fab,sm_vf]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             Real vfrac = vfrac_fab(i,j,k);
-            if (vfrac > 0.0 && vfrac < 1.e-4)
+            if (vfrac > 0.0 && vfrac < sm_vf)
             {
               const Real apx_mns = apx_fab(i,j,k);
               const Real apx_pls = apx_fab(i+1,j,k);
@@ -92,11 +93,11 @@ mfix::mfix_correct_small_cells (Vector<MultiFab*      > const& vel_in,
           // of the MAC velocities onfaces
           amrex::ParallelFor(bx,
             [vfrac_fab,apx_fab,apy_fab,apz_fab,ccvel_fab,umac_fab,vmac_fab,wmac_fab,
-             eb_vel,barea]
+             eb_vel,barea,sm_vf]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
             Real vfrac = vfrac_fab(i,j,k);
-            if (vfrac > 0.0 && vfrac < 1.e-4)
+            if (vfrac > 0.0 && vfrac < sm_vf)
             {
               const Real apx_mns = apx_fab(i  ,j  ,k  );
               const Real apx_pls = apx_fab(i+1,j  ,k  );

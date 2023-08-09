@@ -172,6 +172,9 @@ mfix::InitParams ()
     // Redistribute after the nodal projection
     pp.query("redistribute_nodal_proj"          , m_redistribute_nodal_proj);
 
+    // Threshold volfrac for correcting small cell velocity in the predictor and corrector
+    pp.query("correction_small_volfrac"         , m_correction_small_volfrac);
+
     // Are we using MOL or Godunov?
     std::string l_advection_type = "Godunov";
     pp.query("advection_type"                   , l_advection_type);
