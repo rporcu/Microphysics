@@ -1,0 +1,9 @@
+CEXE_headers += post_mfix.H
+CEXE_headers += pm_fluid.H
+CEXE_headers += pm_particles.H
+
+CEXE_sources += main.cpp
+CEXE_sources += post_mfix.cpp
+CEXE_sources += pm_fluid.cpp
+CEXE_sources += pm_particles.cpp
+CEXE_sources += pm_report.cpp

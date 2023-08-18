@@ -1,0 +1,24 @@
+include $(AMREX_HOME)/Tools/GNUMake/Make.defs
+
+Bdirs := post-mfix
+
+Bpack += $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
+Blocs += $(foreach dir, $(Bdirs), $(TOP)/$(dir))
+
+include $(Bpack)
+
+INCLUDE_LOCATIONS += $(Blocs)
+VPATH_LOCATIONS   += $(Blocs)
+
+# Particle AmrCore Boundary
+Pdirs := Base
+
+Ppack += $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
+
+include $(Ppack)
+
+all: $(executable)
+	@echo SUCCESS
+
+include $(AMREX_HOME)/Tools/GNUMake/Make.rules
+
