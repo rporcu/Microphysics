@@ -96,10 +96,7 @@ void actual_rhs (eos_t& state, Array1D<Real, 1, neqs>& ydot)
     constexpr amrex::Real large_number(1.0e32);
 
     // Here I'm assuming to store fluid velocity into the aux variables
-    // TODO
-    amrex::RealVect vel_g({0.});
-//    amrex::RealVect vel_g(state.aux[0], state.aux[1], state.aux[2]); THIS IS
-//    NOT WORKING
+    amrex::RealVect vel_g(state.aux[0], state.aux[1], state.aux[2]);
 
     amrex::Real v_rel = (vel_g).vectorLength();
     v_rel *= 1.e2;

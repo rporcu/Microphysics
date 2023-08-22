@@ -2,3 +2,8 @@
 Air            Air          1        28.97e-3
 Vapor         H2Og          2        18.02e-3
 Liquid        H2Os          3        18.02e-3
+
+# auxiliary variables
+__aux_velgx
+__aux_velgy
+__aux_velgz

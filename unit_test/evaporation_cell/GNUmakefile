@@ -24,8 +24,7 @@ EOS_DIR     := gamma_law
 
 # This sets the network directory
 NETWORK_DIR := droplet_evaporation
-
-#CONDUCTIVITY_DIR := stellar
+NETWORK_INPUT := evaporation.net
 
 INTEGRATOR_DIR =  VODE
 
