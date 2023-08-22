@@ -1,8 +1,11 @@
 #ifndef actual_rhs_H
 #define actual_rhs_H
 
+#include <AMReX_RealVect.H>
+
 #include <extern_parameters.H>
 #include <actual_network.H>
+#include <eos.H>
 #include <burn_type.H>
 
 using namespace amrex;
@@ -80,28 +83,36 @@ void actual_rhs_init () {
 
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
+void actual_rhs (eos_t& state, Array1D<Real, 1, neqs>& ydot)
 {
     using namespace Species;
+
+    // TODO this shouldn't be defined here
+    constexpr int Air = 0;
+    constexpr int Vapor = 1;
 
     constexpr amrex::Real Pi(3.14159265358979323846);
     const amrex::Real T_p(state.T);
     constexpr amrex::Real large_number(1.0e32);
 
     // Here I'm assuming to store fluid velocity into the aux variables
-    amrex::RealVect vel_g(state.aux[0], state.aux[1], state.aux[2]);
+    // TODO
+    amrex::RealVect vel_g({0.});
+//    amrex::RealVect vel_g(state.aux[0], state.aux[1], state.aux[2]); THIS IS
+//    NOT WORKING
 
     amrex::Real v_rel = (vel_g).vectorLength();
     v_rel *= 1.e2;
 
+    // TODO
     constexpr amrex::Real DP = 0.001;
 
     amrex::Real Sa = Pi * DP * DP;
     Sa *= 1.e4;
 
-    amrex::Real Diff_H2OinAir = Diff_H2O_Air(state.T, 10*statet.p);
+    amrex::Real Diff_H2OinAir = Diff_H2O_Air(state.T, 10*state.p);
 
-    amrex::Real MUg = fluid_parms.calc_mu_g(state.T);
+    amrex::Real MUg = 1.86e-5;
     MUg *= 1.e1;
 
     amrex::Real ROg = state.rho;
@@ -117,14 +128,15 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
     amrex::Real H2O_xfr = (N_Sh * Diff_H2OinAir) / DP;
     H2O_xfr *= 1.e-2;
 
+    // TODO
     // Is there a way to access fluid atomic weights?
     const amrex::Real Air_MW = 28.97e-3;
     const amrex::Real Vapor_MW = 18.02e-3;
 
-    amrex::Real MW_g_MIX = 1./(state.xn[Air-1]/Air_MW +
-                               state.xn[Vapor-1]/Vapor_MW);
+    amrex::Real MW_g_MIX = 1./(state.xn[Air]/Air_MW +
+                               state.xn[Vapor]/Vapor_MW);
 
-    const amrex::Real Y_H2O = state.xn[Vapor-1] * (MW_g_MIX / Vapor_MW);
+    const amrex::Real Y_H2O = state.xn[Vapor] * (MW_g_MIX / Vapor_MW);
 
     amrex::Real Cm_H2O = Psat_H2O(T_p) / (8314.56e4*state.T);
 
