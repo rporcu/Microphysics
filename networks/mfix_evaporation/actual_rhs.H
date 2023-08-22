@@ -88,6 +88,7 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
     const amrex::Real T_p(state.T);
     constexpr amrex::Real large_number(1.0e32);
 
+    // Here I'm assuming to store fluid velocity into the aux variables
     amrex::RealVect vel_g(state.aux[0], state.aux[1], state.aux[2]);
 
     amrex::Real v_rel = (vel_g).vectorLength();
@@ -116,10 +117,14 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
     amrex::Real H2O_xfr = (N_Sh * Diff_H2OinAir) / DP;
     H2O_xfr *= 1.e-2;
 
-    amrex::Real MW_g_MIX = 1./(state.xn[Air-1]/fluid_parms.get_MW_gk<run_on>(Air) +
-                               state.xn[Vapor-1]/fluid_parms.get_MW_gk<run_on>(Vapor));
+    // Is there a way to access fluid atomic weights?
+    const amrex::Real Air_MW = 28.97e-3;
+    const amrex::Real Vapor_MW = 18.02e-3;
 
-    const amrex::Real Y_H2O = state.xn[Vapor-1] * (MW_g_MIX / fluid_parms.get_MW_gk<run_on>(Vapor));
+    amrex::Real MW_g_MIX = 1./(state.xn[Air-1]/Air_MW +
+                               state.xn[Vapor-1]/Vapor_MW);
+
+    const amrex::Real Y_H2O = state.xn[Vapor-1] * (MW_g_MIX / Vapor_MW);
 
     amrex::Real Cm_H2O = Psat_H2O(T_p) / (8314.56e4*state.T);
 
