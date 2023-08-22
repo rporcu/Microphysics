@@ -162,6 +162,7 @@ build:csg:
             -DCMAKE_BUILD_TYPE=MinSizeRel
             -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors -Wshadow -Wfloat-conversion -Woverloaded-virtual -Wnon-virtual-dtor -Wlogical-op -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wmissing-include-dirs -Wextra-semi"
             -DMFIX_CSG=ON
+            -DMFIX_CSG_TESTS=ON
     - cmake --build build --target functional_tests
     - ./build/src/eb/tests/functional_tests
   <<: *build_base

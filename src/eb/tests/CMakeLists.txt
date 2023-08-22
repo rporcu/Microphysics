@@ -2,7 +2,7 @@
 # CSG/EB Comparison Tests
 ################################################################################
 
-add_executable(functional_tests EXCLUDE_FROM_ALL
+add_executable(functional_tests
   benchmarks/05-cyl-fluidbed.cpp
   benchmarks/07-hopper.cpp
   benchmarks/08-cyclone.cpp
@@ -36,5 +36,5 @@ find_package(Catch2 REQUIRED)
 target_link_libraries(functional_tests
   AMReX::amrex
   Catch2::Catch2
-  csg-eb
+  CsgEb::csg-eb
 )

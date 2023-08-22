@@ -107,6 +107,12 @@ endif ()
 # CSG support
 option( MFIX_CSG "Build with CSG support" OFF)
 
+# Global switch to turn on/off building of tests
+option( MFIX_TESTS "Build MFIX tests" ON)
+
+# Switch to turn on/off building of CSG tests
+option( MFIX_CSG_TESTS "Build MFIX CSG tests" OFF)
+
 if (MFIX_CUDA)
   # CMake 3.18+: CMAKE_CUDA_ARCHITECTURES
   # https://cmake.org/cmake/help/latest/policy/CMP0104.html
@@ -155,8 +161,10 @@ endif ()
 add_subdirectory(tools)
 
 # Tests
-enable_testing()
-add_subdirectory( tests )
+if (MFIX_TESTS)
+   enable_testing()
+   add_subdirectory( tests )
+endif ()
 
 # Tags
 include(MFIX_Tags)

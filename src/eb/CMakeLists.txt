@@ -17,7 +17,7 @@ target_sources( mfixcore
 
 if (MFIX_CSG)
    target_sources(mfixcore PRIVATE mfix_eb_csg.cpp)
-   if (BUILD_TESTING)
+   if (MFIX_TESTS AND MFIX_CSG_TESTS)
       add_subdirectory(tests)
    endif()
    target_compile_definitions(mfixcore PUBLIC CSG_EB)

@@ -113,7 +113,7 @@ else ()
    set(AMReX_LINEAR_SOLVERS        ON)
    set(AMReX_HYPRE                 ${MFIX_HYPRE})
    set(AMReX_BUILD_TUTORIALS       OFF)
-   set(AMReX_PLOTFILE_TOOLS        ON)
+   set(AMReX_PLOTFILE_TOOLS        ${MFIX_TESTS})
 
    list(APPEND CMAKE_MODULE_PATH ${AMREX_SRC_DIR}/Tools/CMake)
 
@@ -135,7 +135,9 @@ else ()
    #
    # Define full path to fextract
    #
-   get_target_property(FEXTRACT AMReX::fextract BINARY_DIR)
-   set(FEXTRACT ${FEXTRACT}/fextract CACHE INTERNAL "")
+   if (MFIX_TESTS)
+      get_target_property(FEXTRACT AMReX::fextract BINARY_DIR)
+      set(FEXTRACT ${FEXTRACT}/fextract CACHE INTERNAL "")
+   endif ()
 
 endif ()
