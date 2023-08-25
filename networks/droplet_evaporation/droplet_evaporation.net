@@ -4,6 +4,7 @@ Vapor        Vapor          2        18.02e-3
 Liquid      Liquid          3        18.02e-3
 
 # auxiliary variables
-__aux_velgx
-__aux_velgy
-__aux_velgz
+__aux_velocity_x
+__aux_velocity_y
+__aux_velocity_z
+__aux_pressure
