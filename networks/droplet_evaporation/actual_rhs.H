@@ -11,7 +11,7 @@
 using namespace amrex;
 using namespace network_rp;
 
-AMREX_GPU_HOST_DEVICE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real Psat_H2O(const amrex::Real sat_T)
 {
   const amrex::GpuArray<amrex::Real,8> coeffs({-7.419242e0, 2.97221e-1, -1.155286e-1, 8.68563e-3,
@@ -37,7 +37,7 @@ amrex::Real Psat_H2O(const amrex::Real sat_T)
 }
 
 
-AMREX_GPU_HOST_DEVICE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real Diff_H2O_Air(const amrex::Real ref_T,
                          const amrex::Real ref_P)
 {
@@ -49,7 +49,7 @@ amrex::Real Diff_H2O_Air(const amrex::Real ref_T,
 }
 
 
-AMREX_GPU_HOST_DEVICE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real cal_NRe(const amrex::Real MUg,
                     const amrex::Real ROg,
                     const amrex::Real v_rel,
@@ -60,7 +60,7 @@ amrex::Real cal_NRe(const amrex::Real MUg,
 }
 
 
-AMREX_GPU_HOST_DEVICE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real cal_NSc(const amrex::Real MUg,
                     const amrex::Real ROg,
                     const amrex::Real Diff_coeff)
@@ -69,7 +69,7 @@ amrex::Real cal_NSc(const amrex::Real MUg,
 }
 
 
-AMREX_GPU_HOST_DEVICE
+AMREX_GPU_HOST_DEVICE AMREX_INLINE
 amrex::Real cal_NSh(const amrex::Real Re,
                     const amrex::Real Sc)
 {
@@ -126,10 +126,10 @@ void actual_rhs (eos_t& state, Array1D<Real, 1, neqs>& ydot)
     const amrex::Real Air_MW = 28.97e-3;
     const amrex::Real Vapor_MW = 18.02e-3;
 
-    amrex::Real MW_g_MIX = 1./(state.xn[Air]/Air_MW +
-                               state.xn[Vapor]/Vapor_MW);
+    amrex::Real MW_g_MIX = 1./(state.xn[Air-1]/Air_MW +
+                               state.xn[Vapor-1]/Vapor_MW);
 
-    const amrex::Real Y_H2O = state.xn[Vapor] * (MW_g_MIX / Vapor_MW);
+    const amrex::Real Y_H2O = state.xn[Vapor-1] * (MW_g_MIX / Vapor_MW);
 
     amrex::Real Cm_H2O = Psat_H2O(T_p) / (8314.56e4*state.T);
 
