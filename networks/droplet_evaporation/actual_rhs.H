@@ -87,10 +87,6 @@ void actual_rhs (eos_t& state, Array1D<Real, 1, neqs>& ydot)
 {
     using namespace Species;
 
-    // TODO this shouldn't be defined here
-    constexpr int Air = 0;
-    constexpr int Vapor = 1;
-
     constexpr amrex::Real Pi(3.14159265358979323846);
     const amrex::Real T_p(state.T);
     constexpr amrex::Real large_number(1.0e32);
