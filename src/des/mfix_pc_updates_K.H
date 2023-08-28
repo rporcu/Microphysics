@@ -226,6 +226,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
                       const MFIXSolidsParms& solids_parms,
                       const amrex::Real& dt,
                       const amrex::Real& coeff,
+                      const amrex::Real& p_enthalpy_old,
                       const amrex::Real& p_mass_new,
                       amrex::Real* cond_ptr,
                       const amrex::Real& enthalpy_source,
@@ -237,18 +238,6 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
                       const int& is_IOProc,
                       const int& solve_dem)
 {
-  amrex::Real p_enthalpy_old(0);
-
-  const amrex::Real Tp = p_realarray[SoArealData::temperature][i];
-
-  if (solid_is_a_mixture) {
-    for (int n_s(0); n_s < nspecies_s; ++n_s) {
-      p_enthalpy_old += ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
-    }
-  } else {
-    p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp);
-  }
-
   amrex::Real p_enthalpy_new(0.);
 
   if (solve_dem) {
@@ -273,7 +262,7 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
   Solvers::Newton::SolidsEnthalpy::Gradient gradient(solid_is_a_mixture,
       i, nspecies_s, solids_parms, ptile_data, idx_X_sn);
 
-  amrex::Real Tp_new(Tp);
+  amrex::Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
   Solvers::Newton::solve(Tp_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
 

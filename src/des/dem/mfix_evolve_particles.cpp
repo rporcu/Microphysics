@@ -374,6 +374,18 @@ void MFIXParticleContainer::EvolveParticles (int lev,
               const Real p_oneOverI_old = p_realarray[SoArealData::oneOverI][i];
               Real p_oneOverI_new(p_oneOverI_old);
 
+              Real p_enthalpy_old(0);
+              if (solve_enthalpy) {
+                const Real Tp = p_realarray[SoArealData::temperature][i];
+                if (solid_is_a_mixture) {
+                  for (int n_s(0); n_s < nspecies_s; ++n_s) {
+                    p_enthalpy_old += ptile_data.m_runtime_rdata[idx_X_sn+n_s][i]*solids_parms.calc_h_sn<run_on>(Tp,n_s);
+                  }
+                } else {
+                  p_enthalpy_old = solids_parms.calc_h_s<run_on>(Tp);
+                }
+              }
+
               // Flag to stop computing particle's quantities if mass_new < 0,
               // i.e. the particle disappears because of chemical reactions
               int proceed = 1;
@@ -410,8 +422,9 @@ void MFIXParticleContainer::EvolveParticles (int lev,
 
                   part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn,
                       nspecies_s, solid_is_a_mixture, solids_parms, subdt, coeff,
-                      p_mass_new, cond_ptr, enthalpy_source, solve_reactions,
-                      idx_h_txfr, abstol, reltol, maxiter, is_IOProc, 1);
+                      p_enthalpy_old, p_mass_new, cond_ptr, enthalpy_source,
+                      solve_reactions, idx_h_txfr, abstol, reltol, maxiter,
+                      is_IOProc, 1);
 
                 }
               }
