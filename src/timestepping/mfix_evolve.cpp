@@ -136,6 +136,15 @@ mfix::Evolve (int nstep,
                         m_rw->report_mass_balance);
       }
 
+
+      if (m_dem.solve() || m_pic.solve()) {
+        if (pc->UseConstraint()) {
+          for (int lev = 0; lev <= finest_level; lev ++ ) {
+            pc->ImposeMean(lev);
+          }
+        }
+      }
+
       Real end_particles = ParallelDescriptor::second() - start_particles;
       ParallelDescriptor::ReduceRealMax(end_particles, ParallelDescriptor::IOProcessorNumber());
 

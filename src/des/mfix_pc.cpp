@@ -146,11 +146,33 @@ void MFIXParticleContainer::ReadStaticParameters ()
 
 void MFIXParticleContainer::ReadParameters ()
 {
+
+  {
     ParmParse pp("solids.newton_solver");
 
     pp.query("absolute_tol", newton_abstol);
     pp.query("relative_tol", newton_reltol);
     pp.query("max_iterations", newton_maxiter);
+  }
+
+  { ParmParse pp("particles");
+
+    std::string constraint_in;
+    if ( pp.query("constraint", constraint_in) ) {
+      if ( amrex::toLower(constraint_in).compare("mean_velocity") == 0 )  {
+        m_use_constraint[0] = pp.query("constraint.mean_velocity_x", m_constraint[0]);
+        m_use_constraint[1] = pp.query("constraint.mean_velocity_y", m_constraint[1]);
+        m_use_constraint[2] = pp.query("constraint.mean_velocity_z", m_constraint[2]);
+      } else {
+        std::string message;
+        message = "Unknown particle constraint type!\nFix the inputs file.\n";
+        amrex::Print() << message;
+        amrex::Abort(message);
+      }
+    }
+  }
+
+
 }
 
 void MFIXParticleContainer::

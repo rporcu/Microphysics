@@ -17,3 +17,4 @@ CEXE_sources += mfix_calc_transfer_coeffs.cpp
 CEXE_sources += mfix_calc_volume_fraction.cpp
 CEXE_sources += mfix_calc_txfr.cpp
 CEXE_sources += mfix_pc_mass_balance.cpp
+CEXE_sources += mfix_pc_impose_mean.cpp

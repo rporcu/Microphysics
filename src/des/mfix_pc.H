@@ -425,6 +425,10 @@ class MFIXParticleContainer final
 
     void ResetMassBalance (int const a_n);
 
+    int UseConstraint ()  noexcept { return m_use_constraint.sum(); }
+
+    void ImposeMean (int const a_lev);
+
   private:
     int nlev;
 
@@ -439,6 +443,9 @@ class MFIXParticleContainer final
     amrex::Real newton_abstol = 1.e-6;
     amrex::Real newton_reltol = 1.e-6;
     int newton_maxiter = 100;
+
+    amrex::IntVect m_use_constraint = amrex::IntVect::TheZeroVector();
+    amrex::RealVect m_constraint = amrex::RealVect::TheZeroVector();
 
     amrex::IntVect max_grid_size{-1};
 

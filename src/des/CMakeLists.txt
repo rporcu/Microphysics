@@ -23,6 +23,7 @@ target_sources( mfixcore
    mfix_calc_volume_fraction.cpp
    mfix_calc_txfr.cpp
    mfix_pc_mass_balance.cpp
+   mfix_pc_impose_mean.cpp
    # dem ----------------------------------------------------------------------
    dem/mfix_des_coll_K.H
    dem/mfix_des_cond_K.H
