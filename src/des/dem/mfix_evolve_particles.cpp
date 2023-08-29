@@ -158,8 +158,6 @@ void MFIXParticleContainer::EvolveParticles (int lev,
       mfix_pc_inflow(lev, 1, 0, dt, solids.solve_enthalpy(), ebfactory);
     }
 
-    const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
     const Real abstol = newton_abstol;
     const Real reltol = newton_reltol;
     const int maxiter = newton_maxiter;
@@ -361,7 +359,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                 idx_h_txfr,update_mass,fc_ptr,cond_ptr,ntot,gravity,tow_ptr,
                 p_hi,p_lo,lo_hi_bc,enthalpy_source,update_momentum,time,
                 solid_is_a_mixture,solids_parms,solve_enthalpy,solve_reactions,
-                is_IOProc,abstol,reltol,maxiter]
+                abstol,reltol,maxiter]
               AMREX_GPU_DEVICE (int i) noexcept
             {
               ParticleType& p = pstruct[i];
@@ -423,8 +421,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                   part_enthalpy_update(ptile_data, p_realarray, i, idx_X_sn,
                       nspecies_s, solid_is_a_mixture, solids_parms, subdt, coeff,
                       p_enthalpy_old, p_mass_new, cond_ptr, enthalpy_source,
-                      solve_reactions, idx_h_txfr, abstol, reltol, maxiter,
-                      is_IOProc, 1);
+                      solve_reactions, idx_h_txfr, abstol, reltol, maxiter, 1);
 
                 }
               }

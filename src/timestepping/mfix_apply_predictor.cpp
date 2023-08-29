@@ -659,8 +659,6 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         diffusion_op->ComputeDivhJ(div_hJ_old, h_gk_fc, J_gk, get_T_g_old_const(), update_enthalpies);
       }
 
-      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
       for (int lev = 0; lev <= finest_level; lev++) {
 
         auto& ld = *m_leveldata[lev];
@@ -699,7 +697,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
           amrex::ParallelFor(bx, [h_g_o,h_g_n,T_g_o,T_g_n,rho_o,rho_n,epg,dhdt_o,
               l_dt,lap_T_o,l_explicit_diff,Dpressure_Dt,X_gk_n,closed_system,
               fluid_parms,fluid_is_a_mixture,nspecies_g,div_hJ_o,flags_arr,
-              solve_species,is_IOProc,abstol=newton_abstol,reltol=newton_reltol,
+              solve_species,abstol=newton_abstol,reltol=newton_reltol,
               maxiter=newton_maxiter]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -740,7 +738,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
               Real Tg(T_g_o(i,j,k));
 
-              Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+              auto output = Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter);
+
+              if (output.iterations == -1)
+                amrex::Abort("Newton solver did not converge");
 
               T_g_n(i,j,k) = Tg;
             }

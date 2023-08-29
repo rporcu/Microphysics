@@ -235,7 +235,6 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
                       const amrex::Real& abstol,
                       const amrex::Real& reltol,
                       const int& maxiter,
-                      const int& is_IOProc,
                       const int& solve_dem)
 {
   amrex::Real p_enthalpy_new(0.);
@@ -264,7 +263,10 @@ part_enthalpy_update (const amrex::ParticleTileData<amrex::Particle<0,0>,SoAreal
 
   amrex::Real Tp_new(p_realarray[SoArealData::temperature][i]);
 
-  Solvers::Newton::solve(Tp_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+  auto output = Solvers::Newton::solve(Tp_new, residue, gradient, abstol, reltol, maxiter);
+
+  if (output.iterations == -1)
+    amrex::Abort("Newton solver did not converge");
 
   p_realarray[SoArealData::temperature][i] = Tp_new;
 

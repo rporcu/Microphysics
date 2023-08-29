@@ -679,8 +679,6 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         diffusion_op->ComputeDivhJ(div_hJ, h_gk_fc, J_gk, get_T_g_const(), update_enthalpies);
       }
 
-      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
       for (int lev(0); lev < nlev; ++lev) {
 
         auto& ld = *m_leveldata[lev];
@@ -725,7 +723,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
               dhdt_o,dhdt_n,h_rhs_o,h_rhs_n,l_dt,lap_T_o,lap_T_n,Dpressure_Dt,
               Dpressure_Dt_old,closed_system,explicit_diffusive_enthalpy,
               fluid_parms,X_gk_n,nspecies_g,fluid_is_a_mixture,flags_arr,
-              div_hJ_o,div_hJ_n,solve_species,is_IOProc,abstol=newton_abstol,
+              div_hJ_o,div_hJ_n,solve_species,abstol=newton_abstol,
               reltol=newton_reltol,maxiter=newton_maxiter]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
           {
@@ -777,7 +775,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
               Real Tg(T_g_o(i,j,k));
 
-              Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+              auto output = Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter);
+
+              if (output.iterations == -1)
+                amrex::Abort("Newton solver did not converge");
 
               T_g_n(i,j,k) = Tg;
             }
@@ -817,9 +818,8 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
             auto const& flags_arr = flags.const_array(mfi);
 
             amrex::ParallelFor(bx, [ep_g,ro_g_n,h_g_n,T_g_o,T_g_n,lap_T_o,l_dt,
-                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,
-                flags_arr,is_IOProc,abstol=newton_abstol,
-                reltol=newton_reltol,maxiter=newton_maxiter]
+                fluid_parms,fluid_is_a_mixture,nspecies_g,X_gk_n,flags_arr,
+                abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
               AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {
               const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -847,7 +847,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
                 Real Tg(T_g_o(i,j,k));
 
-                Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+                auto output = Newton::solve(Tg, residue, gradient, abstol, reltol, maxiter);
+
+                if (output.iterations == -1)
+                  amrex::Abort("Newton solver did not converge");
 
                 T_g_n(i,j,k) = Tg;
               }

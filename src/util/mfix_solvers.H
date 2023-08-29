@@ -202,16 +202,32 @@ struct Gradient
 
 } // end namespace SolidsEnthalpy
 
+// Newton solver output information
+struct Output
+{
+  AMREX_GPU_HOST_DEVICE
+  Output(const int iter,
+         const amrex::Real update,
+         const amrex::Real residue)
+    : iterations(iter)
+    , update_norm(update)
+    , residue_norm(residue)
+  {}
+
+  int iterations;
+  amrex::Real update_norm;
+  amrex::Real residue_norm;
+};
+
 // Solve for scalars
 template<typename ResidueFunc, typename GradientFunc>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-int solve (amrex::Real& solution,
-           ResidueFunc& R,
-           GradientFunc& partial_R,
-           const amrex::Real /*abs_tol*/,
-           const amrex::Real rel_tol,
-           const int max_iterations,
-           const int is_IOProc = 0)
+Output solve (amrex::Real& solution,
+              ResidueFunc& R,
+              GradientFunc& partial_R,
+              const amrex::Real /*abs_tol*/,
+              const amrex::Real rel_tol,
+              const int max_iterations)
 {
   amrex::Real gradient = partial_R(solution);
   amrex::Real residue  = R(solution);
@@ -223,7 +239,7 @@ int solve (amrex::Real& solution,
 
   // Do not do anything if we're already on the solution
   if (std::abs(residue) < 1.e-15) {
-    return iter;
+    return Output(0, 0, std::abs(residue));
   }
 
   if (std::abs(gradient) < 1.e-15) {
@@ -237,27 +253,14 @@ int solve (amrex::Real& solution,
     gradient = partial_R(solution);
 
     ++iter;
-    if(iter > max_iterations) {
 
-      if (is_IOProc) {
-#ifdef AMREX_USE_GPU
-        AMREX_DEVICE_PRINTF("Newton total iterations = %d\n", iter);
-        AMREX_DEVICE_PRINTF("Newton update norm = %e\n", std::abs(update));
-        AMREX_DEVICE_PRINTF("Newton residue norm = %e\n", std::abs(residue));
-#else
-        std::printf("Newton total iterations = %d\n", iter);
-        std::printf("Newton update norm = %e\n", std::abs(update));
-        std::printf("Newton residue norm = %e\n", std::abs(residue));
-#endif
-      }
+    if (iter > max_iterations)
+      return Output(-1, std::abs(update), std::abs(residue));
 
-      amrex::Abort("Newton solver did not converge");
-
-    }
   } while(//(std::abs(residue) > residue_rel_tol) ||
           (std::abs(update) > update_rel_tol));
 
-  return iter;
+  return Output(iter, std::abs(update), std::abs(residue));
 }
 
 } } // end namespace Solvers::Newton

@@ -525,8 +525,6 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
       const int nspecies_g = fluid.nspecies();
       const int fluid_is_a_mixture = fluid.isMixture();
 
-      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
       InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
       const int idx_gammaTp_txfr = txfr_idxs.gammaTp;
@@ -534,8 +532,8 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          idx_gammaTp_txfr, idx_convection_coeff_txfr,
-          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,abstol=newton_abstol,
+          reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -564,7 +562,10 @@ mfix::mfix_add_enthalpy_txfr_explicit (Real dt,
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+          auto output = Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter);
+
+          if (output.iterations == -1)
+            amrex::Abort("Newton solver did not converge");
 
           Tg_array(i,j,k) = Tg_new;
 
@@ -699,12 +700,10 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
       const int nspecies_g = fluid.nspecies();
 
-      const int is_IOProc = int(ParallelDescriptor::IOProcessor());
-
       amrex::ParallelFor(bx,[dt,hg_array,Tg_array,txfr_array,ro_array,ep_array,
           fluid_parms,Xgk_array,nspecies_g,fluid_is_a_mixture,flags_arr,
-          idx_gammaTp_txfr, idx_convection_coeff_txfr,
-          is_IOProc,abstol=newton_abstol,reltol=newton_reltol,maxiter=newton_maxiter]
+          idx_gammaTp_txfr, idx_convection_coeff_txfr,abstol=newton_abstol,
+          reltol=newton_reltol,maxiter=newton_maxiter]
         AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
         const int cell_is_covered = static_cast<int>(flags_arr(i,j,k).isCovered());
@@ -734,7 +733,10 @@ mfix::mfix_add_enthalpy_txfr_implicit (Real dt,
 
           Real Tg_new(Tg_old);
 
-          Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter, is_IOProc);
+          auto output = Newton::solve(Tg_new, residue, gradient, abstol, reltol, maxiter);
+
+          if (output.iterations == -1)
+            amrex::Abort("Newton solver did not converge");
 
           Tg_array(i,j,k) = Tg_new;
 
