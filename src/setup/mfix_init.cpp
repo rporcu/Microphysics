@@ -1094,6 +1094,11 @@ mfix::mfix_init_fluid (int is_restarting,
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
       }
 
+      if (fluid.solve_enthalpy()) {
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g_old());
+      }
+
       if (fluid.solve_species()) {
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
@@ -1139,8 +1144,10 @@ mfix::mfix_set_bc0 ()
 
     Real time = 0.0;
 
-    if (fluid.solve_enthalpy())
+    if (fluid.solve_enthalpy()) {
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+    }
 
     if (fluid.solve_species())
       m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());

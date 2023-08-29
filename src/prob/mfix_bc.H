@@ -125,6 +125,10 @@ class MFIXBoundaryConditions
                               MFIXFluidPhase& fluid,
                               amrex::Vector< amrex::MultiFab* > const& T_g);
 
+    void set_enthalpy_bcs (amrex::Real time,
+                           MFIXFluidPhase& fluid,
+                           amrex::Vector< amrex::MultiFab* > const& T_g);
+
     void set_eb_temperature_bcs (amrex::Vector< amrex::MultiFab* > const& T_g_on_EB);
 
     void set_species_bc_values (amrex::Real time_in,

@@ -109,6 +109,59 @@ MFIXBoundaryConditions::set_temperature_bcs (Real time,
 
 
 void
+MFIXBoundaryConditions::set_enthalpy_bcs (Real time,
+                                             MFIXFluidPhase& fluid,
+                                             Vector< MultiFab* > const& h_g_in)
+{
+  BL_PROFILE("MFIXBoundaryConditions::set_enthalpy_bcs()");
+
+  const int nspecies_g = fluid.nspecies();
+  const int fluid_is_a_mixture = fluid.isMixture();
+
+  set_temperature_bc_values(time, fluid);
+  Real* p_bc_t_g = m_bc_t_g.data();
+
+  if(fluid_is_a_mixture)
+    set_species_bc_values(time, fluid);
+
+  Real** p_bc_X_gk = fluid_is_a_mixture ? m_bc_X_gk_ptr.data() : nullptr;
+
+  const auto& fluid_parms = fluid.parameters();
+
+  auto bcs_function = [p_bc_t_g,p_bc_X_gk,fluid_parms,fluid_is_a_mixture,nspecies_g]
+    AMREX_GPU_DEVICE (const int bct,
+                      const int bcv,
+                      const IntVect& ijk,
+                      const IntVect& dom_ijk,
+                      const int n,
+                      const Array4<Real>& mf_arr,
+                      const Array4<const EBCellFlag>& flags_arr,
+                      const int /*dir*/)
+  {
+    if(bct == BCList::pout) {
+      mf_arr(ijk,n) = mf_arr(dom_ijk,n);
+    }
+    else if (bct == BCList::minf || bct == BCList::pinf) {
+      const int cell_is_covered = static_cast<int>(flags_arr(ijk).isCovered());
+
+      if (!fluid_is_a_mixture) {
+        mf_arr(ijk,n) = fluid_parms.calc_h_g<run_on>(p_bc_t_g[bcv], cell_is_covered);
+      } else {
+        Real h_g_sum(0);
+        for (int n_g(0); n_g < nspecies_g; n_g++) {
+          const Real h_gk = fluid_parms.calc_h_gk<run_on>(p_bc_t_g[bcv], n_g, cell_is_covered);
+          h_g_sum += p_bc_X_gk[n_g][bcv]*h_gk;
+        }
+        mf_arr(ijk,n) = h_g_sum;
+      }
+    }
+  };
+
+  set_bcs(time, bcs_function, h_g_in);
+}
+
+
+void
 MFIXBoundaryConditions::set_velocity_bcs (Real time,
                                           Vector< MultiFab* > const& vel_g_in,
                                           int extrap_dir_bcs)

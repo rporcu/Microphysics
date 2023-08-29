@@ -198,8 +198,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = (fluid.solve_tracer() &&  l_explicit_diff);
       const bool update_flux = (fluid.solve_species() && (l_explicit_diff || constraint));
 
-      if (fluid.solve_enthalpy())
+      if (fluid.solve_enthalpy()) {
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g_old());
+      }
 
       if (fluid.solve_species())
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
@@ -210,8 +212,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
       // We call the bc routines again to enforce the ext_dir condition
       // on the faces (the diffusion operator may move those to ghost cell centers)
-      if (fluid.solve_enthalpy())
+      if (fluid.solve_enthalpy()) {
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g_old());
+      }
 
       if (fluid.solve_species())
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
@@ -257,6 +261,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
 
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g_old());
 
       mfix_enthalpy_rhs(enthalpy_RHS_old, get_ep_g_const(), get_ro_g_old_const(),
           get_X_gk_old(), get_T_g_old_const(), get_txfr_const());
@@ -265,6 +270,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
 
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g_old());
     }
 
     // Species
@@ -345,8 +351,10 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
 
     m_boundary_conditions.set_density_bcs(time, get_ro_g_old());
 
-    if (fluid.solve_enthalpy())
+    if (fluid.solve_enthalpy()) {
       m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g_old());
+      m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g_old());
+    }
 
     if (fluid.solve_species())
       m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk_old());
@@ -743,6 +751,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
       if (!l_explicit_diff) {
 
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g());
 
         // Diffuse temperature
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
@@ -752,6 +761,7 @@ mfix::mfix_apply_predictor (Vector< MultiFab* >& conv_u_old,
         // Note we need to call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator moved those to ghost cell centers)
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g());
       }
 
       // ***********************************************************************

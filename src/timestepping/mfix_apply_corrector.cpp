@@ -223,8 +223,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
       const bool update_lapS = (fluid.solve_tracer()   &&  explicit_diffusive_trac);
       const bool update_flux = (fluid.solve_species() && (explicit_diffusive_species || constraint));
 
-      if (fluid.solve_enthalpy())
+      if (fluid.solve_enthalpy()) {
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+      }
 
       if (fluid.solve_species())
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
@@ -235,8 +237,10 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
 
       // We call the bc routines again to enforce the ext_dir condition
       // on the faces (the diffusion operator can move those to ghost cell centers)
-      if (fluid.solve_enthalpy())
+      if (fluid.solve_enthalpy()) {
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid,get_h_g());
+      }
 
       if (fluid.solve_species())
         m_boundary_conditions.set_species_bcs(time, fluid,get_X_gk());
@@ -852,6 +856,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         } // lev
 
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g());
 
         // NOTE: we do this call before multiplying ep_g by ro_g
         diffusion_op->diffuse_temperature(get_T_g(), get_ep_g(), get_ro_g(),
@@ -861,6 +866,7 @@ mfix::mfix_apply_corrector (Vector< MultiFab* >& conv_u_old,
         // We call the bc routines again to enforce the ext_dir condition
         // on the faces (the diffusion operator can move those to ghost cell centers)
         m_boundary_conditions.set_temperature_bcs(time, fluid, get_T_g());
+        m_boundary_conditions.set_enthalpy_bcs(time, fluid, get_h_g());
       }
 
       // ***********************************************************************
