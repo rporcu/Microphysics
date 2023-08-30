@@ -266,6 +266,11 @@ class MFIXParticleContainer final
 
     void MFIX_PC_InitCollisionParams ();
 
+    void UpdateCost (amrex::MultiFab* cost_mf,
+                     const MFIXParIter& particle_tile_iterator,
+                     const std::string& cost_type,
+                     const amrex::Real& wall_time) const;
+
     void output (int estatus,
                  int finish,
                  int nstep,

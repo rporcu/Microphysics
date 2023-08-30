@@ -40,7 +40,6 @@ class MFIXReadWrite
                   amrex::Vector<amrex::MultiFab*>& particle_proc_in,
                   amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
                   const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-                  std::string load_balance_type_in,
                   BCList& bc_list_in,
                   amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& particle_ebfactory_in,
                   MFIXRegions& regions_in);
@@ -289,8 +288,6 @@ private:
    amrex::Vector<amrex::MultiFab*>& fluid_proc;
 
    const amrex::Vector<amrex::IntVect>& ref_ratio;
-
-   std::string load_balance_type;
 
    BCList& bc_list;
 

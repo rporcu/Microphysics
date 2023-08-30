@@ -176,6 +176,28 @@ void MFIXParticleContainer::ReadParameters ()
 }
 
 void MFIXParticleContainer::
+UpdateCost(MultiFab* cost_mf,
+           const MFIXParIter& pti,
+           const std::string& cost_type,
+           const Real& wall_time) const
+{
+  AMREX_ASSERT (cost_mf != nullptr);
+
+  Real wt(0.);
+
+  if (cost_type == "RunTimeCosts") {
+    wt = ParallelDescriptor::second() - wall_time;
+  } else if (cost_type == "NumParticles") {
+    wt = pti.numParticles()*m_dem.solve() + pti.numRealParticles()*m_pic.solve();
+  } else {
+    amrex::Abort("Error");
+  }
+
+  const Box& tbx = pti.tilebox();
+  (*cost_mf)[pti].plus<run_on>(wt, tbx);
+}
+
+void MFIXParticleContainer::
 ComputeAverageDensities (const int lev,
                          const Real time,
                          const std::string&  basename,

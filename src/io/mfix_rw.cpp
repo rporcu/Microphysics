@@ -40,7 +40,6 @@ MFIXReadWrite::MFIXReadWrite (int nlev_in,
                 amrex::Vector<amrex::MultiFab*>& particle_proc_in,
                 amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
                 const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-                std::string load_balance_type_in,
                 BCList& bc_list_in,
                 Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
                 MFIXRegions& regions_in)
@@ -67,7 +66,6 @@ MFIXReadWrite::MFIXReadWrite (int nlev_in,
   , particle_proc(particle_proc_in)
   , fluid_proc(fluid_proc_in)
   , ref_ratio(ref_ratio_in)
-  , load_balance_type(load_balance_type_in)
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
   , regions(regions_in)

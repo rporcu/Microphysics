@@ -151,7 +151,7 @@ mfix::mfix ()
                              levelset_eb_refinement, levelset_eb_pad, solids,
                              m_dem, m_pic, reactions, particle_cost,
                              particle_proc, fluid_proc, refRatio(),
-                             load_balance_type, bc_list, particle_ebfactory,
+                             bc_list, particle_ebfactory,
                              regions);
 
     m_solids_volume_deposition = new MFIXSolidsVolume;
