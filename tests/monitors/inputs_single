@@ -228,6 +228,7 @@ mfix.monitors.fm1.variables =  ep_g  p_g  ro_g  h_g
 mfix.monitors.fm1.plot_file = fm1
 mfix.monitors.fm1.plot_int = 2
 mfix.monitors.fm1.output.format = scientific
+mfix.monitors.fm1.output.openmode = "trunc"
 
 mfix.monitors.fm2 = Eulerian::AreaRegion::StandardDeviation
 mfix.monitors.fm2.region = slice1
@@ -235,6 +236,7 @@ mfix.monitors.fm2.variables =  ro_g  vel_g  T_g  X_gk
 mfix.monitors.fm2.plot_file = fm2
 mfix.monitors.fm2.plot_int = 1
 mfix.monitors.fm2.output.format = scientific
+mfix.monitors.fm2.output.openmode = "trunc"
 
 mfix.monitors.fm3 = Eulerian::AreaRegion::Min
 mfix.monitors.fm3.region =  slice2
@@ -244,6 +246,7 @@ mfix.monitors.fm3.plot_int = 2
 mfix.monitors.fm3.output.setw = 12
 mfix.monitors.fm3.output.setfill = " "
 mfix.monitors.fm3.output.format = scientific
+mfix.monitors.fm3.output.openmode = "trunc"
 
 mfix.monitors.fm4 = Eulerian::VolumeRegion::Max
 mfix.monitors.fm4.region =  lower
@@ -254,6 +257,7 @@ mfix.monitors.fm4.output.setw = 12
 mfix.monitors.fm4.output.setfill = " " 
 mfix.monitors.fm4.output.setprecision = 6
 mfix.monitors.fm4.output.format = fixed
+mfix.monitors.fm4.output.openmode = "trunc"
 
 mfix.monitors.fm5 = Eulerian::VolumeRegion::Average
 mfix.monitors.fm5.region =  full
@@ -264,6 +268,7 @@ mfix.monitors.fm5.output.setw = 12
 mfix.monitors.fm5.output.setfill = " " 
 mfix.monitors.fm5.output.setprecision = 6
 mfix.monitors.fm5.output.format = fixed
+mfix.monitors.fm5.output.openmode = "trunc"
 
 mfix.monitors.fm6 = Eulerian::SurfaceIntegral::Area
 mfix.monitors.fm6.region = slice1
@@ -271,6 +276,7 @@ mfix.monitors.fm6.variables = "None"
 mfix.monitors.fm6.plot_file = fm6
 mfix.monitors.fm6.plot_int = 10
 mfix.monitors.fm6.output.format = scientific
+mfix.monitors.fm6.output.openmode = "trunc"
 
 mfix.monitors.fm7 = Eulerian::SurfaceIntegral::FlowRate
 mfix.monitors.fm7.region = slice1
@@ -278,6 +284,7 @@ mfix.monitors.fm7.variables = vort  txfr_velocity  divtau
 mfix.monitors.fm7.plot_file = fm7
 mfix.monitors.fm7.plot_int = 2
 mfix.monitors.fm7.output.format = scientific
+mfix.monitors.fm7.output.openmode = "trunc"
 
 mfix.monitors.fm8 = Eulerian::SurfaceIntegral::MassWeightedAverage
 mfix.monitors.fm8.region = slice2
@@ -288,6 +295,7 @@ mfix.monitors.fm8.output.setw = 8
 mfix.monitors.fm8.output.setfill = " "
 mfix.monitors.fm8.output.setprecision = 3
 mfix.monitors.fm8.output.format = scientific
+mfix.monitors.fm8.output.openmode = "trunc"
 
 mfix.monitors.fm9 = Eulerian::VolumeIntegral::Volume
 mfix.monitors.fm9.region = full
@@ -298,6 +306,7 @@ mfix.monitors.fm9.output.setw = 10
 mfix.monitors.fm9.output.setfill = " "
 mfix.monitors.fm9.output.setprecision = 4
 mfix.monitors.fm9.output.format = scientific
+mfix.monitors.fm9.output.openmode = "trunc"
 
 mfix.monitors.fm10 = Eulerian::VolumeIntegral::VolumeWeightedAverage
 mfix.monitors.fm10.region = upper
@@ -308,6 +317,7 @@ mfix.monitors.fm10.output.setw = 10
 mfix.monitors.fm10.output.setfill = " "
 mfix.monitors.fm10.output.setprecision = 2
 mfix.monitors.fm10.output.format = scientific
+mfix.monitors.fm10.output.openmode = "trunc"
 
 mfix.monitors.fm11 = Eulerian::VolumeIntegral::MassWeightedAverage
 mfix.monitors.fm11.region = upper
@@ -318,6 +328,7 @@ mfix.monitors.fm11.output.setw = 10
 mfix.monitors.fm11.output.setfill = " "
 mfix.monitors.fm11.output.setprecision = 2
 mfix.monitors.fm11.output.format = scientific
+mfix.monitors.fm11.output.openmode = "trunc"
 
 mfix.monitors.pm1 = Lagrangian::GeneralProperty::Max
 mfix.monitors.pm1.region = lower
@@ -326,6 +337,7 @@ mfix.monitors.pm1.plot_file = pm1
 mfix.monitors.pm1.plot_per_approx = 5.e-6
 mfix.monitors.pm1.output.setw = 10
 mfix.monitors.pm1.output.format = scientific
+mfix.monitors.pm1.output.openmode = "trunc"
 
 mfix.monitors.pm2 = Lagrangian::GeneralProperty::Sum
 mfix.monitors.pm2.region = lower
@@ -334,6 +346,7 @@ mfix.monitors.pm2.plot_file = pm2
 mfix.monitors.pm2.plot_per_approx = 5.e-6
 mfix.monitors.pm2.output.setw = 10
 mfix.monitors.pm2.output.format = scientific
+mfix.monitors.pm2.output.openmode = "trunc"
 
 mfix.monitors.pm3 = Lagrangian::AveragedProperty::StandardDeviation
 mfix.monitors.pm3.region = half
@@ -344,6 +357,7 @@ mfix.monitors.pm3.output.setw = 10
 mfix.monitors.pm3.output.setfill = " "
 mfix.monitors.pm3.output.setprecision = 7
 mfix.monitors.pm3.output.format = fixed
+mfix.monitors.pm3.output.openmode = "trunc"
 
 mfix.monitors.pm4 = Lagrangian::AveragedProperty::VolumeWeightedAverage
 mfix.monitors.pm4.region = full
@@ -351,6 +365,7 @@ mfix.monitors.pm4.variables = position  radius  dragcoeff  omega  convection
 mfix.monitors.pm4.plot_file = pm4
 mfix.monitors.pm4.plot_int = 2
 mfix.monitors.pm4.output.format = scientific
+mfix.monitors.pm4.output.openmode = "trunc"
 
 mfix.monitors.pm5 = Lagrangian::FlowRate::FlowRate
 mfix.monitors.pm5.region = full
@@ -359,6 +374,7 @@ mfix.monitors.pm5.variables = velocity  omega  drag  convection
 mfix.monitors.pm5.plot_file = pm5
 mfix.monitors.pm5.plot_int = 2
 mfix.monitors.pm5.output.format = scientific
+mfix.monitors.pm5.output.openmode = "trunc"
 
 mfix.monitors.pm6 = Lagrangian::FlowRate::MassWeightedFlowRate
 mfix.monitors.pm6.region = full
@@ -367,6 +383,7 @@ mfix.monitors.pm6.variables = velocity  omega  drag  convection
 mfix.monitors.pm6.plot_file = pm6
 mfix.monitors.pm6.plot_int = 2
 mfix.monitors.pm6.output.format = scientific
+mfix.monitors.pm6.output.openmode = "trunc"
 
 
 #_______________________________________________________________________
