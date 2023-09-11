@@ -788,7 +788,13 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
       } // pti
     } // GPU region
 
+    // Free up memory
     delete interp_ptr;
+
+    if (fluid.solve_species()) {
+      delete X_gk_interp_ptr;
+    }
+
   } // lev
 
   // Reset the volume fractions back to the correct values at
