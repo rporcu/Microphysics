@@ -258,7 +258,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     std::string field_bcRegion = "bc."+input_regions[bcv];
     amrex::ParmParse ppRegion(field_bcRegion.c_str());
 
-    int dir_int = -1;
+    int face = -1;
 
     if (new_bc.type == BCList::nsw) {
 
@@ -286,7 +286,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
             point[dir] = plo[dir]+1.0e-15;
             normal[dir] =  1.0;
 
-            dir_int = 2*dir;
+            face = 2*dir;
 
             if (new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
               m_ppe_lobc[dir] = amrex::LinOpBCType::Dirichlet;
@@ -304,7 +304,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
             point[dir] = phi[dir]-1.0e-15;
             normal[dir] = -1.0;
 
-            dir_int = 2*dir+1;
+            face = 2*dir+1;
 
             if (new_bc.type == BCList::pinf || new_bc.type == BCList::pout) {
               m_ppe_hibc[dir] = amrex::LinOpBCType::Dirichlet;
@@ -328,7 +328,7 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
           // as walls for particle collisions.
           if (new_bc.type == BCList::minf || new_bc.type == BCList::pinf ||
               (new_bc.type == BCList::pinf && po_noParOut == 1)) {
-            m_flow_plane.flip(dir_int);
+            m_flow_plane.flip(face);
           }
         }
 
@@ -339,25 +339,25 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
     }
 
     // Store the BC ID for quick look-up when setting BC types
-    if (dir_int == 0) {
+    if (face == 0) {
       m_bc_lo[0].push_back(bcv);
-    } else if (dir_int == 1) {
+    } else if (face == 1) {
       m_bc_hi[0].push_back(bcv);
-    } else if (dir_int == 2) {
+    } else if (face == 2) {
       m_bc_lo[1].push_back(bcv);
-    } else if (dir_int == 3) {
+    } else if (face == 3) {
       m_bc_hi[1].push_back(bcv);
-    } else if (dir_int == 4) {
+    } else if (face == 4) {
       m_bc_lo[2].push_back(bcv);
-    } else if (dir_int == 5) {
+    } else if (face == 5) {
       m_bc_hi[2].push_back(bcv);
     }
 
-    m_dir.push_back(dir_int);
+    m_dir.push_back(face);
 
     // Enforce the boundary for pressure outflows if specified.
     if (new_bc.type == BCList::pout && po_noParOut == 0) {
-      m_domain_bc[dir_int] = 0;
+      m_domain_bc[face] = 0;
     }
 
     // m_flow_planes are used to create 'walls' in the level-set so that
@@ -556,8 +556,11 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
 
           } else if (is_eb || (is_mi && pic.solve()) ) {
 
-             new_solid.statwt = 1.0;
-             ppSolid.query("statwt", new_solid.statwt);
+            int const dir_lohi(face%2); // lo=0, hi=1
+            int const dir((face-dir_lohi)/((int)2)); // dir=0,1,2 (x,y,z)
+
+            new_solid.statwt = 1.0;
+            ppSolid.query("statwt", new_solid.statwt);
 
             if (ppSolid.contains("velocity")) {
 
@@ -575,9 +578,9 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
               } else if (rcomps == 1) {
                 new_solid.velmag = amrex::Math::abs(vel_in[0]);
 
-                new_solid.velocity.push_back( (dir_int == 0 ? vel_in[0] : 0.) );
-                new_solid.velocity.push_back( (dir_int == 1 ? vel_in[0] : 0.) );
-                new_solid.velocity.push_back( (dir_int == 2 ? vel_in[0] : 0.) );
+                new_solid.velocity.push_back( (dir == 0 ? vel_in[0] : 0.) );
+                new_solid.velocity.push_back( (dir == 1 ? vel_in[0] : 0.) );
+                new_solid.velocity.push_back( (dir == 2 ? vel_in[0] : 0.) );
 
               } else {
                 std::string message = " Error: BC region " + input_regions[bcv]
@@ -590,6 +593,13 @@ MFIXBoundaryConditions::Initialize (amrex::Geometry& geom,
               }
             } else if (ppSolid.contains("volflow")) {
               ppSolid.get("volflow", new_solid.volflow);
+
+              // +1 low side; -1 high side
+              Real const r_normal_dir = (dir_lohi == 0) ? 1. : -1.;
+
+              new_solid.velocity.push_back( ( dir == 0 ? r_normal_dir : 0.) );
+              new_solid.velocity.push_back( ( dir == 1 ? r_normal_dir : 0.) );
+              new_solid.velocity.push_back( ( dir == 2 ? r_normal_dir : 0.) );
 
             } else {
                 std::string message = " Error: BC region " + input_regions[bcv]

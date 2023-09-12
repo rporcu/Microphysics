@@ -63,7 +63,7 @@ mfix_pc_inflow (int const lev,
 
   int total_np = 0;
 
-  constexpr Real tolerance = std::numeric_limits<Real>::epsilon();
+  constexpr Real tolerance = std::numeric_limits<Real>::min();
   const auto& flags = factory->getMultiEBCellFlagFab();
 
   const int MyProc = ParallelDescriptor::MyProc();
@@ -177,6 +177,8 @@ mfix_pc_inflow (int const lev,
 
       Real* p_bc_inputs = (adv_enthalpy || solve_species) ?  d_bc_inputs.data() : nullptr;
 
+      RealVect bc_velvec(bc_solid.velocity[0],bc_solid.velocity[1],bc_solid.velocity[2]);
+
       Real const flow_area = (bc_solid.volfrac*bc_area);
 
       Real const bc_volflow = (bc_solid.volflow > tolerance) ?
@@ -185,7 +187,11 @@ mfix_pc_inflow (int const lev,
       Real const bc_velmag  = (bc_solid.velmag > tolerance) ?
           bc_solid.velmag : (bc_volflow / flow_area);
 
-      RealVect const bc_velvec(bc_solid.velocity[0],bc_solid.velocity[1],bc_solid.velocity[2]);
+      // We only stored the normal, so we need to convert
+      // volflow to velocity for MIs.
+      if ((bc_solid.volflow > tolerance) && is_mi) {
+        bc_velvec[dir] *= bc_velmag;
+      }
 
       Real vol_remainder(bc_solid.vol_remainder);
 
