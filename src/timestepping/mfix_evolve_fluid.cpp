@@ -217,8 +217,11 @@ mfix::EvolveFluid (int nstep,
           if (fluid.solve_species())
             std::swap(m_leveldata[lev]->X_gk, m_leveldata[lev]->X_gko);
 
-          if (reactions.solve())
+          if (reactions.solve() &&
+              fluid.constraint_type() == MFIXFluidPhase::ConstraintType::IdealGasClosedSystem)
+          {
             std::swap(m_leveldata[lev]->thermodynamic_p_g, m_leveldata[lev]->thermodynamic_p_go);
+          }
 
           // User hooks
           for (MFIter mfi(*m_leveldata[lev]->ep_g, false); mfi.isValid(); ++mfi)
