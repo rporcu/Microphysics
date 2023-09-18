@@ -83,7 +83,7 @@ void actual_rhs_init () {
 
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
+void actual_rhs (burn_t& state, Array1D<Real, 0, 0>& ydot)
 {
     using namespace Species;
     using namespace AuxZero;
@@ -124,10 +124,10 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
     amrex::Real H2O_xfr = (N_Sh * Diff_H2OinAir) / DP;
     H2O_xfr *= 1.e-2;
 
-    amrex::Real MW_g_MIX = 1./(state.xn[Air-1]/NP::zion(Air) +
-                               state.xn[Vapor-1]/NP::zion(Vapor));
+    amrex::Real MW_g_MIX = 1./(state.xn[Air]/NP::zion(Air) +
+                               state.xn[Vapor]/NP::zion(Vapor));
 
-    const amrex::Real Y_H2O = state.xn[Vapor-1] * (MW_g_MIX / NP::zion(Vapor));
+    const amrex::Real Y_H2O = state.xn[Vapor] * (MW_g_MIX / NP::zion(Vapor));
 
     amrex::Real Cm_H2O = Psat_H2O(T_p) / (8314.56e4*state.T);
 
