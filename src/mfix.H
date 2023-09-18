@@ -1096,7 +1096,7 @@ class mfix : public AmrCore
     // const int m_eb_volume_grow_cells = nghost;
     // const int m_eb_full_grow_cells = nghost;
 
-    int nghost_eb_basic () const  { return 4; }
+    int nghost_eb_basic () const  { return 5; }
 
     int nghost_eb_volume () const { return 5; }
 
