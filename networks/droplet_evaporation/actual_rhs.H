@@ -83,7 +83,7 @@ void actual_rhs_init () {
 
 
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void actual_rhs (burn_t& state, Array1D<Real, 0, 0>& ydot)
+void actual_rhs (burn_t& state, Array1D<Real, 1, INT_NEQS>& ydot)
 {
     using namespace Species;
     using namespace AuxZero;
@@ -137,7 +137,8 @@ void actual_rhs (burn_t& state, Array1D<Real, 0, 0>& ydot)
 
     amrex::Real rate = Sa * H2O_xfr * Cmg_H2O;
 
-    ydot(Vapor) = (Cmg_H2O > 0) ? rate : 0;
+    // Add 1 to the index as ydot indexing starts from 1
+    ydot(Vapor+1) = (Cmg_H2O > 0) ? rate : 0;
 }
 
 
