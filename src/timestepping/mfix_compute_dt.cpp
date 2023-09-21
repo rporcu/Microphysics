@@ -30,17 +30,21 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
       Fx, Fy, Fz = net acceleration due to external forces
 
+      WARNING: We use a slightly modified version of C in the implementation below
+
     */
+    bool explicit_diffusion = (m_predictor_diff_type == DiffusionType::Explicit);
 
     InterphaseTxfrIndexes txfr_idxs(fluid.nspecies(), reactions.nreactions());
 
     const int idx_drag_txfr = txfr_idxs.drag_coeff;
 
-    // Max CFL factor for all levels
-    Real cfl_max(0.0);
-
     const auto& fluid_parms = fluid.parameters();
 
+    // Max convective, diffusive and forcing CFL for all levels
+    Real c_cfl = Real(0.0);
+    Real v_cfl = Real(0.0);
+    Real f_cfl = Real(0.0);
     for (int lev(0); lev <= finest_level; ++lev) {
 
       const Real* dx = geom[lev].CellSize();
@@ -49,16 +53,15 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
       Real ody(1.0 / dx[1]);
       Real odz(1.0 / dx[2]);
 
-      // Reduce max operation for cfl_max
-      ReduceOps<ReduceOpMax> reduce_op;
-      ReduceData<Real> reduce_data(reduce_op);
+      // Reduce max operation for c_cfl
+      ReduceOps<ReduceOpMax, ReduceOpMax, ReduceOpMax> reduce_op;
+      ReduceData<Real, Real, Real> reduce_data(reduce_op);
       using ReduceTuple = typename decltype(reduce_data)::Type;
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
       for (MFIter mfi(*m_leveldata[lev]->vel_g,TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-
         const auto& ld = *m_leveldata[lev];
 
         const auto& vel       = ld.vel_g->array(mfi);
@@ -83,7 +86,6 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
 
         const Real mu_g0 = fluid.mu_g();
 
-        // Compute CFL on a per cell basis
         if (flags.getType(bx) != FabType::covered) {
 
           reduce_op.eval(bx, reduce_data,
@@ -91,62 +93,82 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
              flags_fab,T_g,adv_enthalpy,fluid_parms,idx_drag_txfr]
             AMREX_GPU_DEVICE (int i, int j, int k) -> ReduceTuple
           {
-            Real l_cfl_max = 0._rt;
+            Real l_c_cfl = Real(-1.0);
+            Real l_v_cfl = Real(-1.0);
+            Real l_f_cfl = Real(-1.0);
 
             if (!flags_fab(i,j,k).isCovered())
             {
-              RealVect acc(0.);
-              Real qro  = 1.0/ro(i,j,k);
-              Real qep  = 1.0/ep(i,j,k);
+                RealVect acc(0.);
+                Real qro  = 1.0/ro(i,j,k);
+                Real qep  = 1.0/ep(i,j,k);
 
-              // Compute the three components of the net acceleration
-              // Explicit particle forcing is given by
-              for (int n(0); n < 3; ++n)
-              {
-                Real delp = gp0_dev[n] + gradp(i,j,k,n);
-                Real fp   = txfr_fab(i,j,k,n) -
-                  txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
+                Real mu_g(0);
 
-                acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
-              }
+                if (adv_enthalpy)
+                  mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
+                else
+                  mu_g = mu_g0;
 
-              Real c_cfl = amrex::Math::abs(vel(i,j,k,0))*odx +
-                           amrex::Math::abs(vel(i,j,k,1))*ody +
-                           amrex::Math::abs(vel(i,j,k,2))*odz;
+                // Compute the three components of the net acceleration
+                // Explicit particle forcing is given by
+                for (int n(0); n < 3; ++n)
+                {
+                  Real delp = gp0_dev[n] + gradp(i,j,k,n);
+                  Real fp   = txfr_fab(i,j,k,n) -
+                    txfr_fab(i,j,k,idx_drag_txfr) * vel(i,j,k,n);
 
-              Real mu_g(0);
+                  acc[n] = gravity_dev[n] + qro * ( - delp + fp*qep );
+                }
 
-              if (adv_enthalpy)
-                mu_g = fluid_parms.calc_mu_g(T_g(i,j,k));
-              else
-                mu_g = mu_g0;
+                l_c_cfl = amrex::max(amrex::Math::abs(vel(i,j,k,0))*odx,
+                                     amrex::Math::abs(vel(i,j,k,1))*ody,
+                                     amrex::Math::abs(vel(i,j,k,2))*odz,
+                                     l_c_cfl);
 
-              Real v_cfl   = 2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz);
-              Real cpv_cfl = c_cfl + v_cfl;
+                l_v_cfl = amrex::max(2.0 * mu_g * qro * (odx*odx + ody*ody + odz*odz), 
+                                     l_v_cfl);
 
-              // MAX CFL factor on cell (i,j,k)
-              Real cfl_max_cell = cpv_cfl + std::sqrt(cpv_cfl*cpv_cfl +
-                                                      4*amrex::Math::abs(acc[0])*odx +
-                                                      4*amrex::Math::abs(acc[1])*ody +
-                                                      4*amrex::Math::abs(acc[2])*odz);
-              l_cfl_max = amrex::max(l_cfl_max, cfl_max_cell);
+                l_f_cfl = amrex::max(amrex::Math::abs(acc[0])*odx,
+                                     amrex::Math::abs(acc[1])*ody,
+                                     amrex::Math::abs(acc[2])*odz,
+                                     l_f_cfl);
             }
-
-            return {l_cfl_max};
+            return {l_c_cfl, l_v_cfl, l_f_cfl};
           });
         }
-      } // MFIter
+      }
 
       ReduceTuple host_tuple = reduce_data.value();
-      cfl_max = amrex::max(cfl_max, amrex::get<0>(host_tuple));
+      c_cfl = amrex::max(c_cfl, amrex::get<0>(host_tuple));
+      v_cfl = amrex::max(v_cfl, amrex::get<1>(host_tuple));
+      f_cfl = amrex::max(f_cfl, amrex::get<2>(host_tuple));
 
-    } // lev
+    } //lev
 
     // Do global max operation
-    ParallelDescriptor::ReduceRealMax(cfl_max);
+    ParallelDescriptor::ReduceRealMax({c_cfl, v_cfl, f_cfl});
+
+    Real cv_cfl(0.0);
+    if (explicit_diffusion) {
+       cv_cfl = c_cfl + v_cfl;
+    } else {
+       cv_cfl = c_cfl;
+    }
+
+    // Max CFL factor for all levels
+    Real cfl_max = cv_cfl + std::sqrt(cv_cfl*cv_cfl + Real(4.0) * f_cfl);
 
     // New dt
-    dt_new = m_cfl * 2.0 / cfl_max;
+    if (cfl_max > 0.) {
+       dt_new = m_cfl * 2.0 / cfl_max;
+    } else {
+       // This is totally random but just a way to set a timestep
+       // when the initial velocity is zero and the forcing term
+       // is not a body force
+       auto const dx    = geom[finest_level].CellSizeArray();
+       dt_new = std::min({dx[0], dx[1], dx[2]});
+    }
 
     // Protect against cfl_max very small
     // This may happen, for example, when the initial velocity field
@@ -154,9 +176,9 @@ mfix::mfix_compute_dt (int nstep, Real time, Real stop_time, Real& dt, Real& pre
     Real eps = std::numeric_limits<Real>::epsilon();
     if ( nstep > 1 && cfl_max <= eps ) dt_new = 0.5 * old_dt;
 
-    // Don't let the timestep grow by more than 1% per step.
+    // Don't let the timestep grow by more than 10% per step.
     if ( nstep > 1 )
-        dt_new = amrex::min( dt_new, 1.01*old_dt );
+        dt_new = amrex::min( dt_new, 1.1*old_dt );
 
     // Don't overshoot the final time if not running to steady state
     if (m_steady_state == 0 && stop_time > 0.)
