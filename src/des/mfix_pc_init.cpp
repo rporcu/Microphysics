@@ -499,8 +499,6 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
 
   const auto& solids_parms = solids.parameters();
 
-  const int solve_pic = m_pic.solve();
-
   for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
 
     auto& particles = pti.GetArrayOfStructs();
@@ -566,8 +564,6 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
             h_temperature_loc = ic_solid.temperature;
           }
 
-          Real h_statwt_loc = solve_pic ? ic_solid.statwt : 1.;
-
           if (solve_species) {
             for (int n_s(0); n_s < nspecies_s; n_s++)
               h_mass_fractions[n_s] = ic_solid.species[n_s].mass_fraction;
@@ -581,7 +577,7 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
           amrex::ParallelFor(np,
             [particles_ptr,p_realarray,p_intarray,ptile_data,h_temperature_loc,
              p_mass_fractions,ic_realbox,nspecies_s,solid_is_a_mixture,adv_enthalpy,
-             solids_parms,solve_species,idx_X_sn,ic_phase,h_statwt_loc]
+             solids_parms,solve_species,idx_X_sn,ic_phase]
             AMREX_GPU_DEVICE (int ip) noexcept
           {
             const auto& p = particles_ptr[ip];
@@ -593,8 +589,6 @@ void MFIXParticleContainer::InitParticlesRuntimeVariables (const int adv_enthalp
               if(adv_enthalpy) {
                 p_realarray[SoArealData::temperature][ip] = h_temperature_loc;
               }
-
-              p_realarray[SoArealData::statwt][ip] = h_statwt_loc;
 
               if(adv_enthalpy) {
 

@@ -67,9 +67,9 @@ MFIX_PC_SolidsVelocityDeposition (int lev,
         AMREX_ASSERT(ngrow == vel_s_in[1]->nGrow());
         AMREX_ASSERT(ngrow == vel_s_in[1]->nGrow());
 
-        Box const& xbx = Box(box).grow(ngrow).surroundingNodes(0);
-        Box const& ybx = Box(box).grow(ngrow).surroundingNodes(1);
-        Box const& zbx = Box(box).grow(ngrow).surroundingNodes(2);
+        Box const xbx = Box(box).grow(ngrow).surroundingNodes(0);
+        Box const ybx = Box(box).grow(ngrow).surroundingNodes(1);
+        Box const zbx = Box(box).grow(ngrow).surroundingNodes(2);
 
         if (Gpu::notInLaunchRegion())
         {
@@ -387,9 +387,9 @@ MFIXParticleContainer::PICHydroStep (int lev,
         AMREX_ALWAYS_ASSERT(vel_ncomp == vel_s_out[2]->nComp());
 
         const int ngrow = vel_s_in[lev][0]->nGrow();
-        Box const& xbx = Box(bx).grow(ngrow).surroundingNodes(0);
-        Box const& ybx = Box(bx).grow(ngrow).surroundingNodes(1);
-        Box const& zbx = Box(bx).grow(ngrow).surroundingNodes(2);
+        Box const xbx = Box(bx).grow(ngrow).surroundingNodes(0);
+        Box const ybx = Box(bx).grow(ngrow).surroundingNodes(1);
+        Box const zbx = Box(bx).grow(ngrow).surroundingNodes(2);
 
         if(Gpu::notInLaunchRegion())
         {

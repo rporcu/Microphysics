@@ -121,6 +121,8 @@ mfix.plot_file      ="plt"
 mfix.check_int      = -1
 mfix.check_file     ="chk"
 
+mfix.plt_regtest = 1
+
 
 #_______________________________________________________________________
 # Fluid model settings

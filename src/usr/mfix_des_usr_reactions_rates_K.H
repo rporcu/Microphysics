@@ -48,30 +48,29 @@ class HeterogeneousRatesUser
       // Loop over reactions
       for (int q(0); q < reactions_parms.m_nreactions; q++)
       {
-//        int nreact(0);
-//        for (int n(0); n < reactions_parms.nreactants[q]; n++)
+//      int nreact(0);
+//      for (int n(0); n < reactions_parms.nreactants[q]; n++)
+//      {
+//        const int current_species_id = reactions_parms.reactants_id[q][n];
+//  
 //        {
-//          const int current_species_id = reactions_parms.reactants_id[q][n];
-//
-//          {
-//            const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
-//            if (pos != -1)
-//              if (X_gk[pos] > 0)
-//                nreact += 1;
-//          }
-//
-//          {
-//            const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
-//            if (pos != -1)
-//              if (X_sn[pos] > 0)
-//                nreact += 1;
-//          }
+//          const int pos = find(fluid_parms.species_id, fluid_parms.nspecies, current_species_id);
+//          if (pos != -1)
+//            if (X_gk[pos] > 0)
+//              nreact += 1;
 //        }
-//      
-//        R_q[accessor(q,idx)] = (nreact == reactions_parms.nreactants[q]) ? 0 : reaction rate;
+//  
+//        {
+//          const int pos = find(solids_parms.species_id, solids_parms.nspecies, current_species_id);
+//          if (pos != -1)
+//            if (X_sn[pos] > 0)
+//              nreact += 1;
+//        }
+//      }
 
-        R_q[accessor(q,idx)] = 0.;
+        R_q[accessor(q,idx)] = 0;
       }
+
     }
 };
 

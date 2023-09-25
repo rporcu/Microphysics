@@ -1,0 +1,288 @@
+amrex.fpe_trap_invalid=1
+amrex.fpe_trap_zero=1
+amrex.fpe_trap_overflow=1
+amrex.the_arena_init_size=1000000000
+
+#----------------------------------------------------------------------
+# Run settings
+#----------------------------------------------------------------------
+
+mfix.max_step = 100
+mfix.fixed_dt = 0
+mfix.cfl      = 0.5
+mfix.dt_min   = 1.0e-9
+mfix.dt_max   = 1.0e-3
+#dem mfix.tcoll_ratio = 20.
+
+#----------------------------------------------------------------------
+# Model settings
+#----------------------------------------------------------------------
+mfix.gravity =  -9.81  0.0  0.0
+
+mfix.advect_density         = 1
+mfix.advect_enthalpy        = 1
+mfix.solve_species          = 0
+mfix.constraint_type = "IdealGasOpenSystem"
+
+#phase coupling 
+mfix.drag_type = "Gidaspow"
+mfix.convection_type = "Gunn"
+
+#fluid discretization
+mfix.do_initial_proj    = true
+mfix.initial_iterations = 3
+
+mfix.use_drag_coeff_in_proj_gp = true
+
+mfix.advection_type = "Godunov"
+
+mfix.use_drag_in_godunov = false
+
+mfix.redistribution_type = "StateRedist"
+
+mfix.max_solids_volume_fraction = 0.65
+
+#----------------------------------------------------------------------
+# Solver settings
+#----------------------------------------------------------------------
+
+# Nodal solver
+nodal_proj.verbose    = 0
+nodal_proj.maxiter = 2000
+nodal_proj.bottom_verbose = 0
+nodal_proj.bottom_maxiter = 1000
+nodal_proj.mg_rtol       = 1.e-8
+
+
+# MAC solver
+mac_proj.verbose     = 0
+mac_proj.maxiter  = 2000
+mac_proj.bottom_verbose  = 0
+mac_proj.bottom_maxiter  = 1000
+mac_proj.mg_rtol        = 1.e-8
+
+#----------------------------------------------------------------------
+# Geometry / grids / tiles
+#----------------------------------------------------------------------
+
+# Maximum level in hierarchy (for now must be 0, i.e., one level in total)
+amr.max_level = 0
+
+# Geometry
+geometry.coord_sys   = 0                       # 0: Cartesian
+geometry.is_periodic = 0       0       0       # Is periodic in each direction?
+geometry.prob_lo     = 0.000   0.000   0.000   # lo corner of physical domain
+geometry.prob_hi     = 0.064   0.016   0.016   # hi corner of physical domain
+
+# Number of grid cells in each direction at the coarsest level
+amr.n_cell =   32   8   8
+
+amr.blocking_factor = 4
+
+# Fluid grids: maximum allowable size of each fluid subdomain
+amr.max_grid_size_x =    8
+amr.max_grid_size_y = 1024
+amr.max_grid_size_z = 1024
+
+# Particle grids (not with KDTree)
+#particles.max_grid_size_x =    4
+#particles.max_grid_size_y =    4
+#particles.max_grid_size_z =    4
+
+# Fluid tiles: Maximum tile size within each grid
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# Particle load balancing
+#mfix.load_balance_type = "KnapSack"
+amr.dual_grid          =  0
+amr.regrid_int         = -1
+
+#mfix.knapsack_weight_type = "NumParticles"
+#mfix.knapsack_weight_type = "RunTimeCosts"
+
+#----------------------------------------------------------------------
+# IO / Checkpointing
+#----------------------------------------------------------------------
+amr.check_int      =  -1
+amr.check_file     = "chk"
+
+amr.par_ascii_int  =  -1
+amr.par_ascii_file = "vis"
+
+amr.plot_int       =  100
+amr.plot_file      = "plt"
+
+amr.plt_regtest = 1
+
+
+#----------------------------------------------------------------------
+# Fluid model 
+#----------------------------------------------------------------------
+fluid.solve = fluid
+
+fluid.molecular_weight   = 28.013 #N2
+
+fluid.viscosity          = constant
+fluid.viscosity.constant = 1.75e-5  #patil: 2e-5
+
+fluid.specific_heat          = constant
+fluid.specific_heat.constant = 1041.0  #patil: 1010
+
+fluid.thermal_conductivity          = constant
+fluid.thermal_conductivity.constant = 0.0254  #patil:
+
+#----------------------------------------------------------------------
+# Solids properties
+#----------------------------------------------------------------------
+solids.types = solid0
+
+solids.specific_heat = constant
+solids.specific_heat.constant = 840.
+
+#----------------------------------------------------------------------
+# DEM model settings
+#----------------------------------------------------------------------
+dem.solve = None 
+
+#----------------------------------------------------------------------
+# PIC model settings
+#----------------------------------------------------------------------
+#dem pic.solve = None 
+pic.solve = solid0
+
+pic.verbose = 1
+
+pic.max_iter = 3
+
+pic.beta = 3.0
+pic.pressure_coefficient = 100.0
+
+pic.close_pack = 0.64
+
+pic.small_number = 1.0e-8
+
+pic.damping_factor = 0.40
+pic.damping_factor_wall_tangent = 1.0
+pic.damping_factor_wall_normal  = 0.3
+
+pic.velocity_reference_frame = 0.50
+
+pic.advance_vel_p = 0.5
+
+pic.initial_step_type = nth_eps
+
+#----------------------------------------------------------------------
+# EB model settings
+#----------------------------------------------------------------------
+mfix.levelset__refinement = 1    # levelset resolution (to the particles)
+mfix.write_eb_surface = false    # Needed to output eb-surfaces
+
+# geometry 
+#none 
+#eb2.small_volfrac = 1.0e-6
+
+#----------------------------------------------------------------------
+# Regions 
+#----------------------------------------------------------------------
+mfix.regions = full-domain  init-bed  inflow  jet  outflow  bottom-wall  top-wall  front-wall  back-wall  wall-temp
+
+regions.full-domain.lo = 0.000     0.000    0.000
+regions.full-domain.hi = 0.064     0.016    0.016
+
+regions.init-bed.lo    = 0.000     0.000     0.000
+regions.init-bed.hi    = 0.0225    0.016     0.016
+
+regions.inflow.lo      = 0.000     0.000     0.000
+regions.inflow.hi      = 0.000     0.016     0.016
+
+regions.jet.lo         = 0.000     0.006     0.006
+regions.jet.hi         = 0.000     0.010     0.010
+
+regions.outflow.lo     = 0.064     0.000     0.000
+regions.outflow.hi     = 0.064     0.016     0.016
+
+regions.bottom-wall.lo = 0.000     0.000001  0.0005
+regions.bottom-wall.hi = 0.064     0.000001  0.0155
+
+regions.top-wall.lo    = 0.000     0.015999  0.0005
+regions.top-wall.hi    = 0.064     0.015999  0.0155
+
+regions.front-wall.lo  = 0.000     0.000     0.0005
+regions.front-wall.hi  = 0.064     0.016     0.0005
+
+regions.back-wall.lo   = 0.000     0.000     0.0155
+regions.back-wall.hi   = 0.064     0.016     0.0155
+
+regions.wall-temp.lo   = 0.000     0.000     0.000
+regions.wall-temp.hi   = 0.064     0.016     0.016
+
+#----------------------------------------------------------------------
+# Initial Conditions
+#----------------------------------------------------------------------
+ic.regions = full-domain  init-bed 
+
+mfix.particle_init_type = Auto
+
+# background fluid 
+ic.full-domain.fluid.volfrac  = 1.0
+ic.full-domain.fluid.velocity = 0.0  0.0  0.0
+ic.full-domain.fluid.pressure  = 101325.
+ic.full-domain.fluid.temperature = 393.15
+
+# initial static bed 
+ic.init-bed.fluid.volfrac  = 0.48
+ic.init-bed.fluid.velocity = 0.0 0.00  0.00
+ic.init-bed.fluid.pressure  = 101325.
+ic.init-bed.fluid.temperature = 393.15
+
+ic.init-bed.solids = solid0
+ic.init-bed.packing = eightper
+
+ic.init-bed.solid0.statwt = 0.3055
+
+ic.init-bed.solid0.volfrac  = 0.52
+ic.init-bed.solid0.velocity = 0.0  0.0  0.0
+
+ic.init-bed.solid0.temperature = 363.15
+
+ic.init-bed.solid0.diameter = constant
+ic.init-bed.solid0.diameter.constant = 0.0008
+
+ic.init-bed.solid0.density =  constant
+ic.init-bed.solid0.density.constant = 2500.0
+
+#----------------------------------------------------------------------
+# Boundary Conditions
+#----------------------------------------------------------------------
+bc.regions = inflow  outflow  jet  bottom-wall  top-wall  front-wall  back-wall  wall-temp
+
+#in
+bc.inflow = mi
+bc.inflow.fluid.volfrac  =  1.0
+bc.inflow.fluid.velocity =  0.431  0.0  0.0
+bc.inflow.fluid.temperature =  293.15
+
+#jet
+bc.jet = mi
+bc.jet.fluid.volfrac  =  1.0
+bc.jet.fluid.velocity =  0.0  0.0  0.0
+bc.jet.fluid.temperature =  293.15
+
+#out
+bc.outflow = po
+bc.outflow.fluid.pressure =  101325.0
+
+# NSWs
+bc.bottom-wall = nsw
+bc.top-wall    = nsw
+bc.front-wall  = nsw
+bc.back-wall   = nsw
+
+bc.bottom-wall.normal =  0.0  1.0  0.0
+bc.top-wall.normal    =  0.0 -1.0  0.0
+bc.front-wall.normal  =  0.0  0.0  1.0
+bc.back-wall.normal   =  0.0  0.0 -1.0
+
+# Temp of the NSWs
+bc.wall-temp = eb
+bc.wall-temp.eb.temperature = 293.15
