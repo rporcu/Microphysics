@@ -1,10 +1,11 @@
 # name       short name       aion (mass nb)     zion (proton nb)
-Nitrogen          Air          14.0                7.0     
-Vapor           Vapor          18.0               10.0
-Liquid         Liquid          18.0               10.0
+Nitrogen          Air          14.485              7.0     
+Vapor           Vapor          18.02              10.0
+Liquid         Liquid          18.02              10.0
 
 # auxiliary variables
 __aux_velocity_x
 __aux_velocity_y
 __aux_velocity_z
 __aux_pressure
+__aux_temperature_p
