@@ -181,6 +181,20 @@ build:ascent:
     - cmake --build build
   <<: *build_base
 
+build:pic2dem:
+  needs: ['build-nvcc-env']
+  image: $CI_REGISTRY_IMAGE/nvcc
+  variables:
+    CC: gcc
+    CXX: g++
+  script:
+    - cmake -S .
+            -B build
+            -DCMAKE_BUILD_TYPE=MinSizeRel
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wnull-dereference -Werror -pedantic -pedantic-errors -Wshadow -Wfloat-conversion -Woverloaded-virtual -Wnon-virtual-dtor -Wlogical-op -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wmissing-include-dirs -Wextra-semi"
+    - cmake --build build --target pic2dem
+  <<: *build_base
+
 ## LINT ###
 .lint: &lint_template
   stage: lint

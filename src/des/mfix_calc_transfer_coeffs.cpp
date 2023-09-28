@@ -221,8 +221,8 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
     bool OnSameGrids = ((dmap[lev] == (pc->ParticleDistributionMap(lev))) &&
                         (grids[lev].CellEqual(pc->ParticleBoxArray(lev))));
 
-    MultiFab* interp_ptr;
-    MultiFab* X_gk_interp_ptr;
+    MultiFab* interp_ptr(nullptr);
+    MultiFab* X_gk_interp_ptr(nullptr);
 
     const int interp_ng = 1;    // Only one layer needed for interpolation
     const int interp_comp = 5 + // 3 vel_g + 1 ep_g + 1 ro_g
@@ -332,7 +332,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
     // FillBoundary on interpolation MultiFab
     interp_ptr->FillBoundary(geom[lev].periodicity());
 
-    if (fluid.solve_species()) {
+    if (X_gk_interp_ptr != nullptr) {
       X_gk_interp_ptr->FillBoundary(geom[lev].periodicity());
     }
 
@@ -381,8 +381,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
           const Array4<const Real> empty_array;
 
           const auto& interp_array = interp_ptr->const_array(pti);
-          const auto& X_gk_array = fluid.solve_species() ? X_gk_interp_ptr->const_array(pti) :
-                                                           empty_array;
+          const auto& X_gk_array = (X_gk_interp_ptr != nullptr) ? X_gk_interp_ptr->const_array(pti) : empty_array;
 
           const auto& flags_array  = flags.array();
 
@@ -791,7 +790,7 @@ void mfix::mfix_calc_transfer_coeffs (const Real time,
     // Free up memory
     delete interp_ptr;
 
-    if (fluid.solve_species()) {
+    if (X_gk_interp_ptr != nullptr) {
       delete X_gk_interp_ptr;
     }
 

@@ -53,13 +53,15 @@ particle_walls (const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>&
   amrex::Real overlap_n = rp - ls_value;
 
   // PFW conduction
-  amrex::Real Tp1, Tp2;
+  amrex::Real Tp1(0);
+  amrex::Real Tp2(0);
+
   if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
     const amrex::Real FLPC = solids_parms.get_flpc<run_on>();
     amrex::Real Rlens      = (1.0 + FLPC)*rp;
     if (ls_value < Rlens) {
       const amrex::Real Rough = solids_parms.get_min_cond<run_on>();
-      Tp1              = p_realarray[SoArealData::temperature][i];
+      Tp1 = p_realarray[SoArealData::temperature][i];
 
       // Construct a point inside the wall (to machine precision)
       amrex::RealVect normal(0.);
@@ -87,8 +89,7 @@ particle_walls (const amrex::GpuArray<amrex::ParticleReal*, SoArealData::count>&
     if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
       const amrex::Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
       const amrex::Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
-      amrex::Real Q_dot     = des_pp_conduction(ls_value+rp,rp,rp,
-                                         kp1,kp2,Tp1,Tp2);
+      amrex::Real Q_dot = des_pp_conduction(ls_value+rp,rp,rp,kp1,kp2,Tp1,Tp2);
       amrex::HostDevice::Atomic::Add(&cond_ptr[i],Q_dot);
     }
 
@@ -226,7 +227,6 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
                     const int& i,
                     const int& solve_enthalpy,
                     const amrex::Real& dt,
-                    const amrex::RealVect& pos1,
                     const int& nrp,
                     const MFIXSolidsParms& solids_parms,
                     const amrex::Real& k_g,
@@ -243,6 +243,8 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
                     const int& istate)
 {
   constexpr amrex::Real small_number = 1.e-15;
+
+  const amrex::RealVect& pos1(particle.pos());
 
   for (auto mit = neighbs.begin(); mit != neighbs.end(); ++mit)
   {
@@ -263,9 +265,8 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
       amrex::Real r_lm = p1radius + p2radius;
 
       AMREX_ASSERT_WITH_MESSAGE(
-          !(particle.id() == p2.id() &&
-            particle.cpu() == p2.cpu()),
-        "A particle should not be its own neighbor!");
+          !(particle.id() == p2.id() && particle.cpu() == p2.cpu()),
+          "A particle should not be its own neighbor!");
 
       // PFP conduction
       if(solve_enthalpy && solids_parms.get_do_pfp_cond<run_on>()) {
@@ -301,8 +302,7 @@ particle_particles (const MFIXParticleContainer::ParticleType& particle,
             const amrex::Real Tp2 = p_realarray[SoArealData::temperature][j];
             const amrex::Real kp1 = solids_parms.calc_kp_sn<run_on>(Tp1,0);
             const amrex::Real kp2 = solids_parms.calc_kp_sn<run_on>(Tp2,0);
-            amrex::Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,
-                                           kp1,kp2,Tp1,Tp2);
+            amrex::Real Q_dot = des_pp_conduction(dist_mag,p1radius,p2radius,kp1,kp2,Tp1,Tp2);
             if(i < nrp) amrex::HostDevice::Atomic::Add(&cond_ptr[i], Q_dot);
             if(j < nrp) amrex::HostDevice::Atomic::Add(&cond_ptr[j],-Q_dot);
           }

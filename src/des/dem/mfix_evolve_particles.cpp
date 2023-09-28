@@ -304,7 +304,7 @@ void MFIXParticleContainer::EvolveParticles (int lev,
                     const auto neighbs = nbor_data.getNeighbors(i);
 
                     particle_particles(particle, neighbs, p_realarray,
-                        p_intarray, i, solve_enthalpy, subdt, pos1, nrp,
+                        p_intarray, i, solve_enthalpy, subdt, nrp,
                         solids_parms, k_g, kn, etan, mew, total_force,
                         total_tow_force, fc_ptr, tow_ptr, cond_ptr,
                         has_collisions, ntot, istate);

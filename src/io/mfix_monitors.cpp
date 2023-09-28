@@ -163,7 +163,7 @@ Monitor::Monitor (const std::array<std::string,2> specs,
   const int per_approx = ppMonitor.query("plot_per_approx", m_plot_per_approx);
 
   // XOR operation
-  AMREX_ASSERT(plot_int ^ per_approx);
+  AMREX_ALWAYS_ASSERT(plot_int ^ per_approx);
 
   ppMonitor.query("output.openmode", m_openmode);
 
@@ -316,8 +316,8 @@ Monitor::calc_box (const Geometry& geometry,
   const Real* realbox_hi = realbox.hi();
 
   for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-    AMREX_ASSERT(!(realbox_lo[dir] < prob_lo[dir]));
-    AMREX_ASSERT(!(realbox_hi[dir] > prob_hi[dir]));
+    AMREX_ALWAYS_ASSERT(!(realbox_lo[dir] < prob_lo[dir]));
+    AMREX_ALWAYS_ASSERT(!(realbox_hi[dir] > prob_hi[dir]));
   }
 
   const IntVect box_type(AMREX_D_DECL(
@@ -328,8 +328,8 @@ Monitor::calc_box (const Geometry& geometry,
   const int sum = AMREX_D_TERM(box_type[0], + box_type[1], + box_type[2]);
   const int prod = AMREX_D_TERM(box_type[0], * box_type[1], * box_type[2]);
 
-  AMREX_ASSERT(((sum <= 1) && (prod == 0)) ||
-               (amrex::toLower(m_specs[0]).compare("pointregion") == 0 && sum == 3));
+  AMREX_ALWAYS_ASSERT(((sum <= 1) && (prod == 0)) ||
+      (amrex::toLower(m_specs[0]).compare("pointregion") == 0 && sum == 3));
 
   IntVect box_lo, box_hi;
 
@@ -384,8 +384,8 @@ Monitor::calc_realbox (const Geometry& geometry,
   const Real* realbox_hi = realbox.hi();
 
   for (int dir(0); dir < AMREX_SPACEDIM; ++dir) {
-    AMREX_ASSERT(!(realbox_lo[dir] < prob_lo[dir]));
-    AMREX_ASSERT(!(realbox_hi[dir] > prob_hi[dir]));
+    AMREX_ALWAYS_ASSERT(!(realbox_lo[dir] < prob_lo[dir]));
+    AMREX_ALWAYS_ASSERT(!(realbox_hi[dir] > prob_hi[dir]));
   }
 
   return realbox;
@@ -1189,7 +1189,7 @@ AreaMonitor::check_boxes_are_ok () const
                                                        m_boxes[lev].length(1),
                                                        m_boxes[lev].length(2)));
 
-    AMREX_ASSERT_WITH_MESSAGE(min_box_length == 1,
+    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(min_box_length == 1,
         "AreaMonitor Box is over-dimensionated");
   }
 }

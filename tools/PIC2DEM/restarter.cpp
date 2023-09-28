@@ -1022,7 +1022,6 @@ MFIXRestarter::init_particles_data (mfix* mfix_fine) const
     avgdPIC_ptr->FillBoundary(geom.periodicity());
 
     const auto dxi = geom.InvCellSizeArray();
-    const auto dx  = geom.CellSizeArray();
     const auto plo = geom.ProbLoArray();
 
 #ifdef _OPENMP

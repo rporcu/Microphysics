@@ -167,8 +167,10 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
   const RealVect dx(Geom(lev).CellSize());
   const RealVect plo(Geom(lev).ProbLo());
 
+  auto& ics = m_initial_conditions.ic();
+
   // Store particle count totals by IC region
-  std::vector<long> total_np(m_initial_conditions.ic().size(), 0);
+  std::vector<long> total_np(ics.size(), 0);
 
   const Real tolerance = std::numeric_limits<Real>::epsilon();
 
@@ -179,13 +181,17 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
   // double check if this goes out of MFIter loop
   MFIXICRegions ic_regions;
 
-  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+  for (int icv(0); icv < ics.size(); icv++) {
 
-    AMREX_ALWAYS_ASSERT(m_initial_conditions.ic(icv).solids.size() <= 1);
+    auto& ic = ics[icv];
+    auto& ic_solids = ic.solids;
+    auto& ic_fluid = ic.fluid;
 
-    if (Math::abs(m_initial_conditions.ic(icv).fluid.volfrac-1) > tolerance) {
+    AMREX_ALWAYS_ASSERT(ic_solids.size() <= 1);
 
-      const RealBox* ic_region = m_initial_conditions.ic(icv).region;
+    if (Math::abs(ic_fluid.volfrac-1) > tolerance) {
+
+      const RealBox* ic_region = ic.region;
       const int ic_region_added = ic_regions.add(*ic_region, m_initial_conditions.allow_overlap());
 
       if (ic_region_added) {
@@ -196,11 +202,11 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
         Gpu::copy(Gpu::hostToDevice, ic_regions.begin(), ic_regions.end(), ic_regions_gpu.begin());
         const RealBox* ic_regions_ptr = ic_regions_gpu.dataPtr();
 
-        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
+        for (int lcs(0); lcs < ic_solids.size(); lcs++) {
 
-          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
+          if (ic_solids[lcs].volfrac > tolerance) {
 
-            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
+            const int phase = ic_solids[lcs].phase;
 
             const Box ic_box = calc_ic_box(Geom(lev), ic_region);
 
@@ -252,10 +258,10 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
     } // ep_g < 1
   } // loop over ICs
 
-  ParallelDescriptor::ReduceLongSum(total_np.data(), m_initial_conditions.ic().size());
+  ParallelDescriptor::ReduceLongSum(total_np.data(), ics.size());
 
   m_total_numparticle = 0;
-  for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+  for (int icv(0); icv < ics.size(); icv++) {
     m_initial_conditions.set_particle_count(icv, total_np[icv]);
     m_total_numparticle += total_np[icv];
   }
@@ -271,18 +277,21 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
   // deviation of 1 to all the particles we generated.
   if (m_initial_conditions.has_granular_temperature()) {
 
-    const int ic_count = m_initial_conditions.ic().size();
+    const int ic_count = ics.size();
 
     std::vector<Real> meanVel(4*ic_count, 0);
 
     // First block: compute mean to force back to zero.
-    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    for (int icv(0); icv < ics.size(); icv++) {
 
       // Avoid destroying fluctuations with nested regions
-      if (!m_initial_conditions.has_granular_temperature(icv)) continue;
+      if (!m_initial_conditions.has_granular_temperature(icv))
+        continue;
 
-      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
-                              m_initial_conditions.ic(icv).region->hi());
+      auto& ic = ics[icv];
+      auto& ic_region = ic.region;
+
+      const RealBox ic_realbox(ic_region->lo(), ic_region->hi());
 
       ReduceOps<ReduceOpSum, ReduceOpSum, ReduceOpSum, ReduceOpSum> reduce_op;
       ReduceData<int, Real, Real, Real> reduce_data(reduce_op);
@@ -298,14 +307,14 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
         RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-        if (tilebox_region.intersects(ic_region)) {
+        if (tilebox_region.intersects(ic_realbox)) {
 
           const int np = NumberOfParticles(pti);
 
           SoA& soa = pti.GetStructOfArrays();
           auto p_realarray = soa.realarray();
 
-          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_region]
+          reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_realbox]
             AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
           {
             const ParticleType p = pstruct[p_id];
@@ -313,7 +322,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
             Real velx(0.);
             Real vely(0.);
             Real velz(0.);
-            if ( ic_region.contains(p.pos()) ) {
+            if ( ic_realbox.contains(p.pos()) ) {
               cnt = 1;
               velx = p_realarray[SoArealData::velx][p_id];
               vely = p_realarray[SoArealData::vely][p_id];
@@ -339,10 +348,12 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
     // Subtract the mean velocities from each particle random velocity
     // so the new means are zero. Also, compute the mean granular
     // temperature.
-    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    for (int icv(0); icv < ics.size(); icv++) {
 
-      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
-                              m_initial_conditions.ic(icv).region->hi());
+      auto& ic = ics[icv];
+      auto& ic_region = ic.region;
+
+      const RealBox ic_realbox(ic_region->lo(), ic_region->hi());
 
       Real ic_np = meanVel[icv];
 
@@ -368,14 +379,14 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
           RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-          if (tilebox_region.intersects(ic_region)) {
+          if (tilebox_region.intersects(ic_realbox)) {
 
             const int np = NumberOfParticles(pti);
 
             SoA& soa = pti.GetStructOfArrays();
             auto p_realarray = soa.realarray();
 
-            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_region,
+            reduce_op.eval(np, reduce_data, [pstruct,p_realarray,ic_realbox,
               meanU, meanV, meanW]
               AMREX_GPU_DEVICE (int p_id) -> ReduceTuple
             {
@@ -384,7 +395,7 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
               int cnt = 0;
               Real p_granTemp(0.);
 
-              if ( ic_region.contains(p.pos()) ) {
+              if ( ic_realbox.contains(p.pos()) ) {
 
                 cnt = 1;
 
@@ -413,24 +424,36 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 
     ParallelDescriptor::ReduceRealSum(granTemp.data(), granTemp.size());
 
-    for (int icv(0); icv < m_initial_conditions.ic().size(); icv++) {
+    for (int icv(0); icv < ics.size(); icv++) {
 
-      const RealBox ic_region(m_initial_conditions.ic(icv).region->lo(),
-                              m_initial_conditions.ic(icv).region->hi());
+      auto& ic = ics[icv];
+      auto& ic_region = ic.region;
+
+      const RealBox ic_realbox(ic_region->lo(), ic_region->hi());
 
       Real ic_np = granTemp[icv];
 
       if (ic_np > 0.) {
 
         GpuArray<Real,3> bulkVel;
-        for (int lcs(0); lcs < m_initial_conditions.ic(icv).solids.size(); lcs++) {
-          if (m_initial_conditions.ic(icv).solids[lcs].volfrac > tolerance) {
-            const int phase = m_initial_conditions.ic(icv).solids[lcs].phase;
-            const SOLIDS_t& ic_solid = *(m_initial_conditions.ic(icv).get_solid(phase));
 
-            bulkVel[0]= ic_solid.velocity[0];
-            bulkVel[1]= ic_solid.velocity[1];
-            bulkVel[2]= ic_solid.velocity[2];
+        auto& ic_solids = ic.solids;
+
+        for (int lcs(0); lcs < ic_solids.size(); lcs++) {
+
+          if (ic_solids[lcs].volfrac > tolerance) {
+
+            const int phase = ic_solids[lcs].phase;
+
+            const auto ic_solid = ic.get_solid(phase);
+
+            if (ic_solid == nullptr) {
+              amrex::Abort("Error");
+            } else {
+              bulkVel[0]= ic_solid->velocity[0];
+              bulkVel[1]= ic_solid->velocity[1];
+              bulkVel[2]= ic_solid->velocity[2];
+            }
 
           }
         }
@@ -445,25 +468,26 @@ void MFIXParticleContainer::InitParticlesAuto (EBFArrayBoxFactory* particle_ebfa
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
         for (MFIXParIter pti(*this, lev); pti.isValid(); ++pti) {
+
           Box tilebox = pti.tilebox();
           AoS& aos = pti.GetArrayOfStructs();
           ParticleType* pstruct = aos().dataPtr();
 
           RealBox tilebox_region(tilebox, Geom(lev).CellSize(), Geom(lev).ProbLo());
 
-          if (tilebox_region.intersects(ic_region)) {
+          if (tilebox_region.intersects(ic_realbox)) {
 
             const int np = NumberOfParticles(pti);
 
             SoA& soa = pti.GetStructOfArrays();
             auto p_realarray = soa.realarray();
 
-            amrex::ParallelFor(np, [pstruct,p_realarray,ic_region, bulkVel, scale]
+            amrex::ParallelFor(np, [pstruct,p_realarray,ic_realbox, bulkVel, scale]
               AMREX_GPU_DEVICE (int p_id) noexcept
             {
               const ParticleType p = pstruct[p_id];
 
-              if ( ic_region.contains(p.pos()) ) {
+              if ( ic_realbox.contains(p.pos()) ) {
 
                 Real velx = p_realarray[SoArealData::velx][p_id];
                 Real vely = p_realarray[SoArealData::vely][p_id];
