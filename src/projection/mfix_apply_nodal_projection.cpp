@@ -153,6 +153,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
 
         for (int n(0); n < 3; n++)
             MultiFab::Multiply(*epu[lev], *ep_g_in[lev], 0, n, 1, epu[lev]->nGrow());
+
+        epu[lev]->setBndry(0.0);
     }
 
     // Extrapolate Dirichlet values to ghost cells -- but do it differently in that
@@ -163,7 +165,11 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     //  TODO
     // Why are we using this instead of simply multiplying vel and ep with their BCs in place
     // already?
-    m_boundary_conditions.set_vec_bcs(a_time, epu);
+    //
+    // For incremental dt, keep boundary values as zero
+    if (!proj_for_small_dt) {
+        m_boundary_conditions.set_vec_bcs(a_time, epu);
+    }
 
     for (int lev(0); lev < nlev; ++lev) {
         // We set these to zero because if the values in the covered cells are undefined,
