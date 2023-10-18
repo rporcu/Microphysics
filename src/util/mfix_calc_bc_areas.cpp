@@ -175,7 +175,7 @@ calc_bc_area( int      const       a_lev,
   Real dz = m_geom[a_lev].CellSize(2);
 
   // This should be caught elsewhere but just in case...
-  AMREX_ASSERT(dx == dy && dy == dz);
+  AMREX_ALWAYS_ASSERT(amrex::almostEqual(dx,dy) && amrex::almostEqual(dy,dz));
   Real const da( dx*dx );
 
   const GpuArray<Real, 3> plo = m_geom[a_lev].ProbLoArray();
@@ -260,7 +260,7 @@ calc_eb_bc_area( int      const       a_lev,
   Real dz = m_geom[a_lev].CellSize(2);
 
   // This should be caught elsewhere but just in case...
-  AMREX_ALWAYS_ASSERT(dx == dy && dy == dz);
+  AMREX_ALWAYS_ASSERT(amrex::almostEqual(dx,dy) && amrex::almostEqual(dy,dz));
   Real const da( dx*dx );
 
   const int  has_normal = a_bc.eb.has_normal;
