@@ -123,6 +123,7 @@ mfix.check_file     ="chk"
 
 mfix.plt_regtest = 1
 
+mfix.reports.mass_balance_int = 10
 
 #_______________________________________________________________________
 # Fluid model settings

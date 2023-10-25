@@ -69,10 +69,6 @@ MFIXReadWrite::MFIXReadWrite (int nlev_in,
   , bc_list(bc_list_in)
   , particle_ebfactory(particle_ebfactory_in)
   , regions(regions_in)
-  , m_mass_accum(fluid_in.nspecies()*2, 0.)
-  , m_mass_inflow(fluid_in.nspecies(), 0.)
-  , m_mass_outflow(fluid_in.nspecies(), 0.)
-  , m_mass_prod(fluid_in.nspecies(), 0.)
   , m_ascent_actions_yaml("")
 {
   readParameters();
@@ -398,6 +394,14 @@ MFIXReadWrite::Initialize ()
     ParmParse pp(plot_region.m_pp_string.c_str());
     GetSolidsIOPltFlags(plot_region.m_write_real_comp, plot_region.m_write_int_comp);
   }
+
+  // Initialize the mass balance variables
+  m_mass_accum.resize(fluid.nspecies()*2, 0.);
+  m_mass_inflow.resize(fluid.nspecies(), 0.);
+  m_mass_outflow.resize(fluid.nspecies(), 0.);
+  m_mass_prod.resize(fluid.nspecies(), 0.);
+
+
 }
 
 
