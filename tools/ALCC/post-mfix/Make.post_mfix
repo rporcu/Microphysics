@@ -1,6 +1,8 @@
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
 Bdirs := post-mfix
+Bdirs += post-mfix/leveldata
+Bdirs += post-mfix/utils
 
 Bpack += $(foreach dir, $(Bdirs), $(TOP)/$(dir)/Make.package)
 Blocs += $(foreach dir, $(Bdirs), $(TOP)/$(dir))
@@ -10,8 +12,7 @@ include $(Bpack)
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-# Particle AmrCore Boundary
-Pdirs := Base
+Pdirs := Base AmrCore Boundary LinearSolvers/MLMG Particle
 
 Ppack += $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 

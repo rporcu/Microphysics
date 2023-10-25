@@ -5,119 +5,207 @@
 
 using namespace amrex;
 
-// Destructor
-post_mfix::~post_mfix ()
-{
-}
-
 // Constructor
-post_mfix::post_mfix (std::string a_plot_file_name)
-  : m_verbose(0)
-  , m_error(0)
-  , m_print_vars(0)
-  , m_no_work(1)
-  , m_plot_file_name(a_plot_file_name)
-  , m_fluid(a_plot_file_name)
-  , m_particles(a_plot_file_name, "particles")
-  , m_input_size_fluid(0)
-  , m_input_size_particles(0)
-{
-
-  const int narg = amrex::command_argument_count();
-
-  int farg = 1;
-  while (farg <= narg) {
-    const std::string& name = amrex::get_command_argument(farg);
-    if (name == "-v" || name == "--verbose") {
-      m_verbose = 1;
-    } else if (name == "-f" || name == "--fluid") {
-      m_input_variables_fluid = input_list_to_vector(get_command_argument(++farg));
-    } else if (name == "-p" || name == "--particle") {
-      m_input_variables_particles = input_list_to_vector(get_command_argument(++farg));
-    } else if (name == "--print-vars") {
-      m_print_vars = 1;
-    } else {
-      break;
-    }
-    ++farg;
-  }
-
-  if (m_fluid.error()) { m_error = 1; return; }
-  //if (m_particles.error()) { m_error = 1; return; }
-
-  m_input_size_fluid = m_input_variables_fluid.size();
-  m_fluid.set_verbose(m_verbose);
-
-
-  // Loop over the variables that the user provided and make
-  // sure we have them in the plot file.
-  if ( m_input_size_fluid ) {
-
-    m_no_work = 0;
-
-    if(!m_fluid.contains("ep_g")) {
-      Print() << "Volume fraction (ep_g) not found in plot file!\n";
-      m_error = 1; return;
-    }
-
-    for (int lc(0); lc < m_input_variables_fluid.size(); lc++) {
-      if(!m_fluid.contains(m_input_variables_fluid[lc])) {
-        Print() << m_input_variables_fluid[lc] << " not found in plot file!\n";
-        m_error = 1; return;
-      } else if (m_verbose) {
-        Print() << "Found " << m_input_variables_fluid[lc] << " in plot file.\n";
-      }
-    }
-  } else if (m_verbose) {
-    Print() << "No fluid variable names provided!\n";
-  }
-
-  m_input_size_particles = m_input_variables_particles.size();
-  m_particles.set_verbose(m_verbose);
-
-  if ( m_input_size_particles ) {
-
-    m_no_work = 0;
-
-    for (int lc(0); lc < m_input_size_particles; lc++) {
-      if(!m_particles.contains(m_input_variables_particles[lc])) {
-        Print() << m_input_variables_particles[lc] << " not found in plot file!\n";
-        m_error = 1; return;
-      } else if (m_verbose) {
-        Print() << "Found " << m_input_variables_particles[lc] << " in plot file.\n";
-      }
-    }
-  } else if (m_verbose) {
-    Print() << "No particle variable names provided!\n";
-  }
-
-}
-
-
-amrex::Vector<std::string>
 post_mfix::
-input_list_to_vector( std::string const a_list )
+post_mfix ( amrex::Geometry const& a_level_0_geom,
+            amrex::AmrInfo const& a_amr_info,
+            pm_plotfile* a_plotfile)
+  : amrex::AmrCore(a_level_0_geom, a_amr_info)
+  , m_verbose(0)
 {
-  // Count the number of variables by counting commas.
-  int const size = 1 + std::count(a_list.begin(), a_list.end(), ',');
 
-  amrex::Vector<std::string> var_vect(size);
-  std::istringstream var_stream{a_list};
+  int const nlev = a_plotfile->get_nlev();
+  Real const time = a_plotfile->get_time();
 
-  int lc(0);
-  for(std::string var; std::getline(var_stream, var,','); ) {
-    var_vect[lc++] = var;
+  for (int lev(0); lev < nlev; lev++) {
+
+    const BoxArray& ba = a_plotfile->get_ba(lev);
+    DistributionMapping dm = a_plotfile->get_dm(lev);
+
+    MakeNewLevelFromScratch(0, time, ba, dm);
   }
-  return var_vect;
+
+  { // Read and store fluid data
+
+    Print() << "\nLoading grid data\n";
+    m_fluid = new pm_fluid(maxLevel(), Geom(), DistributionMap(),
+                    boxArray(), a_plotfile );
+  }
+
+
+  { // Create particle container
+
+    Print() << "Loading particle data\n";
+    m_particles = new pm_particles(maxLevel(), Geom(), DistributionMap(),
+                    boxArray(), a_plotfile);
+    Print() << "Total number of particles: " << a_plotfile->particle_count() << "\n";
+  }
+
+  // Convert particle data to continuum variables
+  Print() << "\nCreating Eulerain solids\n";
+  m_solids = new pm_solids(maxLevel(), Geom(), DistributionMap(),
+                    boxArray(), m_particles);
+
+
+  m_alpha_p.resize(get_nlev());
+  m_alpha_f.resize(get_nlev());
+
+  Print() << "\nComputing alpha_p and alpha_f\n";
+  for (int lev(0); lev < nlev; lev++) {
+
+    m_alpha_p[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 1));
+    m_alpha_p[lev]->setVal(0.0);
+    { int const srccomp = m_solids->index("alpha");
+      int const dstcomp = 0;
+      int const numcomp = 1;
+      int const nghost  = 0;
+
+      MultiFab const* const src_ptr = m_solids->get_const_data(lev);
+      MultiFab::Copy(*m_alpha_p[lev], *src_ptr, srccomp, dstcomp, numcomp, nghost);
+    }
+
+    m_alpha_f[lev].reset(new MultiFab(grids[lev], dmap[lev], 1, 1));
+    m_alpha_f[lev]->setVal(1.0);
+    { int const srccomp = 0;
+      int const dstcomp = 0;
+      int const numcomp = 1;
+      int const nghost  = 0;
+
+      MultiFab::Subtract(*m_alpha_f[lev], *m_alpha_p[lev], srccomp, dstcomp, numcomp, nghost);
+    }
+    m_alpha_p[lev]->FillBoundary(geom[lev].periodicity());
+    m_alpha_f[lev]->FillBoundary(geom[lev].periodicity());
+  }
+
 }
 
 void
 post_mfix::
-print_vars ()
+MakeNewLevelFromScratch (int a_lev, Real /*time*/,
+                         const BoxArray& a_new_grids,
+                         const DistributionMapping& a_new_dmap)
 {
-  if (m_print_vars) {
-    m_fluid.show_map();
-    m_particles.show_map();
-  }
+    if (m_verbose) {
+      amrex::Print() << "MakeNewLevelFromScratch" << std::endl;
 
+      if (a_lev == 0) {
+        std::cout << "Making level 0 with box array\n" << a_new_grids << "\n";
+      } else {
+        Print() << "Setting refined region at level " << a_lev
+                << " to " << a_new_grids << "\n";
+      }
+    }
+
+    if (m_verbose > 1) {
+    }
+
+    SetBoxArray(a_lev, a_new_grids);
+    SetDistributionMap(a_lev, a_new_dmap);
+
+    if (m_verbose > 1) {
+      amrex::Print() << "SETTING NEW GRIDS IN MAKE NEW LEVEL " << a_new_grids << std::endl;
+      amrex::Print() << "SETTING NEW DMAP IN MAKE NEW LEVEL " << a_new_dmap << std::endl;
+    }
+}
+
+void
+post_mfix::
+fill_var_MF ( int const a_lev, std::string const a_var,
+              MultiFab* a_MF, int const a_dstcomp)
+{
+  a_MF->setVal(1.0, a_dstcomp, 1, a_MF->nGrow());
+
+  int const verbose(0);
+
+  //Print() << "\nFilling variable " << a_var << "\n";
+
+  Vector<std::string> var_comps = get_var_comps(a_var);
+  int const var_ncomp = static_cast<int>(var_comps.size());
+
+  int const numcomp = 1;
+  int const  nghost = 0;
+
+  int srccomp;
+  MultiFab const* src_ptr;
+
+  for (int n(0); n<var_ncomp; ++n) {
+
+    std::string entry = var_comps[n];
+
+    if (is_gradient(entry)) {
+
+      size_t first = entry.find("(");
+      size_t last  = entry.rfind(")");
+
+      std::string grad_var = entry.substr(first+1,last-first-1);
+
+      MultiFab tmp_MF(grids[a_lev], dmap[a_lev], 1, 1);
+
+      if (verbose) { Print() << "Computing gradient of " << grad_var << "\n";}
+      int const dir = grad_dir(entry);
+      compute_grad( a_lev, dir, grad_var, &tmp_MF);
+
+      srccomp = 0;
+      MultiFab::Multiply(*a_MF, tmp_MF, srccomp, a_dstcomp, numcomp, nghost);
+
+    } else if (entry.find("sigma_") != std::string::npos) {
+
+      if (verbose) { Print() << "Computing fluid stress component " << entry << "\n"; }
+
+      MultiFab tmp_MF(grids[a_lev], dmap[a_lev], 1, 1);
+
+      compute_stress( a_lev, entry, &tmp_MF);
+
+      srccomp = 0;
+      MultiFab::Multiply(*a_MF, tmp_MF, srccomp, a_dstcomp, numcomp, nghost);
+
+    } else if (entry.find("sigPp_") != std::string::npos) {
+
+      if (verbose) { Print() << "Computing granular viscosity term " << entry << "\n"; }
+
+      MultiFab tmp_MF(grids[a_lev], dmap[a_lev], 1, 1);
+
+      compute_granular_viscosity( a_lev, entry, &tmp_MF);
+
+      srccomp = 0;
+      MultiFab::Multiply(*a_MF, tmp_MF, srccomp, a_dstcomp, numcomp, nghost);
+
+    } else {
+
+      if (entry.compare("alpha_p") == 0) {
+
+        if (verbose) { Print() << "Found " << entry << "\n"; }
+
+        srccomp = 0;
+        src_ptr = get_const_alpha_p(a_lev);
+
+      } else if (entry.compare("alpha_f") == 0) {
+
+        if (verbose) { Print() << "Found " << entry << "\n"; }
+
+        srccomp = 0;
+        src_ptr = get_const_alpha_f(a_lev);
+
+      } else if (m_solids->contains(entry)) {
+
+        srccomp = m_solids->index(entry);
+        src_ptr = m_solids->get_const_data(a_lev);
+
+        if (verbose) { Print() << "Found " << entry << " in solids data.\n"; }
+
+      } else if (m_fluid->contains(entry)) {
+
+        srccomp = m_fluid->index(entry);
+        src_ptr = m_fluid->get_const_data(a_lev);
+
+        if (verbose) { Print() << "Found " << entry << " in fluid data.\n"; }
+
+      } else {
+        amrex::Print() << "Unable to locate " << entry << "!\n";
+        amrex::Abort();
+      }
+
+      MultiFab::Multiply(*a_MF, *src_ptr, srccomp, a_dstcomp, numcomp, nghost);
+    }
+  }
 }

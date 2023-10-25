@@ -269,7 +269,7 @@ lint:spelling:
   <<: *lint_template
   script:
     - rm -rf subprojects
-    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te,ro,ody --enable-colors --quiet-level 2
+    - codespell --ignore-words-list ba,blocs,inout,ith,od,wen,structed,te,ro,ody,ptd --enable-colors --quiet-level 2
 
 ## CTESTS ###
 .test: &test_template
