@@ -67,14 +67,10 @@ output_hdf5 (std::string a_plotfile)
                                         Geom(), time, istep, refRatio(),
                                         hdf5_compression);
 
-  // This currently does work because AMReX does not take runtime
-  // real variables into account.
-#if 0
   m_particles->WritePlotFileHDF5(hdf5_dir, "particles",
                                  write_real_comp, write_int_comp,
                                  real_comp_names, int_comp_names,
                                  hdf5_compression);
-#endif
 
 #endif
 }
