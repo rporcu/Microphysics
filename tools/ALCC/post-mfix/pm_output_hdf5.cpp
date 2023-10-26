@@ -39,9 +39,32 @@ output_hdf5 (std::string a_plotfile)
           << "       hdf5: " << hdf5_dir << "\n"
           << "compression: " << hdf5_compression << "\n";
 #endif
+
   Vector<int> istep;
   istep.resize(get_nlev(),nstep);
   Real time = 0.;
+
+  Vector<std::unique_ptr<MultiFab>> HDF5_MF(get_nlev());
+  Vector<std::string> varnames;
+
+  for (int lev(0); lev<get_nlev(); ++lev) {
+
+    // Fluid level data
+    auto const lev_data = m_fluid->get_const_data(lev);
+
+    // Number of components (all fluid plus fluid volume fraction.
+    int const ncomp = lev_data->nComp()+1;
+
+    HDF5_MF[lev].reset(new MultiFab(grids[lev], dmap[lev], ncomp, 0));
+
+    MultiFab::Copy(*HDF5_MF[lev].get(), *get_const_alpha_f(lev), 0, 0, 1, 0);
+    varnames.push_back("alpha_f");
+
+    for (int comp(0); comp<lev_data->nComp(); ++comp) {
+      MultiFab::Copy(*HDF5_MF[lev].get(), *lev_data, comp, comp+1, 1, 0);
+      varnames.push_back(m_fluid->varName(comp));
+    }
+  }
 
   // Not writing particle real data?!
   Vector<int> write_real_comp(m_particles->nComps_real(),1);
@@ -63,7 +86,7 @@ output_hdf5 (std::string a_plotfile)
   const std::string& hdf5_grid = hdf5_dir + "/grid_data";
 
   WriteMultiLevelPlotfileHDF5SingleDset(hdf5_grid, get_nlev(),
-                                        m_fluid->get_const_data(), m_fluid->varNames(),
+                                        GetVecOfConstPtrs(HDF5_MF), varnames,
                                         Geom(), time, istep, refRatio(),
                                         hdf5_compression);
 
@@ -71,6 +94,11 @@ output_hdf5 (std::string a_plotfile)
                                  write_real_comp, write_int_comp,
                                  real_comp_names, int_comp_names,
                                  hdf5_compression);
+
+  ParallelDescriptor::Barrier();
+
+  for (int lev(0); lev<get_nlev(); ++lev)
+  { HDF5_MF[lev].reset( nullptr ); }
 
 #endif
 }
