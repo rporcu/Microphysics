@@ -7,7 +7,8 @@ amrex.the_arena_init_size=1000000000
 # Run settings
 #----------------------------------------------------------------------
 
-mfix.max_step = 100
+#mfix.restart  = "chk00005"
+mfix.max_step = 20
 mfix.fixed_dt = 0
 mfix.cfl      = 0.5
 mfix.dt_min   = 1.0e-9
