@@ -3,7 +3,7 @@
 	url = https://github.com/AMReX-Codes/amrex.git
 [submodule "subprojects/AMReX-Hydro"]
 	path = subprojects/AMReX-Hydro
-	url = https://github.com/amrex-codes/AMReX-Hydro.git
+	url = https://github.com/AMReX-Fluids/AMReX-Hydro.git
 [submodule "subprojects/csg-eb"]
 	path = subprojects/csg-eb
 	url = ../../exa/csg-eb
