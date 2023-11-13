@@ -580,13 +580,12 @@ mfix::Restart (std::string& restart_file,
         {
           particle_cost[lev] = new MultiFab(pc->ParticleBoxArray(lev),
                                             pc->ParticleDistributionMap(lev), 1, 0);
+	  particle_cost[lev]->setVal(0.);
 
           // Initialize particles cost
           if (load_balance_type == "KnapSack" && knapsack_weight_type == "NumParticles") {
             for (MFIXParticleContainer::MFIXParIter pti(*pc,lev); pti.isValid(); ++pti)
               pc->UpdateCost(particle_cost[lev], pti, knapsack_weight_type, 0.);
-          } else {
-            particle_cost[lev]->setVal(0.);
           }
 
           const Real proc = static_cast<Real>(ParallelDescriptor::MyProc());
