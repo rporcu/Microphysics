@@ -40,6 +40,7 @@ MFIXTimer::Initialize ()
   pp.query("stop_time", m_stop_time);
   pp.query("overstep_end_time", m_overstep_end_time);
   pp.query("max_step", m_max_step);
+  m_usr_max_step = m_max_step; // save the original max step selected by the user
 
   pp.query("clean_exit", m_clean_exit);
 }
@@ -61,6 +62,7 @@ MFIXTimer::reset (const MFIXTimer& other)
   m_first_step = other.first_step();
   m_nstep = other.nstep();
   m_max_step = other.max_step();
+  m_usr_max_step = other.usr_max_step();
   m_clean_exit = other.clean_exit();
   m_run_status_type = other.run_status_type();
 }

@@ -31,6 +31,7 @@ class MFIXTimer
       , m_first_step(0)
       , m_nstep(0)
       , m_max_step(-1)
+      , m_usr_max_step(-1)
       , m_clean_exit("")
       , m_run_status_type(MFIXRunStatusType::OK)
     {
@@ -95,6 +96,7 @@ class MFIXTimer
     int nstep () const { return m_nstep; }
     int& nstep () { return m_nstep; }
     int max_step () const { return m_max_step; }
+    int usr_max_step () const { return m_usr_max_step; }
 
     AMREX_FORCE_INLINE
     void advance_nstep (const int n)
@@ -126,6 +128,7 @@ class MFIXTimer
     int m_first_step;
     int m_nstep;
     int m_max_step;
+    int m_usr_max_step;
 
     std::string m_clean_exit;
 
@@ -134,8 +137,9 @@ class MFIXTimer
     AMREX_FORCE_INLINE
     void update_max_step ()
     { 
-      if (m_walltime_limit > 0. && m_avg_step_runtime > 0.)
-        m_max_step = int(amrex::Math::floor(m_walltime_limit / m_avg_step_runtime));
+      if (m_walltime_limit > 0. && m_avg_step_runtime > 0.) {
+        m_max_step = std::min(m_usr_max_step, int(amrex::Math::floor(m_walltime_limit / m_avg_step_runtime)));
+      }
     }
 };
 
