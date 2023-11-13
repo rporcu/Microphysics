@@ -19,30 +19,30 @@ using namespace amrex;
 
 
 MFIXReadWrite::MFIXReadWrite (int nlev_in,
-                amrex::Vector<amrex::BoxArray>& grids_in,
-                amrex::Vector<amrex::Geometry>& geom_in,
-                MFIXParticleContainer* pc_in,
-                MFIXFluidPhase& fluid_in,
-                amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
-                amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
-                amrex::Vector<amrex::DistributionMapping>& dmap_in,
-                bool ooo_debug_in,
-                amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
-                int levelset_refinement_in,
-                int levelset_pad_in,
-                int levelset_eb_refinement_in,
-                int levelset_eb_pad_in,
-                MFIXSolidsPhase& solids_in,
-                MFIXDEM& dem,
-                MFIXPIC& pic,
-                MFIXReactions& reactions_in,
-                amrex::Vector<amrex::MultiFab*>& particle_cost_in,
-                amrex::Vector<amrex::MultiFab*>& particle_proc_in,
-                amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
-                const amrex::Vector<amrex::IntVect>& ref_ratio_in,
-                BCList& bc_list_in,
-                Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
-                MFIXRegions& regions_in)
+                              amrex::Vector<amrex::BoxArray>& grids_in,
+                              amrex::Vector<amrex::Geometry>& geom_in,
+                              MFIXParticleContainer* pc_in,
+                              MFIXFluidPhase& fluid_in,
+                              amrex::Vector<std::unique_ptr<LevelData>>& m_leveldata_in,
+                              amrex::Vector<std::unique_ptr<amrex::EBFArrayBoxFactory>>& ebfactory_in,
+                              amrex::Vector<amrex::DistributionMapping>& dmap_in,
+                              bool ooo_debug_in,
+                              amrex::Vector<std::unique_ptr<amrex::MultiFab>>& level_sets_in,
+                              int levelset_refinement_in,
+                              int levelset_pad_in,
+                              int levelset_eb_refinement_in,
+                              int levelset_eb_pad_in,
+                              MFIXSolidsPhase& solids_in,
+                              MFIXDEM& dem,
+                              MFIXPIC& pic,
+                              MFIXReactions& reactions_in,
+                              amrex::Vector<amrex::MultiFab*>& particle_cost_in,
+                              amrex::Vector<amrex::MultiFab*>& particle_proc_in,
+                              amrex::Vector<amrex::MultiFab*>& fluid_proc_in,
+                              const amrex::Vector<amrex::IntVect>& ref_ratio_in,
+                              BCList& bc_list_in,
+                              Vector<std::unique_ptr<EBFArrayBoxFactory>>& particle_ebfactory_in,
+                              MFIXRegions& regions_in)
   : finest_level(nlev_in-1)
   , nlev(nlev_in)
   , grids(grids_in)
@@ -591,7 +591,10 @@ MFIXReadWrite::writeNow (MFIXTimer& timer,
           check_test = (timer.nstep() % check_int == 0) ? 1 : 0;
         }
         else if (check_walltime_interval > 0) {
-          check_test = test_walltime_interval(timer);
+          if (ParallelDescriptor::IOProcessor()) {
+            check_test = test_walltime_interval(timer);
+          }
+          ParallelDescriptor::Bcast(&check_test, 1, ParallelDescriptor::IOProcessorNumber());
         }
 
         if (check_test == 1) {
@@ -608,7 +611,13 @@ MFIXReadWrite::writeNow (MFIXTimer& timer,
         }
 
         if ( timer.walltime_limit() > 0. && check_test == 0 ) {
-          if ( !timer.runtime_left_is_sufficient() ) {
+          int sufficient_time(1);
+          if (ParallelDescriptor::IOProcessor()) {
+            sufficient_time = timer.runtime_left_is_sufficient();
+          }
+          ParallelDescriptor::ReduceIntMin(sufficient_time, ParallelDescriptor::IOProcessor());
+
+          if ( !sufficient_time ) {
             WriteCheckPointFile(check_file, timer.nstep(), dt, timer.time());
           }
         }
@@ -743,8 +752,8 @@ void MFIXReadWrite::reportGridStats() const
 //
 void
 MFIXReadWrite::mfix_print_max_vel (int lev,
-                            const Vector<MultiFab*>& vel_g_in,
-                            const Vector<MultiFab*>& p_g_in)
+                                   const Vector<MultiFab*>& vel_g_in,
+                                   const Vector<MultiFab*>& p_g_in)
 {
     amrex::Print() << "   max(abs(u/v/w/p))  = "
                    << vel_g_in[lev]->norm0(0,0,false,true) << "  "
@@ -758,7 +767,7 @@ MFIXReadWrite::mfix_print_max_vel (int lev,
 //
 void
 MFIXReadWrite::mfix_print_max_gp (int lev,
-                           const Vector<MultiFab*>& gp_g_in)
+                                  const Vector<MultiFab*>& gp_g_in)
 {
     amrex::Print() << "   max(abs(gpx/gpy/gpz))  = "
                    << gp_g_in[lev]->norm0(0,0,false,true) << "  "
@@ -772,8 +781,8 @@ MFIXReadWrite::mfix_print_max_gp (int lev,
 //
 int
 MFIXReadWrite::test_per_approx (const Real time,
-                         const Real dt,
-                         const Real per_approx)
+                                const Real dt,
+                                const Real per_approx)
 {
   // Check to see if we've crossed a _per_approx interval by comparing
   // the number of intervals that have elapsed for both the current

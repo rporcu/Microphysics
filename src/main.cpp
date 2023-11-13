@@ -379,8 +379,7 @@ int main (int argc, char* argv[])
                    timer.time(), timer.stop_time());
 
                Real step_time = timer.elapsed_runtime(start_time);
-
-               ParallelDescriptor::ReduceRealMax(&step_time, 1);
+               ParallelDescriptor::ReduceRealMax(step_time, ParallelDescriptor::IOProcessorNumber());
 
                if (ParallelDescriptor::IOProcessor())
                    std::cout << "   Time per step        " << step_time << std::endl;

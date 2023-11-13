@@ -87,7 +87,6 @@ MFIXTimer::ok ()
   }
 
   if (((m_walltime_limit > 0.)) || (m_clean_exit != "")) {
-
     ParallelDescriptor::Bcast(&m_run_status_type, 1, ParallelDescriptor::IOProcessorNumber());
   }
 
@@ -98,7 +97,7 @@ MFIXTimer::ok ()
 int
 MFIXTimer::runtime_left_is_sufficient ()
 {
-  const Real needed_time = 1.1*(m_max_write_chkpt_time + m_avg_step_runtime);
+  const Real needed_time = 1.2*(m_max_write_chkpt_time + m_avg_step_runtime);
 
   const Real missing_time = m_walltime_limit - elapsed_runtime();
 
