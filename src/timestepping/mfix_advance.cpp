@@ -180,7 +180,9 @@ mfix::mfix_project_velocity ()
     }
 
     // Call the initial redistribution after the initial projection.
-    InitialRedistribution(time);
+    if (m_redistribute_after_initial_nodal_proj) {
+      InitialRedistribution(time);
+    }
 }
 
 void

@@ -172,6 +172,9 @@ mfix::InitParams ()
     // Redistribute after the nodal projection
     pp.query("redistribute_nodal_proj"          , m_redistribute_nodal_proj);
 
+    // Redistribute after the initial nodal projection
+    pp.query("redistribute_after_initial_nodal_proj", m_redistribute_after_initial_nodal_proj);
+
     // Threshold volfrac for correcting small cell velocity in the predictor and corrector
     pp.query("correction_small_volfrac"         , m_correction_small_volfrac);
 

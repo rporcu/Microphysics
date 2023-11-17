@@ -130,7 +130,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     m_boundary_conditions.set_velocity_bcs(a_time, vel_g_in, 0);
 
     // Define "vel" to be U^* - U^n rather than U^*
-    if (proj_for_small_dt)
+    if (proj_for_small_dt || (!proj_2))
     {
        m_boundary_conditions.set_velocity_bcs(a_time, vel_g_old_in, 0);
 
@@ -166,8 +166,8 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     // Why are we using this instead of simply multiplying vel and ep with their BCs in place
     // already?
     //
-    // For incremental dt, keep boundary values as zero
-    if (!proj_for_small_dt) {
+    // For incremental dt and initial iterations, keep boundary values as zero
+    if (!proj_for_small_dt && proj_2) {
         m_boundary_conditions.set_vec_bcs(a_time, epu);
     }
 
@@ -218,7 +218,7 @@ mfix::mfix_apply_nodal_projection (Vector< MultiFab* >& a_S_cc,
     nodal_projector->project(nodalproj_options->mg_rtol, nodalproj_options->mg_atol);
 
     // Define "vel" to be U^{n+1} rather than (U^{n+1}-U^n)
-    if (proj_for_small_dt)
+    if (proj_for_small_dt || (!proj_2))
     {
        for(int lev = 0; lev <= finest_level; lev++)
           MultiFab::Saxpy(*vel_g_in[lev], 1.0, *vel_g_old_in[lev], 0, 0, 3, vel_g_in[lev]->nGrow());

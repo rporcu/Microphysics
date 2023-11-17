@@ -941,6 +941,9 @@ class mfix : public AmrCore
     // Redistribute the velocity field after the nodal projection
     bool m_redistribute_nodal_proj = false;
 
+    // Redistribute after the initial nodal projection
+    bool m_redistribute_after_initial_nodal_proj = true;
+
     // Threshold volfrac for correcting small cell velocity in the predictor and corrector
     Real m_correction_small_volfrac = 1.e-4;
 
