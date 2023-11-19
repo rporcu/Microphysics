@@ -232,7 +232,7 @@ mfix.monitors.fm1.output.openmode = "trunc"
 
 mfix.monitors.fm2 = Eulerian::AreaRegion::StandardDeviation
 mfix.monitors.fm2.region = slice1
-mfix.monitors.fm2.variables =  ro_g  vel_g  T_g  X_gk
+mfix.monitors.fm2.variables =  ro_g  vel_g  T_g
 mfix.monitors.fm2.plot_file = fm2
 mfix.monitors.fm2.plot_int = 1
 mfix.monitors.fm2.output.format = scientific
