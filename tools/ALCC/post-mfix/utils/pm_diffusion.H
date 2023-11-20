@@ -69,9 +69,16 @@ class pm_diffusion {
     int m_max_coarsening_level;
     int m_max_semicoarsening_level;
 
+    int m_pre_smooth_iter;
+    int m_post_smooth_iter;
+    int m_final_smooth_iter;
+    int m_bottom_smooth_iter;
+
     amrex::Real m_rtol;
     amrex::Real m_atol;
     std::string m_bottom_solver;
+
+    std::string m_hypre_namespace;
 
     amrex::Vector<amrex::Array<std::unique_ptr<amrex::MultiFab>, AMREX_SPACEDIM>> m_bcoef;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> m_phi;

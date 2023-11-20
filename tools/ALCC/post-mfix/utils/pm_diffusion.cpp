@@ -41,10 +41,15 @@ pm_diffusion ( int const a_max_level,
   , m_consolidation(true)
   , m_semicoarsening(false)
   , m_max_coarsening_level(32)
+  , m_pre_smooth_iter(2)
+  , m_post_smooth_iter(2)
+  , m_final_smooth_iter(8)
+  , m_bottom_smooth_iter(0)
   , m_max_semicoarsening_level(32)
   , m_rtol(1.0e-11)
   , m_atol(1.0e-14)
   , m_bottom_solver("bicgstab")
+  , m_hypre_namespace("hypre")
 {
 
   { ParmParse pp("diffusion");
@@ -63,9 +68,15 @@ pm_diffusion ( int const a_max_level,
     pp.query("max_coarsening_level", m_max_coarsening_level);
     pp.query("max_semicoarsening_level", m_max_semicoarsening_level);
 
+    pp.query("pre_smooth_iter",    m_pre_smooth_iter);
+    pp.query("post_smooth_iter",   m_post_smooth_iter);
+    pp.query("final_smooth_iter",  m_final_smooth_iter);
+    pp.query("bottom_smooth_iter", m_bottom_smooth_iter);
+
     pp.query("rtol", m_rtol);
     pp.query("atol", m_atol);
     pp.query("bottom_solver", m_bottom_solver);
+    pp.query("hypre_namespace", m_hypre_namespace);
   }
 
   Real diff_coeff(-1.0);
@@ -327,12 +338,45 @@ smooth ( const Vector< MultiFab* >& a_MF,
 
       MLMG mlmg(*m_mlabec);
 
+      // The default bottom solver is BiCG
+      if(m_bottom_solver == "bicgstab")
+      { mlmg.setBottomSolver(MLMG::BottomSolver::bicgstab); }
+      else if(m_bottom_solver == "smoother")
+      { mlmg.setBottomSolver(MLMG::BottomSolver::smoother); }
+      else if(m_bottom_solver == "cg")
+      { mlmg.setBottomSolver(MLMG::BottomSolver::cg); }
+      else if(m_bottom_solver == "bicgcg")
+      { mlmg.setBottomSolver(MLMG::BottomSolver::bicgcg); }
+      else if(m_bottom_solver == "cgbicg")
+      { mlmg.setBottomSolver(MLMG::BottomSolver::cgbicg); }
+      else if(m_bottom_solver == "hypre") {
+#ifdef AMREX_USE_HYPRE
+        mlmg.setBottomSolver(MLMG::BottomSolver::hypre);
+        mlmg.setHypreOptionsNamespace(m_hypre_namespace);
+        mlmg.setHypreInterface(amrex::Hypre::Interface::ij);
+#else
+        post_mfix::Error(__FILE__, __LINE__) << " Error:"
+          << " diffusion.bottom_solve = hypre but post_mfix was not built with hypre support\n"
+          << " Please correct the input deck.";
+#endif
+      }
+      else {
+        post_mfix::Error(__FILE__, __LINE__) << " Error:"
+          << " Unknown diffusion bottom solve " << m_bottom_solver << "\n"
+          << " Please correct the input deck.";
+      }
+
       mlmg.setMaxIter(m_max_iter);
       mlmg.setMaxFmgIter(m_max_fmg_iter);
       mlmg.setVerbose(m_verbose);
       mlmg.setBottomVerbose(m_bottom_verbose);
 
       mlmg.setFinalFillBC(false);
+
+      mlmg.setPreSmooth(m_pre_smooth_iter);
+      mlmg.setPostSmooth(m_post_smooth_iter);
+      mlmg.setFinalSmooth(m_final_smooth_iter);
+      mlmg.setBottomSmooth(m_bottom_smooth_iter);
 
       mlmg.solve(GetVecOfPtrs(m_phi), GetVecOfConstPtrs(m_rhs), m_rtol, m_atol);
 

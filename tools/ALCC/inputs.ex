@@ -185,4 +185,91 @@ diffusion.max_semicoarsening_level = 32 # int [32]
 diffusion.rtol = 1.0e-4  # Real [1.0e-11]
 diffusion.atol = 1.0e-9  # Real [1.0e-14]
 
-diffusion.bottom_solver = "bicgstab" # string ["bicgstab"]
+diffusion.bottom_solver = "bicgstab" # string ["bicgstab"], "smoother", "hypre", "cg", "bicgcg", "cgbicg"
+
+diffusion.pre_smooth_iter    =  2 # int [2]
+diffusion.bottom_smooth_iter =  0 # int [0] additional smoothing after solve
+diffusion.post_smooth_iter   =  2 # int [2]
+
+# smoother is used as bottom solver
+diffusion.final_smooth_iter  =  8 # int [8]
+
+diffusion.hypre_namespace = "hypre" # string ["hypre"]
+
+## HYPRE settings ......................................................
+#
+#hypre.recompute_preconditioner = 0 # 1 if the mxtrix changes
+#hypre.write_matrix_files = 0
+#
+#hypre.hypre_preconditioner = BoomerAMG
+#hypre.hypre_solver = GMRES
+#
+## HYPRE BoomerAMG preconditioner settings .............................
+#
+#hypre.verbose      = 0
+#hypre.bamg_verbose = 0
+#
+#hypre.bamg_max_iterations    = 1  # default 1; should be set to 1 for preconditioner
+#hypre.bamg_precond_tolerance = 0. # default 0.; should be set to 0. for preconditioner
+#hypre.bamg_coarsen_type      = 8  # default 6; (If on the CPU, use 10); see hypre/src/parcsr_ls/HYPRE_parcsr_ls.h HYPRE_BoomerAMGSetCoarsenType()
+#hypre.bamg_cycle_type        = 1  # default 1 (V-cycle); 2 (W-cycle)
+#hypre.bamg_relax_order       = 0  # default 1 (CF-relaxation); 0 (lexicographic)
+#
+## must set either relax_type or (all 3) down/up/coarse_relax_type; see hypre/src/parcsr_ls/par_relax.c hypre_BoomerAMGRelax()
+#hypre.bamg_relax_type         = 12 # default 6
+##hypre.bamg_down_relax_type   = 11 # default 11
+##hypre.bamg_up_relax_type     = 11 # default 11
+##hypre.bamg_coarse_relax_type = 11 # default 11
+#
+## must set either num_sweeps or (all 3) down/up/coarse_num_sweeps
+#hypre.bamg_num_sweeps        =  4 # default 2
+##hypre.bamg_num_down_sweeps   = 2 # default 2
+##hypre.bamg_num_up_sweeps     = 2 # default 2
+##hypre.bamg_num_coarse_sweeps = 1 # default 1
+#
+#hypre.bamg_max_levels  = 10 # default 20
+#hypre.bamg_strong_threshold = 0.25 # default 0.57
+#hypre.bamg_interp_type = 6    # default 0; see hypre/src/parcsr_ls/HYPRE_parcsr_ls.h HYPRE_BoomerAMGSetInterpType()
+#
+#hypre.bamg_variant          = 0   # default 0; see hypre/src/parcsr_ls/HYPRE_parcsr_ls.h HYPRE_BoomerAMGSetVariant()
+#hypre.bamg_keep_transpose   = 1
+#hypre.bamg_min_coarse_size  = 1   # default 1
+#hypre.bamg_max_coarse_size  = 9   # default 9
+#hypre.bamg_pmax_elmts       = 3   # default 4
+#hypre.bamg_agg_num_levels   = 1   # default 0
+#hypre.bamg_agg_interp_type  = 7   # default 4; see hypre/src/parcsr_ls/HYPRE_parcsr_ls.h HYPRE_BoomerAMGSetAggInterpType()
+#hypre.bamg_agg_pmax_elmts   = 2   # default 0
+#hypre.bamg_trunc_factor     = 0.1 # default 0.1
+#hypre.bamg_set_restriction  = 0   # default 0
+#
+##bamg_non_galerkin_tol =
+##bamg_non_galerkin_level_tols =
+##bamg_non_galerkin_level_levels =
+##bamg_non_galerkin_level_tols =
+#
+##bamg_smooth_type = 5 # default 6; see hypre/src/parcsr_ls/HYPRE_parcsr_ls.h HYPRE_BoomerAMGSetSmoothType()
+#
+## for smooth_type=5 (ParILUK) or 7 (Pilut) or 9 (Euclid)
+##bamg_smooth_num_sweeps = 1
+##bamg_smooth_num_levels = 1 # default 0 (no complex smoothers)
+#
+## for smooth_type=5 or 7
+##bamg_ilu_max_iter = 1
+#
+## for smooth_type=5
+##bamg_ilu_type = 0
+##bamg_ilu_level = 0
+#
+## for smooth_type=7
+##bamg_ilu_max_row_nnz =
+##bamg_ilu_drop_tol =
+#
+## for smooth_type=9
+##bamg_euclid_file =
+#
+## HYPRE GRMES solver settings .............................
+#hypre.verbose = 0
+#hypre.num_krylov     = 100 # default 50
+##hypre.max_iterations = 200 # default 200
+##hypre.rtol           =
+##hypre.atol           =
