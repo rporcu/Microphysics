@@ -5,6 +5,19 @@
 
 using namespace amrex;
 
+post_mfix::
+~post_mfix ()
+{
+
+  for (auto& lev_alpha_f : m_alpha_f) { lev_alpha_f.reset( nullptr ); }
+  for (auto& lev_alpha_p : m_alpha_p) { lev_alpha_p.reset( nullptr ); }
+
+  if ( m_fluid     ) { delete m_fluid; }
+  if ( m_particles ) { delete m_particles; }
+  if ( m_solids    ) { delete m_solids; }
+
+}
+
 // Constructor
 post_mfix::
 post_mfix ( amrex::Geometry const& a_level_0_geom,
@@ -45,7 +58,6 @@ post_mfix ( amrex::Geometry const& a_level_0_geom,
   Print() << "\nCreating Eulerain solids\n";
   m_solids = new pm_solids(maxLevel(), Geom(), DistributionMap(),
                     boxArray(), m_particles);
-
 
   m_alpha_p.resize(get_nlev());
   m_alpha_f.resize(get_nlev());

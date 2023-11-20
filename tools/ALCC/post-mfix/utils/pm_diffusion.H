@@ -31,6 +31,8 @@ class pm_diffusion {
                    amrex::Vector<amrex::MultiFab const*>     const   a_alpha,
                    int const a_alpha_comp, amrex::Real a_mean_diameter);
 
+    ~pm_diffusion ();
+
     int no_filter () { return (m_filter_type == FilterType::none) ? 1 : 0; }
 
     void smooth ( const amrex::Vector< amrex::MultiFab* >& a_MF,

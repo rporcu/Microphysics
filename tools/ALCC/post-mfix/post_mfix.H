@@ -20,6 +20,8 @@ class post_mfix : public amrex::AmrCore
                amrex::AmrInfo const& a_amr_info,
                pm_plotfile* m_p_plotfile);
 
+    ~post_mfix ();
+
     pm_particles* get_particles () noexcept { return m_particles; }
 
     void compute_derived_quantites ();

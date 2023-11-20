@@ -8,9 +8,7 @@ using namespace amrex;
 pm_solids::
 ~pm_solids ()
 {
-  for (int lev(0); lev < get_nlev(); ++lev) {
-    m_data[lev].reset( nullptr );
-  }
+  for (auto& lev_data : m_data) { lev_data.reset( nullptr ); }
 }
 
 pm_solids::

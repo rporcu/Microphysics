@@ -6,6 +6,18 @@
 using namespace amrex;
 
 pm_diffusion::
+~pm_diffusion ()
+{
+  for (auto& lev_bcoef : m_bcoef) {
+    lev_bcoef[0].reset( nullptr );
+    lev_bcoef[1].reset( nullptr );
+    lev_bcoef[2].reset( nullptr );
+  }
+  for (auto& lev_phi : m_phi) { lev_phi.reset( nullptr ); }
+  for (auto& lev_rhs : m_rhs) { lev_rhs.reset( nullptr ); }
+}
+
+pm_diffusion::
 pm_diffusion ( int const a_max_level,
                Vector<Geometry>            const & a_geom,
                Vector<DistributionMapping> const & a_dmap,
@@ -257,7 +269,6 @@ pm_diffusion ( int const a_max_level,
     m_mlabec->setACoeffs(lev, 1.0);
     m_mlabec->setBCoeffs(lev, GetArrOfConstPtrs(m_bcoef[lev]));
   }
-
 }
 
 void

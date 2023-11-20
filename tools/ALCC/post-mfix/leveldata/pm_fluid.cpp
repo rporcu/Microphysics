@@ -7,9 +7,7 @@ using namespace amrex;
 pm_fluid::
 ~pm_fluid ()
 {
-  for (int lev(0); lev < get_nlev(); ++lev) {
-    m_data[lev].reset( nullptr );
-  }
+  for (auto& lev_data : m_data) { lev_data.reset( nullptr ); }
 }
 
 
@@ -85,5 +83,7 @@ pm_fluid ( int const a_max_level,
       }
     }
     m_data[lev]->FillBoundary(m_geom[lev].periodicity());
+
   }
+
 }
