@@ -269,7 +269,7 @@ void burn_cell_c()
     }
 #endif
 
-    // these need to be initialized 
+    // these need to be initialized
 
     burn_state.sdc_iter = 1;
     burn_state.num_sdc_iters = 1;
@@ -292,6 +292,12 @@ void burn_cell_c()
 
 
     burn_state.T_fixed = -1.0;
+
+#ifdef NSE_NET
+    burn_state.mu_p = unit_test_rp::mu_p;
+    burn_state.mu_n = unit_test_rp::mu_n;
+    burn_state.y_e = -1.0;
+#endif
 
     std::ofstream state_over_time("state_over_time.txt");
 
@@ -318,18 +324,18 @@ void burn_cell_c()
     state_over_time << std::setw(12) << "Density";
     state_over_time << std::setw(12) << "Temperature";
     for(int x = 0; x < NumSpec; ++x){
-	const std::string& element = short_spec_names_cxx[x];
-	state_over_time << std::setw(12) << element; 
+        const std::string& element = short_spec_names_cxx[x];
+        state_over_time << std::setw(12) << element;
     }
     state_over_time << std::endl;
 
     Real t = 0.0;
 
     state_over_time << std::setw(10) << t;
-    state_over_time << std::setw(12) << burn_state.rho; 
-    state_over_time << std::setw(12) << burn_state.T; 
+    state_over_time << std::setw(12) << burn_state.rho;
+    state_over_time << std::setw(12) << burn_state.T;
     for (int x = 0; x < NumSpec; ++x){
-        state_over_time << std::setw(12) << burn_state.xn[x]; 
+        state_over_time << std::setw(12) << burn_state.xn[x];
     }
     state_over_time << std::endl;
 
@@ -349,19 +355,19 @@ void burn_cell_c()
 
         std::cout << "burning for dt = " << dt << std::endl;
 
-    	burner(burn_state, dt);
+        burner(burn_state, dt);
 
         nstep_int += burn_state.n_step;
 
         t += dt;
 
-	state_over_time << std::setw(10) << t;
-	state_over_time << std::setw(12) << burn_state.rho;
-	state_over_time << std::setw(12) << burn_state.T;
-	for (int x = 0; x < NumSpec; ++x){
-	     state_over_time << std::setw(12) << burn_state.y[SFS+x] / burn_state.rho; 
-	}
-	state_over_time << std::endl;
+        state_over_time << std::setw(10) << t;
+        state_over_time << std::setw(12) << burn_state.rho;
+        state_over_time << std::setw(12) << burn_state.T;
+        for (int x = 0; x < NumSpec; ++x){
+             state_over_time << std::setw(12) << burn_state.y[SFS+x] / burn_state.rho;
+        }
+        state_over_time << std::endl;
     }
     state_over_time.close();
 

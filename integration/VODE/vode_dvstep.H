@@ -149,7 +149,7 @@ int dvstep (BurnT& state, DvodeT& vstate)
         y_save(i) = vstate.y(i);
     }
 #endif
-#ifdef SIMPLIFIED_SDC
+#ifdef SDC
     Real rho_old = state.rho_orig + TOLD * state.ydot_a[SRHO];
     for (int i = 1; i <= int_neqs; ++i) {
         y_save(i) = vstate.y(i);
@@ -224,10 +224,10 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
         bool valid_update = true;
 
-#ifdef SIMPLIFIED_SDC
-	if (vstate.y(SEINT+1) < 0.0_rt) {
-	    valid_update = false;
-	}
+#ifdef SDC
+        if (vstate.y(SEINT+1) < 0.0_rt) {
+            valid_update = false;
+        }
 
         Real rho_current = state.rho_orig + vstate.tn * state.ydot_a[SRHO];
 
@@ -247,7 +247,7 @@ int dvstep (BurnT& state, DvodeT& vstate)
                 (std::abs(vstate.y(i)) > vode_increase_change_factor * std::abs(y_save(i)) ||
                  std::abs(vstate.y(i)) < vode_decrease_change_factor * std::abs(y_save(i)))) {
 #ifdef MICROPHYSICS_DEBUG
-#ifndef AMREX_USE_GPU 
+#ifndef AMREX_USE_GPU
                std::cout << "rejecting step based on species " << i << " from " << y_save(i) << " to " << vstate.y(i) << std::endl;
 #endif
 #endif
@@ -259,6 +259,7 @@ int dvstep (BurnT& state, DvodeT& vstate)
             // or greater than one (within a tolerance).
             if (vstate.y(i) < -species_failure_tolerance) {
                 valid_update = false;
+                break;
             }
 
             // Don't enforce the condition below if
@@ -266,12 +267,13 @@ int dvstep (BurnT& state, DvodeT& vstate)
             if (!use_number_densities) {
                 if (vstate.y(i) > 1.0_rt + species_failure_tolerance) {
                     valid_update = false;
+                    break;
                 }
             }
 
 #endif
 
-#ifdef SIMPLIFIED_SDC
+#ifdef SDC
 
             // these are basically the same checks as with Strang
             // above, except now we are evolving rhoX instead of X.
@@ -295,31 +297,15 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
             if (vstate.y(SFS+i) < -species_failure_tolerance * rho_current) {
                 valid_update = false;
+                break;
             }
 
             if (vstate.y(SFS+i) > (1.0_rt + species_failure_tolerance) * rho_current) {
                 valid_update = false;
+                break;
             }
 
 #endif
-
-#ifdef TRUE_SDC
-            // as above, we want to make sure that the mass fractions stay bounded, but we are
-            // evolving:
-            //
-            //  y(1) = density
-            //  y(2:2+NumSpec-1) = rho X
-            //  y(NumSpec+2) = rho e
-
-            if (vstate.y(1+i) < -species_failure_tolerance * vstate.y(1)) {
-                valid_update = false;
-            }
-
-            if (vstate.y(1+i) > (1.0_rt + species_failure_tolerance) * vstate.y(1)) {
-                valid_update = false;
-            }
-#endif
-
 
         }
 
