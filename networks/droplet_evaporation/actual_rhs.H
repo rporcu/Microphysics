@@ -43,8 +43,14 @@ void actual_rhs_init () {}
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void actual_rhs (burn_t& state, Array1D<Real, 1, INT_NEQS>& ydot)
 {
-    using namespace Species;
-    using namespace AuxZero;
+  using namespace Species;
+  using namespace AuxZero;
+
+  for (int n(1); n <= INT_NEQS; ++n)
+    ydot(n) = 0.;
+
+  if (state.aux[ifluid_homogeneous_flag] == 0)
+  {
     namespace NP = NetworkProperties;
 
     const amrex::Real p_g = 101325.0;
@@ -116,6 +122,17 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, INT_NEQS>& ydot)
     ydot(Air) = 0;
     ydot(Vapor) = (Cmg_H2O > 0) ? rate : 0;
     ydot(Liquid) = (Cmg_H2O > 0) ? -1*rate : 0;
+
+  } else if (state.aux[ifluid_homogeneous_flag] == 1) {
+
+    ydot(Air) = 0;
+    ydot(Vapor) = 0;
+    ydot(Liquid) = 0;
+
+  } else {
+
+    amrex::Abort("Error");
+  }
 }
 
 

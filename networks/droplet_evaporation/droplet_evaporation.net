@@ -9,3 +9,4 @@ __aux_velocity_y
 __aux_velocity_z
 __aux_pressure
 __aux_temperature_p
+__aux_fluid_homogeneous_flag
