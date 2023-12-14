@@ -3,9 +3,6 @@
 
 #include <AMReX_REAL.H>
 #include <network_properties.H>
-#ifdef USE_SCREENING
-#include <screen.H>
-#endif
 #include <tfactors.H>
 
 // Implementation of "constexpr for" based on

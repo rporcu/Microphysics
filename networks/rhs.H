@@ -9,12 +9,6 @@
 #include <rhs_type.H>
 #include <actual_network.H>
 #include <burn_type.H>
-#ifdef SCREENING
-#include <screen.H>
-#endif
-#ifdef NEUTRINOS
-#include <sneut5.H>
-#endif
 #include <jacobian_utilities.H>
 #include <integrator_data.H>
 
@@ -1347,14 +1341,7 @@ void rhs (burn_t& burn_state, Array1D<Real, 1, nrhs>& ydot)
     });
 
     // Evaluate the neutrino cooling.
-#ifdef NEUTRINOS
-    constexpr int do_derivatives{0};
-    Real sneut, dsneutdt, dsneutdd, dsnuda, dsnudz;
-    sneut5<do_derivatives>(burn_state.T, burn_state.rho, burn_state.abar, burn_state.zbar,
-                           sneut, dsneutdt, dsneutdd, dsnuda, dsnudz);
-#else
     Real sneut = 0.0;
-#endif
 
     // Compute the energy RHS term.
     if constexpr (nrhs == 2 * neqs) {
@@ -1494,15 +1481,8 @@ void jac (burn_t& burn_state, ArrayUtil::MathArray2D<1, neqs, 1, neqs>& jac)
     });
 
     // Evaluate the neutrino cooling.
-#ifdef NEUTRINOS
-    Real sneut, dsneutdt, dsneutdd, dsnuda, dsnudz;
-    constexpr int do_derivatives{1};
-    sneut5<do_derivatives>(burn_state.T, burn_state.rho, burn_state.abar, burn_state.zbar,
-                           sneut, dsneutdt, dsneutdd, dsnuda, dsnudz);
-#else
     Real sneut = 0.0, dsneutdt = 0.0, dsneutdd = 0.0, dsnuda = 0.0, dsnudz = 0.0;
     amrex::ignore_unused(sneut, dsneutdd);
-#endif
 
     jac(net_ienuc, net_ienuc) = -temperature_to_energy_jacobian(burn_state, dsneutdt);
 
