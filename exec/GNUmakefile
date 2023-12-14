@@ -17,8 +17,8 @@ EBASE = main
 BL_NO_FORT = TRUE
 
 # define the location of the Microphysics top directory
-MICROPHYSICS_HOME  := ../..
-AMREX_HOME  := ../../subprojects/amrex
+MICROPHYSICS_HOME  := ../
+AMREX_HOME  := ../subprojects/amrex
 
 # This sets the EOS directory
 EOS_DIR     := helmholtz
@@ -34,4 +34,4 @@ EXTERN_SEARCH += . ..
 Bpack   := ./Make.package
 Blocs   := .
 
-include $(MICROPHYSICS_HOME)/unit_test/Make.unit_test
+include $(MICROPHYSICS_HOME)/Make.Microphysics
