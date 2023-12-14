@@ -82,7 +82,7 @@ void burn_cell_c()
     // output just the instantaneous RHS
 
     Array1D<Real, 1, neqs> ydot;
-    actual_rhs(burn_state, ydot);
+    //RPactual_rhs(burn_state, ydot);
 
     std::cout << "RHS at t = 0" << std::endl;
     for(int n = 0; n < NumSpec; ++n){

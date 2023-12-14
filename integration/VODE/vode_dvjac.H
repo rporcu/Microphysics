@@ -1,10 +1,8 @@
 #ifndef VODE_DVJAC_H
 #define VODE_DVJAC_H
 
+#include <todo.H>
 #include <vode_type.H>
-#ifndef NEW_NETWORK_IMPLEMENTATION
-#include <linpack.H>
-#endif
 #ifdef STRANG
 #include <integrator_rhs_strang.H>
 #endif

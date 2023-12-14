@@ -6,6 +6,7 @@
 
 #include <iomanip>
 
+#include <todo.H>
 #include <network.H>
 #include <burn_type.H>
 #include <eos_type.H>
@@ -14,7 +15,6 @@
 #include <vode_type.H>
 #include <vode_dvode.H>
 
-using namespace integrator_rp;
 
 template <typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE

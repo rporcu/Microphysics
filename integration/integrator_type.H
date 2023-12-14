@@ -1,9 +1,9 @@
 #ifndef INTEGRATOR_TYPE_H
 #define INTEGRATOR_TYPE_H
 
+#include <todo.H>
 #include <eos.H>
 
-using namespace integrator_rp;
 
 template <typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE

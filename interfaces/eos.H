@@ -1,7 +1,6 @@
 #ifndef EOS_H
 #define EOS_H
 
-#include <network_properties.H>
 #include <eos_data.H>
 #include <eos_type.H>
 #include <eos_composition.H>

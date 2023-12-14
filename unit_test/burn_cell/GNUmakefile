@@ -23,9 +23,6 @@ AMREX_HOME  := ../../subprojects/amrex
 # This sets the EOS directory
 EOS_DIR     := helmholtz
 
-# This sets the network directory
-NETWORK_DIR := vode_example
-
 INTEGRATOR_DIR =  VODE
 
 ifeq ($(USE_CUDA), TRUE)

@@ -5,6 +5,7 @@
 
 #include <AMReX_REAL.H>
 
+#include <todo.H>
 #include <network.H>
 #include <eos_type.H>
 #include <eos_composition.H>
@@ -13,7 +14,6 @@
 #include <ArrayUtilities.H>
 
 using namespace amrex;
-using namespace network_rp;
 
 // A generic structure holding data necessary to do a nuclear burn.
 

@@ -1,10 +1,8 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include <todo.H>
 #include <string>
-#include <network_properties.H>
-
-void network_init();
 
 AMREX_INLINE int network_spec_index(const std::string& name) {
   int idx = -1;

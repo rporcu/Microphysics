@@ -15,7 +15,6 @@ TOP := $(MICROPHYSICS_HOME)
 
 # default microphysics locations
 EOS_HOME ?= $(TOP)/EOS
-NETWORK_HOME ?= $(TOP)/networks
 
 EBASE ?= main
 
@@ -99,8 +98,6 @@ Bpack  += $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 #------------------------------------------------------------------------------
 # microphysics
 #------------------------------------------------------------------------------
-NETWORK_OUTPUT_PATH := $(MICROPHYSICS_AUTO_SOURCE_DIR)
-
 include $(MICROPHYSICS_HOME)/Make.Microphysics_extern
 
 Bpack += $(foreach dir, $(EXTERN_CORE), $(dir)/Make.package)
@@ -141,9 +138,6 @@ AUTO_BUILD_SOURCES += $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H
 
 # these are for finding runtime parameters
 EXTERN_SEARCH += $(EXTERN_CORE) $(MICROPHYSICS_HOME)/unit_test
-ifdef MICROPHYSICS_HOME
-   EXTERN_SEARCH += $(MICROPHYSICS_HOME)/networks/
-endif
 
 EXTERN_PARAMETERS := $(shell $(MICROPHYSICS_HOME)/util/build_scripts/findparams.py $(EXTERN_SEARCH))
 
@@ -168,7 +162,7 @@ CEXE_headers += $(AMREX_HOME)/Tools/C_scripts/AMReX_buildInfo.H
 INCLUDE_LOCATIONS +=  $(AMREX_HOME)/Tools/C_scripts
 
 
-MNAMES := EOS=$(EOS_PATH) NETWORK=$(NETWORK_PATH) INTEGRATOR=$(INTEGRATOR_DIR)
+MNAMES := EOS=$(EOS_PATH) INTEGRATOR=$(INTEGRATOR_DIR)
 
 # we make AMReX_buildInfo.cpp as we make the .o file, so we can delete
 # it immediately.  this way if the build is interrupted, we are
@@ -209,7 +203,6 @@ include $(AMREX_HOME)/Tools/GNUMake/Make.rules
 
 clean::
 	$(SILENT) $(RM) extern.F90
-	$(SILENT) $(RM) network_properties.F90 network_properties.H
 	$(SILENT) $(RM) $(MICROPHYSICS_AUTO_SOURCE_DIR)/*.H $(MICROPHYSICS_AUTO_SOURCE_DIR)/*.[fF]90
 	$(SILENT) $(RM) extern_parameters.cpp extern_parameters_F.H extern_parameters.H
 
@@ -220,7 +213,6 @@ clean::
 # The same is true for "extern.f90".
 
 clean::
-	$(RM) network.f90
 	$(RM) extern.f90
 
 

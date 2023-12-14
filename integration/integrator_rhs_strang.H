@@ -1,22 +1,13 @@
 #ifndef INTEGRATOR_RHS_STRANG_H
 #define INTEGRATOR_RHS_STRANG_H
 
+#include <todo.H>
 #include <network.H>
-#include <actual_network.H>
-#ifdef NEW_NETWORK_IMPLEMENTATION
-#include <rhs.H>
-#else
-#include <actual_rhs.H>
-#endif
 #include <burn_type.H>
 #include <extern_parameters.H>
 #include <integrator_data.H>
 #include <integrator_type_strang.H>
-#ifdef NONAKA_PLOT
-#include <nonaka_plot.H>
-#endif
 
-using namespace integrator_rp;
 
 // The rhs routine provides the right-hand-side for the DVODE solver.
 // This is a generic interface that calls the specific RHS routine in the
@@ -68,17 +59,7 @@ void rhs (const Real time, BurnT& state, T& int_state, RArray1D& ydot, [[maybe_u
 
     // Call the specific network routine to get the RHS.
 
-#ifdef NEW_NETWORK_IMPLEMENTATION
-    RHS::rhs(state, ydot);
-#else
-    actual_rhs(state, ydot);
-#endif
-
-#ifdef NONAKA_PLOT
-    if (! in_jacobian) {
-        nonaka_rhs(time, state, ydot);
-    }
-#endif
+    //RPactual_rhs(state, ydot);
 
     // We integrate X, not Y
     // turn it off for primordial chem
@@ -136,11 +117,7 @@ void jac ([[maybe_unused]] const Real time, BurnT& state, T& int_state, MatrixTy
 
     integrator_to_burn(int_state, state);
 
-#ifdef NEW_NETWORK_IMPLEMENTATION
-    RHS::jac(state, pd);
-#else
-    actual_jac(state, pd);
-#endif
+    //RPactual_jac(state, pd);
 
     // We integrate X, not Y
     // turn it off for primordial chem
