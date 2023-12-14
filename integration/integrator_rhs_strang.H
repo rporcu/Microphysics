@@ -58,7 +58,7 @@ void rhs (const Real time, BurnT& state, T& int_state, RArray1D& ydot, [[maybe_u
 
     // Call the specific network routine to get the RHS.
 
-    //RPactual_rhs(state, ydot);
+//RP    actual_rhs(state, ydot);
 
     // We integrate X, not Y
     // turn it off for primordial chem
@@ -116,7 +116,7 @@ void jac ([[maybe_unused]] const Real time, BurnT& state, T& int_state, MatrixTy
 
     integrator_to_burn(int_state, state);
 
-    //RPactual_jac(state, pd);
+//RP    actual_jac(state, pd);
 
     // We integrate X, not Y
     // turn it off for primordial chem

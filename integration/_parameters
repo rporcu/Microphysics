@@ -53,13 +53,6 @@ ode_max_dt                 real         1.d30
 # Whether to use Jacobian caching in VODE
 use_jacobian_caching    integer    1
 
-# Inputs for generating a Nonaka Plot (TM)
-nonaka_i                integer           0
-nonaka_j                integer           0
-nonaka_k                integer           0
-nonaka_level            integer           0
-nonaka_file             character         "nonaka_plot.dat"
-
 # in the clean_state process, do we clip the species such that they
 # are in [0, 1]?
 do_species_clip              integer          1
