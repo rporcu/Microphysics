@@ -78,20 +78,6 @@ ifeq ($(USE_NSE_TABLE), TRUE)
 
 endif
 
-ifeq ($(USE_NEUTRINOS), TRUE)
-
-  NEUTRINO_PATH := $(MICROPHYSICS_HOME)/neutrinos
-
-  INCLUDE_LOCATIONS += $(NEUTRINO_PATH)
-  VPATH_LOCATIONS   += $(NEUTRINO_PATH)
-  EXTERN_CORE       += $(NEUTRINO_PATH)
-
-  include $(NEUTRINO_PATH)/Make.package
-
-  DEFINES += -DNEUTRINOS
-
-endif
-
 NETWORK_OUTPUT_PATH ?= .
 
 # for dependency resolution

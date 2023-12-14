@@ -3,7 +3,7 @@
 
 #include <AMReX_REAL.H>
 #include <network_properties.H>
-#ifdef SCREENING
+#ifdef USE_SCREENING
 #include <screen.H>
 #endif
 #include <tfactors.H>

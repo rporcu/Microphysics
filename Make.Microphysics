@@ -11,16 +11,11 @@ USE_CUDA ?= FALSE
 
 CUDA_VERBOSE ?= FALSE
 
-# default is not to compile in the conductivity
-USE_CONDUCTIVITY ?= FALSE
-
 TOP := $(MICROPHYSICS_HOME)
 
 # default microphysics locations
 EOS_HOME ?= $(TOP)/EOS
 NETWORK_HOME ?= $(TOP)/networks
-CONDUCTIVITY_HOME ?= $(TOP)/conductivity
-NSE_TABULAR_HOME ?= $(TOP)/nse_tabular
 
 EBASE ?= main
 

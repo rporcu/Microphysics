@@ -5,7 +5,7 @@ DEBUG      = FALSE
 
 DIM        = 3
 
-COMP	   = gnu
+COMP       = gnu
 
 USE_MPI    = FALSE
 USE_OMP    = FALSE
@@ -18,14 +18,13 @@ BL_NO_FORT = TRUE
 
 # define the location of the Microphysics top directory
 MICROPHYSICS_HOME  := ../..
+AMREX_HOME  := ../../subprojects/amrex
 
 # This sets the EOS directory
 EOS_DIR     := helmholtz
 
 # This sets the network directory
-NETWORK_DIR := aprox13
-
-CONDUCTIVITY_DIR := stellar
+NETWORK_DIR := vode_example
 
 INTEGRATOR_DIR =  VODE
 
@@ -39,5 +38,3 @@ Bpack   := ./Make.package
 Blocs   := .
 
 include $(MICROPHYSICS_HOME)/unit_test/Make.unit_test
-
-
