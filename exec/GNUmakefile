@@ -20,9 +20,6 @@ BL_NO_FORT = TRUE
 MICROPHYSICS_HOME  := ../
 AMREX_HOME  := ../subprojects/amrex
 
-# This sets the EOS directory
-EOS_DIR     := helmholtz
-
 INTEGRATOR_DIR =  VODE
 
 ifeq ($(USE_CUDA), TRUE)

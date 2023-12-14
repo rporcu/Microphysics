@@ -21,4 +21,3 @@ endif
 # there.
 
 EXTERN_CORE += $(MICROPHYSICS_HOME)/integration
-EXTERN_CORE += $(MICROPHYSICS_HOME)/util
