@@ -20,7 +20,5 @@ endif
 # Network includes since it has actions that depend on variables set
 # there.
 
-EXTERN_CORE += $(MICROPHYSICS_HOME)/interfaces
 EXTERN_CORE += $(MICROPHYSICS_HOME)/integration
-EXTERN_CORE += $(MICROPHYSICS_HOME)/constants
 EXTERN_CORE += $(MICROPHYSICS_HOME)/util

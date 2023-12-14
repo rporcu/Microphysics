@@ -4,5 +4,7 @@ ifeq ($(USE_REACT),TRUE)
   CEXE_headers += linpack.H
 endif
 
+CEXE_headers += fundamental_constants.H
+
 INCLUDE_LOCATIONS += $(MICROPHYSICS_HOME)/util/gcem/include
 CEXE_headers += gcem.hpp

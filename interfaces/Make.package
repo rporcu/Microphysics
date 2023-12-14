@@ -1,9 +1,0 @@
-CEXE_headers += ArrayUtilities.H
-
-CEXE_headers += rhs_type.H
-CEXE_headers += tfactors.H
-
-ifeq ($(USE_REACT), TRUE)
-  CEXE_headers += burn_type.H
-  CEXE_headers += burner.H
-endif
