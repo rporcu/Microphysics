@@ -2,7 +2,6 @@
 #define INTEGRATOR_TYPE_H
 
 #include <todo.H>
-#include <eos.H>
 
 
 template <typename BurnT>
@@ -68,7 +67,7 @@ void update_thermodynamics (BurnT& state, const I& int_state)
     // Get T from e (also updates composition quantities).
 
     if (call_eos_in_rhs) {
-        eos(eos_input_re, state);
+//RP        eos(eos_input_re, state);
     }
 
     // override T if we are fixing it (e.g. due to

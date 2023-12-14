@@ -2,8 +2,6 @@
 #define BURN_CELL_H
 
 #include <extern_parameters.H>
-#include <eos.H>
-#include <network.H>
 #include <burner.H>
 #include <fstream>
 #include <iostream>
@@ -49,7 +47,7 @@ void burn_cell_c()
     set_aux_comp_from_X(eos_state);
 #endif
 
-    eos(eos_input_rt, eos_state);
+    //RPeos(eos_input_rt, eos_state);
 
     burn_state.rho = eos_state.rho;
     burn_state.T = eos_state.T;
@@ -77,7 +75,7 @@ void burn_cell_c()
     // the burn but we need to keep track of e to get a valid
     // temperature for the burn if we substep
 
-    eos(eos_input_rt, burn_state);
+    //RPeos(eos_input_rt, burn_state);
 
     // output just the instantaneous RHS
 
@@ -173,7 +171,7 @@ void burn_cell_c()
         // get the updated T
 
         if (call_eos_in_rhs) {
-            eos(eos_input_re, burn_state);
+            //RPeos(eos_input_re, burn_state);
         }
 
         t += dt;

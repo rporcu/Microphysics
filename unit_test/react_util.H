@@ -29,7 +29,7 @@ init_t setup_composition(const int nz) {
     comp_data.nprim = 0;
 
     // we absolutely require primary_species_1 to be defined
-    comp_data.is1 = network_spec_index(primary_species_1);
+    //RPcomp_data.is1 = network_spec_index(primary_species_1);
     if (comp_data.is1 >= 0) {
         comp_data.nprim++;
     } else {
@@ -38,13 +38,13 @@ init_t setup_composition(const int nz) {
 
     // we'll check the next species, but if it is not valid,
     // we'll just move on
-    comp_data.is2 = network_spec_index(primary_species_2);
+    //RPcomp_data.is2 = network_spec_index(primary_species_2);
     if (comp_data.is2 >= 0) {
         comp_data.nprim++;
 
         // only consider primary_species_3 if primary_species_2
         // was defined
-        comp_data.is3 = network_spec_index(primary_species_3);
+        //RPcomp_data.is3 = network_spec_index(primary_species_3);
         if (comp_data.is3 >= 0) {
             comp_data.nprim++;
         }

@@ -17,7 +17,7 @@ static constexpr bool subtract_internal_energy = false;
 static constexpr bool burner_verbose = false;
 
 static constexpr int NumSpec = 1;
-static constexpr int NumAux = 0;
+static constexpr int NumAux = 1;
 static constexpr int ode_max_steps = 0;
 static constexpr int jacobian = 0;
 
@@ -37,5 +37,49 @@ static const std::vector<std::string> short_spec_names_cxx = {};
 static const std::vector<amrex::Real> zion = {};
 static const std::vector<amrex::Real> aion = {};
 static const std::vector<amrex::Real> aion_inv = {};
+
+template <typename T, typename Enable = void>
+struct has_xn
+    : std::false_type {};
+
+template <typename T>
+struct has_xn<T, decltype((void)T::xn, void())>
+    : std::true_type {};
+
+template <typename T, typename Enable = void>
+struct has_energy
+    : std::false_type {};
+
+template <typename T>
+struct has_energy<T, decltype((void)T::e, void())>
+    : std::true_type {};
+
+namespace EOSData {
+  static constexpr amrex::Real mindens = 0;
+  static constexpr amrex::Real mintemp = 0;
+}
+
+struct eos_base_t {};
+
+struct eos_t:eos_base_t {
+  amrex::Real rho{};
+  amrex::Real T{};
+  amrex::Real p{};
+  amrex::Real e{};
+  amrex::Real h{};
+  amrex::Real s{};
+  amrex::Real xn[NumSpec]{};
+  amrex::Real aux[NumAux]{};
+  // many others
+};
+
+enum eos_input_t {eos_input_rt = 0,
+                  eos_input_rh,
+                  eos_input_tp,
+                  eos_input_rp,
+                  eos_input_re,
+                  eos_input_ps,
+                  eos_input_ph,
+                  eos_input_th};
 
 #endif

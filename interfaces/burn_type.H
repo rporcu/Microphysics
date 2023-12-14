@@ -6,9 +6,6 @@
 #include <AMReX_REAL.H>
 
 #include <todo.H>
-#include <network.H>
-#include <eos_type.H>
-#include <eos_composition.H>
 #include <extern_parameters.H>
 
 #include <ArrayUtilities.H>

@@ -16,24 +16,10 @@ else
 endif
 
 
-ifeq ($(EOS_DIR), gamma_law_general)
-  override EOS_DIR := gamma_law
-  $(warning gamma_law_general has been renamed gamma_law)
-endif
-
-
-EOS_PATH := $(MICROPHYSICS_HOME)/EOS/$(strip $(EOS_DIR))
-
-
-EXTERN_CORE += $(EOS_HOME)
-EXTERN_CORE += $(EOS_PATH)
-
-
 # Note that this should be located after the include of the EOS and
 # Network includes since it has actions that depend on variables set
 # there.
 
-EXTERN_CORE += $(MICROPHYSICS_HOME)/EOS
 EXTERN_CORE += $(MICROPHYSICS_HOME)/interfaces
 EXTERN_CORE += $(MICROPHYSICS_HOME)/integration
 EXTERN_CORE += $(MICROPHYSICS_HOME)/constants

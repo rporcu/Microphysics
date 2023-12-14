@@ -1,6 +1,7 @@
 #ifndef INTEGRATOR_DATA_H
 #define INTEGRATOR_DATA_H
 
+#include <todo.H>
 #include <burn_type.H>
 
 // Define the size of the ODE system that VODE will integrate

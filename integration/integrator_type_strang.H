@@ -2,7 +2,6 @@
 #define INTEGRATOR_TYPE_STRANG_H
 
 #include <todo.H>
-#include <eos.H>
 #include <integrator_type.H>
 
 

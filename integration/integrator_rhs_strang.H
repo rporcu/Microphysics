@@ -2,7 +2,6 @@
 #define INTEGRATOR_RHS_STRANG_H
 
 #include <todo.H>
-#include <network.H>
 #include <burn_type.H>
 #include <extern_parameters.H>
 #include <integrator_data.H>

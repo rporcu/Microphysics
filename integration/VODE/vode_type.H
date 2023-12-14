@@ -5,7 +5,6 @@
 #include <AMReX_Array.H>
 
 #include <ArrayUtilities.H>
-#include <network.H>
 
 #include <integrator_data.H>
 

@@ -7,10 +7,7 @@
 #include <iomanip>
 
 #include <todo.H>
-#include <network.H>
 #include <burn_type.H>
-#include <eos_type.H>
-#include <eos.H>
 #include <extern_parameters.H>
 #include <vode_type.H>
 #include <vode_dvode.H>
@@ -57,7 +54,7 @@ void actual_integrator (BurnT& state, Real dt)
     // We assume that (rho, T) coming in are valid, do an EOS call
     // to fill the rest of the thermodynamic variables.
 
-    eos(eos_input_rt, state);
+//RP    eos(eos_input_rt, state);
 
     // set the scaling for energy if we integrate it dimensionlessly
     state.e_scale = state.e;

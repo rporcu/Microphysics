@@ -7,8 +7,6 @@
 using namespace amrex;
 
 #include <extern_parameters.H>
-#include <eos.H>
-#include <network.H>
 #include <burn_cell.H>
 #include <unit_test.H>
 
@@ -23,9 +21,6 @@ int main(int argc, char *argv[]) {
   ParmParse ppa("amr");
 
   init_unit_test();
-
-  // C++ EOS initialization (must be done after Fortran eos_init and init_extern_parameters)
-  eos_init(small_temp, small_dens);
 
   burn_cell_c();
 

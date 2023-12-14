@@ -1,13 +1,5 @@
 CEXE_headers += ArrayUtilities.H
 
-CEXE_headers += eos.H
-CEXE_headers += eos_data.H
-CEXE_headers += eos_type.H
-CEXE_headers += eos_override.H
-
-CEXE_sources += eos_data.cpp
-
-CEXE_headers += network.H
 CEXE_headers += rhs_type.H
 CEXE_headers += tfactors.H
 
