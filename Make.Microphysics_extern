@@ -21,3 +21,8 @@ endif
 # there.
 
 EXTERN_CORE += $(MICROPHYSICS_HOME)/integration
+INCLUDE_LOCATIONS += $(MICROPHYSICS_HOME)/utils
+VPATH_LOCATIONS   += $(MICROPHYSICS_HOME)/utils
+EXTERN_CORE       += $(MICROPHYSICS_HOME)/utils
+
+include $(MICROPHYSICS_HOME)/utils/Make.package

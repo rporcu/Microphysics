@@ -8,10 +8,6 @@ EXTERN_CORE       += $(MICROPHYSICS_HOME)/integration/$(INTEGRATOR_DIR)
 include $(MICROPHYSICS_HOME)/integration/$(INTEGRATOR_DIR)/Make.package
 
 # Check if we should make a Nonaka plot and add to cpp definitions
-ifeq ($(USE_NONAKA_PLOT), TRUE)
-  DEFINES += -DNONAKA_PLOT
-endif
-
 CEXE_headers += integrator.H
 CEXE_headers += integrator_data.H
 CEXE_headers += integrator_type.H
@@ -23,17 +19,3 @@ else
   CEXE_headers += integrator_type_strang.H
   CEXE_headers += integrator_rhs_strang.H
 endif
-
-ifeq ($(USE_NSE_TABLE), TRUE)
-  ifeq ($(USE_ALL_SDC), TRUE)
-    CEXE_headers += nse_update_simplified_sdc.H
-  else
-    CEXE_headers += nse_update_strang.H
-  endif
-endif
-
-INCLUDE_LOCATIONS += $(MICROPHYSICS_HOME)/integration/utils
-VPATH_LOCATIONS   += $(MICROPHYSICS_HOME)/integration/utils
-EXTERN_CORE       += $(MICROPHYSICS_HOME)/integration/utils
-
-include $(MICROPHYSICS_HOME)/integration/utils/Make.package

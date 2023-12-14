@@ -136,14 +136,14 @@ AUTO_BUILD_SOURCES += $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H
 # these are for finding runtime parameters
 EXTERN_SEARCH += $(EXTERN_CORE)
 
-EXTERN_PARAMETERS := $(shell $(MICROPHYSICS_HOME)/integration/utils/build_scripts/findparams.py $(EXTERN_SEARCH))
+EXTERN_PARAMETERS := $(shell $(MICROPHYSICS_HOME)/utils/build_scripts/findparams.py $(EXTERN_SEARCH))
 
 
 $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.cpp: $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H
 
 $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H: $(EXTERN_PARAMETERS) $(EXTERN_TEMPLATE)
 	@if [ ! -d $(MICROPHYSICS_AUTO_SOURCE_DIR) ]; then mkdir -p $(MICROPHYSICS_AUTO_SOURCE_DIR); fi
-	$(MICROPHYSICS_HOME)/integration/utils/build_scripts/write_probin.py \
+	$(MICROPHYSICS_HOME)/utils/build_scripts/write_probin.py \
            --cxx_prefix $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern \
            --pa "$(EXTERN_PARAMETERS)" --use_namespace
 
