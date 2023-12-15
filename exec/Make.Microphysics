@@ -13,8 +13,6 @@ CXXSTD := c++17
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
-MICROPHYSICS_AUTO_SOURCE_DIR := $(TmpBuildDir)/microphysics_sources/$(optionsSuffix).EXE
-
 all: build_status $(executable) integrator_library
 	@echo SUCCESS
 
@@ -24,12 +22,6 @@ build_status:
           --git_dirs "$(TOP) $(AMREX_HOME)"
 
 integrator_library: $(executable)
-ifeq ($(USE_COMPILE_WITH_F2PY), TRUE)
-	@echo Wrapping sources with f90wrap ...
-	sh dowrap.sh
-	@echo Linking objects with f2py ...
-	sh dof2py.sh
-endif
 
 # Use a coarse grained OMP approach
 DEFINES += -DCRSEGRNDOMP
@@ -55,10 +47,6 @@ ifeq ($(USE_REACT_SPARSE_JACOBIAN), TRUE)
   endif
 endif
 
-ifeq ($(USE_COMPILE_WITH_F2PY), TRUE)
-  DEFINES += -DCOMPILE_WITH_F2PY
-endif
-
 
 #------------------------------------------------------------------------------
 # AMReX
@@ -80,7 +68,30 @@ Bpack  += $(foreach dir, $(Pdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 #------------------------------------------------------------------------------
 # microphysics
 #------------------------------------------------------------------------------
-include Make.Microphysics_extern
+# for common code paths between simplified-SDC and true-SDC, we'll use the SDC
+# define
+ifeq ($(USE_SIMPLIFIED_SDC), TRUE)
+  DEFINES += -DSIMPLIFIED_SDC
+  DEFINES += -DSDC
+  USE_ALL_SDC := TRUE
+else ifeq ($(USE_TRUE_SDC), TRUE)
+  DEFINES += -DTRUE_SDC
+  DEFINES += -DSDC
+  USE_ALL_SDC := TRUE
+else
+  DEFINES += -DSTRANG
+endif
+
+
+# Note that this should be located after the include of the EOS and Network
+# includes since it has actions that depend on variables set there.
+EXTERN_CORE += $(MICROPHYSICS_HOME)/integration
+INCLUDE_LOCATIONS += $(MICROPHYSICS_HOME)/utils
+VPATH_LOCATIONS   += $(MICROPHYSICS_HOME)/utils
+EXTERN_CORE       += $(MICROPHYSICS_HOME)/utils
+
+include $(MICROPHYSICS_HOME)/utils/Make.package
+
 
 Bpack += $(foreach dir, $(EXTERN_CORE), $(dir)/Make.package)
 Blocs += $(foreach dir, $(EXTERN_CORE), $(dir))
@@ -92,48 +103,15 @@ Blocs += $(foreach dir, $(EXTERN_CORE), $(dir))
 
 include $(Bpack)
 
-# this is a safety from the mega-fortran attempts
-f90EXE_sources += $(ca_f90EXE_sources)
-F90EXE_sources += $(ca_F90EXE_sources)
-
 INCLUDE_LOCATIONS += $(Blocs)
 VPATH_LOCATIONS   += $(Blocs)
 
-
-#------------------------------------------------------------------------------
-# make generated source files location
-#------------------------------------------------------------------------------
-VPATH_LOCATIONS += $(MICROPHYSICS_AUTO_SOURCE_DIR)
-INCLUDE_LOCATIONS += $(MICROPHYSICS_AUTO_SOURCE_DIR)
-
-
-#------------------------------------------------------------------------------
-# runtime parameters
-#------------------------------------------------------------------------------
-
-CEXE_sources += extern_parameters.cpp
-CEXE_headers += extern_parameters.H
-
-# for dependency resolution
-
-AUTO_BUILD_SOURCES += $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H
 
 # these are for finding runtime parameters
 EXTERN_SEARCH += $(EXTERN_CORE)
 
 EXTERN_PARAMETERS := $(shell $(MICROPHYSICS_HOME)/utils/build_scripts/findparams.py $(EXTERN_SEARCH))
 
-
-$(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.cpp: $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H
-
-$(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.H: $(EXTERN_PARAMETERS) $(EXTERN_TEMPLATE)
-	@if [ ! -d $(MICROPHYSICS_AUTO_SOURCE_DIR) ]; then mkdir -p $(MICROPHYSICS_AUTO_SOURCE_DIR); fi
-	$(MICROPHYSICS_HOME)/utils/build_scripts/write_probin.py \
-           --cxx_prefix $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern \
-           --pa "$(EXTERN_PARAMETERS)" --use_namespace
-
-# for debugging
-test_extern_params: $(MICROPHYSICS_AUTO_SOURCE_DIR)/extern_parameters.cpp
 
 #------------------------------------------------------------------------------
 # build info
@@ -182,20 +160,6 @@ $(objEXETempDir)/AMReX_buildInfo.o: .FORCE
 #------------------------------------------------------------------------------
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules
-
-clean::
-	$(SILENT) $(RM) extern.F90
-	$(SILENT) $(RM) $(MICROPHYSICS_AUTO_SOURCE_DIR)/*.H $(MICROPHYSICS_AUTO_SOURCE_DIR)/*.[fF]90
-	$(SILENT) $(RM) extern_parameters.cpp extern_parameters_F.H extern_parameters.H
-
-# Older versions of CASTRO generated a "network.f90" file when using
-# the general_null network, which conflicts with our generalized
-# network.f90 file.  So we should delete the local copy if we are
-# trying to rebuild from an old directory.
-# The same is true for "extern.f90".
-
-clean::
-	$(RM) extern.f90
 
 
 # for debugging.  To see the value of a Makefile variable,

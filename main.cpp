@@ -6,8 +6,6 @@
 #include <AMReX_MultiFab.H>
 using namespace amrex;
 
-#include <extern_parameters.H>
-
 int main(int argc, char *argv[]) {
 
   amrex::Initialize(argc, argv);
