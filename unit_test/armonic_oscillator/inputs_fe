@@ -21,4 +21,3 @@ integrator.scale_system = 0
 integrator.integrate_energy = 0
 integrator.react_boost = 0.
 integrator.call_eos_in_rhs = 0
-integrator.X_reject_buffer = 1.e32

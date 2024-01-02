@@ -84,9 +84,9 @@ void actual_integrator (BurnT& state, const Real dt)
 
     // Normalize the final abundances.
 
-//    if (!use_number_densities) {
-//        normalize_abundances_burn(state);
-//    }
+    if (!use_number_densities) {
+        normalize_abundances_burn(state);
+    }
 
     // Get the number of RHS and Jacobian evaluations.
 

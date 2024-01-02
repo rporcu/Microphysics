@@ -62,11 +62,11 @@ void actual_integrator (BurnT& state, Real dt)
     // set the scaling for energy if we integrate it dimensionlessly
     state.e_scale = state.e;
 
-//    if (scale_system) {
-//        // the absolute tol for energy needs to reflect the scaled
-//        // energy the integrator sees
-//        vode_state.atol_enuc /= state.e_scale;
-//    }
+    if (scale_system) {
+        // the absolute tol for energy needs to reflect the scaled
+        // energy the integrator sees
+        vode_state.atol_enuc /= state.e_scale;
+    }
 
     // Fill in the initial integration state.
 
@@ -100,9 +100,9 @@ void actual_integrator (BurnT& state, Real dt)
     // need to sync the auxiliary data up with the new mass fractions
     set_aux_comp_from_X(state);
 #endif
-//    if (call_eos_in_rhs) {
-//        eos(eos_input_re, state);
-//    }
+    if (call_eos_in_rhs) {
+        eos(eos_input_re, state);
+    }
 
 #endif
 
@@ -115,9 +115,9 @@ void actual_integrator (BurnT& state, Real dt)
 
     // Normalize the final abundances.
     // Don't normalize for primordial chem
-//    if (!use_number_densities) {
-//        normalize_abundances_burn(state);
-//    }
+    if (!use_number_densities) {
+        normalize_abundances_burn(state);
+    }
 
     // Get the number of RHS and Jacobian evaluations.
 

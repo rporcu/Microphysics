@@ -114,7 +114,7 @@ void rhs (const Real time, BurnT& state, T& /*int_state*/, RArray1D& ydot, [[may
 // Analytical Jacobian
 template<typename BurnT, typename T, class MatrixType>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void jac ([[maybe_unused]] const Real time, BurnT& state, T& /*int_state*/, MatrixType& pd)
+void jac ([[maybe_unused]] const Real time, BurnT& state, T& int_state, MatrixType& pd)
 {
 
     // Only do the burn if the incoming temperature is within the temperature
@@ -153,13 +153,13 @@ void jac ([[maybe_unused]] const Real time, BurnT& state, T& /*int_state*/, Matr
         }
     }
 
-//    // scale the energy derivatives
-//    if (scale_system) {
-//        for (int j = 1; j <= INT_NEQS; ++j) {
-//            pd(net_ienuc,j) /= state.e_scale;
-//        }
-//    }
-//
+    // scale the energy derivatives
+    if (scale_system) {
+        for (int j = 1; j <= INT_NEQS; ++j) {
+            pd(net_ienuc,j) /= state.e_scale;
+        }
+    }
+
 //    // apply fudge factor:
 //    if (react_boost > 0.0_rt) {
 //        pd.mul(react_boost);
