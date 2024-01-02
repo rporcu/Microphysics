@@ -1,0 +1,31 @@
+unit_test.run_prefix = "armonic_oscillator_"
+
+#unit_test.small_temp = 1.e-5
+#unit_test.small_dens = 1.e-5
+
+unit_test.tfirst = 0.0
+unit_test.tmax = 100.0
+unit_test.nsteps = 10000
+
+# these don't matter for the VODE burner, but we'll make them values that are in our EOS table
+
+#unit_test.density = 0.
+#unit_test.temperature = 0.
+
+integrator.rtol_spec = 1.0e-12
+#integrator.rtol_enuc = 1.0e-8
+
+integrator.atol_spec = 1.0e-12
+#integrator.atol_enuc = 1.0e-8
+integrator.ode_max_steps = 150000
+
+integrator.jacobian = 1
+integrator.subtract_internal_energy = 0
+integrator.use_number_densities = 1
+integrator.species_failure_tolerance = 1.e32
+integrator.burner_verbose = 1
+integrator.scale_system = 0
+integrator.integrate_energy = 0
+integrator.react_boost = 0.
+integrator.call_eos_in_rhs = 0
+integrator.X_reject_buffer = 1.e32

@@ -165,6 +165,10 @@ void actual_integrator (BurnT& state, Real dt)
 
     fe_t<int_neqs> fe;
 
+    for (int n = 1; n <= int_neqs; ++n) {
+      fe.y(n) = state.xn[n-1];
+    }
+
     initialize_state(state);
 
     initialize_int_state(fe);
@@ -186,7 +190,7 @@ void actual_integrator (BurnT& state, Real dt)
 
         evaluate_rhs(fe, state, spec_rhs, ener_rhs);
 
-       // Calculate the timestep.
+        // Calculate the timestep.
 
         Real dt_sub = calculate_dt(fe, state, spec_rhs, ener_rhs);
 
@@ -197,7 +201,6 @@ void actual_integrator (BurnT& state, Real dt)
         }
 
         // Apply the update.
-
         for (int n = 1; n <= NumSpec; ++n) {
             fe.y(n) += spec_rhs(n) * dt_sub;
             state.xn[n-1] += spec_rhs(n) * dt_sub;
@@ -206,12 +209,14 @@ void actual_integrator (BurnT& state, Real dt)
         if (integrate_energy) {
             fe.y(net_ienuc) += ener_rhs * dt_sub;
             state.e += ener_rhs * dt_sub;
+            amrex::Abort("Error");
         }
 
         fe.t += dt_sub;
         ++fe.n_step;
 
-        clean_state(fe.t, fe, state);
+//        clean_state(fe.t, fe, state);
+
     }
 
     if (fe.n_step >= ode_max_steps) {

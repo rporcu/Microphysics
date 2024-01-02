@@ -27,6 +27,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 
     IERPJ = 0;
 
+//    amrex::Print() << "Q1)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
 #ifdef ALLOW_JACOBIAN_CACHING
     // See whether the Jacobian should be evaluated. Start by basing
     // the decision on whether we're caching the Jacobian.
@@ -36,6 +39,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
     if (use_jacobian_caching) {
         evaluate_jacobian = 0;
     }
+
+//    amrex::Print() << "Q2)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     if (use_jacobian_caching) {
         // Now evaluate the cases where we're caching the Jacobian but aren't
@@ -60,6 +66,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 
     }
 
+//    amrex::Print() << "Q3)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     if (evaluate_jacobian == 1) {
 #endif
 
@@ -82,7 +91,13 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
             // Initialize the Jacobian to zero
             vstate.jac.zero();
 
+//            amrex::Print() << "F1)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             jac(vstate.tn, state, vstate, vstate.jac);
+
+//            amrex::Print() << "F2)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
 #ifdef ALLOW_JACOBIAN_CACHING
             // Store the Jacobian if we're caching.
@@ -116,6 +131,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
                 R0 = 1.0_rt;
             }
 
+//            amrex::Print() << "FA)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             bool in_jacobian = true;
             for (int j = 1; j <= int_neqs; ++j) {
                 Real yj = vstate.y(j);
@@ -131,6 +149,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 
                 vstate.y(j) = yj;
             }
+
+//            amrex::Print() << "FB)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
             // Increment the RHS evaluation counter by N.
             vstate.NFE += int_neqs;
@@ -157,6 +178,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
     }
 #endif
 
+//    amrex::Print() << "Q4)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     // Multiply Jacobian by a scalar, add the identity matrix
     // (along the diagonal), and do LU decomposition.
 
@@ -168,6 +192,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 
     int IER;
 
+//    amrex::Print() << "Q5)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
 #ifdef NEW_NETWORK_IMPLEMENTATION
     amrex::ignore_unused(pivot);
     RHS::dgefa(vstate.jac);
@@ -175,6 +202,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 #else
     dgefa<int_neqs>(vstate.jac, pivot, IER);
 #endif
+
+//    amrex::Print() << "Q6)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     if (IER != 0) {
         IERPJ = 1;

@@ -26,7 +26,6 @@ template <typename BurnT, typename T>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void rhs (const Real time, BurnT& state, T& int_state, RArray1D& ydot, [[maybe_unused]] const bool in_jacobian=false)
 {
-
     // We are integrating a system of
     //
     // y(1:NumSpec) = dX/dt
@@ -40,26 +39,26 @@ void rhs (const Real time, BurnT& state, T& int_state, RArray1D& ydot, [[maybe_u
     // Fix the state as necessary -- this ensures that the mass
     // fractions that enter are valid (and optionally normalized)
 
-    clean_state(time, state, int_state);
+//    clean_state(time, state, int_state);
 
     // Update the thermodynamics as necessary -- this primarily takes
     // the information in int_state (X and e), copies it to the
     // (burn_t) state and calls the EOS to get state.T
 
-    update_thermodynamics(state, int_state);
+//    update_thermodynamics(state, int_state);
 
     // Only do the burn if the incoming temperature is within the temperature
     // bounds. Otherwise set the RHS to zero and return.
 
-    if (state.T <= EOSData::mintemp || state.T >= MAX_TEMP) {
-
-        for (int n = 1; n <= INT_NEQS; ++n) {
-            ydot(n) = 0.0_rt;
-        }
-
-        return;
-
-    }
+//    if (state.T <= EOSData::mintemp || state.T >= MAX_TEMP) {
+//
+//        for (int n = 1; n <= INT_NEQS; ++n) {
+//            ydot(n) = 0.0_rt;
+//        }
+//
+//        return;
+//
+//    }
 
     state.time = time;
 
@@ -120,21 +119,21 @@ void jac ([[maybe_unused]] const Real time, BurnT& state, T& int_state, MatrixTy
     // Only do the burn if the incoming temperature is within the temperature
     // bounds. Otherwise set the Jacobian to zero and return.
 
-    if (state.T <= EOSData::mintemp || state.T >= MAX_TEMP) {
-
-        for (int j = 1; j <= INT_NEQS; ++j) {
-            for (int i = 1; i <= INT_NEQS; ++i) {
-                pd(i,j) = 0.0_rt;
-            }
-        }
-
-        return;
-
-    }
+//    if (state.T <= EOSData::mintemp || state.T >= MAX_TEMP) {
+//
+//        for (int j = 1; j <= INT_NEQS; ++j) {
+//            for (int i = 1; i <= INT_NEQS; ++i) {
+//                pd(i,j) = 0.0_rt;
+//            }
+//        }
+//
+//        return;
+//
+//    }
 
     // Call the specific network routine to get the Jacobian.
 
-    integrator_to_burn(int_state, state);
+//    integrator_to_burn(int_state, state);
 
 #ifdef NEW_NETWORK_IMPLEMENTATION
     RHS::jac(state, pd);
@@ -153,17 +152,17 @@ void jac ([[maybe_unused]] const Real time, BurnT& state, T& int_state, MatrixTy
         }
     }
 
-    // scale the energy derivatives
-    if (scale_system) {
-        for (int j = 1; j <= INT_NEQS; ++j) {
-            pd(net_ienuc,j) /= state.e_scale;
-        }
-    }
-
-    // apply fudge factor:
-    if (react_boost > 0.0_rt) {
-        pd.mul(react_boost);
-    }
+//    // scale the energy derivatives
+//    if (scale_system) {
+//        for (int j = 1; j <= INT_NEQS; ++j) {
+//            pd(net_ienuc,j) /= state.e_scale;
+//        }
+//    }
+//
+//    // apply fudge factor:
+//    if (react_boost > 0.0_rt) {
+//        pd.mul(react_boost);
+//    }
 
     // Allow temperature and energy integration to be disabled.
 

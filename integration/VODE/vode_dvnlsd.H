@@ -15,6 +15,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
 
     Real ACNRM = 1.e10_rt;
 
+//    amrex::Print() << "V1)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     // dvnlsd is a nonlinear system solver that uses a chord (modified
     // Newton) method with direct linear algebraic system solvers.
     // It then handles the corrector phase of this integration package.
@@ -50,12 +53,18 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
         vstate.IPUP = 1;
     }
 
+//    amrex::Print() << "V2)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     // Up to MAXCOR corrector iterations are taken.  A convergence test is
     // made on the r.m.s. norm of each correction, weighted by the error
     // weight array ewt.  The sum of the corrections is accumulated in the
     // array acor.  The YH array is not altered in the corrector loop.
 
     bool converged = false;
+
+//    amrex::Print() << "V3)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     while (true) {
 
@@ -66,8 +75,14 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
             vstate.y(i) = vstate.yh(i,1);
         }
 
+//        amrex::Print() << "W1)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         rhs(vstate.tn, state, vstate, vstate.savf);
         vstate.NFE += 1;
+
+//        amrex::Print() << "W2)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         if (vstate.IPUP == 1) {
 
@@ -76,7 +91,15 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
             // to 0 as an indicator that this has been done.
 
             int IERPJ;
+
+//            amrex::Print() << "W3)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             dvjac(pivot, IERPJ, state, vstate);
+
+//            amrex::Print() << "W4)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             vstate.IPUP = 0;
             vstate.RC = 1.0_rt;
             vstate.DRC = 0.0_rt;
@@ -90,6 +113,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
                 vstate.IPUP = 1;
                 return ACNRM;
             }
+
+//            amrex::Print() << "W5)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         }
 
@@ -111,11 +137,17 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
                               (vstate.RL1 * vstate.yh(i,2) + vstate.acor(i));
             }
 
+//            amrex::Print() << "W6)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
 #ifdef NEW_NETWORK_IMPLEMENTATION
             RHS::dgesl(vstate.jac, vstate.y);
 #else
             dgesl<int_neqs>(vstate.jac, pivot, vstate.y);
 #endif
+
+//            amrex::Print() << "W7)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
             if (vstate.RC != 1.0_rt) {
                 Real CSCALE = 2.0_rt / (1.0_rt + vstate.RC);
@@ -123,6 +155,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
                     vstate.y(i) *= CSCALE;
                 }
             }
+
+//            amrex::Print() << "W8)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
             DEL = 0.0_rt;
             for (int i = 1; i <= int_neqs; ++i) {
@@ -145,6 +180,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
                 vstate.CRATE = amrex::max(CRDOWN * vstate.CRATE, DEL / DELP);
             }
 
+//            amrex::Print() << "W9)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             Real DCON = DEL * amrex::min(1.0_rt, vstate.CRATE) / vstate.tq(4);
             if (DCON <= 1.0_rt) {
                 // we converged, exit the outer loop
@@ -158,14 +196,23 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
                 break;
             }
 
+//            amrex::Print() << "W10)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             if (M >= 2 && DEL > RDIV * DELP) {
                 // exit the inner correction iteration
                 break;
             }
 
+//            amrex::Print() << "W11)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
             DELP = DEL;
             rhs(vstate.tn, state, vstate, vstate.savf);
             vstate.NFE += 1;
+
+//            amrex::Print() << "W12)" << std::endl;
+//            amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         }
 
@@ -185,6 +232,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
 
     }
 
+//    amrex::Print() << "V4)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     // Return for successful step.
     NFLAG = 0;
     vstate.JCUR = 0;
@@ -193,6 +243,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
         ACNRM = DEL;
     }
 
+//    amrex::Print() << "V5)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     if (M > 0) {
         ACNRM = 0.0_rt;
         for (int i = 1; i <= int_neqs; ++i) {
@@ -200,6 +253,9 @@ Real dvnlsd (IArray1D& pivot, int& NFLAG, BurnT& state, DvodeT& vstate)
         }
         ACNRM = std::sqrt(ACNRM / int_neqs);
     }
+
+//    amrex::Print() << "V6)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     return ACNRM;
 }

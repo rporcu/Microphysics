@@ -41,7 +41,7 @@ void actual_integrator (BurnT& state, const Real dt)
     // We assume that (rho, T) coming in are valid, do an EOS call
     // to fill the rest of the thermodynamic variables.
 
-    eos(eos_input_rt, state);
+//    eos(eos_input_rt, state);
 
     // set the scaling for energy if we integrate it dimensionlessly
     state.e_scale = state.e;
@@ -84,9 +84,9 @@ void actual_integrator (BurnT& state, const Real dt)
 
     // Normalize the final abundances.
 
-    if (!use_number_densities) {
-        normalize_abundances_burn(state);
-    }
+//    if (!use_number_densities) {
+//        normalize_abundances_burn(state);
+//    }
 
     // Get the number of RHS and Jacobian evaluations.
 
@@ -134,6 +134,7 @@ void actual_integrator (BurnT& state, const Real dt)
         std::cout << "energy generated = " << state.e << std::endl;
 #endif
     }
+
 }
 
 #endif

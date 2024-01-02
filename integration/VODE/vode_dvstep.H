@@ -66,6 +66,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
     // On a successful return, ETAMAX is reset and ACOR is scaled.
 
+//    amrex::Print() << "M1)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     // Parameter declarations
     const int KFC = -3;
     const int KFH = -7;
@@ -93,6 +96,8 @@ int dvstep (BurnT& state, DvodeT& vstate)
     NCF = 0;
     vstate.JCUR = 0;
     NFLAG = 0;
+
+    amrex::Print() << "A) kflag = " << kflag << std::endl;
 
     // Take preliminary actions if the driver changed H. ETA must be
     // reset and the history array yh is rescaled.
@@ -132,6 +137,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
     }
 
+//    amrex::Print() << "M2)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
     Array1D<short, 1, int_neqs> pivot;
 
     // Compute the predicted values by effectively
@@ -149,23 +157,32 @@ int dvstep (BurnT& state, DvodeT& vstate)
         y_save(i) = vstate.y(i);
     }
 #endif
-#ifdef SDC
-    Real rho_old = state.rho_orig + TOLD * state.ydot_a[SRHO];
-    for (int i = 1; i <= int_neqs; ++i) {
-        y_save(i) = vstate.y(i);
-    }
-    for (int i = 1; i <= NumSpec; ++i) {
-        y_save(SFS+i) /= rho_old;
-    }
-#endif
+//#ifdef SDC
+//    Real rho_old = state.rho_orig + TOLD * state.ydot_a[SRHO];
+//    for (int i = 1; i <= int_neqs; ++i) {
+//        y_save(i) = vstate.y(i);
+//    }
+//    for (int i = 1; i <= NumSpec; ++i) {
+//        y_save(SFS+i) /= rho_old;
+//    }
+//#endif
 
     while (true) {
 
         vstate.tn += vstate.H;
 
+//        amrex::Print() << "S1)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         advance_nordsieck(state, vstate);
 
+//        amrex::Print() << "S2)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         dvset(vstate);
+
+//        amrex::Print() << "S3)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         vstate.RL1 = 1.0_rt / vstate.el(2);
         vstate.RC *= (vstate.RL1 / vstate.PRL1);
@@ -174,7 +191,13 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
         // Call the nonlinear system solver.
 
+//        amrex::Print() << "S4)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         Real ACNRM = dvnlsd(pivot, NFLAG, state, vstate);
+
+//        amrex::Print() << "S5)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         if (NFLAG != 0) {
 
@@ -199,6 +222,8 @@ int dvstep (BurnT& state, DvodeT& vstate)
                 return kflag;
             }
 
+            amrex::Print() << "B) kflag = " << kflag << std::endl;
+
             vstate.ETA = ETACF;
             vstate.ETA = amrex::max(vstate.ETA, HMIN / std::abs(vstate.H));
 
@@ -219,6 +244,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
             continue;
         }
 
+//        amrex::Print() << "S6)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         // We add to VODE some constraints. If these constraints are violated,
         // we treat it the same way we will treat an error test failure (below).
 
@@ -226,15 +254,23 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
 #ifdef SDC
         if (vstate.y(SEINT+1) < 0.0_rt) {
+            amrex::Print() << "000\n";
             valid_update = false;
         }
 
         Real rho_current = state.rho_orig + vstate.tn * state.ydot_a[SRHO];
 
+//        amrex::Print() << "S7)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         if (rho_current < 0.0_rt) {
+            amrex::Print() << "111\n";
             valid_update = false;
         }
 #endif
+
+//        amrex::Print() << "S8)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         for (int i = 1; i <= NumSpec; ++i) {
 
@@ -243,7 +279,17 @@ int dvstep (BurnT& state, DvodeT& vstate)
             // factor in a given step (as long as their initial abundance was large enough
             // for us to worry about).
 
-            if (std::abs(y_save(i)) > X_reject_buffer * atol_spec && std::abs(vstate.y(i)) > X_reject_buffer * atol_spec &&
+//            amrex::Print() << "X_reject_buffer = " << X_reject_buffer << "\n";
+//            amrex::Print() << "y_save(i) = " << std::abs(y_save(i)) << "\n";
+//            amrex::Print() << "vstate.y(i) = " << std::abs(vstate.y(i)) << "\n";
+//
+//            amrex::Print() << "1 check -- " << int(std::abs(y_save(i)) > X_reject_buffer * atol_spec) << "\n";
+//            amrex::Print() << "2 check -- " << int(std::abs(vstate.y(i)) > X_reject_buffer * atol_spec) << "\n";
+//            amrex::Print() << "3 check -- " << int(std::abs(vstate.y(i)) > vode_increase_change_factor * std::abs(y_save(i))) << "\n";
+//            amrex::Print() << "4 check -- " << int(std::abs(vstate.y(i)) < vode_decrease_change_factor * std::abs(y_save(i))) << "\n";
+
+            if (std::abs(y_save(i)) > X_reject_buffer * atol_spec &&
+                std::abs(vstate.y(i)) > X_reject_buffer * atol_spec &&
                 (std::abs(vstate.y(i)) > vode_increase_change_factor * std::abs(y_save(i)) ||
                  std::abs(vstate.y(i)) < vode_decrease_change_factor * std::abs(y_save(i)))) {
 #ifdef MICROPHYSICS_DEBUG
@@ -251,14 +297,19 @@ int dvstep (BurnT& state, DvodeT& vstate)
                std::cout << "rejecting step based on species " << i << " from " << y_save(i) << " to " << vstate.y(i) << std::endl;
 #endif
 #endif
+                amrex::Print() << "222\n";
                 valid_update = false;
                 break;
             }
+
+            amrex::Print() << "vstate.y(i) = " << vstate.y(i) << "\n";
+            amrex::Print() << "-species_failure_tolerance = " << -species_failure_tolerance << "\n";
 
             // Constrain abundances such that they are not negative (within a tolerance)
             // or greater than one (within a tolerance).
             if (vstate.y(i) < -species_failure_tolerance) {
                 valid_update = false;
+                amrex::Print() << "333\n";
                 break;
             }
 
@@ -267,52 +318,60 @@ int dvstep (BurnT& state, DvodeT& vstate)
             if (!use_number_densities) {
                 if (vstate.y(i) > 1.0_rt + species_failure_tolerance) {
                     valid_update = false;
+                    amrex::Print() << "444\n";
                     break;
                 }
             }
 
 #endif
 
-#ifdef SDC
-
-            // these are basically the same checks as with Strang
-            // above, except now we are evolving rhoX instead of X.
-            // Also, we only consider the reactive portion of the
-            // update
-
-            Real X_current = (vstate.y(SFS+i) - vstate.H * state.ydot_a[SFS-1+i]) / rho_current;
-
-            if (std::abs(y_save(SFS+i)) > X_reject_buffer * atol_spec &&
-                std::abs(X_current) > X_reject_buffer * atol_spec &&
-                (std::abs(X_current) > vode_increase_change_factor * std::abs(y_save(SFS+i)) ||
-                 std::abs(X_current) < vode_decrease_change_factor * std::abs(y_save(SFS+i)))) {
-#ifdef MICROPHYSICS_DEBUG
-#ifndef AMREX_USE_GPU
-                std::cout << "rejecting step based on species " << i << " from " << y_save(SFS+i) << " to " << X_current << std::endl;
-#endif
-#endif
-                valid_update = false;
-                break;
-            }
-
-            if (vstate.y(SFS+i) < -species_failure_tolerance * rho_current) {
-                valid_update = false;
-                break;
-            }
-
-            if (vstate.y(SFS+i) > (1.0_rt + species_failure_tolerance) * rho_current) {
-                valid_update = false;
-                break;
-            }
-
-#endif
+//#ifdef SDC
+//
+//            // these are basically the same checks as with Strang
+//            // above, except now we are evolving rhoX instead of X.
+//            // Also, we only consider the reactive portion of the
+//            // update
+//
+//            Real X_current = (vstate.y(SFS+i) - vstate.H * state.ydot_a[SFS-1+i]) / rho_current;
+//
+//            if (std::abs(y_save(SFS+i)) > X_reject_buffer * atol_spec &&
+//                std::abs(X_current) > X_reject_buffer * atol_spec &&
+//                (std::abs(X_current) > vode_increase_change_factor * std::abs(y_save(SFS+i)) ||
+//                 std::abs(X_current) < vode_decrease_change_factor * std::abs(y_save(SFS+i)))) {
+//#ifdef MICROPHYSICS_DEBUG
+//#ifndef AMREX_USE_GPU
+//                std::cout << "rejecting step based on species " << i << " from " << y_save(SFS+i) << " to " << X_current << std::endl;
+//#endif
+//#endif
+//                valid_update = false;
+//                break;
+//            }
+//
+//            if (vstate.y(SFS+i) < -species_failure_tolerance * rho_current) {
+//                valid_update = false;
+//                break;
+//            }
+//
+//            if (vstate.y(SFS+i) > (1.0_rt + species_failure_tolerance) * rho_current) {
+//                valid_update = false;
+//                break;
+//            }
+//
+//#endif
 
         }
+
+//        amrex::Print() << "S9)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         // The corrector has converged (NFLAG = 0). The local error test is
         // made and control passes to statement 500 if it fails.
 
         DSM = ACNRM / vstate.tq(2);
+
+        amrex::Print() << "DSM = " << DSM << std::endl;
+        amrex::Print() << "valid_update = " << valid_update << std::endl;
+
         if (DSM <= 1.0_rt && valid_update) {
 
             // After a successful step, update the yh and TAU arrays and decrement
@@ -326,6 +385,8 @@ int dvstep (BurnT& state, DvodeT& vstate)
                 int i = vstate.L - iback;
                 vstate.tau(i+1) = vstate.tau(i);
             }
+
+            amrex::Print() << "C) kflag = " << kflag << std::endl;
 
             vstate.tau(1) = vstate.H;
             for (int j = 1; j <= vstate.L; ++j) {
@@ -363,9 +424,14 @@ int dvstep (BurnT& state, DvodeT& vstate)
                 vstate.acor(i) *= R;
             }
 
+            amrex::Print() << "D) kflag = " << kflag << std::endl;
+
             return kflag;
 
         }
+
+//        amrex::Print() << "S10)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         // The error test failed (or our constraints on the species failed).
         // kflag keeps track of multiple failures.
@@ -378,12 +444,25 @@ int dvstep (BurnT& state, DvodeT& vstate)
         NFLAG = -2;
         vstate.tn = TOLD;
 
+        amrex::Print() << "E) kflag = " << kflag << std::endl;
+
+//        amrex::Print() << "S11)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         retract_nordsieck(state, vstate);
+
+//        amrex::Print() << "S12)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         if (std::abs(vstate.H) <= HMIN * ONEPSM) {
             kflag = -1;
+            amrex::Print() << "F) kflag = " << kflag << std::endl;
+
             return kflag;
         }
+
+//        amrex::Print() << "S13)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         vstate.ETAMAX = 1.0_rt;
 
@@ -415,6 +494,11 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
         }
 
+//        amrex::Print() << "S14)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
+        amrex::Print() << "G) kflag = " << kflag << std::endl;
+
         // Control reaches this section if 3 or more consecutive failures
         // have occurred. It is assumed that the elements of the yh array
         // have accumulated errors of the wrong order. The order is reduced
@@ -424,8 +508,13 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
         if (kflag == KFH) {
             kflag = -1;
+            amrex::Print() << "H) kflag = " << kflag << std::endl;
+
             return kflag;
         }
+
+//        amrex::Print() << "S15)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
         if (vstate.NQ != 1) {
             vstate.ETA = amrex::max(ETAMIN, HMIN / std::abs(vstate.H));
@@ -452,6 +541,11 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
         }
 
+//        amrex::Print() << "S16)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
+        amrex::Print() << "I) kflag = " << kflag << std::endl;
+
         vstate.ETA = amrex::max(ETAMIN, HMIN / std::abs(vstate.H));
         vstate.H *= vstate.ETA;
         vstate.HSCAL = vstate.H;
@@ -462,9 +556,15 @@ int dvstep (BurnT& state, DvodeT& vstate)
             vstate.yh(i,2) = vstate.H * vstate.savf(i);
         }
 
+//        amrex::Print() << "S17)" << std::endl;
+//        amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
         vstate.NQWAIT = 10;
 
     }
+
+//    amrex::Print() << "M3)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     // If NQWAIT = 0, an increase or decrease in order by one is considered.
     // Factors ETAQ, ETAQM1, ETAQP1 are computed by which H could
@@ -534,6 +634,11 @@ int dvstep (BurnT& state, DvodeT& vstate)
 
     }
 
+//    amrex::Print() << "M4)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+
+    amrex::Print() << "L) kflag = " << kflag << std::endl;
+
     if (!already_set_eta) {
         vstate.ETA = ETAQ;
         vstate.NEWQ = vstate.NQ;
@@ -552,8 +657,14 @@ int dvstep (BurnT& state, DvodeT& vstate)
         for (int i = 1; i <= int_neqs; ++i) {
             vstate.acor(i) *= R;
         }
+
+        amrex::Print() << "J) kflag = " << kflag << std::endl;
+
         return kflag;
     }
+
+//    amrex::Print() << "M5)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     vstate.NEWQ = vstate.NQ;
     vstate.NEWH = 0;
@@ -566,6 +677,11 @@ int dvstep (BurnT& state, DvodeT& vstate)
     for (int i = 1; i <= int_neqs; ++i) {
         vstate.acor(i) *= R;
     }
+
+    amrex::Print() << "K) kflag = " << kflag << std::endl;
+
+//    amrex::Print() << "M6)" << std::endl;
+//    amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
 
     return kflag;
 }

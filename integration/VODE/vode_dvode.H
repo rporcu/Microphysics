@@ -73,8 +73,8 @@ int dvode (BurnT& state, DvodeT& vstate)
         vstate.ewt(i) = vstate.rtol_spec * std::abs(vstate.yh(i,1)) + vstate.atol_spec;
         vstate.ewt(i) = 1.0_rt / vstate.ewt(i);
     }
-    vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
-    vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
+//    vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
+//    vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
 
     // Call DVHIN to set initial step size H0 to be attempted.
     H0 = 0.0_rt;
@@ -146,8 +146,8 @@ int dvode (BurnT& state, DvodeT& vstate)
                vstate.ewt(i) = vstate.rtol_spec * std::abs(vstate.yh(i,1)) + vstate.atol_spec;
                vstate.ewt(i) = 1.0_rt / vstate.ewt(i);
            }
-           vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
-           vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
+//           vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
+//           vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
 
        }
        else {
@@ -183,8 +183,16 @@ int dvode (BurnT& state, DvodeT& vstate)
 
        }
 
+       amrex::Print() << "1)" << std::endl;
+       amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+       amrex::Print() << "vstate: " << vstate.y(1) << ", " << vstate.y(2) << std::endl;
+
        int kflag = dvstep(state, vstate);
 
+       amrex::Print() << "2)" << std::endl;
+       amrex::Print() << "kflag = " << kflag << std::endl;
+       amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
+       amrex::Print() << "vstate: " << vstate.y(1) << ", " << vstate.y(2) << std::endl;
 
        // Branch on KFLAG. KFLAG can be 0, -1, or -2.
 
@@ -230,12 +238,12 @@ int dvode (BurnT& state, DvodeT& vstate)
        if (vstate.NST > MIN_NSE_BAILOUT_STEPS && vstate.tn <= vstate.tout) {
            // first we need to make the burn_t in sync
 
-#ifdef STRANG
-           update_thermodynamics(state, vstate);
-#endif
-#ifdef SDC
-           int_to_burn(vstate.tn, vstate, state);
-#endif
+//#ifdef STRANG
+//           update_thermodynamics(state, vstate);
+//#endif
+//#ifdef SDC
+//           int_to_burn(vstate.tn, vstate, state);
+//#endif
 
            if (in_nse(state)) {
                vstate.t = vstate.tn;
