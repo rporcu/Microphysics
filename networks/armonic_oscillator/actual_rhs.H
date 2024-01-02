@@ -31,7 +31,7 @@ void actual_rhs (burn_t& state, Array1D<Real, 1, neqs>& ydot)
 
 template<class MatrixType>
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void actual_jac (burn_t& state, MatrixType& jac)
+void actual_jac (burn_t& /*state*/, MatrixType& jac)
 {
     using namespace Species;
 

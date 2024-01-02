@@ -44,10 +44,6 @@ void armonic_oscillator()
     std::cout << std::setw(6) << "Elem (" << n << "): " << ydot(n+1) << std::endl;
   }
 
-  // save the initial state -- we'll use this to determine
-  // how much things changed over the entire burn
-  burn_t burn_state_in = burn_state;
-
   // loop over steps, burn, and output the current state
   int nstep_int = 0;
   amrex::Real t(tstart);

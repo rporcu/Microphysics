@@ -134,7 +134,6 @@ void actual_integrator (BurnT& state, const Real dt)
         std::cout << "energy generated = " << state.e << std::endl;
 #endif
     }
-
 }
 
 #endif

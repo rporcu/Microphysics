@@ -41,8 +41,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void numerical_jac(BurnT& state, const jac_info_t& jac_info, JacNetArray2D& jac)
 {
 
-  amrex::Abort("Stop stop stop");
-
     // we already come in with a cleaned state, and density updated to
     // the current time
 

@@ -18,7 +18,7 @@ using namespace integrator_rp;
 
 template <typename IntT, typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-Real calculate_dt (IntT& int_state, BurnT& state, Array1D<Real, 1, NumSpec>& spec_rhs, Real& ener_rhs)
+Real calculate_dt (IntT& /*int_state*/, BurnT& state, Array1D<Real, 1, NumSpec>& spec_rhs, Real& ener_rhs)
 {
     using namespace microphysics::forward_euler;
 
@@ -190,7 +190,7 @@ void actual_integrator (BurnT& state, Real dt)
 
         evaluate_rhs(fe, state, spec_rhs, ener_rhs);
 
-        // Calculate the timestep.
+       // Calculate the timestep.
 
         Real dt_sub = calculate_dt(fe, state, spec_rhs, ener_rhs);
 
@@ -209,14 +209,12 @@ void actual_integrator (BurnT& state, Real dt)
         if (integrate_energy) {
             fe.y(net_ienuc) += ener_rhs * dt_sub;
             state.e += ener_rhs * dt_sub;
-            amrex::Abort("Error");
         }
 
         fe.t += dt_sub;
         ++fe.n_step;
 
 //        clean_state(fe.t, fe, state);
-
     }
 
     if (fe.n_step >= ode_max_steps) {

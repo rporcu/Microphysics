@@ -183,16 +183,8 @@ int dvode (BurnT& state, DvodeT& vstate)
 
        }
 
-       amrex::Print() << "1)" << std::endl;
-       amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
-       amrex::Print() << "vstate: " << vstate.y(1) << ", " << vstate.y(2) << std::endl;
-
        int kflag = dvstep(state, vstate);
 
-       amrex::Print() << "2)" << std::endl;
-       amrex::Print() << "kflag = " << kflag << std::endl;
-       amrex::Print() << "state: " << state.xn[0] << ", " << state.xn[1] << std::endl;
-       amrex::Print() << "vstate: " << vstate.y(1) << ", " << vstate.y(2) << std::endl;
 
        // Branch on KFLAG. KFLAG can be 0, -1, or -2.
 
@@ -241,9 +233,9 @@ int dvode (BurnT& state, DvodeT& vstate)
 //#ifdef STRANG
 //           update_thermodynamics(state, vstate);
 //#endif
-//#ifdef SDC
-//           int_to_burn(vstate.tn, vstate, state);
-//#endif
+#ifdef SDC
+           int_to_burn(vstate.tn, vstate, state);
+#endif
 
            if (in_nse(state)) {
                vstate.t = vstate.tn;
