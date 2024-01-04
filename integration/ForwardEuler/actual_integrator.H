@@ -121,7 +121,7 @@ void initialize_state (BurnT& state)
     // We assume that (rho, T) coming in are valid, do an EOS call
     // to fill the rest of the thermodynamic variables.
 
-    eos(eos_input_rt, state);
+//    eos(eos_input_rt, state);
 
     state.success = true;
     state.error_code = IERR_SUCCESS;
