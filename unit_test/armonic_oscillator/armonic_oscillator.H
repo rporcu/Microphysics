@@ -14,12 +14,12 @@ using namespace unit_test_rp;
 
 void armonic_oscillator()
 {
-  amrex::Real solution[INT_NEQS-1] = {1., 0.};
+  amrex::Real solution[INT_NEQS] = {1., 0., 0.};
 
   const amrex::Real tstart(0.);
-  const amrex::Real tend(100.0);
+  const amrex::Real tend(10.0);
   const amrex::Real tinterval(tend - tstart);
-  const int nsteps = 10000;
+  const int nsteps = 1000;
 
   std::cout << "Maximum Time (s): " << tend << std::endl;
   for (int n = 0; n < INT_NEQS-1; ++n) {
@@ -90,7 +90,7 @@ void armonic_oscillator()
   std::cout << "------------------------------------" << std::endl;
   std::cout << "new solution: " << std::endl;
   for (int n = 0; n < INT_NEQS-1; ++n) {
-    std::cout << "Elem (" << n << "): " << burn_state.xn[n] << std::endl;
+    std::cout << "Elem (" << n << "): " << std::setw(18) << std::setprecision(16) << burn_state.xn[n] << std::endl;
   }
 
   std::cout << "number of steps taken: " << nstep_int << std::endl;

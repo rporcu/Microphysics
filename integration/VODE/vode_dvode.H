@@ -231,7 +231,7 @@ int dvode (BurnT& state, DvodeT& vstate)
            // first we need to make the burn_t in sync
 
 #ifdef STRANG
-//           update_thermodynamics(state, vstate);
+           update_thermodynamics(state, vstate);
 #endif
 #ifdef SDC
            int_to_burn(vstate.tn, vstate, state);
