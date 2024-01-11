@@ -6,11 +6,11 @@ unit_test.nsteps = 1000
 
 # these don't matter for the VODE burner, but we'll make them values that are in our EOS table
 
-integrator.rtol_spec = 1.0e-12
-integrator.rtol_enuc = 1.0e-12
+integrator.rtol_spec = 1.0e-14
+integrator.rtol_enuc = 1.0e-14
+integrator.atol_spec = 1.0e-14
+integrator.atol_enuc = 1.0e-14
 
-integrator.atol_spec = 1.0e-12
-integrator.atol_enuc = 1.0e-12
 integrator.ode_max_steps = 150000
 
 integrator.jacobian = 1

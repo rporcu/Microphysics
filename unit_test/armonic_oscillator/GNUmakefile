@@ -1,8 +1,8 @@
 PRECISION  = DOUBLE
 PROFILE    = FALSE
 
-DEBUG      = TRUE
-MICROPHYSICS_DEBUG = TRUE
+DEBUG      = FALSE
+MICROPHYSICS_DEBUG = FALSE
 
 DIM        = 3
 
@@ -27,6 +27,7 @@ EOS_DIR     := gamma_law
 # This sets the network directory
 NETWORK_DIR := armonic_oscillator
 
+#INTEGRATOR_DIR =  BackwardEuler
 INTEGRATOR_DIR =  VODE
 
 ifeq ($(USE_CUDA), TRUE)

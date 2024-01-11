@@ -123,7 +123,7 @@ int single_step (BurnT& state, BeT& be, const Real dt)
         y_norm = std::sqrt(y_norm / int_neqs);
         b_norm = std::sqrt(b_norm / int_neqs);
 
-        if (b_norm < tol * y_norm) {
+        if (b_norm < (tol * y_norm + tol)) {
             converged = true;
             break;
         }

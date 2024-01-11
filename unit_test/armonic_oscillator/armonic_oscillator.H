@@ -19,7 +19,7 @@ void armonic_oscillator()
   const amrex::Real tstart(0.);
   const amrex::Real tend(10.0);
   const amrex::Real tinterval(tend - tstart);
-  const int nsteps = 1000;
+  const int nsteps = 1000000;
 
   std::cout << "Maximum Time (s): " << tend << std::endl;
   for (int n = 0; n < INT_NEQS-1; ++n) {
@@ -45,7 +45,7 @@ void armonic_oscillator()
   }
 
   // loop over steps, burn, and output the current state
-  int nstep_int = 0;
+  unsigned long nstep_int = 0;
   amrex::Real t(tstart);
 
   std::ofstream output;
