@@ -18,7 +18,7 @@ using namespace integrator_rp;
 
 template <typename IntT, typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-Real calculate_dt (IntT& /*int_state*/, BurnT& state, Array1D<Real, 1, NumSpec>& spec_rhs, Real& ener_rhs)
+Real calculate_dt (IntT& int_state, BurnT& state, Array1D<Real, 1, NumSpec>& spec_rhs, Real& ener_rhs)
 {
     using namespace microphysics::forward_euler;
 
@@ -69,24 +69,26 @@ Real calculate_dt (IntT& /*int_state*/, BurnT& state, Array1D<Real, 1, NumSpec>&
 
 template <typename IntT, typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void clean_state (const Real time, IntT& int_state, BurnT& state)
+void clean_state (const Real /*time*/,
+                  IntT& /*int_state*/,
+                  BurnT& /*state*/)
 {
-    using namespace microphysics::forward_euler;
-
-    // Renormalize the abundances.
-
-    normalize_abundances_burn(state);
-
-    // Evaluate the EOS to get T from e.
-
-    if (call_eos_in_rhs) {
-        eos(eos_input_re, state);
-    }
-
-    // Ensure that the temperature always stays within reasonable limits.
-
-    state.T = amrex::min(MAX_TEMP, amrex::max(state.T, EOSData::mintemp));
-
+//    using namespace microphysics::forward_euler;
+//
+//    // Renormalize the abundances.
+//
+//    normalize_abundances_burn(state);
+//
+//    // Evaluate the EOS to get T from e.
+//
+//    if (call_eos_in_rhs) {
+//        eos(eos_input_re, state);
+//    }
+//
+//    // Ensure that the temperature always stays within reasonable limits.
+//
+//    state.T = amrex::min(MAX_TEMP, amrex::max(state.T, EOSData::mintemp));
+//
 }
 
 template <typename IntT, typename BurnT>
@@ -121,7 +123,7 @@ void initialize_state (BurnT& state)
     // We assume that (rho, T) coming in are valid, do an EOS call
     // to fill the rest of the thermodynamic variables.
 
-//    eos(eos_input_rt, state);
+    eos(eos_input_rt, state);
 
     state.success = true;
     state.error_code = IERR_SUCCESS;
@@ -165,10 +167,6 @@ void actual_integrator (BurnT& state, Real dt)
 
     fe_t<int_neqs> fe;
 
-    for (int n = 1; n <= int_neqs; ++n) {
-      fe.y(n) = state.xn[n-1];
-    }
-
     initialize_state(state);
 
     initialize_int_state(fe);
@@ -201,6 +199,7 @@ void actual_integrator (BurnT& state, Real dt)
         }
 
         // Apply the update.
+
         for (int n = 1; n <= NumSpec; ++n) {
             fe.y(n) += spec_rhs(n) * dt_sub;
             state.xn[n-1] += spec_rhs(n) * dt_sub;
@@ -214,7 +213,7 @@ void actual_integrator (BurnT& state, Real dt)
         fe.t += dt_sub;
         ++fe.n_step;
 
-//        clean_state(fe.t, fe, state);
+        clean_state(fe.t, fe, state);
     }
 
     if (fe.n_step >= ode_max_steps) {

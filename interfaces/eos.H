@@ -395,47 +395,51 @@ void check_inputs (const I input, T& state)
 
 template <typename I, typename T>
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
-void eos (const I input, T& state, bool use_raw_inputs = false)
+void eos (const I /*input*/,
+          T& /*state*/,
+          bool use_raw_inputs = false)
 {
-  static_assert(std::is_same<I, eos_input_t>::value, "input must be an eos_input_t");
+  amrex::ignore_unused(use_raw_inputs);
 
-  // Input arguments
-
-  bool has_been_reset = false;
-  bool use_composition_routine = true;
-
-  // Local variables
-
-#ifndef AMREX_USE_GPU
-  if (!EOSData::initialized) {
-    amrex::Error("EOS: not initialized");
-  }
-#endif
-
-  if (use_raw_inputs) {
-    use_composition_routine = false;
-  }
-
-  if constexpr (has_xn<T>::value) {
-      if (use_composition_routine) {
-          // Get abar, zbar, etc.
-          composition(state);
-      }
-  }
-
-  // Force the inputs to be valid.
-  reset_inputs(input, state, has_been_reset);
-
-  // Allow the user to override any details of the
-  // EOS state. This should generally occur right
-  // before the actual_eos call.
-  eos_override(state);
-
-  // Call the EOS.
-
-  if (!has_been_reset) {
-    actual_eos(input, state);
-  }
+//  static_assert(std::is_same<I, eos_input_t>::value, "input must be an eos_input_t");
+//
+//  // Input arguments
+//
+//  bool has_been_reset = false;
+//  bool use_composition_routine = true;
+//
+//  // Local variables
+//
+//#ifndef AMREX_USE_GPU
+//  if (!EOSData::initialized) {
+//    amrex::Error("EOS: not initialized");
+//  }
+//#endif
+//
+//  if (use_raw_inputs) {
+//    use_composition_routine = false;
+//  }
+//
+//  if constexpr (has_xn<T>::value) {
+//      if (use_composition_routine) {
+//          // Get abar, zbar, etc.
+//          composition(state);
+//      }
+//  }
+//
+//  // Force the inputs to be valid.
+//  reset_inputs(input, state, has_been_reset);
+//
+//  // Allow the user to override any details of the
+//  // EOS state. This should generally occur right
+//  // before the actual_eos call.
+//  eos_override(state);
+//
+//  // Call the EOS.
+//
+//  if (!has_been_reset) {
+//    actual_eos(input, state);
+//  }
 }
 
 #endif

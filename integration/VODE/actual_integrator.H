@@ -57,7 +57,7 @@ void actual_integrator (BurnT& state, Real dt)
     // We assume that (rho, T) coming in are valid, do an EOS call
     // to fill the rest of the thermodynamic variables.
 
-//    eos(eos_input_rt, state);
+    eos(eos_input_rt, state);
 
     // set the scaling for energy if we integrate it dimensionlessly
     state.e_scale = state.e;

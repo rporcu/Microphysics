@@ -37,7 +37,6 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void update_thermodynamics (BurnT& state, const I& int_state)
 {
 #ifdef AUX_THERMO
-    amrex::Abort("Why here?");
     // we are handling the thermodynamics via the aux quantities, which
     // are stored in the burn_t here, so we need to update those based on
     // the current state.
@@ -69,7 +68,7 @@ void update_thermodynamics (BurnT& state, const I& int_state)
     // Get T from e (also updates composition quantities).
 
     if (call_eos_in_rhs) {
-//        eos(eos_input_re, state);
+        eos(eos_input_re, state);
     }
 
     // override T if we are fixing it (e.g. due to

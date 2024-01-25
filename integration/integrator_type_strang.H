@@ -45,40 +45,42 @@ void burn_to_integrator (const BurnT& state, I& int_state)
 
 template <typename BurnT, typename I>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void clean_state (const Real time, BurnT& state, I& int_state)
+void clean_state (const Real /*time*/,
+                  BurnT& /*state*/,
+                  I& /*int_state*/)
 {
-    amrex::ignore_unused(time);
-    amrex::ignore_unused(state);
-
-    // Ensure that mass fractions always stay positive and less than or
-    // equal to 1.
-
-    if (do_species_clip) {
-        for (int n = 1; n <= NumSpec; ++n) {
-            int_state.y(n) = amrex::max(amrex::min(int_state.y(n), 1.0_rt), SMALL_X_SAFE);
-        }
-    }
-
-    // for primordial chem, just enforce positivity
-    if (use_number_densities) {
-        for (int n = 1; n <= NumSpec; ++n) {
-            int_state.y(n) = amrex::max(int_state.y(n), SMALL_X_SAFE);
-        }
-    }
-
-    // Renormalize the abundances as necessary.
-
-    if (renormalize_abundances) {
-        Real sum = 0.0_rt;
-
-        for (int n = 1; n <= NumSpec; ++n) {
-            sum += int_state.y(n);
-        }
-
-        for (int n = 1; n <= NumSpec; ++n) {
-            int_state.y(n) /= sum;
-        }
-    }
+//    amrex::ignore_unused(time);
+//    amrex::ignore_unused(state);
+//
+//    // Ensure that mass fractions always stay positive and less than or
+//    // equal to 1.
+//
+//    if (do_species_clip) {
+//        for (int n = 1; n <= NumSpec; ++n) {
+//            int_state.y(n) = amrex::max(amrex::min(int_state.y(n), 1.0_rt), SMALL_X_SAFE);
+//        }
+//    }
+//
+//    // for primordial chem, just enforce positivity
+//    if (use_number_densities) {
+//        for (int n = 1; n <= NumSpec; ++n) {
+//            int_state.y(n) = amrex::max(int_state.y(n), SMALL_X_SAFE);
+//        }
+//    }
+//
+//    // Renormalize the abundances as necessary.
+//
+//    if (renormalize_abundances) {
+//        Real sum = 0.0_rt;
+//
+//        for (int n = 1; n <= NumSpec; ++n) {
+//            sum += int_state.y(n);
+//        }
+//
+//        for (int n = 1; n <= NumSpec; ++n) {
+//            int_state.y(n) /= sum;
+//        }
+//    }
 }
 
 #endif

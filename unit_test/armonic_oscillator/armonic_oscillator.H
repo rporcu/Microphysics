@@ -19,7 +19,7 @@ void armonic_oscillator()
   const amrex::Real tstart(0.);
   const amrex::Real tend(10.0);
   const amrex::Real tinterval(tend - tstart);
-  const int nsteps = 1000000;
+  const int nsteps = 10000;
 
   std::cout << "Maximum Time (s): " << tend << std::endl;
   for (int n = 0; n < INT_NEQS-1; ++n) {

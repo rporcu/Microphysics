@@ -17,21 +17,21 @@ using namespace integrator_rp;
 
 template <typename BurnT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-void clean_state (BurnT& state)
+void clean_state (BurnT& /*state*/)
 {
-    // Renormalize the abundances.
-
-    normalize_abundances_burn(state);
-
-    // Evaluate the EOS to get T from e.
-
-    if (call_eos_in_rhs) {
-        eos(eos_input_re, state);
-    }
-
-    // Ensure that the temperature always stays within reasonable limits.
-
-    state.T = amrex::min(MAX_TEMP, amrex::max(state.T, EOSData::mintemp));
+//    // Renormalize the abundances.
+//
+//    normalize_abundances_burn(state);
+//
+//    // Evaluate the EOS to get T from e.
+//
+//    if (call_eos_in_rhs) {
+//        eos(eos_input_re, state);
+//    }
+//
+//    // Ensure that the temperature always stays within reasonable limits.
+//
+//    state.T = amrex::min(MAX_TEMP, amrex::max(state.T, EOSData::mintemp));
 }
 
 template <typename BurnT>
