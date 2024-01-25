@@ -96,6 +96,9 @@ int single_step (BurnT& state, BeT& be, const Real dt)
 
         int ierr_linpack;
         IArray1D pivot;
+//        for (int n = 1; n <= int_neqs; n++) {
+//            pivot(n) = 0;
+//        }
         dgefa<int_neqs>(be.jac, pivot, ierr_linpack);
 
         if (ierr_linpack != 0) {
@@ -160,6 +163,9 @@ int be_integrator (BurnT& state, BeT& be)
 {
     constexpr int int_neqs = integrator_neqs<BurnT>();
 
+    printf("1) state = %e, %e\n", state.xn[0], state.xn[1]);
+    printf("1) be = %e, %e\n", be.y(1), be.y(2));
+
     be.n_rhs = 0;
     be.n_jac = 0;
     be.n_step = 0;
@@ -171,9 +177,18 @@ int be_integrator (BurnT& state, BeT& be)
     Array1D<Real, 1, int_neqs> ydot;
     rhs(be.t, state, be, ydot);
 
+    printf("2) state = %e, %e\n", state.xn[0], state.xn[1]);
+    printf("2) be = %e, %e\n", be.y(1), be.y(2));
+    printf("2) ydot = %e, %e\n", ydot(1), ydot(2));
+
     be.n_rhs += 1;
 
     Real dt_sub = initial_react_dt(state, be, ydot);
+
+    printf("3) state = %e, %e\n", state.xn[0], state.xn[1]);
+    printf("3) be = %e, %e\n", be.y(1), be.y(2));
+    printf("3) ydot = %e, %e\n", ydot(1), ydot(2));
+    printf("3) dt_sub = %e\n", dt_sub);
 
     // main timestepping loop
 
@@ -185,6 +200,10 @@ int be_integrator (BurnT& state, BeT& be)
         for (int n = 1; n <= int_neqs; ++n) {
             y_old(n) = be.y(n);
         }
+
+        printf("4) state = %e, %e\n", state.xn[0], state.xn[1]);
+        printf("4) be = %e, %e\n", be.y(1), be.y(2));
+        printf("4) y_old = %e, %e\n", y_old(1), y_old(2));
 
         // don't go too far
 
@@ -202,9 +221,23 @@ int be_integrator (BurnT& state, BeT& be)
 
         Array1D<Real, 1, int_neqs> y_fine;
 
+        printf("5) state = %e, %e\n", state.xn[0], state.xn[1]);
+        printf("5) be = %e, %e\n", be.y(1), be.y(2));
+
         ierr = single_step(state, be, dt_sub/2);
+
+        printf("6) state = %e, %e\n", state.xn[0], state.xn[1]);
+        printf("6) be = %e, %e\n", be.y(1), be.y(2));
+
         if (ierr == IERR_SUCCESS) {
+
+            printf("7) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("7) be = %e, %e\n", be.y(1), be.y(2));
+
             ierr = single_step(state, be, dt_sub/2);
+
+            printf("8) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("8) be = %e, %e\n", be.y(1), be.y(2));
 
             // store the fine dt solution
 
@@ -217,7 +250,16 @@ int be_integrator (BurnT& state, BeT& be)
             for (int n = 1; n <= int_neqs; ++n) {
                 be.y(n) = y_old(n);
             }
+
+            printf("9) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("9) be = %e, %e\n", be.y(1), be.y(2));
+            printf("9) y_fine = %e, %e\n", y_fine(1), y_fine(2));
+            printf("9) y_old = %e, %e\n", y_old(1), y_old(2));
+
             ierr = single_step(state, be, dt_sub);
+
+            printf("10) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("10) be = %e, %e\n", be.y(1), be.y(2));
         }
 
         // define a weight for each variable to use in checking the error
@@ -228,6 +270,8 @@ int be_integrator (BurnT& state, BeT& be)
         }
         w(net_ienuc) = 1.0_rt / (be.rtol_enuc * std::abs(y_fine(net_ienuc)) + be.atol_enuc);
 
+        printf("11) w = %e, %e\n", w(1), w(2));
+
         // now look for w |y_fine - y_coarse| < 1
 
         Real rel_error = 0.0_rt;
@@ -235,6 +279,8 @@ int be_integrator (BurnT& state, BeT& be)
             rel_error = amrex::max(rel_error, w(n) * std::abs(y_fine(n) - be.y(n)));
         }
         rel_error = amrex::max(rel_error, w(net_ienuc) * std::abs(y_fine(net_ienuc) - be.y(net_ienuc)));
+
+        printf("11) rel_error = %e\n", rel_error);
 
         bool step_success = false;
         if (rel_error < 1.0_rt) {
@@ -255,11 +301,17 @@ int be_integrator (BurnT& state, BeT& be)
                 be.y(n) = y_fine(n);
             }
 
+            printf("12) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("12) be = %e, %e\n", be.y(1), be.y(2));
+            printf("12) y_fine = %e, %e\n", y_fine(1), y_fine(2));
+
             // can we potentially increase the timestep?
             // backward-Euler has a local truncation error of dt**2
 
             Real dt_new = dt_sub * std::pow(1.0_rt / rel_error, 0.5_rt);
             dt_sub = amrex::min(amrex::max(dt_new, dt_sub / 2.0), 2.0 * dt_sub);
+
+            printf("13) dt_sub = %e\n", dt_sub);
 
         } else {
 
@@ -268,8 +320,13 @@ int be_integrator (BurnT& state, BeT& be)
                 be.y(n) = y_old(n);
             }
 
+            printf("14) state = %e, %e\n", state.xn[0], state.xn[1]);
+            printf("14) be = %e, %e\n", be.y(1), be.y(2));
+
             // adjust the timestep and try again
             dt_sub /= 2;
+
+            printf("15) dt_sub = %e\n", dt_sub);
 
         }
 

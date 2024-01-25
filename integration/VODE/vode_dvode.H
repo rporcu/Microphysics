@@ -27,6 +27,9 @@ int dvode (BurnT& state, DvodeT& vstate)
     Real H0, S;
     int IER, NITER;
 
+    //printf("1) state = %e, %e\n", state.xn[0], state.xn[1]);
+    //printf("1) vstate = %e, %e\n\n", vstate.y(1), vstate.y(2));
+
     // Flag determining if we were successful.
 
     int istate = IERR_SUCCESS;
@@ -53,6 +56,10 @@ int dvode (BurnT& state, DvodeT& vstate)
 
     rhs(vstate.t, state, vstate, f_init);
 
+    //printf("2) state = %e, %e\n", state.xn[0], state.xn[1]);
+    //printf("2) vstate = %e, %e\n", vstate.y(1), vstate.y(2));
+    //printf("2) f_init = %e, %e\n\n", f_init(1), f_init(2));
+
     for (int i = 1; i <= int_neqs; ++i) {
         vstate.yh(i,2) = f_init(i);
     }
@@ -69,6 +76,11 @@ int dvode (BurnT& state, DvodeT& vstate)
     vstate.NQ = 1;
     vstate.H = 1.0_rt;
 
+    printf("&&) vstate.H = %e\n", vstate.H);
+
+    //printf("A) vstate.yh = %e, %e\n", vstate.yh(1,1), vstate.yh(2,1));
+    //printf("A) rtol = %e, atol = %e\n", vstate.rtol_spec, vstate.atol_spec);
+
     for (int i = 1; i <= NumSpec; ++i) {
         vstate.ewt(i) = vstate.rtol_spec * std::abs(vstate.yh(i,1)) + vstate.atol_spec;
         vstate.ewt(i) = 1.0_rt / vstate.ewt(i);
@@ -76,10 +88,18 @@ int dvode (BurnT& state, DvodeT& vstate)
     vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
     vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
 
+    //printf("A) vstate.ewt = %e, %e\n\n", vstate.ewt(1), vstate.ewt(2));
+
     // Call DVHIN to set initial step size H0 to be attempted.
     H0 = 0.0_rt;
+    printf("$1) H0 = %e\n", H0);
     dvhin(state, vstate, H0, NITER, IER);
+    printf("$2) H0 = %e\n", H0);
     vstate.NFE += NITER;
+
+    //printf("3) H0 = %e\n", H0);
+    //printf("3) state = %e, %e\n", state.xn[0], state.xn[1]);
+    //printf("3) vstate = %e, %e\n\n", vstate.y(1), vstate.y(2));
 
     if (IER != 0) {
 #ifndef AMREX_USE_GPU
@@ -91,6 +111,9 @@ int dvode (BurnT& state, DvodeT& vstate)
 
     // Load H with H0 and scale yh(:,2) by H0.
     vstate.H = H0;
+
+    printf("$$) vstate.H = %e\n", vstate.H);
+
     for (int i = 1; i <= int_neqs; ++i) {
         vstate.yh(i,2) *= H0;
     }
@@ -142,6 +165,9 @@ int dvode (BurnT& state, DvodeT& vstate)
 
            }
 
+//           //printf("B) vstate.yh = %e, %e\n", vstate.yh(1,1), vstate.yh(2,1));
+//           //printf("B) rtol = %e, atol = %e\n", vstate.rtol_spec, vstate.atol_spec);
+
            for (int i = 1; i <= NumSpec; ++i) {
                vstate.ewt(i) = vstate.rtol_spec * std::abs(vstate.yh(i,1)) + vstate.atol_spec;
                vstate.ewt(i) = 1.0_rt / vstate.ewt(i);
@@ -149,16 +175,27 @@ int dvode (BurnT& state, DvodeT& vstate)
            vstate.ewt(NumSpec+1) = vstate.rtol_enuc * std::abs(vstate.yh(NumSpec+1,1)) + vstate.atol_enuc;
            vstate.ewt(NumSpec+1) = 1.0_rt / vstate.ewt(NumSpec+1);
 
+//           //printf("B) vstate.ewt = %e, %e\n\n", vstate.ewt(1), vstate.ewt(2));
+//
+//           //printf("4) vstate.yh = %e, %e\n", vstate.yh(1,1), vstate.yh(2,1));
+//           //printf("4) vstate.ewt = %e, %e\n\n", vstate.ewt(1), vstate.ewt(2));
+
        }
        else {
            skip_loop_start = false;
        }
+
+       //printf("5) vstate.yh = %e, %e\n", vstate.yh(1,1), vstate.yh(2,1));
+       //printf("5) vstate.ewt = %e, %e\n\n", vstate.ewt(1), vstate.ewt(2));
 
        Real TOLSF = 0.0_rt;
        for (int i = 1; i <= int_neqs; ++i) {
            TOLSF += (vstate.yh(i,1) * vstate.ewt(i)) * (vstate.yh(i,1) * vstate.ewt(i));
        }
        TOLSF = UROUND * std::sqrt(TOLSF / int_neqs);
+
+       //printf("6) UROUND = %e\n", UROUND);
+       //printf("6) TOLSF = %e\n\n", TOLSF);
 
        if (TOLSF > 1.0_rt) {
 
@@ -183,8 +220,13 @@ int dvode (BurnT& state, DvodeT& vstate)
 
        }
 
+       //printf("7) state = %e, %e\n", state.xn[0], state.xn[1]);
+       //printf("7) vstate = %e, %e\n\n", vstate.y(1), vstate.y(2));
+
        int kflag = dvstep(state, vstate);
 
+       //printf("8) state = %e, %e\n", state.xn[0], state.xn[1]);
+       //printf("8) vstate = %e, %e\n\n", vstate.y(1), vstate.y(2));
 
        // Branch on KFLAG. KFLAG can be 0, -1, or -2.
 
@@ -264,6 +306,8 @@ int dvode (BurnT& state, DvodeT& vstate)
                vstate.y(i) = vstate.yh(i,j+1) + S * vstate.y(i);
            }
        }
+
+       //printf("9) vstate = %e, %e\n\n", vstate.y(1), vstate.y(2));
 
        vstate.t = vstate.tout;
 

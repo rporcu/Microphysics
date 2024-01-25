@@ -54,10 +54,13 @@ void dvhin (BurnT& state, DvodeT& vstate, Real& H0, int& NITER, int& IER)
     int iter = 0;
     Real HG = std::sqrt(HLB * HUB);
 
+    printf("\n");
+
     // If the bounds have crossed, exit with the mean value.
     bool do_iterations = true;
     if (HUB < HLB) {
         H0 = HG;
+        printf("1A) H0 = %e\n", H0);
         do_iterations = false;
     }
 
@@ -90,9 +93,13 @@ void dvhin (BurnT& state, DvodeT& vstate, Real& H0, int& NITER, int& IER)
             // Get the corresponding new value of h.
             if (YDDNRM * HUB * HUB > 2.0_rt) {
                 hnew = std::sqrt(2.0_rt / YDDNRM);
+                printf("1) hnew = %e\n", hnew);
             }
             else {
                 hnew = std::sqrt(HG * HUB);
+                printf("HG = %e\n", HG);
+                printf("HUB = %e\n", HUB);
+                printf("2) hnew = %e\n", hnew);
             }
             iter += 1;
 
@@ -113,6 +120,7 @@ void dvhin (BurnT& state, DvodeT& vstate, Real& H0, int& NITER, int& IER)
 
             if ((iter >= 2) && (hnew > 2.0_rt * HG)) {
                 hnew = HG;
+                printf("3) hnew = %e\n", hnew);
                 break;
             }
 
@@ -122,16 +130,20 @@ void dvhin (BurnT& state, DvodeT& vstate, Real& H0, int& NITER, int& IER)
 
         // Iteration done. Apply bounds, bias factor, and sign. Then exit.
         H0 = hnew * 0.5_rt;
+        printf("2B) H0 = %e\n", H0);
         if (H0 < HLB) {
             H0 = HLB;
+            printf("3C) H0 = %e\n", H0);
         }
         if (H0 > HUB) {
             H0 = HUB;
+            printf("4D) H0 = %e\n", H0);
         }
 
     }
 
     H0 = std::copysign(H0, vstate.tout - vstate.t);
+    printf("5E) H0 = %e\n", H0);
     NITER = iter;
     IER = 0;
 

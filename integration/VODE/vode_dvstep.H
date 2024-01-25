@@ -127,12 +127,18 @@ int dvstep (BurnT& state, DvodeT& vstate)
         }
 
         vstate.H = vstate.HSCAL * vstate.ETA;
+        printf("AA) vstate.H = %e\n", vstate.H);
+        printf("AA) vstate.HSCAL = %e\n", vstate.HSCAL);
+        printf("AA) vstate.ETA = %e\n", vstate.ETA);
         vstate.HSCAL = vstate.H;
         vstate.RC = vstate.RC * vstate.ETA;
 
     }
 
     Array1D<short, 1, int_neqs> pivot;
+//    for (int n = 1; n <= int_neqs; ++n) {
+//        pivot(n) = 0;
+//    }
 
     // Compute the predicted values by effectively
     // multiplying the yh array by the Pascal triangle matrix.
@@ -213,6 +219,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
             }
 
             vstate.H = vstate.HSCAL * vstate.ETA;
+            printf("BB) vstate.H = %e\n", vstate.H);
+            printf("BB) vstate.HSCAL = %e\n", vstate.HSCAL);
+            printf("BB) vstate.ETA = %e\n", vstate.ETA);
             vstate.HSCAL = vstate.H;
             vstate.RC *= vstate.ETA;
 
@@ -408,6 +417,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
             }
 
             vstate.H = vstate.HSCAL * vstate.ETA;
+            printf("CC) vstate.H = %e\n", vstate.H);
+            printf("CC) vstate.HSCAL = %e\n", vstate.HSCAL);
+            printf("CC) vstate.ETA = %e\n", vstate.ETA);
             vstate.HSCAL = vstate.H;
             vstate.RC = vstate.RC * vstate.ETA;
 
@@ -445,6 +457,9 @@ int dvstep (BurnT& state, DvodeT& vstate)
             }
 
             vstate.H = vstate.HSCAL * vstate.ETA;
+            printf("DD) vstate.H = %e\n", vstate.H);
+            printf("DD) vstate.HSCAL = %e\n", vstate.HSCAL);
+            printf("DD) vstate.ETA = %e\n", vstate.ETA);
             vstate.HSCAL = vstate.H;
             vstate.RC = vstate.RC * vstate.ETA;
 

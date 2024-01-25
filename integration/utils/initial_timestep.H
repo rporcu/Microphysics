@@ -60,7 +60,13 @@ Real initial_react_dt (BurnT& burn_state, IntT& int_state,
 
        // Call the RHS, then estimate the finite difference.
 
+       printf("A) burn_state = %e, %e\n", burn_state.xn[0], burn_state.xn[1]);
+       printf("A) int_state = %e, %e\n", int_state.y(1), int_state.y(2));
+
        rhs(int_state.t, burn_state, int_state, ydot_temp);
+
+       printf("B) burn_state = %e, %e\n", burn_state.xn[0], burn_state.xn[1]);
+       printf("B) int_state = %e, %e\n", int_state.y(1), int_state.y(2));
 
        for (int ii = 1; ii <= INT_NEQS; ii++) {
            ddydtt(ii) = (ydot_temp(ii) - ydot(ii)) / h;

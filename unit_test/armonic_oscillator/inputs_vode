@@ -1,8 +1,8 @@
 unit_test.run_prefix = "armonic_oscillator_"
 
 unit_test.tfirst = 0.0
-unit_test.tmax = 10.0
-unit_test.nsteps = 1000
+unit_test.tmax = 10.
+unit_test.nsteps = 10000
 
 # these don't matter for the VODE burner, but we'll make them values that are in our EOS table
 

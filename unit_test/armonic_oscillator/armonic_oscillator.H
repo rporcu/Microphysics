@@ -17,7 +17,7 @@ void armonic_oscillator()
   amrex::Real solution[INT_NEQS] = {1., 0., 0.};
 
   const amrex::Real tstart(0.);
-  const amrex::Real tend(10.0);
+  const amrex::Real tend(10.);
   const amrex::Real tinterval(tend - tstart);
   const int nsteps = 10000;
 

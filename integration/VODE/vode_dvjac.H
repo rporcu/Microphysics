@@ -12,6 +12,39 @@
 #include <integrator_rhs_simplified_sdc.H>
 #endif
 
+namespace dvjac_aux {
+
+void printA (RArray2D& a)
+{
+  for (int i(1); i <= 3; ++i) {
+    for (int j(1); j <= 3; ++j) {
+      if (j != 3) printf("%e,\t", a(i,j));
+      else printf("%e\n", a(i,j));
+    }
+    if (i == 3) printf("\n");
+  }
+}
+
+void printB (RArray1D& b)
+{
+  for (int j(1); j <= 3; ++j) {
+    if (j != 3) printf("%e,\t", b(j));
+    else printf("%e\n", b(j));
+  }
+  printf("\n");
+}
+
+void printP (IArray1D& b)
+{
+  for (int j(1); j <= 3; ++j) {
+    if (j != 3) printf("%d,\t", b(j));
+    else printf("%d\n", b(j));
+  }
+  printf("\n");
+}
+
+} // end namespace dvjac_aux
+
 template <typename IArray1D, typename BurnT, typename DvodeT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
 void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
@@ -82,6 +115,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
             // Initialize the Jacobian to zero
             vstate.jac.zero();
 
+            printf("11)\n");
+            dvjac_aux::printA(vstate.jac);
+
             jac(vstate.tn, state, vstate, vstate.jac);
 
 #ifdef ALLOW_JACOBIAN_CACHING
@@ -119,10 +155,13 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
             bool in_jacobian = true;
             for (int j = 1; j <= int_neqs; ++j) {
                 Real yj = vstate.y(j);
+                printf("yj = %e\n", yj);
 
                 Real R = amrex::max(std::sqrt(UROUND) * std::abs(yj), R0 / vstate.ewt(j));
+                printf("R = %e\n", R);
                 vstate.y(j) += R;
                 fac = 1.0_rt / R;
+                printf("fac = %e\n", fac);
 
                 rhs(vstate.tn, state, vstate, vstate.acor, in_jacobian);
                 for (int i = 1; i <= int_neqs; ++i) {
@@ -131,6 +170,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
 
                 vstate.y(j) = yj;
             }
+
+            printf("22)\n");
+            dvjac_aux::printA(vstate.jac);
 
             // Increment the RHS evaluation counter by N.
             vstate.NFE += int_neqs;
@@ -154,6 +196,9 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
         vstate.JCUR = 0;
         vstate.jac = vstate.jac_save;
 
+        printf("33)\n");
+        dvjac_aux::printA(vstate.jac);
+
     }
 #endif
 
@@ -161,10 +206,20 @@ void dvjac (IArray1D& pivot, int& IERPJ, BurnT& state, DvodeT& vstate)
     // (along the diagonal), and do LU decomposition.
 
     Real hrl1 = vstate.H * vstate.RL1;
+    printf("vstate.H = %e\n", vstate.H);
+    printf("vstate.RL1 = %e\n", vstate.RL1);
+    printf("hrl1 = %e\n\n", hrl1);
     Real con = -hrl1;
 
     vstate.jac.mul(con);
+
+    printf("44)\n");
+    dvjac_aux::printA(vstate.jac);
+
     vstate.jac.add_identity();
+
+    printf("55)\n");
+    dvjac_aux::printA(vstate.jac);
 
     int IER;
 
