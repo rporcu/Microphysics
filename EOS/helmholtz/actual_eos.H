@@ -1238,7 +1238,7 @@ template <typename I, typename T>
 AMREX_GPU_HOST_DEVICE AMREX_INLINE
 void actual_eos (I input, T& state)
 {
-    static_assert(std::is_same<I, eos_input_t>::value, "input must be an eos_input_t");
+    static_assert(std::is_same_v<I, eos_input_t>, "input must be an eos_input_t");
 
     using namespace helmholtz;
 
@@ -1315,14 +1315,6 @@ void actual_eos_init ()
     dtol = eos_dtol;
 
     //    read the helmholtz free energy table
-    tlo   = 3.0e0_rt;
-    thi   = 13.0e0_rt;
-    tstp  = (thi - tlo) / ((Real) (jmax-1));
-    tstpi = 1.0e0_rt / tstp;
-    dlo   = -12.0e0_rt;
-    dhi   = 15.0e0_rt;
-    dstp  = (dhi - dlo) / ((Real) (imax-1));
-    dstpi = 1.0e0_rt / dstp;
 
     for (int j = 0; j < jmax; ++j) {
         Real tsav = tlo + j * tstp;
@@ -1497,7 +1489,7 @@ bool is_input_valid (I input)
 {
   amrex::ignore_unused(input);
 
-  static_assert(std::is_same<I, eos_input_t>::value, "input must be an eos_input_t");
+  static_assert(std::is_same_v<I, eos_input_t>, "input must be an eos_input_t");
 
   bool valid = true;
 

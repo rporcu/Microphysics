@@ -401,7 +401,7 @@ void eos (const I /*input*/,
 {
   amrex::ignore_unused(use_raw_inputs);
 
-//  static_assert(std::is_same<I, eos_input_t>::value, "input must be an eos_input_t");
+//  static_assert(std::is_same_v<I, eos_input_t>, "input must be an eos_input_t");
 //
 //  // Input arguments
 //
