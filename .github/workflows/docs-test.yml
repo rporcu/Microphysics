@@ -9,14 +9,17 @@ on:
     branches:
       - development
 
+env:
+  # enable color output from Sphinx
+  FORCE_COLOR: "1"
+
 jobs:
   docs:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
       - name: Install pandoc and doxygen
         run: |
           sudo apt install pandoc doxygen
@@ -24,7 +27,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
           cache: "pip"
 
       - name: Install dependencies
@@ -33,7 +36,7 @@ jobs:
       - name: Build docs
         run: |
           cd sphinx_docs/
-          make SPHINXOPTS=-v html
+          make SPHINXOPTS='-v -W --keep-going' html
 
       - name: Link check
         run: |

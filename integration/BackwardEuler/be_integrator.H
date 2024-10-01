@@ -14,7 +14,7 @@
 #include <integrator_rhs_strang.H>
 #endif
 #ifdef SDC
-#include <integrator_rhs_simplified_sdc.H>
+#include <integrator_rhs_sdc.H>
 #endif
 #include <integrator_data.H>
 #include <initial_timestep.H>
@@ -26,7 +26,7 @@
 ///
 template <typename BurnT, typename BeT>
 AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
-int single_step (BurnT& state, BeT& be, const Real dt)
+int single_step (BurnT& state, BeT& be, const amrex::Real dt)
 {
     constexpr int int_neqs = integrator_neqs<BurnT>();
 
@@ -36,13 +36,13 @@ int single_step (BurnT& state, BeT& be, const Real dt)
     // create our current guess for the solution -- just as a first
     // order explicit prediction
 
-    Array1D<Real, 1, int_neqs> ydot;
+    amrex::Array1D<amrex::Real, 1, int_neqs> ydot;
 
     rhs(be.t, state, be, ydot);
 
     be.n_rhs += 1;
 
-    Array1D<Real, 1, int_neqs> y_old;
+    amrex::Array1D<amrex::Real, 1, int_neqs> y_old;
 
     for (int n = 1; n <= int_neqs; n++) {
         y_old(n) = be.y(n);
@@ -51,7 +51,7 @@ int single_step (BurnT& state, BeT& be, const Real dt)
 
     // Newton loop
 
-    for (int iter = 1; iter <= max_iter; iter++) {
+    for (int iter = 1; iter <= integrator_rp::max_iter; iter++) {
 
         // work with the current guess
 
@@ -76,8 +76,8 @@ int single_step (BurnT& state, BeT& be, const Real dt)
         // construct the matrix for the linear system
         // (I - dt J) dy^{n+1} = rhs
 
-        for (int m  = 1; m <= int_neqs; m++) {
-            for (int n = 1; n <= int_neqs; n++) {
+        for (int n = 1; n <= int_neqs; n++) {
+            for (int m  = 1; m <= int_neqs; m++) {
                 be.jac(m, n) *= -dt;
                 if (m == n) {
                     be.jac(m, n) = 1.0_rt + be.jac(m, n);
@@ -87,7 +87,7 @@ int single_step (BurnT& state, BeT& be, const Real dt)
 
         // construct the RHS of our linear system
 
-        Array1D<Real, 1, int_neqs> b;
+        amrex::Array1D<amrex::Real, 1, int_neqs> b;
         for (int n = 1; n <= int_neqs; n++) {
             b(n) = y_old(n) - be.y(n) + dt * ydot(n);
         }
@@ -96,14 +96,27 @@ int single_step (BurnT& state, BeT& be, const Real dt)
 
         int ierr_linpack;
         IArray1D pivot;
-        dgefa<int_neqs>(be.jac, pivot, ierr_linpack);
+
+        if (integrator_rp::linalg_do_pivoting == 1) {
+            constexpr bool allow_pivot{true};
+            dgefa<int_neqs, allow_pivot>(be.jac, pivot, ierr_linpack);
+        } else {
+            constexpr bool allow_pivot{false};
+            dgefa<int_neqs, allow_pivot>(be.jac, pivot, ierr_linpack);
+        }
 
         if (ierr_linpack != 0) {
             ierr = IERR_LU_DECOMPOSITION_ERROR;
             break;
         }
 
-        dgesl<int_neqs>(be.jac, pivot, b);
+        if (integrator_rp::linalg_do_pivoting == 1) {
+            constexpr bool allow_pivot{true};
+            dgesl<int_neqs, allow_pivot>(be.jac, pivot, b);
+        } else {
+            constexpr bool allow_pivot{false};
+            dgesl<int_neqs, allow_pivot>(be.jac, pivot, b);
+        }
 
         // update our current guess for the solution
 
@@ -114,8 +127,8 @@ int single_step (BurnT& state, BeT& be, const Real dt)
         // check to see if we converged
         // we compute the norms
 
-        Real y_norm = 0.0;
-        Real b_norm = 0.0;
+        amrex::Real y_norm = 0.0;
+        amrex::Real b_norm = 0.0;
         for (int n = 1; n <= int_neqs; n++) {
             y_norm += be.y(n) * be.y(n);
             b_norm += b(n) * b(n);
@@ -123,7 +136,7 @@ int single_step (BurnT& state, BeT& be, const Real dt)
         y_norm = std::sqrt(y_norm / int_neqs);
         b_norm = std::sqrt(b_norm / int_neqs);
 
-        if (b_norm < tol * y_norm) {
+        if (b_norm < integrator_rp::tol * y_norm) {
             converged = true;
             break;
         }
@@ -168,20 +181,20 @@ int be_integrator (BurnT& state, BeT& be)
 
     // estimate the timestep
 
-    Array1D<Real, 1, int_neqs> ydot;
+    amrex::Array1D<amrex::Real, 1, int_neqs> ydot;
     rhs(be.t, state, be, ydot);
 
     be.n_rhs += 1;
 
-    Real dt_sub = initial_react_dt(state, be, ydot);
+    amrex::Real dt_sub = initial_react_dt(state, be, ydot);
 
     // main timestepping loop
 
     while (be.t < (1.0_rt - timestep_safety_factor) * be.tout &&
-           be.n_step < ode_max_steps) {
+           be.n_step < integrator_rp::ode_max_steps) {
 
         // store the current solution -- we'll revert to this if a step fails
-        Array1D<Real, 1, int_neqs> y_old;
+        amrex::Array1D<amrex::Real, 1, int_neqs> y_old;
         for (int n = 1; n <= int_neqs; ++n) {
             y_old(n) = be.y(n);
         }
@@ -200,7 +213,7 @@ int be_integrator (BurnT& state, BeT& be)
 
         // first do 2 (fine) dt/2 steps
 
-        Array1D<Real, 1, int_neqs> y_fine;
+        amrex::Array1D<amrex::Real, 1, int_neqs> y_fine;
 
         ierr = single_step(state, be, dt_sub/2);
         if (ierr == IERR_SUCCESS) {
@@ -222,7 +235,7 @@ int be_integrator (BurnT& state, BeT& be)
 
         // define a weight for each variable to use in checking the error
 
-        Array1D<Real, 1, int_neqs> w;
+        amrex::Array1D<amrex::Real, 1, int_neqs> w;
         for (int n = 1; n <= NumSpec; n++) {
             w(n) = 1.0_rt / (be.rtol_spec * std::abs(y_fine(n)) + be.atol_spec);
         }
@@ -230,7 +243,7 @@ int be_integrator (BurnT& state, BeT& be)
 
         // now look for w |y_fine - y_coarse| < 1
 
-        Real rel_error = 0.0_rt;
+        amrex::Real rel_error = 0.0_rt;
         for (int n = 1; n <= NumSpec; n++) {
             rel_error = amrex::max(rel_error, w(n) * std::abs(y_fine(n) - be.y(n)));
         }
@@ -258,8 +271,8 @@ int be_integrator (BurnT& state, BeT& be)
             // can we potentially increase the timestep?
             // backward-Euler has a local truncation error of dt**2
 
-            Real dt_new = dt_sub * std::pow(1.0_rt / rel_error, 0.5_rt);
-            dt_sub = amrex::min(amrex::max(dt_new, dt_sub / 2.0), 2.0 * dt_sub);
+            amrex::Real dt_new = dt_sub * std::pow(1.0_rt / rel_error, 0.5_rt);
+            dt_sub = std::clamp(dt_new, dt_sub / 2.0, 2.0 * dt_sub);
 
         } else {
 
@@ -278,7 +291,7 @@ int be_integrator (BurnT& state, BeT& be)
 
     }
 
-    if (be.n_step >= ode_max_steps) {
+    if (be.n_step >= integrator_rp::ode_max_steps) {
         ierr = IERR_TOO_MANY_STEPS;
     }
 

@@ -48,12 +48,14 @@ def get_version():
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
+    'sphinx_math_dollar',
     'sphinx.ext.viewcode',
     'sphinxcontrib.bibtex',
     'nbsphinx',
     'numpydoc',
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx.ext.githubpages',
+    'sphinx_copybutton',
     'sphinx-prompt',
     'sphinx_rtd_theme',
     'breathe']
@@ -84,7 +86,7 @@ main_doc = 'index'
 
 # General information about the project.
 project = 'Microphysics'
-copyright = '2012, Microphysics Development Team'
+copyright = '2024, Microphysics Development Team'
 author = 'Microphysics Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -116,7 +118,14 @@ todo_include_todos = False
 
 
 # -- Options for MathJax
-mathjax3_config = {'tex': {'macros': {}}}
+mathjax3_config = {}
+
+mathjax3_config["tex"] = {
+    "inlineMath": [['\\(', '\\)']],
+    "displayMath": [["\\[", "\\]"]],
+  }
+
+mathjax3_config["tex"]["macros"] = {}
 
 with open('mathsymbols.tex', 'r') as f:
     for line in f:
@@ -209,6 +218,12 @@ man_pages = [
      [author], 1)
 ]
 
+
+# -- Options for linkcheck
+
+linkcheck_retries = 3
+linkcheck_timeout = 100
+user_agent = "Mozilla/5.0 (X11; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0"
 
 # -- Options for Texinfo output -------------------------------------------
 

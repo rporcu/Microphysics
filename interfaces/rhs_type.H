@@ -21,12 +21,12 @@ struct rhs_t {
     int species_E{-1};
     int species_F{-1};
 
-    Real number_A{0.0_rt};
-    Real number_B{0.0_rt};
-    Real number_C{0.0_rt};
-    Real number_D{0.0_rt};
-    Real number_E{0.0_rt};
-    Real number_F{0.0_rt};
+    amrex::Real number_A{0.0_rt};
+    amrex::Real number_B{0.0_rt};
+    amrex::Real number_C{0.0_rt};
+    amrex::Real number_D{0.0_rt};
+    amrex::Real number_E{0.0_rt};
+    amrex::Real number_F{0.0_rt};
 
     int exponent_A{0};
     int exponent_B{0};
@@ -55,9 +55,9 @@ constexpr amrex::Real tab_thi = 10.0e0_rt;
 constexpr int tab_per_decade = 2000;
 constexpr int nrattab = static_cast<int>(tab_thi - tab_tlo) * tab_per_decade + 1;
 constexpr int tab_imax = static_cast<int>(tab_thi - tab_tlo) * tab_per_decade + 1;
-constexpr amrex::Real tab_tstp = (tab_thi - tab_tlo) / static_cast<Real>(tab_imax - 1);
+constexpr amrex::Real tab_tstp = (tab_thi - tab_tlo) / static_cast<amrex::Real>(tab_imax - 1);
 
-extern AMREX_GPU_MANAGED Array1D<amrex::Real, 1, nrattab> ttab;
+extern AMREX_GPU_MANAGED amrex::Array1D<amrex::Real, 1, nrattab> ttab;
 
 // A struct that contains the terms needed to evaluate a tabulated rate.
 struct rate_tab_t
@@ -95,25 +95,27 @@ struct rate_tab_t
     }
 };
 
+// number_t is currently used in the screening routines and templated network
+// rate evaluation
+template <typename number_t>
 struct rhs_state_t
 {
     amrex::Real rho;
-    tf_t tf;
+    tf_t<number_t> tf;
     rate_tab_t tab;
 #ifdef SCREENING
-    plasma_state_t pstate;
+    plasma_state_t<number_t> pstate;
 #endif
     amrex::Real y_e;
     amrex::Real eta;
-    Array1D<amrex::Real, 1, NumSpec> y;
+    amrex::Array1D<amrex::Real, 1, NumSpec> y;
 };
 
+template <typename number_t>
 struct rate_t
 {
-    amrex::Real fr;
-    amrex::Real rr;
-    amrex::Real frdt;
-    amrex::Real rrdt;
+    number_t fr;
+    number_t rr;
 };
 
 } // namespace RHS
